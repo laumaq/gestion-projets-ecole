@@ -11,7 +11,21 @@ function DashboardDirection({ user, onLogout, supabaseRequest }) {
   const [filterType, setFilterType] = useState('all');
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   
-  // Pour le formulaire d'ajout d'événement admin
+  // Pour le formulaire de création de projet
+  const [titre, setTitre] = useState('');
+  const [description, setDescription] = useState('');
+  const [typeActivite, setTypeActivite] = useState('sortie_pedagogique');
+  const [motsCles, setMotsCles] = useState('');
+  const [selectedGroups, setSelectedGroups] = useState([]);
+  const [date, setDate] = useState('');
+  const [heureDebut, setHeureDebut] = useState('');
+  const [heureFin, setHeureFin] = useState('');
+  const [searchGroup, setSearchGroup] = useState('');
+  const [groups, setGroups] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [schedule, setSchedule] = useState([]);
+  
+  // Pour le formulaire d'ajout d'événement admin (ancien - à supprimer)
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [eventTitre, setEventTitre] = useState('');
   const [eventType, setEventType] = useState('greve');
