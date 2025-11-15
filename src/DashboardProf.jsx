@@ -367,8 +367,6 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
                   >
                     <option value="projet">Projet pédagogique</option>
                     <option value="sortie_pedagogique">Sortie pedagogique</option>
-                    <option value="animation">Animation</option>
-                    <option value="conseil_classe">Conseil de classe</option>
                     <option value="autre">Autre</option>
                   </select>
                 </div>
