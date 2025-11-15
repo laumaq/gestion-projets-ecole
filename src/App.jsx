@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Calendar, Clock, Users, AlertCircle, CheckCircle, AlertTriangle, Search, Plus, X, Eye } from 'lucide-react';
+import { useState } from 'react';
+import DashboardProf from './DashboardProf';
+import DashboardDirection from './DashboardDirection';
 
 const SUPABASE_URL = 'https://bjbxatevbcrybsrkgdzx.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqYnhhdGV2YmNyeWJzcmtnZHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyNDg3ODQsImV4cCI6MjA3NTgyNDc4NH0.PTmREL0Nw1FZTgYDsJk72ABObuOabA7eoaztMPdupPE';
@@ -8,11 +9,6 @@ const DIRECTION_USERS = [
   { nom: 'Catot', initiale: 'S' },
   { nom: 'Creeten', initiale: 'R' }
 ];
-
-const HEURES = ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17'];
-const MINUTES = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
-const ANNEES = [1, 2, 3, 4, 5, 6];
-const TYPES = ['classe', 'option', 'atelier', 'autre'];
 
 async function supabaseRequest(endpoint, options = {}) {
   const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;
@@ -40,32 +36,6 @@ function App() {
   const [loginNom, setLoginNom] = useState('');
   const [loginInitiale, setLoginInitiale] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  
-  const [groups, setGroups] = useState([]);
-  const [courses, setCourses] = useState([]);
-
-  useEffect(() => {
-    if (currentUser) {
-      loadData();
-    }
-  }, [currentUser]);
-
-  async function loadData() {
-    try {
-      setLoading(true);
-      const [groupsData, coursesData] = await Promise.all([
-        supabaseRequest('groups?select=*'),
-        supabaseRequest('courses?select=*'),
-      ]);
-      
-      setGroups(groupsData);
-      setCourses(coursesData);
-      setLoading(false);
-    } catch (err) {
-      setError('Erreur de chargement: ' + err.message);
-      setLoading(false);
-    }
-  }
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -75,7 +45,6 @@ function App() {
     setError(null);
 
     try {
-      // Vérifier si c'est un accès direction
       if (loginPassword) {
         if (loginPassword === DIRECTION_PASSWORD) {
           const isDirectionUser = DIRECTION_USERS.some(
@@ -115,7 +84,6 @@ function App() {
         return;
       }
 
-      // Connexion prof normale
       const users = await supabaseRequest(
         `users?nom=eq.${encodeURIComponent(loginNom)}&prenom_initiale=eq.${encodeURIComponent(loginInitiale)}`
       );
@@ -226,32 +194,11 @@ function App() {
     );
   }
 
-  // Afficher le bon dashboard
   if (isDirection) {
-    return <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Dashboard Direction</h1>
-          <button onClick={handleLogout} className="text-blue-600 hover:text-blue-800">
-            Déconnexion
-          </button>
-        </div>
-        <p className="text-gray-600">Dashboard direction en cours de développement...</p>
-      </div>
-    </div>;
+    return <DashboardDirection user={currentUser} onLogout={handleLogout} supabaseRequest={supabaseRequest} />;
   }
 
-  return <div className="min-h-screen bg-gray-50 p-8">
-    <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Dashboard Prof</h1>
-        <button onClick={handleLogout} className="text-blue-600 hover:text-blue-800">
-          Déconnexion
-        </button>
-      </div>
-      <p className="text-gray-600">Dashboard prof en cours de développement...</p>
-    </div>
-  </div>;
+  return <DashboardProf user={currentUser} onLogout={handleLogout} supabaseRequest={supabaseRequest} />;
 }
 
 export default App;
