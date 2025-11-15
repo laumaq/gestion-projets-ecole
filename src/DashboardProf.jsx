@@ -366,7 +366,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="projet">Projet pédagogique</option>
-                    <option value="sortie">Sortie</option>
+                    <option value="sortie_pedagogique">sortie_pedagogique</option>
                     <option value="animation">Animation</option>
                     <option value="conseil_classe">Conseil de classe</option>
                     <option value="autre">Autre</option>
