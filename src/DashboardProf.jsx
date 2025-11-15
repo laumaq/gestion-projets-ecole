@@ -13,7 +13,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
   
   const [titre, setTitre] = useState('');
   const [description, setDescription] = useState('');
-  const [typeActivite, setTypeActivite] = useState('projet');
+  const [typeActivite, setTypeActivite] = useState('projet_pedagogique');
   const [motsCles, setMotsCles] = useState('');
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [date, setDate] = useState('');
