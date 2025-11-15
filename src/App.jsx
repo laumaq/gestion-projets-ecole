@@ -7,7 +7,9 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const DIRECTION_PASSWORD = 'wahaDirection';
 const DIRECTION_USERS = [
   { nom: 'Catot', initiale: 'S' },
-  { nom: 'Creeten', initiale: 'R' }
+  { nom: 'Creeten', initiale: 'R' },
+  { nom: 'Jeangille', initiale: 'L' },
+  { nom: 'Maquet', initiale: 'L' }
 ];
 
 async function supabaseRequest(endpoint, options = {}) {
