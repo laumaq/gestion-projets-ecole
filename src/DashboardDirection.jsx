@@ -40,7 +40,23 @@ function DashboardDirection({ user, onLogout, supabaseRequest }) {
   useEffect(() => {
     loadPendingProjects();
     loadAllProjects();
+    loadGroups();
   }, []);
+
+  async function loadGroups() {
+    try {
+      const [groupsData, coursesData, scheduleData] = await Promise.all([
+        supabaseRequest('groups?select=*'),
+        supabaseRequest('courses?select=*'),
+        supabaseRequest('schedule?select=*'),
+      ]);
+      setGroups(groupsData);
+      setCourses(coursesData);
+      setSchedule(scheduleData);
+    } catch (err) {
+      console.error('Erreur chargement groupes:', err);
+    }
+  }
 
   async function loadPendingProjects() {
     try {
@@ -102,7 +118,7 @@ function DashboardDirection({ user, onLogout, supabaseRequest }) {
   }
 
   async function handleAddEvent() {
-    if (!eventTitre || !eventDate || !eventHeureDebut || !eventHeureFin) {
+    if (!titre || !date || !heureDebut || !heureFin) {
       alert('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -110,14 +126,16 @@ function DashboardDirection({ user, onLogout, supabaseRequest }) {
     try {
       setLoading(true);
       
+      const motsClesArray = motsCles.split(',').map(m => m.trim()).filter(m => m);
+      
       const [project] = await supabaseRequest('projects', {
         method: 'POST',
         body: JSON.stringify({
-          titre: eventTitre,
-          description: eventDescription,
+          titre,
+          description,
           prof_meneur_id: user.id,
-          mots_cles: [],
-          type_activite: eventType,
+          mots_cles: motsClesArray,
+          type_activite: typeActivite,
           recurrence: 'ponctuel',
           statut: 'valide',
         }),
@@ -127,18 +145,18 @@ function DashboardDirection({ user, onLogout, supabaseRequest }) {
         method: 'POST',
         body: JSON.stringify({
           project_id: project.id,
-          date: eventDate,
-          heure_debut: eventHeureDebut,
-          heure_fin: eventHeureFin,
-          groups_concernes: [],
+          date,
+          heure_debut: heureDebut,
+          heure_fin: heureFin,
+          groups_concernes: selectedGroups,
           validation_direction_id: user.id,
         }),
       });
 
-      alert('Événement ajouté avec succès !');
-      setShowAddEvent(false);
-      resetEventForm();
+      alert('Projet créé avec succès !');
+      resetProjectForm();
       await loadAllProjects();
+      setActiveTab('calendrier');
       setLoading(false);
     } catch (err) {
       alert('Erreur: ' + err.message);
@@ -146,14 +164,29 @@ function DashboardDirection({ user, onLogout, supabaseRequest }) {
     }
   }
 
-  function resetEventForm() {
-    setEventTitre('');
-    setEventType('greve');
-    setEventDate('');
-    setEventHeureDebut('');
-    setEventHeureFin('');
-    setEventDescription('');
+  function resetProjectForm() {
+    setTitre('');
+    setDescription('');
+    setTypeActivite('sortie_pedagogique');
+    setMotsCles('');
+    setSelectedGroups([]);
+    setDate('');
+    setHeureDebut('');
+    setHeureFin('');
+    setSearchGroup('');
   }
+
+  const toggleGroup = (groupId) => {
+    setSelectedGroups(prev => 
+      prev.includes(groupId) 
+        ? prev.filter(id => id !== groupId)
+        : [...prev, groupId]
+    );
+  };
+
+  const filteredGroups = groups.filter(g => 
+    g.nom_groupe.toLowerCase().includes(searchGroup.toLowerCase())
+  );
 
   const getSeverityColor = (severity) => {
     if (severity === 'green') return 'bg-green-100 text-green-800';
@@ -227,6 +260,16 @@ function DashboardDirection({ user, onLogout, supabaseRequest }) {
         <div className="mb-6 border-b border-gray-200">
           <nav className="flex gap-4">
             <button
+              onClick={() => setActiveTab('nouveau')}
+              className={`px-4 py-2 font-medium ${
+                activeTab === 'nouveau'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Nouveau projet
+            </button>
+            <button
               onClick={() => setActiveTab('validation')}
               className={`px-4 py-2 font-medium ${
                 activeTab === 'validation'
@@ -248,6 +291,222 @@ function DashboardDirection({ user, onLogout, supabaseRequest }) {
             </button>
           </nav>
         </div>
+
+        {activeTab === 'nouveau' && (
+          <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
+            <h2 className="text-xl font-semibold text-gray-800">Créer un projet / événement</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
+                <input
+                  type="text"
+                  value={titre}
+                  onChange={(e) => setTitre(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ex: Sortie au musée"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                  placeholder="Décrivez l'activité..."
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Type d'activité *</label>
+                  <select
+                    value={typeActivite}
+                    onChange={(e) => setTypeActivite(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="sortie_pedagogique">Sortie pédagogique</option>
+                    <option value="projet_pedagogique">Projet pédagogique</option>
+                    <option value="greve">Grève</option>
+                    <option value="animations">Animations</option>
+                    <option value="conseil_classe">Conseil de classe</option>
+                    <option value="intemperies">Intempéries</option>
+                    <option value="formation_pedagogique">Formation pédagogique</option>
+                    <option value="autre">Autre</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mots-clés</label>
+                  <input
+                    type="text"
+                    value={motsCles}
+                    onChange={(e) => setMotsCles(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="musée, sciences"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Groupes concernés (optionnel)
+                </label>
+                <div className="border border-gray-300 rounded-lg p-4">
+                  <div className="mb-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={searchGroup}
+                        onChange={(e) => setSearchGroup(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Rechercher un groupe..."
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="max-h-48 overflow-y-auto space-y-2">
+                    {filteredGroups.map(group => (
+                      <label
+                        key={group.id}
+                        className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedGroups.includes(group.id)}
+                          onChange={() => toggleGroup(group.id)}
+                          className="w-4 h-4 text-blue-600 rounded"
+                        />
+                        <span className="text-sm">
+                          {group.nom_groupe}
+                          <span className="text-gray-500 ml-2">({group.type})</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+
+                  {selectedGroups.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <p className="text-sm font-medium text-gray-700 mb-2">
+                        Sélectionnés ({selectedGroups.length}) :
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedGroups.map(gId => {
+                          const group = groups.find(g => g.id === gId);
+                          return (
+                            <span
+                              key={gId}
+                              className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                            >
+                              {group ? group.nom_groupe : gId}
+                              <button
+                                type="button"
+                                onClick={() => toggleGroup(gId)}
+                                className="hover:bg-blue-200 rounded-full p-0.5"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date et horaires *</label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Date</label>
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Heure début</label>
+                    <div className="flex gap-1">
+                      <select
+                        value={heureDebut.split(':')[0] || ''}
+                        onChange={(e) => {
+                          const min = heureDebut.split(':')[1] || '00';
+                          setHeureDebut(e.target.value + ':' + min);
+                        }}
+                        className="flex-1 px-2 py-2 border border-gray-300 rounded-lg"
+                      >
+                        <option value="">HH</option>
+                        {HEURES.map(h => <option key={h} value={h}>{h}</option>)}
+                      </select>
+                      <select
+                        value={heureDebut.split(':')[1] || ''}
+                        onChange={(e) => {
+                          const h = heureDebut.split(':')[0] || '08';
+                          setHeureDebut(h + ':' + e.target.value);
+                        }}
+                        className="flex-1 px-2 py-2 border border-gray-300 rounded-lg"
+                      >
+                        <option value="">MM</option>
+                        {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Heure fin</label>
+                    <div className="flex gap-1">
+                      <select
+                        value={heureFin.split(':')[0] || ''}
+                        onChange={(e) => {
+                          const min = heureFin.split(':')[1] || '00';
+                          setHeureFin(e.target.value + ':' + min);
+                        }}
+                        className="flex-1 px-2 py-2 border border-gray-300 rounded-lg"
+                      >
+                        <option value="">HH</option>
+                        {HEURES.map(h => <option key={h} value={h}>{h}</option>)}
+                      </select>
+                      <select
+                        value={heureFin.split(':')[1] || ''}
+                        onChange={(e) => {
+                          const h = heureFin.split(':')[0] || '08';
+                          setHeureFin(h + ':' + e.target.value);
+                        }}
+                        className="flex-1 px-2 py-2 border border-gray-300 rounded-lg"
+                      >
+                        <option value="">MM</option>
+                        {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={resetProjectForm}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleAddEvent}
+                disabled={loading}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
+              >
+                {loading ? 'Création...' : 'Créer le projet'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {activeTab === 'validation' && (
           <>
@@ -369,17 +628,10 @@ function DashboardDirection({ user, onLogout, supabaseRequest }) {
 
         {activeTab === 'calendrier' && (
           <>
-            <div className="mb-6 flex justify-between items-center">
+            <div className="mb-6">
               <h2 className="text-xl font-semibold text-gray-800">
                 Calendrier des activités
               </h2>
-              <button
-                onClick={() => setShowAddEvent(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                <Plus className="w-4 h-4" />
-                Ajouter un événement
-              </button>
             </div>
 
             <div className="mb-4 flex items-center gap-4">
