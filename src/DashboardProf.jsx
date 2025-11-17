@@ -31,6 +31,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
   const [studentGroups, setStudentGroups] = useState([]);
   const [existingActivities, setExistingActivities] = useState([]);
   const [myProjects, setMyProjects] = useState([]);
+  const [schoolYearStart, setSchoolYearStart] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -40,18 +41,23 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
   async function loadData() {
     try {
       setLoading(true);
-      const [groupsData, coursesData, scheduleData, studentsData, activitiesData] = await Promise.all([
+      const [groupsData, coursesData, scheduleData, studentsData, activitiesData, calendarData] = await Promise.all([
         supabaseRequest('groups?select=*'),
         supabaseRequest('courses?select=*'),
         supabaseRequest('schedule?select=*'),
         supabaseRequest('student_groups?select=group_id'),
         supabaseRequest('project_instances?select=*'),
+        supabaseRequest('school_calendar?type=eq.cours_normal&order=date.asc&limit=1'),
       ]);
       
       setGroups(groupsData);
       setCourses(coursesData);
       setSchedule(scheduleData);
       setExistingActivities(activitiesData);
+      
+      if (calendarData && calendarData.length > 0) {
+        setSchoolYearStart(new Date(calendarData[0].date));
+      }
       
       const groupCounts = {};
       studentsData.forEach(sg => {
@@ -78,13 +84,14 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
   }
 
   const impactAnalysis = useMemo(() => {
-    if (!date || !heureDebut || !heureFin || selectedGroups.length === 0) {
+    if (!date || !heureDebut || !heureFin || selectedGroups.length === 0 || !schoolYearStart) {
       return null;
     }
 
     const jourSemaine = new Date(date).getDay();
     if (jourSemaine === 0 || jourSemaine === 6) return null;
 
+    const eventDate = new Date(date);
     const impacts = [];
     let impactsOtherProfs = false;
     
@@ -100,6 +107,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
             impactsOtherProfs = true;
           }
           
+          // Compter les pertes existantes
           const existingLosses = existingActivities.filter(act => {
             if (!act.groups_concernes || !Array.isArray(act.groups_concernes)) return false;
             const actJour = new Date(act.date).getDay();
@@ -109,12 +117,23 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
                    act.heure_fin > scheduleItem.heure_debut;
           }).length;
 
+          // Calculer le nombre de semaines jusqu'à la date de l'événement
+          const weeksUntilEvent = Math.floor((eventDate - schoolYearStart) / (7 * 24 * 60 * 60 * 1000));
+          const coursesUntilEvent = Math.max(1, weeksUntilEvent); // Au moins 1 pour éviter division par 0
+          
+          // Calculer le nombre total de cours dans l'année (environ 30 semaines)
           const totalCoursAnnee = 30;
-          const pourcentagePerdu = ((existingLosses + 1) / totalCoursAnnee) * 100;
 
+          // Impact immédiat (jusqu'à la date)
+          const impactImmediat = ((existingLosses + 1) / coursesUntilEvent) * 100;
+          
+          // Impact annuel (sur toute l'année)
+          const impactAnnuel = ((existingLosses + 1) / totalCoursAnnee) * 100;
+
+          // Définir la sévérité basée sur l'impact immédiat
           let severity = 'green';
-          if (pourcentagePerdu >= 30) severity = 'red';
-          else if (pourcentagePerdu >= 15) severity = 'orange';
+          if (impactImmediat >= 30) severity = 'red';
+          else if (impactImmediat >= 15) severity = 'orange';
 
           impacts.push({
             groupId,
@@ -124,7 +143,10 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
             profId: course?.prof_id,
             heureDebut: scheduleItem.heure_debut,
             heureFin: scheduleItem.heure_fin,
-            pourcentagePerdu: pourcentagePerdu.toFixed(1),
+            impactImmediat: impactImmediat.toFixed(1),
+            impactAnnuel: impactAnnuel.toFixed(1),
+            coursesUntilEvent,
+            existingLosses,
             severity,
           });
         }
@@ -136,7 +158,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
     else if (impacts.some(i => i.severity === 'orange')) globalSeverity = 'orange';
 
     return { impacts, globalSeverity, needsValidation: impactsOtherProfs };
-  }, [date, heureDebut, heureFin, selectedGroups, groups, courses, schedule, studentGroups, existingActivities, user]);
+  }, [date, heureDebut, heureFin, selectedGroups, groups, courses, schedule, studentGroups, existingActivities, user, schoolYearStart]);
 
   const toggleGroup = (groupId) => {
     setSelectedGroups(prev => 
@@ -366,7 +388,9 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="projet">Projet pédagogique</option>
-                    <option value="sortie_pedagogique">Sortie pedagogique</option>
+                    <option value="sortie">Sortie</option>
+                    <option value="animation">Animation</option>
+                    <option value="conseil_classe">Conseil de classe</option>
                     <option value="autre">Autre</option>
                   </select>
                 </div>
@@ -612,7 +636,8 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
                           <th className="px-4 py-2 text-left font-medium text-gray-700">Groupe</th>
                           <th className="px-4 py-2 text-left font-medium text-gray-700">Cours impacté</th>
                           <th className="px-4 py-2 text-left font-medium text-gray-700">Horaire</th>
-                          <th className="px-4 py-2 text-left font-medium text-gray-700">% cours perdus</th>
+                          <th className="px-4 py-2 text-left font-medium text-gray-700">Impact immédiat</th>
+                          <th className="px-4 py-2 text-left font-medium text-gray-700">Impact annuel</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -622,13 +647,28 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
                             <td className="px-4 py-2">{impact.courseName}</td>
                             <td className="px-4 py-2">{impact.heureDebut} - {impact.heureFin}</td>
                             <td className="px-4 py-2">
-                              <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                                impact.severity === 'green' ? 'bg-green-100 text-green-800' :
-                                impact.severity === 'orange' ? 'bg-orange-100 text-orange-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
-                                {impact.pourcentagePerdu}%
-                              </span>
+                              <div className="flex flex-col gap-1">
+                                <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                  impact.severity === 'green' ? 'bg-green-100 text-green-800' :
+                                  impact.severity === 'orange' ? 'bg-orange-100 text-orange-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {impact.impactImmediat}%
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {impact.existingLosses + 1}/{impact.coursesUntilEvent} cours
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-2">
+                              <div className="flex flex-col gap-1">
+                                <span className="text-sm text-gray-700">
+                                  {impact.impactAnnuel}%
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {impact.existingLosses + 1}/30 cours
+                                </span>
+                              </div>
                             </td>
                           </tr>
                         ))}
