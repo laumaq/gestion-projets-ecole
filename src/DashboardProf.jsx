@@ -32,6 +32,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
   const [existingActivities, setExistingActivities] = useState([]);
   const [myProjects, setMyProjects] = useState([]);
   const [schoolYearStart, setSchoolYearStart] = useState(null);
+  const [schoolCalendar, setSchoolCalendar] = useState([]);
 
   useEffect(() => {
     loadData();
@@ -41,22 +42,30 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
   async function loadData() {
     try {
       setLoading(true);
-      const [groupsData, coursesData, scheduleData, studentsData, activitiesData, calendarData] = await Promise.all([
+      const [groupsData, coursesData, scheduleData, studentsData, activitiesData, calendarStartData, calendarAllData] = await Promise.all([
         supabaseRequest('groups?select=*'),
         supabaseRequest('courses?select=*'),
         supabaseRequest('schedule?select=*'),
         supabaseRequest('student_groups?select=group_id'),
-        supabaseRequest('project_instances?select=*'),
+        supabaseRequest('project_instances?select=*,projects!inner(type_activite)'),
         supabaseRequest('school_calendar?type=eq.cours_normal&order=date.asc&limit=1'),
+        supabaseRequest('school_calendar?type=eq.cours_normal&order=date.asc'),
       ]);
       
       setGroups(groupsData);
       setCourses(coursesData);
       setSchedule(scheduleData);
-      setExistingActivities(activitiesData);
       
-      if (calendarData && calendarData.length > 0) {
-        setSchoolYearStart(new Date(calendarData[0].date));
+      // Filtrer pour ne garder que les activités qui ne sont PAS des projets pédagogiques
+      const filteredActivities = activitiesData.filter(act => 
+        act.projects && act.projects.type_activite !== 'projet_pedagogique'
+      );
+      setExistingActivities(filteredActivities);
+      
+      setSchoolCalendar(calendarAllData);
+      
+      if (calendarStartData && calendarStartData.length > 0) {
+        setSchoolYearStart(new Date(calendarStartData[0].date));
       }
       
       const groupCounts = {};
@@ -84,7 +93,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
   }
 
   const impactAnalysis = useMemo(() => {
-    if (!date || !heureDebut || !heureFin || selectedGroups.length === 0 || !schoolYearStart) {
+    if (!date || !heureDebut || !heureFin || selectedGroups.length === 0 || !schoolYearStart || schoolCalendar.length === 0) {
       return null;
     }
 
@@ -93,7 +102,29 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
 
     const eventDate = new Date(date);
     const impacts = [];
+    
+    // Pour les projets pédagogiques, pas d'impact ni de validation nécessaire
+    const isProjetPedagogique = typeActivite === 'projet_pedagogique';
+    
+    if (isProjetPedagogique) {
+      return { impacts: [], globalSeverity: 'green', needsValidation: false, isProjetPedagogique: true };
+    }
+    
     let impactsOtherProfs = false;
+    
+    // Compter le nombre d'occurrences de ce jour dans le calendrier
+    const countOccurrences = (untilDate) => {
+      return schoolCalendar.filter(cal => {
+        const calDate = new Date(cal.date);
+        return calDate.getDay() === jourSemaine && calDate <= untilDate;
+      }).length;
+    };
+    
+    const occurrencesUntilEvent = countOccurrences(eventDate);
+    const occurrencesTotal = schoolCalendar.filter(cal => {
+      const calDate = new Date(cal.date);
+      return calDate.getDay() === jourSemaine;
+    }).length;
     
     selectedGroups.forEach(groupId => {
       const group = groups.find(g => g.id === groupId);
@@ -107,7 +138,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
             impactsOtherProfs = true;
           }
           
-          // Compter les pertes existantes
+          // Compter les pertes existantes (en excluant les projets pédagogiques)
           const existingLosses = existingActivities.filter(act => {
             if (!act.groups_concernes || !Array.isArray(act.groups_concernes)) return false;
             const actJour = new Date(act.date).getDay();
@@ -117,18 +148,15 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
                    act.heure_fin > scheduleItem.heure_debut;
           }).length;
 
-          // Calculer le nombre de semaines jusqu'à la date de l'événement
-          const weeksUntilEvent = Math.floor((eventDate - schoolYearStart) / (7 * 24 * 60 * 60 * 1000));
-          const coursesUntilEvent = Math.max(1, weeksUntilEvent); // Au moins 1 pour éviter division par 0
-          
-          // Calculer le nombre total de cours dans l'année (environ 30 semaines)
-          const totalCoursAnnee = 30;
-
           // Impact immédiat (jusqu'à la date)
-          const impactImmediat = ((existingLosses + 1) / coursesUntilEvent) * 100;
+          const impactImmediat = occurrencesUntilEvent > 0 
+            ? ((existingLosses + 1) / occurrencesUntilEvent) * 100 
+            : 0;
           
           // Impact annuel (sur toute l'année)
-          const impactAnnuel = ((existingLosses + 1) / totalCoursAnnee) * 100;
+          const impactAnnuel = occurrencesTotal > 0
+            ? ((existingLosses + 1) / occurrencesTotal) * 100
+            : 0;
 
           // Définir la sévérité basée sur l'impact immédiat
           let severity = 'green';
@@ -145,7 +173,8 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
             heureFin: scheduleItem.heure_fin,
             impactImmediat: impactImmediat.toFixed(1),
             impactAnnuel: impactAnnuel.toFixed(1),
-            coursesUntilEvent,
+            coursesUntilEvent: occurrencesUntilEvent,
+            coursesTotal: occurrencesTotal,
             existingLosses,
             severity,
           });
@@ -157,8 +186,8 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
     if (impacts.some(i => i.severity === 'red')) globalSeverity = 'red';
     else if (impacts.some(i => i.severity === 'orange')) globalSeverity = 'orange';
 
-    return { impacts, globalSeverity, needsValidation: impactsOtherProfs };
-  }, [date, heureDebut, heureFin, selectedGroups, groups, courses, schedule, studentGroups, existingActivities, user, schoolYearStart]);
+    return { impacts, globalSeverity, needsValidation: impactsOtherProfs, isProjetPedagogique: false };
+  }, [date, heureDebut, heureFin, selectedGroups, groups, courses, schedule, existingActivities, user, schoolYearStart, schoolCalendar, typeActivite]);
 
   const toggleGroup = (groupId) => {
     setSelectedGroups(prev => 
@@ -204,6 +233,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
 
       const motsClesArray = motsCles.split(',').map(m => m.trim()).filter(m => m);
       const needsValidation = impactAnalysis?.needsValidation || false;
+      const isProjetPedagogique = typeActivite === 'projet_pedagogique';
       
       const [project] = await supabaseRequest('projects', {
         method: 'POST',
@@ -214,11 +244,11 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
           mots_cles: motsClesArray,
           type_activite: typeActivite,
           recurrence: 'ponctuel',
-          statut: needsValidation ? 'en_attente' : 'valide',
+          statut: (isProjetPedagogique || !needsValidation) ? 'valide' : 'en_attente',
         }),
       });
 
-      const impactData = impactAnalysis ? {
+      const impactData = impactAnalysis && !isProjetPedagogique ? {
         impacts: impactAnalysis.impacts,
         globalSeverity: impactAnalysis.globalSeverity,
       } : null;
@@ -232,13 +262,16 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
           heure_fin: heureFin,
           groups_concernes: selectedGroups,
           impact_report: impactData,
-          validation_direction_id: needsValidation ? null : user.id,
+          validation_direction_id: (isProjetPedagogique || !needsValidation) ? user.id : null,
         }),
       });
 
-      const message = needsValidation 
-        ? 'Projet soumis avec succès ! Il est en attente de validation par la direction.'
-        : 'Projet enregistré avec succès !';
+      let message = 'Projet enregistré avec succès !';
+      if (isProjetPedagogique) {
+        message = 'Projet pédagogique enregistré avec succès !';
+      } else if (needsValidation) {
+        message = 'Sortie soumise avec succès ! Elle est en attente de validation par la direction.';
+      }
       
       alert(message);
       await loadData();
@@ -666,7 +699,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
                                   {impact.impactAnnuel}%
                                 </span>
                                 <span className="text-xs text-gray-500">
-                                  {impact.existingLosses + 1}/30 cours
+                                  {impact.existingLosses + 1}/{impact.coursesTotal} cours
                                 </span>
                               </div>
                             </td>
