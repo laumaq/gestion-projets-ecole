@@ -138,22 +138,38 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
             impactsOtherProfs = true;
           }
           
-          // Compter les pertes existantes (en excluant les projets pédagogiques)
+          // Compter les pertes existantes UNIQUEMENT pour ce groupe ET ce cours spécifique
           const existingLosses = existingActivities.filter(act => {
             if (!act.groups_concernes || !Array.isArray(act.groups_concernes)) return false;
-            const actJour = new Date(act.date).getDay();
+            const actDate = new Date(act.date);
+            const actJour = actDate.getDay();
+            
+            // Vérifier que l'activité concerne ce groupe ET ce jour de la semaine ET chevauche cet horaire
             return act.groups_concernes.includes(groupId) &&
                    actJour === jourSemaine &&
                    act.heure_debut < scheduleItem.heure_fin &&
                    act.heure_fin > scheduleItem.heure_debut;
           }).length;
+          
+          // Compter combien de ces pertes ont eu lieu AVANT la date de l'événement
+          const existingLossesUntilEvent = existingActivities.filter(act => {
+            if (!act.groups_concernes || !Array.isArray(act.groups_concernes)) return false;
+            const actDate = new Date(act.date);
+            const actJour = actDate.getDay();
+            
+            return act.groups_concernes.includes(groupId) &&
+                   actJour === jourSemaine &&
+                   act.heure_debut < scheduleItem.heure_fin &&
+                   act.heure_fin > scheduleItem.heure_debut &&
+                   actDate < eventDate;
+          }).length;
 
-          // Impact immédiat (jusqu'à la date)
+          // Impact immédiat (jusqu'à la date) - on ajoute +1 pour l'événement qu'on veut créer
           const impactImmediat = occurrencesUntilEvent > 0 
-            ? ((existingLosses + 1) / occurrencesUntilEvent) * 100 
+            ? ((existingLossesUntilEvent + 1) / occurrencesUntilEvent) * 100 
             : 0;
           
-          // Impact annuel (sur toute l'année)
+          // Impact annuel (sur toute l'année) - on ajoute +1 pour l'événement qu'on veut créer
           const impactAnnuel = occurrencesTotal > 0
             ? ((existingLosses + 1) / occurrencesTotal) * 100
             : 0;
@@ -175,6 +191,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
             impactAnnuel: impactAnnuel.toFixed(1),
             coursesUntilEvent: occurrencesUntilEvent,
             coursesTotal: occurrencesTotal,
+            existingLossesUntilEvent,
             existingLosses,
             severity,
           });
