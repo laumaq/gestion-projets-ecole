@@ -706,7 +706,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
                                   {impact.impactImmediat}%
                                 </span>
                                 <span className="text-xs text-gray-500">
-                                  {impact.existingLosses + 1}/{impact.coursesUntilEvent} cours
+                                  {impact.existingLossesUntilEvent + 1}/{impact.coursesUntilEvent} cours
                                 </span>
                               </div>
                             </td>
