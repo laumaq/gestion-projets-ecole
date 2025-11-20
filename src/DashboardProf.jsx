@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Plus, X, Search, CheckCircle, AlertTriangle, AlertCircle, Clock, Eye } from 'lucide-react';
-import { calculateImpact } from '../utils/impactCalculation';
+import { calculateImpact } from '../utils/impactCalculation.js';
 
 const HEURES = ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17'];
 const MINUTES = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
