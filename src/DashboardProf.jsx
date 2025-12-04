@@ -68,12 +68,10 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
       if (calendarStartData && calendarStartData.length > 0) {
         setSchoolYearStart(new Date(calendarStartData[0].date));
       }
+
+      const [studentGroups, setStudentGroups] = useState([]);
       
-      const groupCounts = {};
-      studentsData.forEach(sg => {
-        groupCounts[sg.group_id] = (groupCounts[sg.group_id] || 0) + 1;
-      });
-      setStudentGroups(Object.entries(groupCounts).map(([group_id, count]) => ({ group_id, student_count: count })));
+      setStudentGroups(studentsData);  // Au lieu de groupCounts
       
       setLoading(false);
     } catch (err) {
