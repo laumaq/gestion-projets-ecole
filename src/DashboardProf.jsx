@@ -29,7 +29,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
   const [groups, setGroups] = useState([]);
   const [courses, setCourses] = useState([]);
   const [schedule, setSchedule] = useState([]);
-  const [studentGroups, setStudentGroups] = useState([]);
+  const [studentGroups, setStudentGroups] = useState([]); // MODIFIÉ : maintenant c'est la liste complète des liens
   const [existingActivities, setExistingActivities] = useState([]);
   const [myProjects, setMyProjects] = useState([]);
   const [schoolYearStart, setSchoolYearStart] = useState(null);
@@ -43,11 +43,11 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
   async function loadData() {
     try {
       setLoading(true);
-      const [groupsData, coursesData, scheduleData, studentsData, activitiesData, calendarStartData, calendarAllData] = await Promise.all([
+      const [groupsData, coursesData, scheduleData, studentGroupsData, activitiesData, calendarStartData, calendarAllData] = await Promise.all([
         supabaseRequest('groups?select=*'),
         supabaseRequest('courses?select=*'),
         supabaseRequest('schedule?select=*'),
-        supabaseRequest('student_groups?select=group_id'),
+        supabaseRequest('student_groups?select=student_id,group_id'), // MODIFIÉ : on récupère tous les liens
         supabaseRequest('project_instances?select=*,projects!inner(type_activite)'),
         supabaseRequest('school_calendar?type=eq.cours_normal&order=date.asc&limit=1'),
         supabaseRequest('school_calendar?type=eq.cours_normal&order=date.asc'),
@@ -56,6 +56,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
       setGroups(groupsData);
       setCourses(coursesData);
       setSchedule(scheduleData);
+      setStudentGroups(studentGroupsData); // MODIFIÉ : on stocke directement les liens bruts
       
       // Filtrer pour ne garder que les activités qui ne sont PAS des projets pédagogiques
       const filteredActivities = activitiesData.filter(act => 
@@ -68,10 +69,6 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
       if (calendarStartData && calendarStartData.length > 0) {
         setSchoolYearStart(new Date(calendarStartData[0].date));
       }
-
-      const [studentGroups, setStudentGroups] = useState([]);
-      
-      setStudentGroups(studentsData);  // Au lieu de groupCounts
       
       setLoading(false);
     } catch (err) {
@@ -99,111 +96,23 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
     const jourSemaine = new Date(date).getDay();
     if (jourSemaine === 0 || jourSemaine === 6) return null;
 
-    const eventDate = new Date(date);
-    const impacts = [];
-    
-    // Pour les projets pédagogiques, pas d'impact ni de validation nécessaire
-    const isProjetPedagogique = typeActivite === 'projet_pedagogique';
-    
-    if (isProjetPedagogique) {
-      return { impacts: [], globalSeverity: 'green', needsValidation: false, isProjetPedagogique: true };
-    }
-    
-    let impactsOtherProfs = false;
-    
-    // Compter le nombre d'occurrences de ce jour dans le calendrier
-    const countOccurrences = (untilDate) => {
-      return schoolCalendar.filter(cal => {
-        const calDate = new Date(cal.date);
-        return calDate.getDay() === jourSemaine && calDate <= untilDate;
-      }).length;
-    };
-    
-    const occurrencesUntilEvent = countOccurrences(eventDate);
-    const occurrencesTotal = schoolCalendar.filter(cal => {
-      const calDate = new Date(cal.date);
-      return calDate.getDay() === jourSemaine;
-    }).length;
-    
-    selectedGroups.forEach(groupId => {
-      const group = groups.find(g => g.id === groupId);
-      const groupSchedule = schedule.filter(s => s.group_id === groupId && s.jour_semaine === jourSemaine);
-
-      groupSchedule.forEach(scheduleItem => {
-        if (heureDebut < scheduleItem.heure_fin && heureFin > scheduleItem.heure_debut) {
-          const course = courses.find(c => c.id === scheduleItem.course_id);
-          
-          if (course && course.prof_id && course.prof_id !== user.id) {
-            impactsOtherProfs = true;
-          }
-          
-          // Compter les pertes existantes UNIQUEMENT pour ce groupe ET ce cours spécifique
-          const existingLosses = existingActivities.filter(act => {
-            if (!act.groups_concernes || !Array.isArray(act.groups_concernes)) return false;
-            const actDate = new Date(act.date);
-            const actJour = actDate.getDay();
-            
-            // Vérifier que l'activité concerne ce groupe ET ce jour de la semaine ET chevauche cet horaire
-            return act.groups_concernes.includes(groupId) &&
-                   actJour === jourSemaine &&
-                   act.heure_debut < scheduleItem.heure_fin &&
-                   act.heure_fin > scheduleItem.heure_debut;
-          }).length;
-          
-          // Compter combien de ces pertes ont eu lieu AVANT la date de l'événement
-          const existingLossesUntilEvent = existingActivities.filter(act => {
-            if (!act.groups_concernes || !Array.isArray(act.groups_concernes)) return false;
-            const actDate = new Date(act.date);
-            const actJour = actDate.getDay();
-            
-            return act.groups_concernes.includes(groupId) &&
-                   actJour === jourSemaine &&
-                   act.heure_debut < scheduleItem.heure_fin &&
-                   act.heure_fin > scheduleItem.heure_debut &&
-                   actDate < eventDate;
-          }).length;
-
-          // Impact immédiat (jusqu'à la date) - on ajoute +1 pour l'événement qu'on veut créer
-          const impactImmediat = occurrencesUntilEvent > 0 
-            ? ((existingLossesUntilEvent + 1) / occurrencesUntilEvent) * 100 
-            : 0;
-          
-          // Impact annuel (sur toute l'année) - on ajoute +1 pour l'événement qu'on veut créer
-          const impactAnnuel = occurrencesTotal > 0
-            ? ((existingLosses + 1) / occurrencesTotal) * 100
-            : 0;
-
-          // Définir la sévérité basée sur l'impact immédiat
-          let severity = 'green';
-          if (impactImmediat >= 30) severity = 'red';
-          else if (impactImmediat >= 15) severity = 'orange';
-
-          impacts.push({
-            groupId,
-            groupName: group ? group.nom_groupe : groupId,
-            courseId: scheduleItem.course_id,
-            courseName: course ? course.nom_cours : 'Cours inconnu',
-            profId: course?.prof_id,
-            heureDebut: scheduleItem.heure_debut,
-            heureFin: scheduleItem.heure_fin,
-            impactImmediat: impactImmediat.toFixed(1),
-            impactAnnuel: impactAnnuel.toFixed(1),
-            coursesUntilEvent: occurrencesUntilEvent,
-            coursesTotal: occurrencesTotal,
-            existingLossesUntilEvent,
-            existingLosses,
-            severity,
-          });
-        }
-      });
+    // MODIFIÉ : on passe maintenant studentGroups au calcul d'impact
+    return calculateImpact({
+      date,
+      heureDebut,
+      heureFin,
+      selectedGroups,
+      typeActivite,
+      currentUserId: user.id,
+      groups,
+      courses,
+      schedule,
+      studentGroups, // NOUVEAU : passé au calcul
+      existingActivities,
+      schoolCalendar,
+      schoolYearStart
     });
-
-    let globalSeverity = 'green';
-    if (impacts.some(i => i.severity === 'red')) globalSeverity = 'red';
-    else if (impacts.some(i => i.severity === 'orange')) globalSeverity = 'orange';
-
-    return { impacts, globalSeverity, needsValidation: impactsOtherProfs, isProjetPedagogique: false };
-  }, [date, heureDebut, heureFin, selectedGroups, groups, courses, schedule, existingActivities, user, schoolYearStart, schoolCalendar, typeActivite]);
+  }, [date, heureDebut, heureFin, selectedGroups, groups, courses, schedule, studentGroups, existingActivities, user, schoolYearStart, schoolCalendar, typeActivite]);
 
   const toggleGroup = (groupId) => {
     setSelectedGroups(prev => 
@@ -683,6 +592,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
                           <th className="px-4 py-2 text-left font-medium text-gray-700">Groupe</th>
                           <th className="px-4 py-2 text-left font-medium text-gray-700">Cours impacté</th>
                           <th className="px-4 py-2 text-left font-medium text-gray-700">Horaire</th>
+                          <th className="px-4 py-2 text-left font-medium text-gray-700">Élèves absents</th>
                           <th className="px-4 py-2 text-left font-medium text-gray-700">Impact immédiat</th>
                           <th className="px-4 py-2 text-left font-medium text-gray-700">Impact annuel</th>
                         </tr>
@@ -693,6 +603,12 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
                             <td className="px-4 py-2">{impact.groupName}</td>
                             <td className="px-4 py-2">{impact.courseName}</td>
                             <td className="px-4 py-2">{impact.heureDebut} - {impact.heureFin}</td>
+                            <td className="px-4 py-2">
+                              <span className="text-sm text-gray-700">
+                                {impact.studentsGoingOut}/{impact.studentsInCourse}
+                                <span className="text-xs text-gray-500 ml-1">({impact.impactPercentage}%)</span>
+                              </span>
+                            </td>
                             <td className="px-4 py-2">
                               <div className="flex flex-col gap-1">
                                 <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
@@ -713,7 +629,7 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
                                   {impact.impactAnnuel}%
                                 </span>
                                 <span className="text-xs text-gray-500">
-                                  {impact.existingLosses + 1}/{impact.coursesTotal} cours
+                                  {impact.existingLossesTotal + 1}/{impact.coursesTotal} cours
                                 </span>
                               </div>
                             </td>
@@ -726,20 +642,13 @@ function DashboardProf({ user, onLogout, supabaseRequest }) {
 
                 {impactAnalysis.impacts.length === 0 && (
                   <p className="text-sm text-gray-600">
-                    Aucun cours impacté détecté
+                    Aucun cours impacté détecté (seuil: 33% des élèves du cours)
                   </p>
                 )}
               </div>
             )}
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-              >
-                Annuler
-              </button>
               <button
                 type="button"
                 onClick={handleSubmit}
