@@ -26,7 +26,7 @@ export default function LoginPage() {
         initiale: initialeNormalized
       });
 
-      // Recherche dans la table employees (table unique)
+      // Recherche dans la table employees
       const { data: userData, error: userError } = await supabase
         .from('employees')
         .select('*')
@@ -50,37 +50,94 @@ export default function LoginPage() {
         return;
       }
 
-      // Dans handleLogin, remplacez la partie comparaison de mot de passe :
-
       const storedPassword = userData.mot_de_passe;
+      
+      // DEBUG: Afficher les infos sans opérateur spread
       console.log("🔐 Mot de passe stocké:", `"${storedPassword}"`);
       console.log("🔐 Mot de passe fourni:", `"${password}"`);
-      console.log("🔐 Longueur stocké:", storedPassword?.length);
+      console.log("🔐 Longueur stocké:", storedPassword?.length || 0);
       console.log("🔐 Longueur fourni:", password.length);
-      console.log("🔐 Caractères stocké:", storedPassword ? [...storedPassword].map(c => c.charCodeAt(0)) : []);
-      console.log("🔐 Caractères fourni:", [...password].map(c => c.charCodeAt(0)));
+      
+      // Alternative sans spread operator
+      if (storedPassword) {
+        const charsStocke = [];
+        for (let i = 0; i < storedPassword.length; i++) {
+          charsStocke.push(storedPassword.charCodeAt(i));
+        }
+        console.log("🔐 Caractères stocké:", charsStocke);
+      } else {
+        console.log("🔐 Caractères stocké: []");
+      }
+      
+      const charsFourni = [];
+      for (let i = 0; i < password.length; i++) {
+        charsFourni.push(password.charCodeAt(i));
+      }
+      console.log("🔐 Caractères fourni:", charsFourni);
+      
       console.log("🔐 Égalité stricte:", storedPassword === password);
       console.log("🔐 Égalité après trim:", storedPassword?.trim() === password?.trim());
       console.log("🔐 Type stocké:", typeof storedPassword);
       console.log("🔐 Type fourni:", typeof password);
-      
+
       // CAS 1: PREMIÈRE CONNEXION (NULL ou chaîne vide)
       if (!storedPassword || storedPassword === '') {
-        // ...
+        console.log("Première connexion - enregistrement du mot de passe");
+        
+        const { error: updateError } = await supabase
+          .from('employees')
+          .update({ mot_de_passe: password })
+          .eq('id', userData.id);
+
+        if (updateError) {
+          console.error("Erreur d'enregistrement:", updateError);
+          setError('Erreur technique lors de la création du mot de passe');
+          setLoading(false);
+          return;
+        }
+
+        // Connecter l'utilisateur
+        localStorage.setItem('userType', userData.role || 'employee');
+        localStorage.setItem('userId', userData.id);
+        localStorage.setItem('userName', `${userData.nom} ${userData.initiale}.`);
+        localStorage.setItem('userRole', userData.role || 'employee');
+        
+        console.log("Connexion réussie (première fois)");
+        router.push('/dashboard');
+        return;
       }
-      
+
       // CAS 2: MOT DE PASSE EXISTANT
       if (storedPassword === password) {
-        // ...
+        console.log("Connexion réussie (mot de passe correct)");
+        localStorage.setItem('userType', userData.role || 'employee');
+        localStorage.setItem('userId', userData.id);
+        localStorage.setItem('userName', `${userData.nom} ${userData.initiale}.`);
+        localStorage.setItem('userRole', userData.role || 'employee');
+        router.push('/dashboard');
+        return;
       } else {
         console.log("❌ Mot de passe incorrect");
-        console.log("   Stocké (hex):", storedPassword ? Buffer.from(storedPassword).toString('hex') : 'null');
-        console.log("   Fourni (hex):", Buffer.from(password).toString('hex'));
+        
+        // Afficher en hexadécimal sans Buffer
+        if (storedPassword) {
+          let hexStocke = '';
+          for (let i = 0; i < storedPassword.length; i++) {
+            hexStocke += storedPassword.charCodeAt(i).toString(16).padStart(2, '0');
+          }
+          console.log("   Stocké (hex):", hexStocke);
+        }
+        
+        let hexFourni = '';
+        for (let i = 0; i < password.length; i++) {
+          hexFourni += password.charCodeAt(i).toString(16).padStart(2, '0');
+        }
+        console.log("   Fourni (hex):", hexFourni);
+        
         setError('Mot de passe incorrect');
         setLoading(false);
         return;
       }
-
 
     } catch (err) {
       console.error('Erreur inattendue:', err);
