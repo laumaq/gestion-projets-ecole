@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import GestionChambres from '@/components/GestionChambres.tsx';
+import GestionChambres from '@/components/GestionChambres';
 
 interface Tool {
   id: number;
