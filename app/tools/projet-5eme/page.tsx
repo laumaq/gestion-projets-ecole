@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import GestionChambres from '@/components/GestionChambres';
+import GestionChambres from '@/components/GestionChambres.tsx';
 
 export default function Projet5emePage() {
   return (
