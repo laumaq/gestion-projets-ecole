@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import GestionChambres from '@/components/GestionChambres';
+import { useState } from 'react';
 
 interface Tool {
   id: number;
