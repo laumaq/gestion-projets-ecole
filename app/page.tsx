@@ -50,51 +50,37 @@ export default function LoginPage() {
         return;
       }
 
-      const storedPassword = userData.mot_de_passe;
-      console.log("Mot de passe stocké:", storedPassword);
+      // Dans handleLogin, remplacez la partie comparaison de mot de passe :
 
+      const storedPassword = userData.mot_de_passe;
+      console.log("🔐 Mot de passe stocké:", `"${storedPassword}"`);
+      console.log("🔐 Mot de passe fourni:", `"${password}"`);
+      console.log("🔐 Longueur stocké:", storedPassword?.length);
+      console.log("🔐 Longueur fourni:", password.length);
+      console.log("🔐 Caractères stocké:", storedPassword ? [...storedPassword].map(c => c.charCodeAt(0)) : []);
+      console.log("🔐 Caractères fourni:", [...password].map(c => c.charCodeAt(0)));
+      console.log("🔐 Égalité stricte:", storedPassword === password);
+      console.log("🔐 Égalité après trim:", storedPassword?.trim() === password?.trim());
+      console.log("🔐 Type stocké:", typeof storedPassword);
+      console.log("🔐 Type fourni:", typeof password);
+      
       // CAS 1: PREMIÈRE CONNEXION (NULL ou chaîne vide)
       if (!storedPassword || storedPassword === '') {
-        console.log("Première connexion - enregistrement du mot de passe");
-        
-        const { error: updateError } = await supabase
-          .from('employees')
-          .update({ mot_de_passe: password })
-          .eq('id', userData.id);
-
-        if (updateError) {
-          console.error("Erreur d'enregistrement:", updateError);
-          setError('Erreur technique lors de la création du mot de passe');
-          setLoading(false);
-          return;
-        }
-
-        // Connecter l'utilisateur
-        localStorage.setItem('userType', userData.role || 'employee');
-        localStorage.setItem('userId', userData.id);
-        localStorage.setItem('userName', `${userData.nom} ${userData.initiale}.`);
-        localStorage.setItem('userRole', userData.role || 'employee');
-        
-        console.log("Connexion réussie (première fois)");
-        router.push('/dashboard');
-        return;
+        // ...
       }
-
+      
       // CAS 2: MOT DE PASSE EXISTANT
       if (storedPassword === password) {
-        console.log("Connexion réussie (mot de passe correct)");
-        localStorage.setItem('userType', userData.role || 'employee');
-        localStorage.setItem('userId', userData.id);
-        localStorage.setItem('userName', `${userData.nom} ${userData.initiale}.`);
-        localStorage.setItem('userRole', userData.role || 'employee');
-        router.push('/dashboard');
-        return;
+        // ...
       } else {
-        console.log("Mot de passe incorrect");
+        console.log("❌ Mot de passe incorrect");
+        console.log("   Stocké (hex):", storedPassword ? Buffer.from(storedPassword).toString('hex') : 'null');
+        console.log("   Fourni (hex):", Buffer.from(password).toString('hex'));
         setError('Mot de passe incorrect');
         setLoading(false);
         return;
       }
+
 
     } catch (err) {
       console.error('Erreur inattendue:', err);
