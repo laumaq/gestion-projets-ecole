@@ -5,8 +5,8 @@ import { supabase } from '@/lib/supabase';
 
 interface Props {
   voyageId: string;
-  isResponsable: boolean;
-  userType: 'employee' | 'student' | null;
+  isResponsable: boolean;  // Ajouté
+  userType: 'employee' | 'student' | null;  // Ajouté
 }
 
 interface Eleve {
@@ -46,7 +46,7 @@ interface ProfesseurParticipant {
 
 type ParticipantUnion = Participant | ProfesseurParticipant;
 
-export default function ParticipantsList({ voyageId }: Props) {
+export default function ParticipantsList({ voyageId, isResponsable, userType }: Props) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [professeursParticipants, setProfesseursParticipants] = useState<ProfesseurParticipant[]>([]);
   const [elevesDisponibles, setElevesDisponibles] = useState<Eleve[]>([]);
@@ -64,15 +64,12 @@ export default function ParticipantsList({ voyageId }: Props) {
   const [selectedProfRole, setSelectedProfRole] = useState('accompagnateur');
   
   // États pour gérer les permissions
-  const [userType, setUserType] = useState<'employee' | 'student'>('employee');
   const [userId, setUserId] = useState<string | null>(null);
-  const canEdit = userType === 'employee';
-
+  const canEdit = userType === 'employee' && isResponsable;
+  
   // Récupérer le type d'utilisateur au chargement
   useEffect(() => {
-    const type = localStorage.getItem('userType') as 'employee' | 'student';
     const id = localStorage.getItem('userId');
-    setUserType(type || 'employee');
     setUserId(id);
   }, []);
 
