@@ -3,9 +3,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
+// AJOUTER isResponsable et userType aux Props
 interface Props {
   configId: string;
   voyageId: string;
+  isResponsable: boolean;
+  userType: 'employee' | 'student' | null;
 }
 
 interface Chambre {
@@ -53,19 +56,21 @@ interface Affectation {
   participant: Participant;
 }
 
-export default function PlanChambres({ configId, voyageId }: Props) {
+// AJOUTER les nouvelles props dans les paramètres
+export default function PlanChambres({ configId, voyageId, isResponsable, userType }: Props) {
   const [chambres, setChambres] = useState<Chambre[]>([]);
   const [affectations, setAffectations] = useState<Affectation[]>([]);
   const [elevesDisponibles, setElevesDisponibles] = useState<EleveParticipant[]>([]);
   const [professeursDisponibles, setProfesseursDisponibles] = useState<ProfesseurParticipant[]>([]);
   const [showAddChambre, setShowAddChambre] = useState(false);
-  const [userRole, setUserRole] = useState<string>('');
   const [loading, setLoading] = useState(true);
+
+  // AJOUTER canEdit (supprimer userRole)
+  const canEdit = userType === 'employee' && isResponsable;
 
   useEffect(() => {
     loadChambres();
     loadParticipantsDisponibles();
-    setUserRole(localStorage.getItem('userRole') || '');
   }, [configId]);
 
   const loadChambres = async () => {
@@ -263,6 +268,7 @@ export default function PlanChambres({ configId, voyageId }: Props) {
   };
 
   const deleteChambre = async (chambreId: string) => {
+    if (!canEdit) return; // AJOUTER : vérification
     if (confirm('Supprimer cette chambre ? Toutes les affectations seront perdues.')) {
       const { error } = await supabase
         .from('chambres')
@@ -274,6 +280,8 @@ export default function PlanChambres({ configId, voyageId }: Props) {
   };
 
   const assignerParticipant = async (chambreId: string, participantId: string, type: 'eleve' | 'professeur') => {
+    if (!canEdit) return; // AJOUTER : vérification
+    
     const table = type === 'eleve' ? 'chambre_affectations' : 'chambre_affectations_professeurs';
     
     const { error } = await supabase
@@ -291,6 +299,8 @@ export default function PlanChambres({ configId, voyageId }: Props) {
   };
 
   const retirerParticipant = async (affectationId: string, type: 'eleve' | 'professeur') => {
+    if (!canEdit) return; // AJOUTER : vérification
+    
     const table = type === 'eleve' ? 'chambre_affectations' : 'chambre_affectations_professeurs';
     
     const { error } = await supabase
@@ -375,13 +385,26 @@ export default function PlanChambres({ configId, voyageId }: Props) {
             {affectations.length} personne{affectations.length > 1 ? 's' : ''} affectée{affectations.length > 1 ? 's' : ''}
           </p>
         </div>
-        <button
-          onClick={() => setShowAddChambre(true)}
-          className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700"
-        >
-          + Ajouter
-        </button>
+        
+        {/* MODIFIER : bouton conditionnel avec canEdit */}
+        {canEdit && (
+          <button
+            onClick={() => setShowAddChambre(true)}
+            className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700"
+          >
+            + Ajouter
+          </button>
+        )}
       </div>
+
+      {/* AJOUTER : message pour les non-éditeurs */}
+      {!canEdit && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-2">
+          <p className="text-xs text-blue-700">
+            👋 Mode consultation - Vous pouvez voir les chambres mais pas les modifier.
+          </p>
+        </div>
+      )}
 
       {/* Légende */}
       <div className="flex gap-3 text-xs">
@@ -434,13 +457,17 @@ export default function PlanChambres({ configId, voyageId }: Props) {
                     )}
                   </div>
                 </div>
-                <button
-                  onClick={() => deleteChambre(chambre.id)}
-                  className="text-gray-400 hover:text-red-600 text-xs"
-                  title="Supprimer"
-                >
-                  ✕
-                </button>
+                
+                {/* MODIFIER : bouton supprimer conditionnel */}
+                {canEdit && (
+                  <button
+                    onClick={() => deleteChambre(chambre.id)}
+                    className="text-gray-400 hover:text-red-600 text-xs"
+                    title="Supprimer"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
 
               {/* Barre d'occupation */}
@@ -473,13 +500,17 @@ export default function PlanChambres({ configId, voyageId }: Props) {
                       <span className="text-xs text-gray-500 ml-1 truncate max-w-[60px]">
                         {display.detail}
                       </span>
-                      <button
-                        onClick={() => retirerParticipant(aff.id, aff.participant_type)}
-                        className="text-red-600 hover:text-red-800 text-xs ml-auto"
-                        title="Retirer"
-                      >
-                        ✕
-                      </button>
+                      
+                      {/* MODIFIER : bouton retirer conditionnel */}
+                      {canEdit && (
+                        <button
+                          onClick={() => retirerParticipant(aff.id, aff.participant_type)}
+                          className="text-red-600 hover:text-red-800 text-xs ml-auto"
+                          title="Retirer"
+                        >
+                          ✕
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -490,8 +521,8 @@ export default function PlanChambres({ configId, voyageId }: Props) {
                 )}
               </div>
 
-              {/* Ajout d'élèves ou professeurs */}
-              {userRole !== 'eleve' && !isComplete && (
+              {/* Ajout d'élèves ou professeurs - UNIQUEMENT si canEdit */}
+              {canEdit && !isComplete && (
                 <div className="space-y-1">
                   {/* Sélecteur pour les élèves */}
                   {elevesPossibles.length > 0 && (
@@ -548,8 +579,8 @@ export default function PlanChambres({ configId, voyageId }: Props) {
         })}
       </div>
 
-      {/* Modal ajout chambre */}
-      {showAddChambre && (
+      {/* Modal ajout chambre - UNIQUEMENT si canEdit */}
+      {canEdit && showAddChambre && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold mb-4">Ajouter une chambre</h3>
