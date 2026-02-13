@@ -132,8 +132,11 @@ export default function PlanChambres({ configId, voyageId }: Props) {
         participant_id: item.participant_id,
         participant_type: 'eleve' as const,
         participant: {
-          ...item.participant,
-          type: 'eleve',
+          id: item.participant.id,
+          eleve_id: item.participant.eleve_id,
+          genre: item.participant.genre,
+          classe: item.participant.classe,
+          type: 'eleve' as const,
           eleve: Array.isArray(item.participant.eleve) 
             ? item.participant.eleve[0] 
             : item.participant.eleve
@@ -149,8 +152,10 @@ export default function PlanChambres({ configId, voyageId }: Props) {
         participant_id: item.participant_id,
         participant_type: 'professeur' as const,
         participant: {
-          ...item.participant,
-          type: 'professeur',
+          id: item.participant.id,
+          professeur_id: item.participant.professeur_id,
+          role: item.participant.role,
+          type: 'professeur' as const,
           professeur: Array.isArray(item.participant.professeur) 
             ? item.participant.professeur[0] 
             : item.participant.professeur
@@ -190,8 +195,7 @@ export default function PlanChambres({ configId, voyageId }: Props) {
         )
       `)
       .eq('voyage_id', voyageId)
-      .eq('statut', 'confirme')
-      .not('id', 'in', `(${elevesAffectesIds.join(',') || 'null'})`);
+      .eq('statut', 'confirme');
 
     // Charger les professeurs non affectés
     const { data: professeursData, error: professeursError } = await supabase
@@ -207,11 +211,12 @@ export default function PlanChambres({ configId, voyageId }: Props) {
           initiale
         )
       `)
-      .eq('voyage_id', voyageId)
-      .not('id', 'in', `(${professeursAffectesIds.join(',') || 'null'})`);
+      .eq('voyage_id', voyageId);
   
     if (!elevesError && elevesData) {
-      const elevesFormates = elevesData.map((item: any) => ({
+      // Filtrer les élèves non affectés
+      const elevesNonAffectes = elevesData.filter(e => !elevesAffectesIds.includes(e.id));
+      const elevesFormates = elevesNonAffectes.map((item: any) => ({
         id: item.id,
         eleve_id: item.eleve_id,
         genre: item.genre,
@@ -223,7 +228,9 @@ export default function PlanChambres({ configId, voyageId }: Props) {
     }
 
     if (!professeursError && professeursData) {
-      const professeursFormates = professeursData.map((item: any) => ({
+      // Filtrer les professeurs non affectés
+      const professeursNonAffectes = professeursData.filter(p => !professeursAffectesIds.includes(p.id));
+      const professeursFormates = professeursNonAffectes.map((item: any) => ({
         id: item.id,
         professeur_id: item.professeur_id,
         role: item.role,
@@ -301,7 +308,7 @@ export default function PlanChambres({ configId, voyageId }: Props) {
     return affectations.filter(a => a.chambre_id === chambreId);
   };
 
-  const getParticipantsParGenre = (genre: string) => {
+  const getElevesParGenre = (genre: string) => {
     return elevesDisponibles.filter(p => p.genre === genre);
   };
 
@@ -404,8 +411,8 @@ export default function PlanChambres({ configId, voyageId }: Props) {
           const isComplete = placesLibres === 0;
           
           // Participants disponibles selon le type de chambre
-          const elevesPossibles = chambre.genre === 'M' ? getParticipantsParGenre('M') :
-                                 chambre.genre === 'F' ? getParticipantsParGenre('F') :
+          const elevesPossibles = chambre.genre === 'M' ? getElevesParGenre('M') :
+                                 chambre.genre === 'F' ? getElevesParGenre('F') :
                                  chambre.genre === 'mixte' ? elevesDisponibles : [];
           
           const professeursPossibles = chambre.genre === 'prof' ? professeursDisponibles : [];
@@ -463,9 +470,12 @@ export default function PlanChambres({ configId, voyageId }: Props) {
                       <span className="font-medium truncate max-w-[120px]">
                         {display.icone} {display.prenom} {display.nom.substring(0, 1)}.
                       </span>
+                      <span className="text-xs text-gray-500 ml-1 truncate max-w-[60px]">
+                        {display.detail}
+                      </span>
                       <button
                         onClick={() => retirerParticipant(aff.id, aff.participant_type)}
-                        className="text-red-600 hover:text-red-800 text-xs"
+                        className="text-red-600 hover:text-red-800 text-xs ml-auto"
                         title="Retirer"
                       >
                         ✕
@@ -482,7 +492,7 @@ export default function PlanChambres({ configId, voyageId }: Props) {
 
               {/* Ajout d'élèves ou professeurs */}
               {userRole !== 'eleve' && !isComplete && (
-                <>
+                <div className="space-y-1">
                   {/* Sélecteur pour les élèves */}
                   {elevesPossibles.length > 0 && (
                     <select
@@ -493,7 +503,7 @@ export default function PlanChambres({ configId, voyageId }: Props) {
                         }
                       }}
                       value=""
-                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 mb-1"
+                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
                     >
                       <option value="">+ Ajouter élève...</option>
                       {elevesPossibles.map((p) => (
@@ -527,18 +537,18 @@ export default function PlanChambres({ configId, voyageId }: Props) {
 
                   {/* Message si aucun disponible */}
                   {elevesPossibles.length === 0 && professeursPossibles.length === 0 && (
-                    <div className="text-xs text-gray-500 italic">
+                    <div className="text-xs text-gray-500 italic text-center py-1">
                       Aucun participant disponible
                     </div>
                   )}
-                </>
+                </div>
               )}
             </div>
           );
         })}
       </div>
 
-      {/* Modal ajout chambre (inchangé) */}
+      {/* Modal ajout chambre */}
       {showAddChambre && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
