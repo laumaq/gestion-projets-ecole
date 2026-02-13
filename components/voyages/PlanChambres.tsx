@@ -17,11 +17,12 @@ interface Chambre {
   notes: string | null;
 }
 
-interface Participant {
+interface EleveParticipant {
   id: string;
   eleve_id: number;
   genre: string;
   classe: string;
+  type: 'eleve';
   eleve: {
     nom: string;
     prenom: string;
@@ -29,25 +30,41 @@ interface Participant {
   };
 }
 
+interface ProfesseurParticipant {
+  id: string;
+  professeur_id: string;
+  role: string;
+  type: 'professeur';
+  professeur: {
+    nom: string;
+    prenom: string;
+    email: string | null;
+    initiale: string;
+  };
+}
+
+type Participant = EleveParticipant | ProfesseurParticipant;
+
 interface Affectation {
   id: string;
   chambre_id: string;
   participant_id: string;
+  participant_type: 'eleve' | 'professeur';
   participant: Participant;
 }
 
 export default function PlanChambres({ configId, voyageId }: Props) {
   const [chambres, setChambres] = useState<Chambre[]>([]);
   const [affectations, setAffectations] = useState<Affectation[]>([]);
-  const [participantsDisponibles, setParticipantsDisponibles] = useState<Participant[]>([]);
+  const [elevesDisponibles, setElevesDisponibles] = useState<EleveParticipant[]>([]);
+  const [professeursDisponibles, setProfesseursDisponibles] = useState<ProfesseurParticipant[]>([]);
   const [showAddChambre, setShowAddChambre] = useState(false);
-  const [selectedChambre, setSelectedChambre] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadChambres();
-    loadParticipants();
+    loadParticipantsDisponibles();
     setUserRole(localStorage.getItem('userRole') || '');
   }, [configId]);
 
@@ -68,7 +85,8 @@ export default function PlanChambres({ configId, voyageId }: Props) {
   const loadAffectations = async (chambreIds: string[]) => {
     if (chambreIds.length === 0) return;
   
-    const { data, error } = await supabase
+    // Charger les affectations des élèves
+    const { data: elevesData, error: elevesError } = await supabase
       .from('chambre_affectations')
       .select(`
         *,
@@ -86,29 +104,79 @@ export default function PlanChambres({ configId, voyageId }: Props) {
       `)
       .in('chambre_id', chambreIds);
   
-    if (!error && data) {
-      const affectationsFormatees = data.map((item: any) => ({
-        ...item,
+    // Charger les affectations des professeurs
+    const { data: professeursData, error: professeursError } = await supabase
+      .from('chambre_affectations_professeurs')
+      .select(`
+        *,
+        participant:voyage_professeurs!inner(
+          id,
+          professeur_id,
+          role,
+          professeur:employees!inner(
+            nom,
+            prenom,
+            email,
+            initiale
+          )
+        )
+      `)
+      .in('chambre_id', chambreIds);
+
+    let toutesAffectations: Affectation[] = [];
+
+    if (!elevesError && elevesData) {
+      const elevesFormates = elevesData.map((item: any) => ({
+        id: item.id,
+        chambre_id: item.chambre_id,
+        participant_id: item.participant_id,
+        participant_type: 'eleve' as const,
         participant: {
           ...item.participant,
+          type: 'eleve',
           eleve: Array.isArray(item.participant.eleve) 
             ? item.participant.eleve[0] 
             : item.participant.eleve
         }
       }));
-      
-      setAffectations(affectationsFormatees);
+      toutesAffectations = [...toutesAffectations, ...elevesFormates];
     }
+
+    if (!professeursError && professeursData) {
+      const professeursFormates = professeursData.map((item: any) => ({
+        id: item.id,
+        chambre_id: item.chambre_id,
+        participant_id: item.participant_id,
+        participant_type: 'professeur' as const,
+        participant: {
+          ...item.participant,
+          type: 'professeur',
+          professeur: Array.isArray(item.participant.professeur) 
+            ? item.participant.professeur[0] 
+            : item.participant.professeur
+        }
+      }));
+      toutesAffectations = [...toutesAffectations, ...professeursFormates];
+    }
+    
+    setAffectations(toutesAffectations);
   };
   
-  const loadParticipants = async () => {
-    const { data: affectes } = await supabase
+  const loadParticipantsDisponibles = async () => {
+    // Récupérer les IDs des participants déjà affectés
+    const { data: affectesEleves } = await supabase
       .from('chambre_affectations')
       .select('participant_id');
-  
-    const affectesIds = affectes?.map(a => a.participant_id) || [];
-  
-    const { data, error } = await supabase
+    
+    const { data: affectesProfesseurs } = await supabase
+      .from('chambre_affectations_professeurs')
+      .select('participant_id');
+
+    const elevesAffectesIds = affectesEleves?.map(a => a.participant_id) || [];
+    const professeursAffectesIds = affectesProfesseurs?.map(a => a.participant_id) || [];
+
+    // Charger les élèves non affectés
+    const { data: elevesData, error: elevesError } = await supabase
       .from('voyage_participants')
       .select(`
         id,
@@ -123,18 +191,46 @@ export default function PlanChambres({ configId, voyageId }: Props) {
       `)
       .eq('voyage_id', voyageId)
       .eq('statut', 'confirme')
-      .not('id', 'in', `(${affectesIds.join(',')})`);
+      .not('id', 'in', `(${elevesAffectesIds.join(',') || 'null'})`);
+
+    // Charger les professeurs non affectés
+    const { data: professeursData, error: professeursError } = await supabase
+      .from('voyage_professeurs')
+      .select(`
+        id,
+        professeur_id,
+        role,
+        professeur:employees!inner (
+          nom,
+          prenom,
+          email,
+          initiale
+        )
+      `)
+      .eq('voyage_id', voyageId)
+      .not('id', 'in', `(${professeursAffectesIds.join(',') || 'null'})`);
   
-    if (!error && data) {
-      const participantsFormates = data.map((item: any) => ({
+    if (!elevesError && elevesData) {
+      const elevesFormates = elevesData.map((item: any) => ({
         id: item.id,
         eleve_id: item.eleve_id,
         genre: item.genre,
         classe: item.classe,
+        type: 'eleve' as const,
         eleve: Array.isArray(item.eleve) ? item.eleve[0] : item.eleve
       }));
-      
-      setParticipantsDisponibles(participantsFormates);
+      setElevesDisponibles(elevesFormates);
+    }
+
+    if (!professeursError && professeursData) {
+      const professeursFormates = professeursData.map((item: any) => ({
+        id: item.id,
+        professeur_id: item.professeur_id,
+        role: item.role,
+        type: 'professeur' as const,
+        professeur: Array.isArray(item.professeur) ? item.professeur[0] : item.professeur
+      }));
+      setProfesseursDisponibles(professeursFormates);
     }
   };
 
@@ -170,9 +266,11 @@ export default function PlanChambres({ configId, voyageId }: Props) {
     }
   };
 
-  const assignerEleve = async (chambreId: string, participantId: string) => {
+  const assignerParticipant = async (chambreId: string, participantId: string, type: 'eleve' | 'professeur') => {
+    const table = type === 'eleve' ? 'chambre_affectations' : 'chambre_affectations_professeurs';
+    
     const { error } = await supabase
-      .from('chambre_affectations')
+      .from(table)
       .insert({
         chambre_id: chambreId,
         participant_id: participantId,
@@ -181,19 +279,21 @@ export default function PlanChambres({ configId, voyageId }: Props) {
 
     if (!error) {
       loadChambres();
-      loadParticipants();
+      loadParticipantsDisponibles();
     }
   };
 
-  const retirerEleve = async (affectationId: string) => {
+  const retirerParticipant = async (affectationId: string, type: 'eleve' | 'professeur') => {
+    const table = type === 'eleve' ? 'chambre_affectations' : 'chambre_affectations_professeurs';
+    
     const { error } = await supabase
-      .from('chambre_affectations')
+      .from(table)
       .delete()
       .eq('id', affectationId);
 
     if (!error) {
       loadChambres();
-      loadParticipants();
+      loadParticipantsDisponibles();
     }
   };
 
@@ -202,7 +302,7 @@ export default function PlanChambres({ configId, voyageId }: Props) {
   };
 
   const getParticipantsParGenre = (genre: string) => {
-    return participantsDisponibles.filter(p => p.genre === genre);
+    return elevesDisponibles.filter(p => p.genre === genre);
   };
 
   const getGenreLabel = (genre: string) => {
@@ -217,8 +317,8 @@ export default function PlanChambres({ configId, voyageId }: Props) {
 
   const getGenreColor = (genre: string) => {
     switch (genre) {
-      case 'M': return 'border-indigo-200 bg-indigo-50/50'; // Indigo au lieu de bleu
-      case 'F': return 'border-amber-200 bg-amber-50/50';   // Ambre/ocre au lieu de rose
+      case 'M': return 'border-indigo-200 bg-indigo-50/50';
+      case 'F': return 'border-amber-200 bg-amber-50/50';
       case 'prof': return 'border-purple-200 bg-purple-50/50';
       case 'mixte': return 'border-emerald-200 bg-emerald-50/50';
       default: return 'border-gray-200 bg-gray-50/50';
@@ -235,17 +335,37 @@ export default function PlanChambres({ configId, voyageId }: Props) {
     }
   };
 
+  const getParticipantDisplay = (participant: Participant) => {
+    if (participant.type === 'eleve') {
+      return {
+        nom: participant.eleve.nom,
+        prenom: participant.eleve.prenom,
+        detail: participant.classe,
+        icone: '👤'
+      };
+    } else {
+      return {
+        nom: participant.professeur.nom,
+        prenom: participant.professeur.prenom,
+        detail: participant.role === 'accompagnateur' ? '👥 Accompagnateur' : 
+                participant.role === 'responsable' ? '⭐ Responsable' :
+                participant.role === 'direction' ? '🏢 Direction' : '🏥 Infirmier',
+        icone: '👨‍🏫'
+      };
+    }
+  };
+
   if (loading) return <div className="text-center py-8">Chargement des chambres...</div>;
 
   return (
     <div className="space-y-4">
-      {/* Header des chambres - plus compact */}
+      {/* Header des chambres */}
       <div className="flex justify-between items-center mb-2">
         <div>
           <h3 className="text-base font-semibold text-gray-900">Plan des chambres</h3>
           <p className="text-xs text-gray-600">
             {chambres.length} chambre{chambres.length > 1 ? 's' : ''} • 
-            {affectations.length} élève{affectations.length > 1 ? 's' : ''} affecté{affectations.length > 1 ? 's' : ''}
+            {affectations.length} personne{affectations.length > 1 ? 's' : ''} affectée{affectations.length > 1 ? 's' : ''}
           </p>
         </div>
         <button
@@ -256,7 +376,7 @@ export default function PlanChambres({ configId, voyageId }: Props) {
         </button>
       </div>
 
-      {/* Légende - plus compacte */}
+      {/* Légende */}
       <div className="flex gap-3 text-xs">
         <div className="flex items-center">
           <div className="w-2 h-2 bg-indigo-200 border border-indigo-300 rounded-full mr-1.5"></div>
@@ -282,18 +402,20 @@ export default function PlanChambres({ configId, voyageId }: Props) {
           const affectationsChambre = getAffectationsForChambre(chambre.id);
           const placesLibres = chambre.capacite - affectationsChambre.length;
           const isComplete = placesLibres === 0;
-          const isProf = chambre.genre === 'prof';
-          const participantsPossibles = chambre.genre === 'M' ? getParticipantsParGenre('M') :
-                                      chambre.genre === 'F' ? getParticipantsParGenre('F') :
-                                      chambre.genre === 'prof' ? [] :
-                                      participantsDisponibles;
+          
+          // Participants disponibles selon le type de chambre
+          const elevesPossibles = chambre.genre === 'M' ? getParticipantsParGenre('M') :
+                                 chambre.genre === 'F' ? getParticipantsParGenre('F') :
+                                 chambre.genre === 'mixte' ? elevesDisponibles : [];
+          
+          const professeursPossibles = chambre.genre === 'prof' ? professeursDisponibles : [];
 
           return (
             <div
               key={chambre.id}
               className={`border rounded-lg p-3 ${getGenreColor(chambre.genre)}`}
             >
-              {/* En-tête chambre - plus compact */}
+              {/* En-tête chambre */}
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <div className="flex items-center gap-2">
@@ -314,7 +436,7 @@ export default function PlanChambres({ configId, voyageId }: Props) {
                 </button>
               </div>
 
-              {/* Barre d'occupation - plus compacte, entre le nom et la croix */}
+              {/* Barre d'occupation */}
               <div className="mb-2">
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
@@ -329,25 +451,28 @@ export default function PlanChambres({ configId, voyageId }: Props) {
                 </div>
               </div>
 
-              {/* Liste des occupants - plus compacte */}
+              {/* Liste des occupants */}
               <div className="space-y-1 mb-2 min-h-[60px] max-h-[120px] overflow-y-auto">
-                {affectationsChambre.map((aff) => (
-                  <div
-                    key={aff.id}
-                    className="flex justify-between items-center py-1 px-1.5 bg-white bg-opacity-50 rounded text-xs"
-                  >
-                    <span className="font-medium truncate max-w-[120px]">
-                      {aff.participant.eleve.prenom} {aff.participant.eleve.nom.substring(0, 1)}.
-                    </span>
-                    <button
-                      onClick={() => retirerEleve(aff.id)}
-                      className="text-red-600 hover:text-red-800 text-xs"
-                      title="Retirer"
+                {affectationsChambre.map((aff) => {
+                  const display = getParticipantDisplay(aff.participant);
+                  return (
+                    <div
+                      key={aff.id}
+                      className="flex justify-between items-center py-1 px-1.5 bg-white bg-opacity-50 rounded text-xs"
                     >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+                      <span className="font-medium truncate max-w-[120px]">
+                        {display.icone} {display.prenom} {display.nom.substring(0, 1)}.
+                      </span>
+                      <button
+                        onClick={() => retirerParticipant(aff.id, aff.participant_type)}
+                        className="text-red-600 hover:text-red-800 text-xs"
+                        title="Retirer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
                 {affectationsChambre.length === 0 && (
                   <div className="text-center py-2 text-gray-400 text-xs">
                     Vide
@@ -355,45 +480,70 @@ export default function PlanChambres({ configId, voyageId }: Props) {
                 )}
               </div>
 
-              {/* Ajout d'élèves - plus compact */}
-              {userRole !== 'eleve' && !isComplete && !isProf && (
-                <select
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      assignerEleve(chambre.id, e.target.value);
-                      e.target.value = '';
-                    }
-                  }}
-                  value=""
-                  className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
-                >
-                  <option value="">+ Ajouter...</option>
-                  {participantsPossibles.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.eleve.prenom} {p.eleve.nom.substring(0, 1)}. - {p.classe}
-                    </option>
-                  ))}
-                </select>
-              )}
+              {/* Ajout d'élèves ou professeurs */}
+              {userRole !== 'eleve' && !isComplete && (
+                <>
+                  {/* Sélecteur pour les élèves */}
+                  {elevesPossibles.length > 0 && (
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          assignerParticipant(chambre.id, e.target.value, 'eleve');
+                          e.target.value = '';
+                        }
+                      }}
+                      value=""
+                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 mb-1"
+                    >
+                      <option value="">+ Ajouter élève...</option>
+                      {elevesPossibles.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          👤 {p.eleve.prenom} {p.eleve.nom.substring(0, 1)}. - {p.classe}
+                        </option>
+                      ))}
+                    </select>
+                  )}
 
-              {/* Message pour profs */}
-              {isProf && (
-                <div className="text-xs text-gray-500 italic">
-                  Réservée aux professeurs
-                </div>
+                  {/* Sélecteur pour les professeurs */}
+                  {professeursPossibles.length > 0 && (
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          assignerParticipant(chambre.id, e.target.value, 'professeur');
+                          e.target.value = '';
+                        }
+                      }}
+                      value=""
+                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
+                    >
+                      <option value="">+ Ajouter professeur...</option>
+                      {professeursPossibles.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          👨‍🏫 {p.professeur.prenom} {p.professeur.nom.substring(0, 1)}. - {p.role}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  {/* Message si aucun disponible */}
+                  {elevesPossibles.length === 0 && professeursPossibles.length === 0 && (
+                    <div className="text-xs text-gray-500 italic">
+                      Aucun participant disponible
+                    </div>
+                  )}
+                </>
               )}
             </div>
           );
         })}
       </div>
 
-      {/* Modal ajout chambre - inchangé */}
+      {/* Modal ajout chambre (inchangé) */}
       {showAddChambre && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold mb-4">Ajouter une chambre</h3>
             <form onSubmit={addChambre} className="space-y-4">
-              {/* ... reste du formulaire inchangé ... */}
               <div>
                 <label className="block text-sm font-medium mb-1">Numéro de chambre</label>
                 <input
