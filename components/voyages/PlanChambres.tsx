@@ -87,7 +87,6 @@ export default function PlanChambres({ configId, voyageId }: Props) {
       .in('chambre_id', chambreIds);
   
     if (!error && data) {
-      // ✅ Transformer les données
       const affectationsFormatees = data.map((item: any) => ({
         ...item,
         participant: {
@@ -103,14 +102,12 @@ export default function PlanChambres({ configId, voyageId }: Props) {
   };
   
   const loadParticipants = async () => {
-    // Récupérer les participants déjà affectés
     const { data: affectes } = await supabase
       .from('chambre_affectations')
       .select('participant_id');
   
     const affectesIds = affectes?.map(a => a.participant_id) || [];
   
-    // Récupérer les participants non affectés
     const { data, error } = await supabase
       .from('voyage_participants')
       .select(`
@@ -129,13 +126,12 @@ export default function PlanChambres({ configId, voyageId }: Props) {
       .not('id', 'in', `(${affectesIds.join(',')})`);
   
     if (!error && data) {
-      // ✅ Transformer les données pour correspondre au type Participant
       const participantsFormates = data.map((item: any) => ({
         id: item.id,
         eleve_id: item.eleve_id,
         genre: item.genre,
         classe: item.classe,
-        eleve: Array.isArray(item.eleve) ? item.eleve[0] : item.eleve // Prend le premier élément du tableau
+        eleve: Array.isArray(item.eleve) ? item.eleve[0] : item.eleve
       }));
       
       setParticipantsDisponibles(participantsFormates);
@@ -221,57 +217,67 @@ export default function PlanChambres({ configId, voyageId }: Props) {
 
   const getGenreColor = (genre: string) => {
     switch (genre) {
-      case 'M': return 'border-blue-300 bg-blue-50';
-      case 'F': return 'border-pink-300 bg-pink-50';
-      case 'prof': return 'border-purple-300 bg-purple-50';
-      case 'mixte': return 'border-green-300 bg-green-50';
-      default: return 'border-gray-300 bg-gray-50';
+      case 'M': return 'border-indigo-200 bg-indigo-50/50'; // Indigo au lieu de bleu
+      case 'F': return 'border-amber-200 bg-amber-50/50';   // Ambre/ocre au lieu de rose
+      case 'prof': return 'border-purple-200 bg-purple-50/50';
+      case 'mixte': return 'border-emerald-200 bg-emerald-50/50';
+      default: return 'border-gray-200 bg-gray-50/50';
+    }
+  };
+
+  const getGenreBarColor = (genre: string) => {
+    switch (genre) {
+      case 'M': return 'bg-indigo-500';
+      case 'F': return 'bg-amber-500';
+      case 'prof': return 'bg-purple-500';
+      case 'mixte': return 'bg-emerald-500';
+      default: return 'bg-gray-500';
     }
   };
 
   if (loading) return <div className="text-center py-8">Chargement des chambres...</div>;
 
   return (
-    <div className="space-y-6">
-      {/* Header des chambres */}
-      <div className="flex justify-between items-center">
+    <div className="space-y-4">
+      {/* Header des chambres - plus compact */}
+      <div className="flex justify-between items-center mb-2">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Plan des chambres</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="text-base font-semibold text-gray-900">Plan des chambres</h3>
+          <p className="text-xs text-gray-600">
             {chambres.length} chambre{chambres.length > 1 ? 's' : ''} • 
             {affectations.length} élève{affectations.length > 1 ? 's' : ''} affecté{affectations.length > 1 ? 's' : ''}
           </p>
         </div>
         <button
           onClick={() => setShowAddChambre(true)}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+          className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700"
         >
-          + Ajouter une chambre
+          + Ajouter
         </button>
       </div>
 
-      {/* Légende */}
-      <div className="flex gap-4 text-sm">
+      {/* Légende - plus compacte */}
+      <div className="flex gap-3 text-xs">
         <div className="flex items-center">
-          <div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded mr-2"></div>
+          <div className="w-2 h-2 bg-indigo-200 border border-indigo-300 rounded-full mr-1.5"></div>
           <span>Garçons</span>
         </div>
         <div className="flex items-center">
-          <div className="w-3 h-3 bg-pink-100 border border-pink-300 rounded mr-2"></div>
+          <div className="w-2 h-2 bg-amber-200 border border-amber-300 rounded-full mr-1.5"></div>
           <span>Filles</span>
         </div>
         <div className="flex items-center">
-          <div className="w-3 h-3 bg-purple-100 border border-purple-300 rounded mr-2"></div>
-          <span>Professeurs</span>
+          <div className="w-2 h-2 bg-purple-200 border border-purple-300 rounded-full mr-1.5"></div>
+          <span>Profs</span>
         </div>
         <div className="flex items-center">
-          <div className="w-3 h-3 bg-green-100 border border-green-300 rounded mr-2"></div>
+          <div className="w-2 h-2 bg-emerald-200 border border-emerald-300 rounded-full mr-1.5"></div>
           <span>Mixte</span>
         </div>
       </div>
 
       {/* Grille des chambres */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {chambres.map((chambre) => {
           const affectationsChambre = getAffectationsForChambre(chambre.id);
           const placesLibres = chambre.capacite - affectationsChambre.length;
@@ -279,110 +285,101 @@ export default function PlanChambres({ configId, voyageId }: Props) {
           const isProf = chambre.genre === 'prof';
           const participantsPossibles = chambre.genre === 'M' ? getParticipantsParGenre('M') :
                                       chambre.genre === 'F' ? getParticipantsParGenre('F') :
-                                      chambre.genre === 'prof' ? [] : // Les profs sont gérés à part
-                                      participantsDisponibles; // Mixte
+                                      chambre.genre === 'prof' ? [] :
+                                      participantsDisponibles;
 
           return (
             <div
               key={chambre.id}
-              className={`border-2 rounded-xl p-5 ${getGenreColor(chambre.genre)} ${
-                isComplete ? 'opacity-75' : ''
-              }`}
+              className={`border rounded-lg p-3 ${getGenreColor(chambre.genre)}`}
             >
-              {/* En-tête chambre */}
-              <div className="flex justify-between items-start mb-4">
+              {/* En-tête chambre - plus compact */}
+              <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h4 className="text-lg font-bold text-gray-900">
-                    Chambre {chambre.numero_chambre}
-                  </h4>
-                  {chambre.nom_chambre && (
-                    <p className="text-sm text-gray-600">{chambre.nom_chambre}</p>
-                  )}
-                  <span className="inline-block mt-2 px-3 py-1 text-xs font-medium bg-white bg-opacity-50 rounded-full">
-                    {getGenreLabel(chambre.genre)} • {chambre.capacite} places
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-gray-900">
+                      Ch. {chambre.numero_chambre}
+                    </h4>
+                    {chambre.nom_chambre && (
+                      <span className="text-xs text-gray-600">• {chambre.nom_chambre}</span>
+                    )}
+                  </div>
                 </div>
                 <button
                   onClick={() => deleteChambre(chambre.id)}
-                  className="text-gray-400 hover:text-red-600"
+                  className="text-gray-400 hover:text-red-600 text-xs"
+                  title="Supprimer"
                 >
                   ✕
                 </button>
               </div>
 
-              {/* Liste des occupants */}
-              <div className="space-y-2 mb-4 min-h-[100px]">
+              {/* Barre d'occupation - plus compacte, entre le nom et la croix */}
+              <div className="mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${getGenreBarColor(chambre.genre)} transition-all`}
+                      style={{ width: `${(affectationsChambre.length / chambre.capacite) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium whitespace-nowrap">
+                    {affectationsChambre.length}/{chambre.capacite}
+                  </span>
+                </div>
+              </div>
+
+              {/* Liste des occupants - plus compacte */}
+              <div className="space-y-1 mb-2 min-h-[60px] max-h-[120px] overflow-y-auto">
                 {affectationsChambre.map((aff) => (
                   <div
                     key={aff.id}
-                    className="flex justify-between items-center p-2 bg-white bg-opacity-50 rounded-lg"
+                    className="flex justify-between items-center py-1 px-1.5 bg-white bg-opacity-50 rounded text-xs"
                   >
-                    <div>
-                      <span className="font-medium">
-                        {aff.participant.eleve.nom} {aff.participant.eleve.prenom}
-                      </span>
-                      <span className="ml-2 text-xs text-gray-600">
-                        {aff.participant.classe}
-                      </span>
-                    </div>
+                    <span className="font-medium truncate max-w-[120px]">
+                      {aff.participant.eleve.prenom} {aff.participant.eleve.nom.substring(0, 1)}.
+                    </span>
                     <button
                       onClick={() => retirerEleve(aff.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
+                      className="text-red-600 hover:text-red-800 text-xs"
+                      title="Retirer"
                     >
-                      Retirer
+                      ✕
                     </button>
                   </div>
                 ))}
                 {affectationsChambre.length === 0 && (
-                  <div className="text-center py-4 text-gray-500 text-sm">
-                    Chambre vide
+                  <div className="text-center py-2 text-gray-400 text-xs">
+                    Vide
                   </div>
                 )}
               </div>
 
-              {/* Barre de progression */}
-              <div className="mb-4">
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Occupation</span>
-                  <span className="font-medium">
-                    {affectationsChambre.length}/{chambre.capacite}
-                  </span>
-                </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-blue-600 transition-all"
-                    style={{ width: `${(affectationsChambre.length / chambre.capacite) * 100}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Ajout d'élèves */}
+              {/* Ajout d'élèves - plus compact */}
               {userRole !== 'eleve' && !isComplete && !isProf && (
-                <div>
-                  <select
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        assignerEleve(chambre.id, e.target.value);
-                        e.target.value = '';
-                      }
-                    }}
-                    value=""
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Ajouter un élève...</option>
-                    {participantsPossibles.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.eleve.nom} {p.eleve.prenom} - {p.classe}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      assignerEleve(chambre.id, e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
+                  value=""
+                  className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
+                >
+                  <option value="">+ Ajouter...</option>
+                  {participantsPossibles.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.eleve.prenom} {p.eleve.nom.substring(0, 1)}. - {p.classe}
+                    </option>
+                  ))}
+                </select>
               )}
 
               {/* Message pour profs */}
               {isProf && (
-                <div className="text-sm text-gray-600 italic">
-                  Chambre réservée aux professeurs
+                <div className="text-xs text-gray-500 italic">
+                  Réservée aux professeurs
                 </div>
               )}
             </div>
@@ -390,12 +387,13 @@ export default function PlanChambres({ configId, voyageId }: Props) {
         })}
       </div>
 
-      {/* Modal ajout chambre */}
+      {/* Modal ajout chambre - inchangé */}
       {showAddChambre && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold mb-4">Ajouter une chambre</h3>
             <form onSubmit={addChambre} className="space-y-4">
+              {/* ... reste du formulaire inchangé ... */}
               <div>
                 <label className="block text-sm font-medium mb-1">Numéro de chambre</label>
                 <input
@@ -458,7 +456,7 @@ export default function PlanChambres({ configId, voyageId }: Props) {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
                 >
                   Ajouter
                 </button>
