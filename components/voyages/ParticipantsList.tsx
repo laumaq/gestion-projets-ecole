@@ -133,15 +133,24 @@ export default function ParticipantsList({ voyageId }: Props) {
       .from('voyage_professeurs')
       .select(`
         *,
-        professeur:employees!inner(id, nom, prenom, initiale, email)
+        professeur:employees (
+          id,
+          nom,
+          prenom,
+          initiale,
+          email
+        )
       `)
       .eq('voyage_id', voyageId);
-
+  
+    console.log('Professeurs participants data:', data); // Pour debug
+    console.log('Erreur:', error);
+  
     if (!error && data) {
       const professeursFormates = data.map((item: any) => ({
         ...item,
         type: 'professeur',
-        professeur: Array.isArray(item.professeur) ? item.professeur[0] : item.professeur
+        professeur: item.professeur // Déjà un objet, pas besoin de Array.isArray
       }));
       setProfesseursParticipants(professeursFormates);
     }
