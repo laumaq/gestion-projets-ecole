@@ -109,8 +109,7 @@ export default function ParticipantsList({ voyageId }: Props) {
     if (!error) loadParticipants();
   };
 
-  const classes = [...new Set(participants.map(p => p.classe))].sort();
-
+  const classes = Array.from(new Set(participants.map(p => p.classe))).sort();
   if (loading) return <div className="text-center py-8">Chargement des participants...</div>;
 
   return (
