@@ -509,7 +509,6 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
                 <div className="font-medium">
                   {prof.professeur.prenom} {prof.professeur.nom}
                 </div>
-                <div className="text-xs text-gray-500">{prof.professeur.email || '—'}</div>
               </div>
               <div className="col-span-2">
                 {canEdit  ? (
