@@ -12,6 +12,7 @@ interface Eleve {
   nom: string;
   prenom: string;
   classe: string;
+  niveau: string;
   sexe: string;
 }
 
@@ -29,8 +30,11 @@ export default function ParticipantsList({ voyageId }: Props) {
   const [elevesDisponibles, setElevesDisponibles] = useState<Eleve[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClasse, setSelectedClasse] = useState('');
+  const [selectedNiveau, setSelectedNiveau] = useState('');
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [addMode, setAddMode] = useState<'individuel' | 'classe' | 'niveau'>('individuel');
+  const [selectedEleves, setSelectedEleves] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadParticipants();
@@ -41,7 +45,7 @@ export default function ParticipantsList({ voyageId }: Props) {
       .from('voyage_participants')
       .select(`
         *,
-        eleve:students!inner(matricule, nom, prenom, classe, sexe)
+        eleve:students!inner(matricule, nom, prenom, classe, niveau, sexe)
       `)
       .eq('voyage_id', voyageId);
 
@@ -58,9 +62,11 @@ export default function ParticipantsList({ voyageId }: Props) {
     let query = supabase
       .from('students')
       .select('*')
-      .not('matricule', 'in', `(${participantIds.join(',')})`);
+      .not('matricule', 'in', `(${participantIds.length ? participantIds.join(',') : '0'})`);
 
-    if (selectedClasse) {
+    if (selectedNiveau) {
+      query = query.eq('niveau', selectedNiveau);
+    } else if (selectedClasse) {
       query = query.eq('classe', selectedClasse);
     }
 
@@ -68,24 +74,52 @@ export default function ParticipantsList({ voyageId }: Props) {
       query = query.or(`nom.ilike.%${searchTerm}%,prenom.ilike.%${searchTerm}%`);
     }
 
-    const { data, error } = await query.limit(50);
+    const { data, error } = await query.order('classe').order('nom').limit(100);
     if (!error && data) setElevesDisponibles(data);
   };
 
-  const addParticipant = async (eleve: Eleve) => {
+  const addParticipants = async () => {
+    let elevesAAjouter: Eleve[] = [];
+
+    if (addMode === 'individuel' && selectedEleves.size > 0) {
+      elevesAAjouter = elevesDisponibles.filter(e => selectedEleves.has(e.matricule));
+    } else if (addMode === 'classe' && selectedClasse) {
+      const { data } = await supabase
+        .from('students')
+        .select('*')
+        .eq('classe', selectedClasse)
+        .not('matricule', 'in', `(${participants.map(p => p.eleve_id).join(',')})`);
+      elevesAAjouter = data || [];
+    } else if (addMode === 'niveau' && selectedNiveau) {
+      const { data } = await supabase
+        .from('students')
+        .select('*')
+        .eq('niveau', selectedNiveau)
+        .not('matricule', 'in', `(${participants.map(p => p.eleve_id).join(',')})`);
+      elevesAAjouter = data || [];
+    }
+
+    if (elevesAAjouter.length === 0) {
+      alert('Aucun élève à ajouter');
+      return;
+    }
+
+    const participantsData = elevesAAjouter.map(eleve => ({
+      voyage_id: voyageId,
+      eleve_id: eleve.matricule,
+      genre: eleve.sexe,
+      classe: eleve.classe,
+      statut: 'confirme'
+    }));
+
     const { error } = await supabase
       .from('voyage_participants')
-      .insert({
-        voyage_id: voyageId,
-        eleve_id: eleve.matricule,
-        genre: eleve.sexe,
-        classe: eleve.classe,
-        statut: 'confirme'
-      });
+      .insert(participantsData);
 
     if (!error) {
       loadParticipants();
       setShowAddModal(false);
+      setSelectedEleves(new Set());
     }
   };
 
@@ -100,6 +134,28 @@ export default function ParticipantsList({ voyageId }: Props) {
     }
   };
 
+  const removeMultipleParticipants = async () => {
+    const classes = Array.from(new Set(participants.map(p => p.classe))).sort();
+    const classeToRemove = prompt(`Entrez la classe à retirer (ex: 3PAS):\nClasses disponibles: ${classes.join(', ')}`);
+    
+    if (classeToRemove) {
+      const participantsToRemove = participants.filter(p => p.classe === classeToRemove);
+      if (participantsToRemove.length === 0) {
+        alert('Aucun participant trouvé dans cette classe');
+        return;
+      }
+
+      if (confirm(`Retirer les ${participantsToRemove.length} élèves de la classe ${classeToRemove} ?`)) {
+        const { error } = await supabase
+          .from('voyage_participants')
+          .delete()
+          .in('id', participantsToRemove.map(p => p.id));
+
+        if (!error) loadParticipants();
+      }
+    }
+  };
+
   const updateStatut = async (participantId: string, statut: string) => {
     const { error } = await supabase
       .from('voyage_participants')
@@ -109,7 +165,49 @@ export default function ParticipantsList({ voyageId }: Props) {
     if (!error) loadParticipants();
   };
 
+  const updateStatutMultiple = async (statut: string) => {
+    const classes = Array.from(new Set(participants.map(p => p.classe))).sort();
+    const classeToUpdate = prompt(`Entrez la classe à mettre à jour (statut: ${statut})\nClasses disponibles: ${classes.join(', ')}`);
+    
+    if (classeToUpdate) {
+      const participantsToUpdate = participants.filter(p => p.classe === classeToUpdate);
+      if (participantsToUpdate.length === 0) {
+        alert('Aucun participant trouvé dans cette classe');
+        return;
+      }
+
+      if (confirm(`Mettre à jour les ${participantsToUpdate.length} élèves de la classe ${classeToUpdate} ?`)) {
+        const { error } = await supabase
+          .from('voyage_participants')
+          .update({ statut })
+          .in('id', participantsToUpdate.map(p => p.id));
+
+        if (!error) loadParticipants();
+      }
+    }
+  };
+
+  const toggleSelectEleve = (matricule: number) => {
+    const newSelection = new Set(selectedEleves);
+    if (newSelection.has(matricule)) {
+      newSelection.delete(matricule);
+    } else {
+      newSelection.add(matricule);
+    }
+    setSelectedEleves(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedEleves.size === elevesDisponibles.length) {
+      setSelectedEleves(new Set());
+    } else {
+      setSelectedEleves(new Set(elevesDisponibles.map(e => e.matricule)));
+    }
+  };
+
   const classes = Array.from(new Set(participants.map(p => p.classe))).sort();
+  const niveaux = ['1P', '2P', '3P', '4P', '5P', '6P'];
+
   if (loading) return <div className="text-center py-8">Chargement des participants...</div>;
 
   return (
@@ -122,17 +220,34 @@ export default function ParticipantsList({ voyageId }: Props) {
             {participants.length} élève{participants.length > 1 ? 's' : ''} inscrit{participants.length > 1 ? 's' : ''}
           </p>
         </div>
-        <button
-          onClick={() => {
-            setSearchTerm('');
-            setSelectedClasse('');
-            setElevesDisponibles([]);
-            setShowAddModal(true);
-          }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
-        >
-          + Ajouter des élèves
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={removeMultipleParticipants}
+            className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
+          >
+            Retirer une classe
+          </button>
+          <button
+            onClick={() => updateStatutMultiple('liste_attente')}
+            className="px-4 py-2 border border-yellow-300 text-yellow-600 rounded-lg hover:bg-yellow-50"
+          >
+            Mettre en liste d'attente
+          </button>
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedClasse('');
+              setSelectedNiveau('');
+              setElevesDisponibles([]);
+              setSelectedEleves(new Set());
+              setAddMode('individuel');
+              setShowAddModal(true);
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+          >
+            + Ajouter des élèves
+          </button>
+        </div>
       </div>
 
       {/* Filtres */}
@@ -200,7 +315,7 @@ export default function ParticipantsList({ voyageId }: Props) {
       {/* Modal d'ajout */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[80vh] flex flex-col">
+          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col">
             <div className="p-6 border-b">
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-bold">Ajouter des élèves</h3>
@@ -209,7 +324,41 @@ export default function ParticipantsList({ voyageId }: Props) {
                 </button>
               </div>
               
-              {/* Recherche */}
+              {/* Mode d'ajout */}
+              <div className="mt-4 flex gap-4 border-b pb-4">
+                <button
+                  onClick={() => setAddMode('individuel')}
+                  className={`px-4 py-2 rounded-lg ${
+                    addMode === 'individuel' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Ajout individuel
+                </button>
+                <button
+                  onClick={() => setAddMode('classe')}
+                  className={`px-4 py-2 rounded-lg ${
+                    addMode === 'classe' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Ajouter une classe
+                </button>
+                <button
+                  onClick={() => setAddMode('niveau')}
+                  className={`px-4 py-2 rounded-lg ${
+                    addMode === 'niveau' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Ajouter un niveau
+                </button>
+              </div>
+              
+              {/* Recherche et filtres */}
               <div className="mt-4 flex gap-4">
                 <input
                   type="text"
@@ -218,51 +367,134 @@ export default function ParticipantsList({ voyageId }: Props) {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="flex-1 px-4 py-2 border rounded-lg"
                 />
-                <select
-                  value={selectedClasse}
-                  onChange={(e) => setSelectedClasse(e.target.value)}
-                  className="px-4 py-2 border rounded-lg"
-                >
-                  <option value="">Toutes classes</option>
-                  {['1PAA','1PAB','1PAC','1PAD','1PAE','1PAF','2PAA','2PAB','2PAC','2PAD','2PAE','2PAF','2PAG','3PAS','3PAT','3PAU','3PAV','3PAW','3PAX','3PAY','3PAZ','4PAS','4PAT','4PAU','4PAV','4PAW','4PAX','4PAY','4PAZ','5PAS','5PAT','5PAU','5PAV','5PAW','5PAX','5PAY','5PAZ','6PAU','6PAV','6PAW','6PAX','6PAY','6PAZ'].map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                
+                {addMode === 'classe' && (
+                  <select
+                    value={selectedClasse}
+                    onChange={(e) => setSelectedClasse(e.target.value)}
+                    className="px-4 py-2 border rounded-lg"
+                  >
+                    <option value="">Choisir une classe</option>
+                    {['1PAA','1PAB','1PAC','1PAD','1PAE','1PAF','2PAA','2PAB','2PAC','2PAD','2PAE','2PAF','2PAG','3PAS','3PAT','3PAU','3PAV','3PAW','3PAX','3PAY','3PAZ','4PAS','4PAT','4PAU','4PAV','4PAW','4PAX','4PAY','4PAZ','5PAS','5PAT','5PAU','5PAV','5PAW','5PAX','5PAY','5PAZ','6PAU','6PAV','6PAW','6PAX','6PAY','6PAZ'].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                )}
+
+                {addMode === 'niveau' && (
+                  <select
+                    value={selectedNiveau}
+                    onChange={(e) => setSelectedNiveau(e.target.value)}
+                    className="px-4 py-2 border rounded-lg"
+                  >
+                    <option value="">Choisir un niveau</option>
+                    {niveaux.map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                )}
+
                 <button
                   onClick={loadElevesDisponibles}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
                   Rechercher
                 </button>
+
+                {addMode === 'individuel' && elevesDisponibles.length > 0 && (
+                  <button
+                    onClick={addParticipants}
+                    disabled={selectedEleves.size === 0}
+                    className={`px-4 py-2 rounded-lg ${
+                      selectedEleves.size > 0
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Ajouter ({selectedEleves.size})
+                  </button>
+                )}
+
+                {(addMode === 'classe' || addMode === 'niveau') && selectedClasse && (
+                  <button
+                    onClick={addParticipants}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    Ajouter toute la classe
+                  </button>
+                )}
+
+                {addMode === 'niveau' && selectedNiveau && (
+                  <button
+                    onClick={addParticipants}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    Ajouter tout le niveau
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Résultats */}
             <div className="flex-1 overflow-y-auto p-6">
-              <div className="space-y-2">
-                {elevesDisponibles.map((eleve) => (
-                  <div
-                    key={eleve.matricule}
-                    className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50"
-                  >
-                    <div>
-                      <div className="font-medium">{eleve.nom} {eleve.prenom}</div>
-                      <div className="text-sm text-gray-600">{eleve.classe} • {eleve.sexe === 'M' ? 'Garçon' : 'Fille'}</div>
-                    </div>
-                    <button
-                      onClick={() => addParticipant(eleve)}
-                      className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-                    >
-                      Ajouter
-                    </button>
+              {addMode === 'individuel' && (
+                <>
+                  <div className="mb-4 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedEleves.size === elevesDisponibles.length && elevesDisponibles.length > 0}
+                      onChange={toggleSelectAll}
+                      className="rounded"
+                    />
+                    <span className="text-sm text-gray-600">
+                      {selectedEleves.size === 0 
+                        ? 'Sélectionner tous les élèves'
+                        : `${selectedEleves.size} élève(s) sélectionné(s)`}
+                    </span>
                   </div>
-                ))}
-                {elevesDisponibles.length === 0 && searchTerm && (
-                  <div className="text-center py-8 text-gray-500">
-                    Aucun élève trouvé
+                  
+                  <div className="space-y-2">
+                    {elevesDisponibles.map((eleve) => (
+                      <div
+                        key={eleve.matricule}
+                        className="flex items-center gap-4 p-3 border rounded-lg hover:bg-gray-50"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedEleves.has(eleve.matricule)}
+                          onChange={() => toggleSelectEleve(eleve.matricule)}
+                          className="rounded"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium">{eleve.nom} {eleve.prenom}</div>
+                          <div className="text-sm text-gray-600">{eleve.classe} • {eleve.sexe === 'M' ? 'Garçon' : 'Fille'}</div>
+                        </div>
+                      </div>
+                    ))}
+                    {elevesDisponibles.length === 0 && searchTerm && (
+                      <div className="text-center py-8 text-gray-500">
+                        Aucun élève trouvé
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
+
+              {(addMode === 'classe' || addMode === 'niveau') && elevesDisponibles.length > 0 && (
+                <div>
+                  <p className="mb-4 text-gray-600">
+                    {elevesDisponibles.length} élève(s) vont être ajoutés
+                  </p>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {elevesDisponibles.map((eleve) => (
+                      <div key={eleve.matricule} className="p-2 border rounded">
+                        <span className="font-medium">{eleve.nom} {eleve.prenom}</span>
+                        <span className="text-sm text-gray-600 ml-2">({eleve.classe})</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
