@@ -6,6 +6,8 @@ import PlanChambres from './PlanChambres';
 
 interface Props {
   voyageId: string;
+  isResponsable: boolean;
+  userType: 'employee' | 'student' | null;
 }
 
 interface HebergementConfig {
@@ -17,11 +19,13 @@ interface HebergementConfig {
   ordre: number;
 }
 
-export default function HebergementConfigs({ voyageId }: Props) {
+export default function HebergementConfigs({ voyageId, isResponsable, userType }: Props) {
   const [configs, setConfigs] = useState<HebergementConfig[]>([]);
   const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
   const [showNewConfig, setShowNewConfig] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const canEdit = userType === 'employee' && isResponsable;
 
   useEffect(() => {
     loadConfigs();
@@ -87,6 +91,15 @@ export default function HebergementConfigs({ voyageId }: Props) {
         </button>
       </div>
 
+      {!canEdit && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-blue-700">
+            👋 Vous êtes en mode consultation. Vous pouvez voir les configurations d'hébergement, 
+            mais vous ne pouvez pas les modifier.
+          </p>
+        </div>
+      )}
+
       {/* Sélecteur de configuration */}
       {configs.length > 0 ? (
         <>
@@ -112,8 +125,13 @@ export default function HebergementConfigs({ voyageId }: Props) {
 
           {/* Plan des chambres */}
           {selectedConfig && (
-            <PlanChambres configId={selectedConfig} voyageId={voyageId} />
-          )}
+            <PlanChambres 
+              configId={selectedConfig} 
+              voyageId={voyageId}
+              isResponsable={isResponsable}
+              userType={userType}
+            />
+        )}
         </>
       ) : (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
@@ -124,17 +142,19 @@ export default function HebergementConfigs({ voyageId }: Props) {
           <p className="text-gray-600 mb-4">
             Créez une première configuration pour commencer à organiser les chambres
           </p>
-          <button
-            onClick={() => setShowNewConfig(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Créer une configuration
-          </button>
+          {canEdit && (
+            <button
+              onClick={() => setShowNewConfig(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Créer une configuration
+            </button>
+          )}
         </div>
       )}
 
       {/* Modal nouvelle configuration */}
-      {showNewConfig && (
+      {canEdit && showNewConfig && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold mb-4">Nouvelle configuration</h3>
