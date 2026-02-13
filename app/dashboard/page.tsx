@@ -1,218 +1,249 @@
+// app/dashboard/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
-// Interface pour les outils
-interface Tool {
-  id: number;
-  title: string;
-  description: string;
-  icon: string;
-  path: string;
-  status: 'active' | 'development' | 'planned';
-  color: string;
+interface Voyage {
+  id: string;
+  nom: string;
+  destination: string;
+  date_debut: string;
+  date_fin: string;
+  statut: string;
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [userName, setUserName] = useState('');
-  const [userRole, setUserRole] = useState('');
+  const [userType, setUserType] = useState<'employee' | 'student'>('employee');
+  const [userId, setUserId] = useState('');
+  const [userJob, setUserJob] = useState('');
+  const [mesVoyages, setMesVoyages] = useState<Voyage[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Récupérer les infos utilisateur
-    const name = localStorage.getItem('userName') || 'Utilisateur';
-    const role = localStorage.getItem('userRole') || 'employee';
-    setUserName(name);
-    setUserRole(role);
-  }, []);
+    // Vérifier si l'utilisateur est connecté
+    const type = localStorage.getItem('userType') as 'employee' | 'student';
+    const id = localStorage.getItem('userId');
+    const name = localStorage.getItem('userName');
+    const job = localStorage.getItem('userJob');
 
-  // Liste des outils (à adapter selon vos besoins)
-  const tools: Tool[] = [
-    {
-      id: 1,
-      title: 'Gestion des Absences',
-      description: 'Suivi et gestion des absences des élèves',
-      icon: '📋',
-      path: '/tools/absences',
-      status: 'active',
-      color: 'bg-blue-100 border-blue-300',
-    },
-    {
-      id: 2,
-      title: 'Planificateur de Cours',
-      description: 'Organisation des emplois du temps',
-      icon: '📅',
-      path: '/tools/schedule',
-      status: 'development',
-      color: 'bg-green-100 border-green-300',
-    },
-    {
-      id: 3,
-      title: 'Bulletins et Notes',
-      description: 'Saisie et consultation des résultats',
-      icon: '📊',
-      path: '/tools/grades',
-      status: 'planned',
-      color: 'bg-purple-100 border-purple-300',
-    },
-    {
-      id: 4,
-      title: 'Communication',
-      description: 'Messagerie interne et annonces',
-      icon: '💬',
-      path: '/tools/messaging',
-      status: 'active',
-      color: 'bg-yellow-100 border-yellow-300',
-    },
-    {
-      id: 5,
-      title: 'Ressources Pédagogiques',
-      description: 'Bibliothèque de documents partagés',
-      icon: '📚',
-      path: '/tools/resources',
-      status: 'development',
-      color: 'bg-red-100 border-red-300',
-    },
-    {
-      id: 6,
-      title: 'Évaluations',
-      description: 'Création et gestion des évaluations',
-      icon: '✏️',
-      path: '/tools/exams',
-      status: 'planned',
-      color: 'bg-indigo-100 border-indigo-300',
-    },
-  ];
+    if (!type || !id) {
+      router.push('/');
+      return;
+    }
 
-  // Filtrer les outils selon le rôle (exemple simple)
-  const getFilteredTools = () => {
-    // Logique de filtrage selon le rôle
-    // Pour l'instant, tous les outils sont visibles
-    return tools;
-  };
+    setUserType(type);
+    setUserId(id);
+    setUserName(name || 'Utilisateur');
+    setUserJob(job || '');
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Actif</span>;
-      case 'development':
-        return <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">En développement</span>;
-      case 'planned':
-        return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Planifié</span>;
-      default:
-        return null;
+    // Charger les voyages où l'utilisateur est impliqué
+    chargerMesVoyages(type, id);
+  }, [router]);
+
+  const chargerMesVoyages = async (type: string, id: string) => {
+    try {
+      setLoading(true);
+      
+      if (type === 'employee') {
+        // Charger les voyages où l'employé est professeur
+        const { data: voyagesProf } = await supabase
+          .from('voyage_professeurs')
+          .select(`
+            voyage_id,
+            voyages:voyage_id (
+              id,
+              nom,
+              destination,
+              date_debut,
+              date_fin,
+              statut
+            )
+          `)
+          .eq('professeur_id', id);
+
+        if (voyagesProf) {
+          const voyages = voyagesProf
+            .map(vp => vp.voyages)
+            .filter(v => v !== null) as Voyage[];
+          setMesVoyages(voyages);
+        }
+      } else {
+        // Charger les voyages où l'élève est participant
+        const { data: voyagesEleve } = await supabase
+          .from('voyage_participants')
+          .select(`
+            voyage_id,
+            voyages:voyage_id (
+              id,
+              nom,
+              destination,
+              date_debut,
+              date_fin,
+              statut
+            )
+          `)
+          .eq('eleve_id', parseInt(id));
+
+        if (voyagesEleve) {
+          const voyages = voyagesEleve
+            .map(vp => vp.voyages)
+            .filter(v => v !== null) as Voyage[];
+          setMesVoyages(voyages);
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des voyages:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    router.push('/');
+  };
+
   return (
-    <div className="space-y-8">
-      {/* En-tête */}
-      <div className="bg-white rounded-xl shadow p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Tableau de bord</h1>
-            <p className="text-gray-600 mt-2">
-              Bienvenue, <span className="font-semibold text-blue-600">{userName}</span>
-              <span className="ml-2 text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
-                {userRole.toUpperCase()}
-              </span>
-            </p>
-          </div>
-          <div className="mt-4 md:mt-0">
-            <div className="text-sm text-gray-500">
-              <span className="font-medium">{new Date().toLocaleDateString('fr-FR', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Section des outils */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Outils disponibles</h2>
-          <div className="text-sm text-gray-500">
-            {tools.filter(t => t.status === 'active').length} sur {tools.length} outils actifs
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {getFilteredTools().map((tool) => (
-            <Link
-              key={tool.id}
-              href={tool.status === 'active' ? tool.path : '#'}
-              className={`block ${tool.status !== 'active' ? 'cursor-not-allowed' : 'hover:shadow-lg transition-shadow duration-200'}`}
-            >
-              <div className={`h-full rounded-xl border-2 ${tool.color} p-6 ${tool.status !== 'active' ? 'opacity-70' : ''}`}>
-                <div className="flex items-start justify-between mb-4">
-                  <div className="text-3xl">{tool.icon}</div>
-                  {getStatusBadge(tool.status)}
-                </div>
-                
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{tool.title}</h3>
-                <p className="text-gray-600 mb-4">{tool.description}</p>
-                
-                <div className="mt-4">
-                  {tool.status === 'active' ? (
-                    <span className="text-blue-600 font-medium text-sm flex items-center">
-                      Accéder à l'outil
-                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </span>
-                  ) : tool.status === 'development' ? (
-                    <span className="text-yellow-600 font-medium text-sm">Bientôt disponible</span>
-                  ) : (
-                    <span className="text-gray-500 font-medium text-sm">En cours de planification</span>
-                  )}
-                </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header avec déconnexion */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                <span className="text-white font-bold">W</span>
               </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Section informations */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-xl shadow p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Actualités et annonces</h3>
-          <div className="space-y-4">
-            <div className="border-l-4 border-blue-500 pl-4 py-2">
-              <p className="font-medium">Maintenance prévue</p>
-              <p className="text-sm text-gray-600">Le système sera inaccessible le samedi 15 mars de 2h à 6h.</p>
+              <span className="text-xl font-bold text-gray-900">
+                Waha Portail de l'école
+              </span>
             </div>
-            <div className="border-l-4 border-green-500 pl-4 py-2">
-              <p className="font-medium">Nouvelle fonctionnalité</p>
-              <p className="text-sm text-gray-600">L'export des rapports d'absences est maintenant disponible.</p>
+            
+            <div className="flex items-center space-x-4">
+              <Link 
+                href="/help" 
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+              >
+                Aide
+              </Link>
+              
+              <div className="flex items-center space-x-3">
+                <div className="text-right">
+                  <div className="text-sm font-medium text-gray-900">{userName}</div>
+                  <div className="text-xs text-gray-500">
+                    {userType === 'employee' 
+                      ? (userJob === 'prof' ? 'Professeur' : userJob || 'Personnel') 
+                      : 'Élève'}
+                  </div>
+                </div>
+                
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Déconnexion
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Contenu principal */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-8">Tableau de bord</h1>
+
+        {/* Outils généraux */}
+        <div className="mb-12">
+          <h2 className="text-lg font-semibold text-gray-700 mb-4">Outils disponibles</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Assemblée Générale */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 opacity-75 cursor-not-allowed">
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-1">Assemblée Générale</h3>
+              <p className="text-sm text-gray-500">Bientôt disponible</p>
+            </div>
+
+            {/* Groupe de Travail - Prof only */}
+            {userType === 'employee' && userJob === 'prof' && (
+              <Link href="/tools/projet-5eme" className="block">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition cursor-pointer">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-3">
+                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">Groupe de Travail</h3>
+                  <p className="text-sm text-gray-500">Projet 5e</p>
+                </div>
+              </Link>
+            )}
+
+            {/* Travail de fin d'humanité */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 opacity-75 cursor-not-allowed">
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-1">Travail de fin d'humanité</h3>
+              <p className="text-sm text-gray-500">Bientôt disponible</p>
+            </div>
+
+            {/* Gestion de projets */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 opacity-75 cursor-not-allowed">
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-1">Gestion de projets</h3>
+              <p className="text-sm text-gray-500">Bientôt disponible</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Accès rapide</h3>
-          <div className="space-y-3">
-            <button className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
-              <span className="font-medium text-gray-900">Mon profil</span>
-            </button>
-            <button className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
-              <span className="font-medium text-gray-900">Paramètres</span>
-            </button>
-            <button 
-              className="w-full text-left px-4 py-3 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition font-medium"
-              onClick={() => {
-                localStorage.clear();
-                window.location.href = '/';
-              }}
-            >
-              Déconnexion
-            </button>
+        {/* Mes voyages */}
+        {mesVoyages.length > 0 && (
+          <div>
+            <h2 className="text-lg font-semibold text-gray-700 mb-4">Mes voyages</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {mesVoyages.map((voyage) => (
+                <Link 
+                  key={voyage.id} 
+                  href={`/tools/voyages/${voyage.id}`}
+                  className="block"
+                >
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="text-lg font-medium text-gray-900">{voyage.nom}</h3>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        voyage.statut === 'préparation' ? 'bg-yellow-100 text-yellow-800' :
+                        voyage.statut === 'confirmé' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {voyage.statut}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">{voyage.destination}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(voyage.date_debut).toLocaleDateString('fr-FR')} - {new Date(voyage.date_fin).toLocaleDateString('fr-FR')}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </div>
+        )}
+      </main>
     </div>
   );
 }
