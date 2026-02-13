@@ -12,7 +12,7 @@ interface Eleve {
   nom: string;
   prenom: string;
   classe: string;
-  niveau: string;
+  niveau: number; // Changé en number car c'est un int8
   sexe: string;
 }
 
@@ -30,17 +30,19 @@ export default function ParticipantsList({ voyageId }: Props) {
   const [elevesDisponibles, setElevesDisponibles] = useState<Eleve[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClasse, setSelectedClasse] = useState('');
-  const [selectedNiveau, setSelectedNiveau] = useState('');
+  const [selectedNiveau, setSelectedNiveau] = useState<number | ''>(''); // Changé en number
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [addMode, setAddMode] = useState<'individuel' | 'classe' | 'niveau'>('individuel');
   const [selectedEleves, setSelectedEleves] = useState<Set<number>>(new Set());
+  const [debug, setDebug] = useState<string>('');
 
   useEffect(() => {
     loadParticipants();
   }, [voyageId]);
 
   const loadParticipants = async () => {
+    console.log('Chargement des participants pour voyage:', voyageId);
     const { data, error } = await supabase
       .from('voyage_participants')
       .select(`
@@ -49,33 +51,90 @@ export default function ParticipantsList({ voyageId }: Props) {
       `)
       .eq('voyage_id', voyageId);
 
-    if (!error && data) {
-      setParticipants(data);
+    if (error) {
+      console.error('Erreur chargement participants:', error);
+      setDebug('Erreur: ' + error.message);
+    } else {
+      console.log('Participants chargés:', data?.length);
+      setParticipants(data || []);
     }
     setLoading(false);
   };
 
   const loadElevesDisponibles = async () => {
+    console.log('Chargement des élèves disponibles...');
+    setDebug('Chargement...');
+    
     // Récupérer les IDs des élèves déjà participants
     const participantIds = participants.map(p => p.eleve_id);
+    console.log('IDs déjà participants:', participantIds);
     
     let query = supabase
       .from('students')
       .select('*')
-      .not('matricule', 'in', `(${participantIds.length ? participantIds.join(',') : '0'})`);
+      .order('classe')
+      .order('nom');
 
-    if (selectedNiveau) {
+    // Exclure les déjà participants
+    if (participantIds.length > 0) {
+      query = query.not('matricule', 'in', `(${participantIds.join(',')})`);
+    }
+
+    // Filtre par niveau (attention: niveau est un nombre)
+    if (selectedNiveau !== '') {
+      console.log('Filtre par niveau:', selectedNiveau);
       query = query.eq('niveau', selectedNiveau);
-    } else if (selectedClasse) {
+    }
+    // Filtre par classe (si pas de niveau sélectionné)
+    else if (selectedClasse) {
+      console.log('Filtre par classe:', selectedClasse);
       query = query.eq('classe', selectedClasse);
     }
 
+    // Recherche textuelle
     if (searchTerm) {
+      console.log('Recherche:', searchTerm);
       query = query.or(`nom.ilike.%${searchTerm}%,prenom.ilike.%${searchTerm}%`);
     }
 
-    const { data, error } = await query.order('classe').order('nom').limit(100);
-    if (!error && data) setElevesDisponibles(data);
+    // Limite pour éviter de surcharger
+    query = query.limit(100);
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Erreur chargement élèves:', error);
+      setDebug('Erreur: ' + error.message);
+    } else {
+      console.log('Élèves trouvés:', data?.length);
+      setDebug(`${data?.length || 0} élèves trouvés`);
+      setElevesDisponibles(data || []);
+    }
+  };
+
+  // Fonction pour compter les élèves par classe/niveau avant ajout
+  const countElevesParClasse = async () => {
+    if (addMode === 'classe' && selectedClasse) {
+      const { count, error } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true })
+        .eq('classe', selectedClasse)
+        .not('matricule', 'in', `(${participants.map(p => p.eleve_id).join(',')})`);
+      
+      if (!error) {
+        setDebug(`${count} élèves disponibles dans la classe ${selectedClasse}`);
+      }
+    } else if (addMode === 'niveau' && selectedNiveau !== '') {
+      const { count, error } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true })
+        .eq('niveau', selectedNiveau)
+        .not('matricule', 'in', `(${participants.map(p => p.eleve_id).join(',')})`);
+      
+      if (!error) {
+        setDebug(`${count} élèves disponibles en niveau ${selectedNiveau}`);
+      }
+    }
   };
 
   const addParticipants = async () => {
@@ -90,7 +149,7 @@ export default function ParticipantsList({ voyageId }: Props) {
         .eq('classe', selectedClasse)
         .not('matricule', 'in', `(${participants.map(p => p.eleve_id).join(',')})`);
       elevesAAjouter = data || [];
-    } else if (addMode === 'niveau' && selectedNiveau) {
+    } else if (addMode === 'niveau' && selectedNiveau !== '') {
       const { data } = await supabase
         .from('students')
         .select('*')
@@ -104,6 +163,9 @@ export default function ParticipantsList({ voyageId }: Props) {
       return;
     }
 
+    console.log('Ajout de', elevesAAjouter.length, 'élèves');
+    setDebug(`Ajout de ${elevesAAjouter.length} élèves...`);
+
     const participantsData = elevesAAjouter.map(eleve => ({
       voyage_id: voyageId,
       eleve_id: eleve.matricule,
@@ -116,10 +178,14 @@ export default function ParticipantsList({ voyageId }: Props) {
       .from('voyage_participants')
       .insert(participantsData);
 
-    if (!error) {
+    if (error) {
+      console.error('Erreur ajout:', error);
+      alert('Erreur: ' + error.message);
+    } else {
       loadParticipants();
       setShowAddModal(false);
       setSelectedEleves(new Set());
+      setDebug('');
     }
   };
 
@@ -206,7 +272,8 @@ export default function ParticipantsList({ voyageId }: Props) {
   };
 
   const classes = Array.from(new Set(participants.map(p => p.classe))).sort();
-  const niveaux = ['1P', '2P', '3P', '4P', '5P', '6P'];
+  // Niveaux comme nombres (1 à 6)
+  const niveaux = [1, 2, 3, 4, 5, 6];
 
   if (loading) return <div className="text-center py-8">Chargement des participants...</div>;
 
@@ -219,6 +286,7 @@ export default function ParticipantsList({ voyageId }: Props) {
           <p className="text-gray-600 mt-1">
             {participants.length} élève{participants.length > 1 ? 's' : ''} inscrit{participants.length > 1 ? 's' : ''}
           </p>
+          {debug && <p className="text-sm text-gray-500 mt-1">Debug: {debug}</p>}
         </div>
         <div className="flex gap-2">
           <button
@@ -371,7 +439,10 @@ export default function ParticipantsList({ voyageId }: Props) {
                 {addMode === 'classe' && (
                   <select
                     value={selectedClasse}
-                    onChange={(e) => setSelectedClasse(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedClasse(e.target.value);
+                      setSelectedNiveau('');
+                    }}
                     className="px-4 py-2 border rounded-lg"
                   >
                     <option value="">Choisir une classe</option>
@@ -384,18 +455,24 @@ export default function ParticipantsList({ voyageId }: Props) {
                 {addMode === 'niveau' && (
                   <select
                     value={selectedNiveau}
-                    onChange={(e) => setSelectedNiveau(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedNiveau(e.target.value ? Number(e.target.value) : '');
+                      setSelectedClasse('');
+                    }}
                     className="px-4 py-2 border rounded-lg"
                   >
                     <option value="">Choisir un niveau</option>
                     {niveaux.map(n => (
-                      <option key={n} value={n}>{n}</option>
+                      <option key={n} value={n}>Niveau {n}</option>
                     ))}
                   </select>
                 )}
 
                 <button
-                  onClick={loadElevesDisponibles}
+                  onClick={() => {
+                    loadElevesDisponibles();
+                    countElevesParClasse();
+                  }}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
                   Rechercher
@@ -415,21 +492,12 @@ export default function ParticipantsList({ voyageId }: Props) {
                   </button>
                 )}
 
-                {(addMode === 'classe' || addMode === 'niveau') && selectedClasse && (
+                {(addMode === 'classe' && selectedClasse) || (addMode === 'niveau' && selectedNiveau !== '') && (
                   <button
                     onClick={addParticipants}
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                   >
-                    Ajouter toute la classe
-                  </button>
-                )}
-
-                {addMode === 'niveau' && selectedNiveau && (
-                  <button
-                    onClick={addParticipants}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                  >
-                    Ajouter tout le niveau
+                    Ajouter {addMode === 'classe' ? 'la classe' : 'le niveau'}
                   </button>
                 )}
               </div>
@@ -467,7 +535,9 @@ export default function ParticipantsList({ voyageId }: Props) {
                         />
                         <div className="flex-1">
                           <div className="font-medium">{eleve.nom} {eleve.prenom}</div>
-                          <div className="text-sm text-gray-600">{eleve.classe} • {eleve.sexe === 'M' ? 'Garçon' : 'Fille'}</div>
+                          <div className="text-sm text-gray-600">
+                            {eleve.classe} • Niveau {eleve.niveau} • {eleve.sexe === 'M' ? 'Garçon' : 'Fille'}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -489,10 +559,20 @@ export default function ParticipantsList({ voyageId }: Props) {
                     {elevesDisponibles.map((eleve) => (
                       <div key={eleve.matricule} className="p-2 border rounded">
                         <span className="font-medium">{eleve.nom} {eleve.prenom}</span>
-                        <span className="text-sm text-gray-600 ml-2">({eleve.classe})</span>
+                        <span className="text-sm text-gray-600 ml-2">
+                          ({eleve.classe} - Niveau {eleve.niveau})
+                        </span>
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {elevesDisponibles.length === 0 && (selectedClasse || selectedNiveau !== '') && (
+                <div className="text-center py-8 text-gray-500">
+                  Aucun élève disponible dans {addMode === 'classe' ? 'cette classe' : 'ce niveau'}
+                  <br />
+                  <span className="text-sm">(peut-être déjà tous inscrits ?)</span>
                 </div>
               )}
             </div>
