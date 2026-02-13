@@ -126,7 +126,7 @@ export default function ParticipantsList({ voyageId }: Props) {
     }
 
     // Limite raisonnable
-    query = query.limit(100);
+    query = query.limit(200);
 
     const { data, error } = await query;
 
