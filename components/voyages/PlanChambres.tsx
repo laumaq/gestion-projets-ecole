@@ -67,34 +67,49 @@ export default function PlanChambres({ configId, voyageId }: Props) {
 
   const loadAffectations = async (chambreIds: string[]) => {
     if (chambreIds.length === 0) return;
-
+  
     const { data, error } = await supabase
       .from('chambre_affectations')
       .select(`
         *,
-        participant:voyage_participants(
+        participant:voyage_participants!inner(
           id,
           eleve_id,
           genre,
           classe,
-          eleve:students(nom, prenom, classe)
+          eleve:students!inner(
+            nom,
+            prenom,
+            classe
+          )
         )
       `)
       .in('chambre_id', chambreIds);
-
+  
     if (!error && data) {
-      setAffectations(data);
+      // ✅ Transformer les données
+      const affectationsFormatees = data.map((item: any) => ({
+        ...item,
+        participant: {
+          ...item.participant,
+          eleve: Array.isArray(item.participant.eleve) 
+            ? item.participant.eleve[0] 
+            : item.participant.eleve
+        }
+      }));
+      
+      setAffectations(affectationsFormatees);
     }
   };
-
+  
   const loadParticipants = async () => {
     // Récupérer les participants déjà affectés
-    const affectes = await supabase
+    const { data: affectes } = await supabase
       .from('chambre_affectations')
       .select('participant_id');
-
-    const affectesIds = affectes.data?.map(a => a.participant_id) || [];
-
+  
+    const affectesIds = affectes?.map(a => a.participant_id) || [];
+  
     // Récupérer les participants non affectés
     const { data, error } = await supabase
       .from('voyage_participants')
@@ -103,14 +118,27 @@ export default function PlanChambres({ configId, voyageId }: Props) {
         eleve_id,
         genre,
         classe,
-        eleve:students(nom, prenom, classe)
+        eleve:students!inner (
+          nom,
+          prenom,
+          classe
+        )
       `)
       .eq('voyage_id', voyageId)
       .eq('statut', 'confirme')
       .not('id', 'in', `(${affectesIds.join(',')})`);
-
+  
     if (!error && data) {
-      setParticipantsDisponibles(data);
+      // ✅ Transformer les données pour correspondre au type Participant
+      const participantsFormates = data.map((item: any) => ({
+        id: item.id,
+        eleve_id: item.eleve_id,
+        genre: item.genre,
+        classe: item.classe,
+        eleve: Array.isArray(item.eleve) ? item.eleve[0] : item.eleve // Prend le premier élément du tableau
+      }));
+      
+      setParticipantsDisponibles(participantsFormates);
     }
   };
 
