@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase';
 
 interface Props {
   voyageId: string;
+  isResponsable: boolean;
+  userType: 'employee' | 'student' | null;
 }
 
 interface Eleve {
@@ -64,6 +66,7 @@ export default function ParticipantsList({ voyageId }: Props) {
   // États pour gérer les permissions
   const [userType, setUserType] = useState<'employee' | 'student'>('employee');
   const [userId, setUserId] = useState<string | null>(null);
+  const canEdit = userType === 'employee';
 
   // Récupérer le type d'utilisateur au chargement
   useEffect(() => {
@@ -81,7 +84,7 @@ export default function ParticipantsList({ voyageId }: Props) {
 
   // Charger les classes disponibles depuis la BDD quand on ouvre le modal
   useEffect(() => {
-    if (showAddModal && userType === 'employee') {
+    if (showAddModal && canEdit ) {
       loadClassesDisponibles();
       loadProfesseursDisponibles();
       // Réinitialiser les sélections
@@ -97,7 +100,7 @@ export default function ParticipantsList({ voyageId }: Props) {
 
   // Charger automatiquement les élèves quand les filtres changent
   useEffect(() => {
-    if (showAddModal && userType === 'employee' && (addMode === 'individuel' || addMode === 'classe' || addMode === 'niveau')) {
+    if (showAddModal && canEdit  && (addMode === 'individuel' || addMode === 'classe' || addMode === 'niveau')) {
       const timer = setTimeout(() => {
         loadElevesDisponibles();
       }, 300);
@@ -107,7 +110,7 @@ export default function ParticipantsList({ voyageId }: Props) {
 
   // Charger automatiquement les professeurs
   useEffect(() => {
-    if (showAddModal && userType === 'employee' && addMode === 'prof') {
+    if (showAddModal && canEdit  && addMode === 'prof') {
       loadProfesseursDisponibles();
     }
   }, [searchTerm, addMode, showAddModal, userType]);
@@ -431,7 +434,7 @@ export default function ParticipantsList({ voyageId }: Props) {
         </div>
 
         {/* Boutons d'action - UNIQUEMENT pour les employés */}
-        {userType === 'employee' && (
+        {canEdit  && (
           <div className="flex gap-2">
             <button
               onClick={removeMultipleParticipants}
@@ -512,7 +515,7 @@ export default function ParticipantsList({ voyageId }: Props) {
                 <div className="text-xs text-gray-500">{prof.professeur.email || '—'}</div>
               </div>
               <div className="col-span-2">
-                {userType === 'employee' ? (
+                {canEdit  ? (
                   <select
                     value={prof.role}
                     onChange={(e) => updateProfRole(prof.id, e.target.value)}
@@ -571,7 +574,7 @@ export default function ParticipantsList({ voyageId }: Props) {
                 </span>
               </div>
               <div className="col-span-2">
-                {userType === 'employee' ? (
+                {canEdit  ? (
                   <select
                     value={participant.statut}
                     onChange={(e) => updateStatut(participant.id, e.target.value)}
@@ -601,7 +604,7 @@ export default function ParticipantsList({ voyageId }: Props) {
       </div>
 
       {/* Modal d'ajout - UNIQUEMENT visible pour les employés */}
-      {userType === 'employee' && showAddModal && (
+      {canEdit  && showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col">
             <div className="p-6 border-b">
