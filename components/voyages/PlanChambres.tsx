@@ -468,7 +468,7 @@ export default function PlanChambres({ configId, voyageId }: Props) {
                       className="flex justify-between items-center py-1 px-1.5 bg-white bg-opacity-50 rounded text-xs"
                     >
                       <span className="font-medium truncate max-w-[120px]">
-                        {display.icone} {display.prenom} {display.nom.substring(0, 1)}.
+                        {display.icone} {display.prenom} {display.nom}.
                       </span>
                       <span className="text-xs text-gray-500 ml-1 truncate max-w-[60px]">
                         {display.detail}
@@ -508,7 +508,7 @@ export default function PlanChambres({ configId, voyageId }: Props) {
                       <option value="">+ Ajouter élève...</option>
                       {elevesPossibles.map((p) => (
                         <option key={p.id} value={p.id}>
-                          👤 {p.eleve.prenom} {p.eleve.nom.substring(0, 1)}. - {p.classe}
+                          👤 {p.eleve.prenom} {p.eleve.nom}. - {p.classe}
                         </option>
                       ))}
                     </select>
@@ -529,7 +529,7 @@ export default function PlanChambres({ configId, voyageId }: Props) {
                       <option value="">+ Ajouter professeur...</option>
                       {professeursPossibles.map((p) => (
                         <option key={p.id} value={p.id}>
-                          👨‍🏫 {p.professeur.prenom} {p.professeur.nom.substring(0, 1)}. - {p.role}
+                          👨‍🏫 {p.professeur.prenom} {p.professeur.nom}. - {p.role}
                         </option>
                       ))}
                     </select>
