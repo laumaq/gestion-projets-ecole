@@ -15,6 +15,30 @@ interface Voyage {
   statut: string;
 }
 
+interface VoyageProfResponse {
+  voyage_id: string;
+  voyages: {
+    id: string;
+    nom: string;
+    destination: string;
+    date_debut: string;
+    date_fin: string;
+    statut: string;
+  } | null;
+}
+
+interface VoyageParticipantResponse {
+  voyage_id: string;
+  voyages: {
+    id: string;
+    nom: string;
+    destination: string;
+    date_debut: string;
+    date_fin: string;
+    statut: string;
+  } | null;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [userName, setUserName] = useState('');
@@ -51,7 +75,7 @@ export default function DashboardPage() {
       
       if (type === 'employee') {
         // Charger les voyages où l'employé est professeur
-        const { data: voyagesProf } = await supabase
+        const { data: voyagesProf, error } = await supabase
           .from('voyage_professeurs')
           .select(`
             voyage_id,
@@ -66,15 +90,24 @@ export default function DashboardPage() {
           `)
           .eq('professeur_id', id);
 
-        if (voyagesProf) {
+        if (error) {
+          console.error('Erreur Supabase:', error);
+          setMesVoyages([]);
+        } else if (voyagesProf) {
+          // Filtrer et typer correctement les données
           const voyages = voyagesProf
-            .map(vp => vp.voyages)
-            .filter(v => v !== null) as Voyage[];
+            .map((item: any) => item.voyages)
+            .filter((voyage): voyage is Voyage => 
+              voyage !== null && 
+              typeof voyage === 'object' &&
+              'id' in voyage &&
+              'nom' in voyage
+            );
           setMesVoyages(voyages);
         }
       } else {
         // Charger les voyages où l'élève est participant
-        const { data: voyagesEleve } = await supabase
+        const { data: voyagesEleve, error } = await supabase
           .from('voyage_participants')
           .select(`
             voyage_id,
@@ -89,15 +122,25 @@ export default function DashboardPage() {
           `)
           .eq('eleve_id', parseInt(id));
 
-        if (voyagesEleve) {
+        if (error) {
+          console.error('Erreur Supabase:', error);
+          setMesVoyages([]);
+        } else if (voyagesEleve) {
+          // Filtrer et typer correctement les données
           const voyages = voyagesEleve
-            .map(vp => vp.voyages)
-            .filter(v => v !== null) as Voyage[];
+            .map((item: any) => item.voyages)
+            .filter((voyage): voyage is Voyage => 
+              voyage !== null && 
+              typeof voyage === 'object' &&
+              'id' in voyage &&
+              'nom' in voyage
+            );
           setMesVoyages(voyages);
         }
       }
     } catch (error) {
       console.error('Erreur lors du chargement des voyages:', error);
+      setMesVoyages([]);
     } finally {
       setLoading(false);
     }
@@ -215,32 +258,42 @@ export default function DashboardPage() {
         {mesVoyages.length > 0 && (
           <div>
             <h2 className="text-lg font-semibold text-gray-700 mb-4">Mes voyages</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {mesVoyages.map((voyage) => (
-                <Link 
-                  key={voyage.id} 
-                  href={`/tools/voyages/${voyage.id}`}
-                  className="block"
-                >
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="text-lg font-medium text-gray-900">{voyage.nom}</h3>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        voyage.statut === 'préparation' ? 'bg-yellow-100 text-yellow-800' :
-                        voyage.statut === 'confirmé' ? 'bg-green-100 text-green-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {voyage.statut}
-                      </span>
+            {loading ? (
+              <p className="text-gray-500">Chargement des voyages...</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {mesVoyages.map((voyage) => (
+                  <Link 
+                    key={voyage.id} 
+                    href={`/tools/voyages/${voyage.id}`}
+                    className="block"
+                  >
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="text-lg font-medium text-gray-900">{voyage.nom}</h3>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          voyage.statut === 'préparation' ? 'bg-yellow-100 text-yellow-800' :
+                          voyage.statut === 'confirmé' ? 'bg-green-100 text-green-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {voyage.statut}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{voyage.destination}</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(voyage.date_debut).toLocaleDateString('fr-FR')} - {new Date(voyage.date_fin).toLocaleDateString('fr-FR')}
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">{voyage.destination}</p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(voyage.date_debut).toLocaleDateString('fr-FR')} - {new Date(voyage.date_fin).toLocaleDateString('fr-FR')}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!loading && mesVoyages.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Vous n'êtes impliqué dans aucun voyage pour le moment.</p>
           </div>
         )}
       </main>
