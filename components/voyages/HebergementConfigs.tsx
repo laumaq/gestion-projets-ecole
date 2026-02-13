@@ -8,6 +8,7 @@ interface Props {
   voyageId: string;
   isResponsable: boolean;
   userType: 'employee' | 'student' | null;
+  onConfigSelect?: (configId: string) => void; 
 }
 
 interface HebergementConfig {
@@ -19,7 +20,7 @@ interface HebergementConfig {
   ordre: number;
 }
 
-export default function HebergementConfigs({ voyageId, isResponsable, userType }: Props) {
+export default function HebergementConfigs({ voyageId, isResponsable, userType, onConfigSelect }: Props) {
   const [configs, setConfigs] = useState<HebergementConfig[]>([]);
   const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
   const [showNewConfig, setShowNewConfig] = useState(false);
@@ -45,6 +46,13 @@ export default function HebergementConfigs({ voyageId, isResponsable, userType }
       }
     }
     setLoading(false);
+  };
+  
+  const handleConfigClick = (configId: string) => {
+    setSelectedConfig(configId);
+    if (onConfigSelect) {
+      onConfigSelect(configId);  // ← Notifier le parent
+    }
   };
 
   const createConfig = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -107,7 +115,7 @@ export default function HebergementConfigs({ voyageId, isResponsable, userType }
             {configs.map((config) => (
               <button
                 key={config.id}
-                onClick={() => setSelectedConfig(config.id)}
+                onClick={() => handleConfigClick(config.id)}
                 className={`px-4 py-3 rounded-lg border-2 transition flex-shrink-0 ${
                   selectedConfig === config.id
                     ? 'border-blue-600 bg-blue-50'
