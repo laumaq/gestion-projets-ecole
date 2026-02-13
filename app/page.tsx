@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [userType, setUserType] = useState<'employee' | 'student'>('employee');
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -23,16 +24,38 @@ export default function LoginPage() {
 
       console.log("Tentative de connexion:", {
         nom: nomNormalized,
-        initiale: initialeNormalized
+        initiale: initialeNormalized,
+        userType
       });
 
-      // Recherche dans la table employees
-      const { data: userData, error: userError } = await supabase
-        .from('employees')
-        .select('*')
-        .ilike('nom', nomNormalized)
-        .ilike('initiale', initialeNormalized)
-        .maybeSingle();
+      // Recherche selon le type d'utilisateur
+      let userData = null;
+      let userError = null;
+
+      if (userType === 'employee') {
+        // Recherche dans la table employees
+        const result = await supabase
+          .from('employees')
+          .select('*')
+          .ilike('nom', nomNormalized)
+          .ilike('initiale', initialeNormalized)
+          .maybeSingle();
+        
+        userData = result.data;
+        userError = result.error;
+      } else {
+        // Recherche dans la table students
+        // Pour les élèves, on utilise nom et initiale du prénom
+        const result = await supabase
+          .from('students')
+          .select('*')
+          .ilike('nom', nomNormalized)
+          .ilike('prenom', initialeNormalized + '%') // Les prénoms commençant par l'initiale
+          .maybeSingle();
+        
+        userData = result.data;
+        userError = result.error;
+      }
 
       console.log("Résultat de la requête:", { userData, userError });
 
@@ -52,42 +75,30 @@ export default function LoginPage() {
 
       const storedPassword = userData.mot_de_passe;
       
-      // DEBUG: Afficher les infos sans opérateur spread
+      // DEBUG: Afficher les infos
       console.log("🔐 Mot de passe stocké:", `"${storedPassword}"`);
       console.log("🔐 Mot de passe fourni:", `"${password}"`);
-      console.log("🔐 Longueur stocké:", storedPassword?.length || 0);
-      console.log("🔐 Longueur fourni:", password.length);
       
-      // Alternative sans spread operator
-      if (storedPassword) {
-        const charsStocke = [];
-        for (let i = 0; i < storedPassword.length; i++) {
-          charsStocke.push(storedPassword.charCodeAt(i));
-        }
-        console.log("🔐 Caractères stocké:", charsStocke);
-      } else {
-        console.log("🔐 Caractères stocké: []");
-      }
-      
-      const charsFourni = [];
-      for (let i = 0; i < password.length; i++) {
-        charsFourni.push(password.charCodeAt(i));
-      }
-      console.log("🔐 Caractères fourni:", charsFourni);
-      
-      console.log("🔐 Égalité stricte:", storedPassword === password);
-      console.log("🔐 Égalité après trim:", storedPassword?.trim() === password?.trim());
-      console.log("🔐 Type stocké:", typeof storedPassword);
-      console.log("🔐 Type fourni:", typeof password);
-
       // CAS 1: PREMIÈRE CONNEXION (NULL ou chaîne vide)
       if (!storedPassword || storedPassword === '') {
         console.log("Première connexion - enregistrement du mot de passe");
         
-        const { error: updateError } = await supabase
-          .from('employees')
-          .update({ mot_de_passe: password })
-          .eq('id', userData.id);
+        // Mise à jour selon le type d'utilisateur
+        let updateError = null;
+        
+        if (userType === 'employee') {
+          const result = await supabase
+            .from('employees')
+            .update({ mot_de_passe: password })
+            .eq('id', userData.id);
+          updateError = result.error;
+        } else {
+          const result = await supabase
+            .from('students')
+            .update({ mot_de_passe: password })
+            .eq('matricule', userData.matricule);
+          updateError = result.error;
+        }
 
         if (updateError) {
           console.error("Erreur d'enregistrement:", updateError);
@@ -97,10 +108,19 @@ export default function LoginPage() {
         }
 
         // Connecter l'utilisateur
-        localStorage.setItem('userType', userData.role || 'employee');
-        localStorage.setItem('userId', userData.id);
-        localStorage.setItem('userName', `${userData.nom} ${userData.initiale}.`);
-        localStorage.setItem('userRole', userData.role || 'employee');
+        if (userType === 'employee') {
+          localStorage.setItem('userType', 'employee');
+          localStorage.setItem('userId', userData.id);
+          localStorage.setItem('userName', `${userData.nom} ${userData.initiale}.`);
+          localStorage.setItem('userRole', userData.role || 'employee');
+          localStorage.setItem('userJob', userData.job || 'employee');
+        } else {
+          localStorage.setItem('userType', 'student');
+          localStorage.setItem('userId', userData.matricule.toString());
+          localStorage.setItem('userName', `${userData.prenom} ${userData.nom}`);
+          localStorage.setItem('userClass', userData.classe || '');
+          localStorage.setItem('userLevel', userData.niveau || '');
+        }
         
         console.log("Connexion réussie (première fois)");
         router.push('/dashboard');
@@ -110,30 +130,25 @@ export default function LoginPage() {
       // CAS 2: MOT DE PASSE EXISTANT
       if (storedPassword === password) {
         console.log("Connexion réussie (mot de passe correct)");
-        localStorage.setItem('userType', userData.role || 'employee');
-        localStorage.setItem('userId', userData.id);
-        localStorage.setItem('userName', `${userData.nom} ${userData.initiale}.`);
-        localStorage.setItem('userRole', userData.role || 'employee');
+        
+        if (userType === 'employee') {
+          localStorage.setItem('userType', 'employee');
+          localStorage.setItem('userId', userData.id);
+          localStorage.setItem('userName', `${userData.nom} ${userData.initiale}.`);
+          localStorage.setItem('userRole', userData.role || 'employee');
+          localStorage.setItem('userJob', userData.job || 'employee');
+        } else {
+          localStorage.setItem('userType', 'student');
+          localStorage.setItem('userId', userData.matricule.toString());
+          localStorage.setItem('userName', `${userData.prenom} ${userData.nom}`);
+          localStorage.setItem('userClass', userData.classe || '');
+          localStorage.setItem('userLevel', userData.niveau || '');
+        }
+        
         router.push('/dashboard');
         return;
       } else {
         console.log("❌ Mot de passe incorrect");
-        
-        // Afficher en hexadécimal sans Buffer
-        if (storedPassword) {
-          let hexStocke = '';
-          for (let i = 0; i < storedPassword.length; i++) {
-            hexStocke += storedPassword.charCodeAt(i).toString(16).padStart(2, '0');
-          }
-          console.log("   Stocké (hex):", hexStocke);
-        }
-        
-        let hexFourni = '';
-        for (let i = 0; i < password.length; i++) {
-          hexFourni += password.charCodeAt(i).toString(16).padStart(2, '0');
-        }
-        console.log("   Fourni (hex):", hexFourni);
-        
         setError('Mot de passe incorrect');
         setLoading(false);
         return;
@@ -159,10 +174,36 @@ export default function LoginPage() {
           <p className="text-gray-600">Outils pédagogiques</p>
         </div>
 
+        {/* Sélecteur de type d'utilisateur */}
+        <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+          <button
+            type="button"
+            onClick={() => setUserType('employee')}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition ${
+              userType === 'employee'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Personnel
+          </button>
+          <button
+            type="button"
+            onClick={() => setUserType('student')}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition ${
+              userType === 'student'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Élève
+          </button>
+        </div>
+
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nom
+              {userType === 'employee' ? 'Nom' : 'Nom de famille'}
             </label>
             <input
               type="text"
@@ -170,13 +211,13 @@ export default function LoginPage() {
               onChange={(e) => setNom(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
-              placeholder="Ex: DUPONT"
+              placeholder={userType === 'employee' ? "Ex: DUPONT" : "Ex: MARTIN"}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Initiale du prénom
+              {userType === 'employee' ? 'Initiale du prénom' : 'Première lettre du prénom'}
             </label>
             <input
               type="text"
@@ -222,8 +263,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-500">
-          <p>Utilisez votre nom et l'initiale de votre prénom</p>
-          <p className="mt-1">Table: employees</p>
+          <p>Utilisez votre nom et la première lettre de votre prénom</p>
         </div>
       </div>
     </div>
