@@ -25,6 +25,15 @@ export default function ToolsPage() {
       category: 'AG'
     },
     {
+      id: 7,
+      title: 'Gestion des chambres',
+      description: 'Planification et répartition des chambres pour les voyages scolaires',
+      icon: '🏨',
+      path: '/tools/voyages',  // ← Point d'entrée
+      status: 'active',
+      category: 'Voyages'
+    },
+    {
       id: 2,
       title: 'Projet 5ème',
       description: 'Gestion du projet pédagogique des classes de 5ème',
