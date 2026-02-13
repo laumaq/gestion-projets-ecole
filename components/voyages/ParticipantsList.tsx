@@ -60,6 +60,18 @@ export default function ParticipantsList({ voyageId }: Props) {
   const [classesDisponibles, setClassesDisponibles] = useState<string[]>([]);
   const [loadingClasses, setLoadingClasses] = useState(false);
   const [selectedProfRole, setSelectedProfRole] = useState('accompagnateur');
+  
+  // États pour gérer les permissions
+  const [userType, setUserType] = useState<'employee' | 'student'>('employee');
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Récupérer le type d'utilisateur au chargement
+  useEffect(() => {
+    const type = localStorage.getItem('userType') as 'employee' | 'student';
+    const id = localStorage.getItem('userId');
+    setUserType(type || 'employee');
+    setUserId(id);
+  }, []);
 
   // Charger les participants au démarrage
   useEffect(() => {
@@ -69,7 +81,7 @@ export default function ParticipantsList({ voyageId }: Props) {
 
   // Charger les classes disponibles depuis la BDD quand on ouvre le modal
   useEffect(() => {
-    if (showAddModal) {
+    if (showAddModal && userType === 'employee') {
       loadClassesDisponibles();
       loadProfesseursDisponibles();
       // Réinitialiser les sélections
@@ -81,24 +93,24 @@ export default function ParticipantsList({ voyageId }: Props) {
       setSelectedClasse('');
       setSelectedNiveau('');
     }
-  }, [showAddModal]);
+  }, [showAddModal, userType]);
 
   // Charger automatiquement les élèves quand les filtres changent
   useEffect(() => {
-    if (showAddModal && (addMode === 'individuel' || addMode === 'classe' || addMode === 'niveau')) {
+    if (showAddModal && userType === 'employee' && (addMode === 'individuel' || addMode === 'classe' || addMode === 'niveau')) {
       const timer = setTimeout(() => {
         loadElevesDisponibles();
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [searchTerm, selectedClasse, selectedNiveau, addMode, showAddModal]);
+  }, [searchTerm, selectedClasse, selectedNiveau, addMode, showAddModal, userType]);
 
   // Charger automatiquement les professeurs
   useEffect(() => {
-    if (showAddModal && addMode === 'prof') {
+    if (showAddModal && userType === 'employee' && addMode === 'prof') {
       loadProfesseursDisponibles();
     }
-  }, [searchTerm, addMode, showAddModal]);
+  }, [searchTerm, addMode, showAddModal, userType]);
 
   const loadClassesDisponibles = async () => {
     setLoadingClasses(true);
@@ -417,45 +429,58 @@ export default function ParticipantsList({ voyageId }: Props) {
             {professeursParticipants.length} professeur{professeursParticipants.length > 1 ? 's' : ''})
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={removeMultipleParticipants}
-            className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
-          >
-            Retirer une classe
-          </button>
-          <button
-            onClick={() => updateStatutMultiple('liste_attente')}
-            className="px-4 py-2 border border-yellow-300 text-yellow-600 rounded-lg hover:bg-yellow-50"
-          >
-            Mettre en liste d'attente
-          </button>
-          
-          {/* Bouton pour ajouter des professeurs */}
-          <button
-            onClick={() => {
-              setAddMode('prof');
-              setShowAddModal(true);
-            }}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center"
-          >
-            + Ajouter des professeurs
-          </button>
-          
-          {/* Bouton pour ajouter des élèves */}
-          <button
-            onClick={() => {
-              setAddMode('individuel');
-              setShowAddModal(true);
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
-          >
-            + Ajouter des élèves
-          </button>
-        </div>
+
+        {/* Boutons d'action - UNIQUEMENT pour les employés */}
+        {userType === 'employee' && (
+          <div className="flex gap-2">
+            <button
+              onClick={removeMultipleParticipants}
+              className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
+            >
+              Retirer une classe
+            </button>
+            <button
+              onClick={() => updateStatutMultiple('liste_attente')}
+              className="px-4 py-2 border border-yellow-300 text-yellow-600 rounded-lg hover:bg-yellow-50"
+            >
+              Mettre en liste d'attente
+            </button>
+            
+            {/* Bouton pour ajouter des professeurs */}
+            <button
+              onClick={() => {
+                setAddMode('prof');
+                setShowAddModal(true);
+              }}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center"
+            >
+              + Ajouter des professeurs
+            </button>
+            
+            {/* Bouton pour ajouter des élèves */}
+            <button
+              onClick={() => {
+                setAddMode('individuel');
+                setShowAddModal(true);
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+            >
+              + Ajouter des élèves
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Filtres */}
+      {/* Message pour les élèves */}
+      {userType === 'student' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-blue-700">
+            👋 Voici la liste des participants à ce voyage. Vous pouvez voir qui participe, mais vous ne pouvez pas modifier la liste.
+          </p>
+        </div>
+      )}
+
+      {/* Filtres - toujours visibles */}
       <div className="flex gap-4">
         <select
           value={selectedClasse}
@@ -475,8 +500,7 @@ export default function ParticipantsList({ voyageId }: Props) {
           <div className="grid grid-cols-12 gap-4 p-4 bg-purple-50 font-medium text-sm text-gray-700 border-b">
             <div className="col-span-4">Professeur</div>
             <div className="col-span-2">Rôle</div>
-            <div className="col-span-4"></div>
-            <div className="col-span-2">Actions</div>
+            <div className="col-span-6"></div>
           </div>
 
           {professeursParticipants.map((prof) => (
@@ -488,25 +512,33 @@ export default function ParticipantsList({ voyageId }: Props) {
                 <div className="text-xs text-gray-500">{prof.professeur.email || '—'}</div>
               </div>
               <div className="col-span-2">
-                <select
-                  value={prof.role}
-                  onChange={(e) => updateProfRole(prof.id, e.target.value)}
-                  className="text-sm border rounded px-2 py-1"
-                >
-                  <option value="accompagnateur">👥 Accompagnateur</option>
-                  <option value="responsable">⭐ Responsable</option>
-                  <option value="direction">🏢 Direction</option>
-                  <option value="infirmier">🏥 Infirmier</option>
-                </select>
+                {userType === 'employee' ? (
+                  <select
+                    value={prof.role}
+                    onChange={(e) => updateProfRole(prof.id, e.target.value)}
+                    className="text-sm border rounded px-2 py-1"
+                  >
+                    <option value="accompagnateur">👥 Accompagnateur</option>
+                    <option value="responsable">⭐ Responsable</option>
+                    <option value="direction">🏢 Direction</option>
+                    <option value="infirmier">🏥 Infirmier</option>
+                  </select>
+                ) : (
+                  <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                    prof.role === 'responsable' ? 'bg-yellow-100 text-yellow-800' :
+                    prof.role === 'direction' ? 'bg-blue-100 text-blue-800' :
+                    prof.role === 'infirmier' ? 'bg-green-100 text-green-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {prof.role === 'accompagnateur' ? '👥 Accompagnateur' :
+                     prof.role === 'responsable' ? '⭐ Responsable' :
+                     prof.role === 'direction' ? '🏢 Direction' :
+                     prof.role === 'infirmier' ? '🏥 Infirmier' : prof.role}
+                  </span>
+                )}
               </div>
-              <div className="col-span-4"></div>
-              <div className="col-span-2">
-                <button
-                  onClick={() => removeParticipant(prof)}
-                  className="text-red-600 hover:text-red-800 text-sm"
-                >
-                  Retirer
-                </button>
+              <div className="col-span-6">
+                {/* Pour les élèves, pas d'actions */}
               </div>
             </div>
           ))}
@@ -520,7 +552,7 @@ export default function ParticipantsList({ voyageId }: Props) {
           <div className="col-span-2">Classe</div>
           <div className="col-span-2">Genre</div>
           <div className="col-span-2">Statut</div>
-          <div className="col-span-2">Actions</div>
+          <div className="col-span-2"></div>
         </div>
 
         {participants
@@ -539,30 +571,37 @@ export default function ParticipantsList({ voyageId }: Props) {
                 </span>
               </div>
               <div className="col-span-2">
-                <select
-                  value={participant.statut}
-                  onChange={(e) => updateStatut(participant.id, e.target.value)}
-                  className="text-sm border rounded px-2 py-1"
-                >
-                  <option value="confirme">✅ Confirmé</option>
-                  <option value="liste_attente">⏳ Liste d'attente</option>
-                  <option value="annule">❌ Annulé</option>
-                </select>
+                {userType === 'employee' ? (
+                  <select
+                    value={participant.statut}
+                    onChange={(e) => updateStatut(participant.id, e.target.value)}
+                    className="text-sm border rounded px-2 py-1"
+                  >
+                    <option value="confirme">✅ Confirmé</option>
+                    <option value="liste_attente">⏳ Liste d'attente</option>
+                    <option value="annule">❌ Annulé</option>
+                  </select>
+                ) : (
+                  <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                    participant.statut === 'confirme' ? 'bg-green-100 text-green-800' :
+                    participant.statut === 'liste_attente' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {participant.statut === 'confirme' ? '✅ Confirmé' :
+                     participant.statut === 'liste_attente' ? '⏳ Liste d\'attente' :
+                     '❌ Annulé'}
+                  </span>
+                )}
               </div>
               <div className="col-span-2">
-                <button
-                  onClick={() => removeParticipant(participant)}
-                  className="text-red-600 hover:text-red-800 text-sm"
-                >
-                  Retirer
-                </button>
+                {/* Pour les élèves, pas d'actions */}
               </div>
             </div>
           ))}
       </div>
 
-      {/* Modal d'ajout */}
-      {showAddModal && (
+      {/* Modal d'ajout - UNIQUEMENT visible pour les employés */}
+      {userType === 'employee' && showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col">
             <div className="p-6 border-b">
