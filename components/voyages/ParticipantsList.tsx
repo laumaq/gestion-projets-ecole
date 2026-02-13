@@ -492,12 +492,21 @@ export default function ParticipantsList({ voyageId }: Props) {
                   </button>
                 )}
 
-                {(addMode === 'classe' && selectedClasse) || (addMode === 'niveau' && selectedNiveau !== '') && (
+                {addMode === 'classe' && selectedClasse && (
                   <button
                     onClick={addParticipants}
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                   >
-                    Ajouter {addMode === 'classe' ? 'la classe' : 'le niveau'}
+                    Ajouter la classe
+                  </button>
+                )}
+                
+                {addMode === 'niveau' && selectedNiveau !== '' && (
+                  <button
+                    onClick={addParticipants}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    Ajouter le niveau {selectedNiveau}
                   </button>
                 )}
               </div>
