@@ -28,8 +28,8 @@ export default function VoyageDetailPage() {
   const [voyage, setVoyage] = useState<Voyage | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('participants');
+  const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null); // ← AJOUTÉ
   
-  // Utiliser le hook de permissions
   const { isLoading: permissionsLoading, hasAccess, isResponsable, userType, error } = useVoyagePermissions(voyageId);
 
   useEffect(() => {
@@ -51,7 +51,11 @@ export default function VoyageDetailPage() {
     setLoading(false);
   };
 
-  // Gestion des différents états
+  // Fonction pour recevoir la config sélectionnée depuis HebergementConfigs
+  const handleConfigSelect = (configId: string) => {
+    setSelectedConfigId(configId);
+  };
+
   if (permissionsLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -63,7 +67,6 @@ export default function VoyageDetailPage() {
     );
   }
 
-  // Si pas d'accès, afficher un message d'erreur
   if (!hasAccess || error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -188,11 +191,13 @@ export default function VoyageDetailPage() {
             voyageId={voyageId}
             isResponsable={isResponsable}
             userType={userType}
+            onConfigSelect={handleConfigSelect}  // ← Passer la fonction pour recevoir la config
           />
         )}
         
-        {activeTab === 'plan' && (
+        {activeTab === 'plan' && selectedConfigId && (  // ← Vérifier que selectedConfigId existe
           <PlanChambres 
+            configId={selectedConfigId}
             voyageId={voyageId}
             isResponsable={isResponsable}
             userType={userType}
