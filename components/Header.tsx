@@ -6,12 +6,16 @@ import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const [userName, setUserName] = useState('');
+  const [userType, setUserType] = useState<'employee' | 'student'>('employee');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
     const name = localStorage.getItem('userName') || 'Utilisateur';
+    const type = localStorage.getItem('userType') as 'employee' | 'student' || 'employee';
+    
     setUserName(name);
+    setUserType(type);
   }, []);
 
   const navigation = [
@@ -55,8 +59,11 @@ export default function Header() {
 
           {/* User menu */}
           <div className="flex items-center">
-            <div className="hidden md:block mr-4">
+            <div className="hidden md:block mr-4 text-right">
               <div className="text-sm font-medium text-gray-700">{userName}</div>
+              <div className="text-xs text-gray-500">
+                {userType === 'employee' ? 'Personnel' : 'Élève'}
+              </div>
             </div>
             
             {/* Menu mobile button */}
@@ -91,7 +98,11 @@ export default function Header() {
               </Link>
             ))}
             <div className="px-3 py-2 text-sm text-gray-500 border-t">
-              Connecté en tant que <span className="font-medium">{userName}</span>
+              <div>Connecté en tant que</div>
+              <div className="font-medium">{userName}</div>
+              <div className="text-xs text-gray-400">
+                {userType === 'employee' ? 'Personnel' : 'Élève'}
+              </div>
             </div>
             <button
               className="block w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-md font-medium"
