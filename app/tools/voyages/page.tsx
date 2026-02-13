@@ -40,7 +40,13 @@ export default function VoyagesPage() {
     const formData = new FormData(e.currentTarget);
     const userId = localStorage.getItem('userId');
 
-    const { data, error } = await supabase
+    if (!userId) {
+      router.push('/');
+      return;
+    }
+
+    // 1. Créer le voyage
+    const { data: voyage, error: voyageError } = await supabase
       .from('voyages')
       .insert({
         nom: formData.get('nom'),
@@ -54,9 +60,28 @@ export default function VoyagesPage() {
       .select()
       .single();
 
-    if (!error && data) {
-      router.push(`/tools/voyages/${data.id}`);
+    if (voyageError) {
+      console.error('Erreur création voyage:', voyageError);
+      return;
     }
+
+    // 2. Ajouter le créateur comme professeur responsable
+    const { error: profError } = await supabase
+      .from('voyage_professeurs')
+      .insert({
+        voyage_id: voyage.id,
+        professeur_id: userId,
+        role: 'responsable'
+      });
+
+    if (profError) {
+      console.error('Erreur ajout professeur:', profError);
+      // On redirige quand même vers le voyage, mais on notifie l'erreur
+      alert('Voyage créé mais erreur lors de l\'ajout comme responsable. Veuillez vous ajouter manuellement.');
+    }
+
+    // 3. Rediriger vers la page du voyage
+    router.push(`/tools/voyages/${voyage.id}`);
   };
 
   if (loading) return <div className="p-8 text-center">Chargement...</div>;
