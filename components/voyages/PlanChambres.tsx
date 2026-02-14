@@ -63,6 +63,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
   const [showAddChambre, setShowAddChambre] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserGenre, setCurrentUserGenre] = useState<string | null>(null);
   const [currentUserEleveId, setCurrentUserEleveId] = useState<number | null>(null);
   const [autoAffectation, setAutoAffectation] = useState(false);
 
@@ -75,6 +76,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
     
     if (isEleve && id) {
       setCurrentUserEleveId(parseInt(id));
+      loadCurrentUserGenre(parseInt(id));
     }
     
     loadVoyageConfig();
@@ -330,6 +332,18 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
     return null;
   };
 
+  const loadCurrentUserGenre = async (eleveId: number) => {
+    const { data } = await supabase
+      .from('students')
+      .select('sexe')
+      .eq('matricule', eleveId)
+      .single();
+    
+    if (data) {
+      setCurrentUserGenre(data.sexe);
+    }
+  };
+  
   if (loading) return <div className="text-center py-8">Chargement...</div>;
 
   const maChambre = getMaChambre();
