@@ -430,6 +430,10 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
 
   const currentUserChambreId = getCurrentUserChambreId();
 
+  const getAffectationsForChambre = (chambreId: string) => {
+    return affectations.filter(a => a.chambre_id === chambreId);
+  };
+
   return (
     <div className="space-y-4">
       {/* Header des chambres */}
