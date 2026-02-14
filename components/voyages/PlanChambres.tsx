@@ -602,157 +602,38 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                         }
                       }}
                       value=""
-                   ibold text-gray-900">Plan des chambres</h3>
-          <p className="text-xs text-gray-600">
-            {chambres.length} chambre{chambres.length > 1 ? 's' : ''} • 
-            {affectations.length} personne{affectations.length > 1 ? 's' : ''} affectée{affectations.length > 1 ? 's' : ''}
-          </p>
-        </div>
-        
-        {canEdit && (
-          <button
-            onClick={() => setShowAddChambre(true)}
-            className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700"
-          >
-            + Ajouter une chambre
-          </button>
-        )}
-      </div>
+                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
+                    >
+                      <option value="">+ Ajouter élève...</option>
+                      {getElevesParGenre(chambre.genre).map((p) => (
+                        <option key={p.id} value={p.id}>
+                          👤 {p.eleve.prenom} {p.eleve.nom}. - {p.classe}
+                        </option>
+                      ))}
+                    </select>
+                  )}
 
-      {/* Message pour les élèves */}
-      {isEleve && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-xs text-blue-700">
-            {autoAffectation 
-              ? "👋 Vous pouvez choisir une chambre libre. Une fois inscrit, vous verrez vos camarades de chambre."
-              : "👋 Les inscriptions ne sont pas ouvertes pour le moment."}
-          </p>
-        </div>
-      )}
-
-      {/* Grille des chambres */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {chambres.map((chambre) => {
-          const affectationsChambre = getAffectationsForChambre(chambre.id);
-          const placesLibres = chambre.capacite - affectationsChambre.length;
-          const estComplete = placesLibres === 0;
-          
-          // Pour les élèves : ne voir que les chambres de leur genre, pas complètes
-          const estChambrePourMoi = isEleve && 
-            (chambre.genre === currentUserGenre || chambre.genre === 'mixte') && 
-            !estComplete;
-
-          // Est-ce que l'élève est dans cette chambre ?
-          const jeSuisDansCetteChambre = maChambre?.chambre.id === chambre.id;
-
-          return (
-            <div
-              key={chambre.id}
-              className={`border rounded-lg p-3 ${getGenreColor(chambre.genre)} ${
-                jeSuisDansCetteChambre ? 'ring-2 ring-green-500' : ''
-              }`}
-            >
-              {/* En-tête chambre */}
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-bold text-gray-900">
-                      Ch. {chambre.numero_chambre}
-                    </h4>
-                    {jeSuisDansCetteChambre && (
-                      <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
-                        Ma chambre
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                {canEdit && (
-                  <button
-                    onClick={() => deleteChambre(chambre.id)}
-                    className="text-gray-400 hover:text-red-600 text-xs"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              {/* Barre d'occupation */}
-              <div className="mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${getGenreBarColor(chambre.genre)} transition-all`}
-                      style={{ width: `${(affectationsChambre.length / chambre.capacite) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-medium whitespace-nowrap">
-                    {affectationsChambre.length}/{chambre.capacite}
-                  </span>
-                </div>
-              </div>
-
-              {/* Liste des occupants - visible pour les responsables OU si l'élève est dans la chambre */}
-              {(canEdit || jeSuisDansCetteChambre) && (
-                <div className="space-y-1 mb-2 min-h-[60px] max-h-[120px] overflow-y-auto">
-                  {affectationsChambre.map((aff) => {
-                    const estMoi = aff.participant_type === 'eleve' && 
-                      'eleve_id' in aff.participant && 
-                      aff.participant.eleve_id === currentUserEleveId;
-                    
-                    return (
-                      <div
-                        key={aff.id}
-                        className={`flex justify-between items-center py-1 px-1.5 bg-white bg-opacity-50 rounded text-xs ${
-                          estMoi ? 'bg-green-100 font-medium' : ''
-                        }`}
-                      >
-                        <span>
-                          {aff.participant_type === 'eleve' ? '👤' : '👨‍🏫'} 
-                          {aff.participant_type === 'eleve' 
-                            ? `${(aff.participant as any).eleve?.prenom || ''} ${(aff.participant as any).eleve?.nom || ''}.`
-                            : `${(aff.participant as any).professeur?.prenom || ''} ${(aff.participant as any).professeur?.nom || ''}.`}
-                          {estMoi && ' (moi)'}
-                        </span>
-                        
-                        {/* Bouton de désinscription pour l'élève lui-même */}
-                        {isEleve && estMoi && autoAffectation && (
-                          <button
-                            onClick={() => desinscrireEleve(aff.id)}
-                            className="text-red-600 hover:text-red-800 text-xs"
-                          >
-                            Quitter
-                          </button>
-                        )}
-                        
-                        {/* Bouton de retrait pour les responsables */}
-                        {canEdit && (
-                          <button
-                            onClick={() => desinscrireEleve(aff.id)}
-                            className="text-red-600 hover:text-red-800 text-xs"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                  {affectationsChambre.length === 0 && (
-                    <div className="text-center py-2 text-gray-400 text-xs">
-                      Vide
-                    </div>
+                  {/* Ajout de professeurs pour les chambres prof ou mixte */}
+                  {(chambre.genre === 'prof' || chambre.genre === 'mixte') && professeursDispos.length > 0 && (
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          assignerParticipant(chambre.id, e.target.value, 'professeur');
+                          e.target.value = '';
+                        }
+                      }}
+                      value=""
+                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
+                    >
+                      <option value="">+ Ajouter professeur...</option>
+                      {professeursDispos.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          👨‍🏫 {p.professeur.prenom} {p.professeur.nom}. - {p.role}
+                        </option>
+                      ))}
+                    </select>
                   )}
                 </div>
-              )}
-
-              {/* Pour les élèves sans chambre : bouton d'inscription */}
-              {isEleve && !maChambre && estChambrePourMoi && autoAffectation && (
-                <button
-                  onClick={() => inscrireEleve(chambre.id)}
-                  className="w-full px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                  M'inscrire dans cette chambre
-                </button>
               )}
             </div>
           );
@@ -800,4 +681,4 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
       )}
     </div>
   );
-}
+                                              }
