@@ -380,6 +380,10 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
     return affectation?.chambre_id || null;
   };
 
+  const getAffectationsForChambre = (chambreId: string) => {
+    return affectations.filter(a => a.chambre_id === chambreId);
+  };
+  
   const getElevesParGenre = (genre: string) => {
     return elevesDisponibles.filter(p => p.genre === genre);
   };
@@ -429,10 +433,6 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
   if (loading) return <div className="text-center py-8">Chargement des chambres...</div>;
 
   const currentUserChambreId = getCurrentUserChambreId();
-
-  const getAffectationsForChambre = (chambreId: string) => {
-    return affectations.filter(a => a.chambre_id === chambreId);
-  };
 
   return (
     <div className="space-y-4">
