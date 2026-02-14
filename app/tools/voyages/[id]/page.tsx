@@ -112,7 +112,6 @@ export default function VoyageDetailPage() {
   const tabs = [
     { id: 'participants', label: 'Participants', icon: '👥' },
     { id: 'hebergement', label: 'Hébergement', icon: '🏨' },
-    { id: 'plan', label: 'Plan des chambres', icon: '🛏️' },
   ];
 
   return (
@@ -194,15 +193,7 @@ export default function VoyageDetailPage() {
             onConfigSelect={handleConfigSelect}  // ← Passer la fonction pour recevoir la config
           />
         )}
-        
-        {activeTab === 'plan' && selectedConfigId && (  // ← Vérifier que selectedConfigId existe
-          <PlanChambres 
-            configId={selectedConfigId}
-            voyageId={voyageId}
-            isResponsable={isResponsable}
-            userType={userType}
-          />
-        )}
+
       </div>
     </div>
   );
