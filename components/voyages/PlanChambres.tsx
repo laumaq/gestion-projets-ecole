@@ -460,9 +460,9 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                       >
                         <span>
                           {aff.participant_type === 'eleve' ? '👤' : '👨‍🏫'} 
-                          {'prenom' in aff.participant ? 
-                            `${aff.participant.prenom} ${aff.participant.nom}.` : 
-                            `${aff.participant.professeur.prenom} ${aff.participant.professeur.nom}.`}
+                          {aff.participant_type === 'eleve' 
+                            ? `${(aff.participant as any).prenom} ${(aff.participant as any).nom}.`
+                            : `${(aff.participant as any).professeur?.prenom} ${(aff.participant as any).professeur?.nom}.`}
                           {estMoi && ' (moi)'}
                         </span>
                         
