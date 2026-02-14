@@ -55,11 +55,6 @@ interface Affectation {
   participant: Participant;
 }
 
-interface VoyageConfig {
-  auto_affectation_eleves: boolean;
-  visibilite_restreinte_eleves: boolean;
-}
-
 export default function PlanChambres({ configId, voyageId, isResponsable, userType }: Props) {
   const [chambres, setChambres] = useState<Chambre[]>([]);
   const [affectations, setAffectations] = useState<Affectation[]>([]);
@@ -67,12 +62,9 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
   const [professeursDisponibles, setProfesseursDisponibles] = useState<ProfesseurParticipant[]>([]);
   const [showAddChambre, setShowAddChambre] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [voyageConfig, setVoyageConfig] = useState<VoyageConfig>({
-    auto_affectation_eleves: false,
-    visibilite_restreinte_eleves: true
-  });
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUserEleveId, setCurrentUserEleveId] = useState<number | null>(null);
+  const [autoAffectation, setAutoAffectation] = useState(false);
 
   const canEdit = userType === 'employee' && isResponsable;
   const isEleve = userType === 'student';
@@ -81,8 +73,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
     const id = localStorage.getItem('userId');
     setCurrentUserId(id);
     
-    // Pour les élèves, récupérer leur eleve_id
-    if (userType === 'student' && id) {
+    if (isEleve && id) {
       setCurrentUserEleveId(parseInt(id));
     }
     
@@ -92,14 +83,14 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
   }, [configId]);
 
   const loadVoyageConfig = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('voyages')
-      .select('auto_affectation_eleves, visibilite_restreinte_eleves')
+      .select('auto_affectation_eleves')
       .eq('id', voyageId)
       .single();
 
-    if (!error && data) {
-      setVoyageConfig(data);
+    if (data) {
+      setAutoAffectation(data.auto_affectation_eleves);
     }
   };
 
@@ -120,7 +111,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
   const loadAffectations = async (chambreIds: string[]) => {
     if (chambreIds.length === 0) return;
   
-    const { data: elevesData, error: elevesError } = await supabase
+    const { data: elevesData } = await supabase
       .from('chambre_affectations')
       .select(`
         *,
@@ -138,7 +129,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
       `)
       .in('chambre_id', chambreIds);
   
-    const { data: professeursData, error: professeursError } = await supabase
+    const { data: professeursData } = await supabase
       .from('chambre_affectations_professeurs')
       .select(`
         *,
@@ -158,7 +149,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
 
     let toutesAffectations: Affectation[] = [];
 
-    if (!elevesError && elevesData) {
+    if (elevesData) {
       const elevesFormates = elevesData.map((item: any) => ({
         id: item.id,
         chambre_id: item.chambre_id,
@@ -178,7 +169,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
       toutesAffectations = [...toutesAffectations, ...elevesFormates];
     }
 
-    if (!professeursError && professeursData) {
+    if (professeursData) {
       const professeursFormates = professeursData.map((item: any) => ({
         id: item.id,
         chambre_id: item.chambre_id,
@@ -204,15 +195,10 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
     const { data: affectesEleves } = await supabase
       .from('chambre_affectations')
       .select('participant_id');
-    
-    const { data: affectesProfesseurs } = await supabase
-      .from('chambre_affectations_professeurs')
-      .select('participant_id');
 
     const elevesAffectesIds = affectesEleves?.map(a => a.participant_id) || [];
-    const professeursAffectesIds = affectesProfesseurs?.map(a => a.participant_id) || [];
 
-    const { data: elevesData, error: elevesError } = await supabase
+    const { data: elevesData } = await supabase
       .from('voyage_participants')
       .select(`
         id,
@@ -228,22 +214,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
       .eq('voyage_id', voyageId)
       .eq('statut', 'confirme');
 
-    const { data: professeursData, error: professeursError } = await supabase
-      .from('voyage_professeurs')
-      .select(`
-        id,
-        professeur_id,
-        role,
-        professeur:employees!inner (
-          nom,
-          prenom,
-          email,
-          initiale
-        )
-      `)
-      .eq('voyage_id', voyageId);
-  
-    if (!elevesError && elevesData) {
+    if (elevesData) {
       const elevesNonAffectes = elevesData.filter(e => !elevesAffectesIds.includes(e.id));
       const elevesFormates = elevesNonAffectes.map((item: any) => ({
         id: item.id,
@@ -255,25 +226,13 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
       }));
       setElevesDisponibles(elevesFormates);
     }
-
-    if (!professeursError && professeursData) {
-      const professeursNonAffectes = professeursData.filter(p => !professeursAffectesIds.includes(p.id));
-      const professeursFormates = professeursNonAffectes.map((item: any) => ({
-        id: item.id,
-        professeur_id: item.professeur_id,
-        role: item.role,
-        type: 'professeur' as const,
-        professeur: Array.isArray(item.professeur) ? item.professeur[0] : item.professeur
-      }));
-      setProfesseursDisponibles(professeursFormates);
-    }
   };
 
   const addChambre = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
-    const { error } = await supabase
+    await supabase
       .from('chambres')
       .insert({
         hebergement_config_id: configId,
@@ -284,106 +243,51 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
         notes: formData.get('notes') || null
       });
 
-    if (!error) {
-      loadChambres();
-      setShowAddChambre(false);
-    }
+    loadChambres();
+    setShowAddChambre(false);
   };
 
   const deleteChambre = async (chambreId: string) => {
     if (!canEdit) return;
-    if (confirm('Supprimer cette chambre ? Toutes les affectations seront perdues.')) {
-      const { error } = await supabase
-        .from('chambres')
-        .delete()
-        .eq('id', chambreId);
-
-      if (!error) loadChambres();
+    if (confirm('Supprimer cette chambre ?')) {
+      await supabase.from('chambres').delete().eq('id', chambreId);
+      loadChambres();
     }
   };
 
-  const assignerParticipant = async (chambreId: string, participantId: string, type: 'eleve' | 'professeur') => {
-    // Vérifier les permissions
-    if (type === 'eleve') {
-      // Un élève ne peut s'assigner que si auto_affectation_eleves est true
-      if (isEleve && !voyageConfig.auto_affectation_eleves) {
-        alert("L'auto-affectation n'est pas autorisée pour ce voyage");
-        return;
-      }
-      // Un élève ne peut s'assigner que lui-même
-      if (isEleve) {
-        const participant = elevesDisponibles.find(p => p.id === participantId);
-        if (!participant || participant.eleve_id !== currentUserEleveId) {
-          alert("Vous ne pouvez vous inscrire que vous-même");
-          return;
-        }
-      }
-    }
-    
-    const table = type === 'eleve' ? 'chambre_affectations' : 'chambre_affectations_professeurs';
-    
-    const { error } = await supabase
-      .from(table)
+  const inscrireEleve = async (chambreId: string) => {
+    if (!currentUserEleveId || !autoAffectation) return;
+
+    // Trouver l'ID du participant (pas l'eleve_id)
+    const participant = elevesDisponibles.find(e => e.eleve_id === currentUserEleveId);
+    if (!participant) return;
+
+    await supabase
+      .from('chambre_affectations')
       .insert({
         chambre_id: chambreId,
-        participant_id: participantId,
-        created_by: localStorage.getItem('userId')
+        participant_id: participant.id,
+        created_by: currentUserId
       });
 
-    if (!error) {
-      loadChambres();
-      loadParticipantsDisponibles();
-    }
+    loadChambres();
+    loadParticipantsDisponibles();
   };
 
-  const retirerParticipant = async (affectationId: string, type: 'eleve' | 'professeur', participantId?: string) => {
-    // Vérifier les permissions
-    if (type === 'eleve' && isEleve) {
-      // Un élève ne peut se retirer que si auto_affectation_eleves est true
-      if (!voyageConfig.auto_affectation_eleves) {
-        alert("L'auto-affectation n'est pas autorisée pour ce voyage");
-        return;
-      }
-      
-      // Vérifier que l'affectation concerne bien l'élève connecté
-      const affectation = affectations.find(a => a.id === affectationId);
-      if (affectation?.participant.type === 'eleve' && 
-          affectation.participant.eleve_id !== currentUserEleveId) {
-        alert("Vous ne pouvez vous retirer que vous-même");
-        return;
-      }
-    }
-    
-    const table = type === 'eleve' ? 'chambre_affectations' : 'chambre_affectations_professeurs';
-    
-    const { error } = await supabase
-      .from(table)
+  const desinscrireEleve = async (affectationId: string) => {
+    await supabase
+      .from('chambre_affectations')
       .delete()
       .eq('id', affectationId);
 
-    if (!error) {
-      loadChambres();
-      loadParticipantsDisponibles();
-    }
-  };
-
-  // Vérifier si l'utilisateur courant est dans une chambre
-  const getCurrentUserChambreId = (): string | null => {
-    if (!isEleve || !currentUserEleveId) return null;
-    
-    const affectation = affectations.find(a => 
-      a.participant_type === 'eleve' && 
-      'eleve_id' in a.participant && 
-      a.participant.eleve_id === currentUserEleveId
-    );
-    
-    return affectation?.chambre_id || null;
+    loadChambres();
+    loadParticipantsDisponibles();
   };
 
   const getAffectationsForChambre = (chambreId: string) => {
     return affectations.filter(a => a.chambre_id === chambreId);
   };
-  
+
   const getElevesParGenre = (genre: string) => {
     return elevesDisponibles.filter(p => p.genre === genre);
   };
@@ -408,35 +312,31 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
     }
   };
 
-  const getParticipantDisplay = (participant: Participant) => {
-    if (participant.type === 'eleve') {
-      return {
-        nom: participant.eleve.nom,
-        prenom: participant.eleve.prenom,
-        detail: participant.classe,
-        icone: '👤',
-        estMoi: isEleve && participant.eleve_id === currentUserEleveId
-      };
-    } else {
-      return {
-        nom: participant.professeur.nom,
-        prenom: participant.professeur.prenom,
-        detail: participant.role === 'accompagnateur' ? '👥 Accompagnateur' : 
-                participant.role === 'responsable' ? '⭐ Responsable' :
-                participant.role === 'direction' ? '🏢 Direction' : '🏥 Infirmier',
-        icone: '👨‍🏫',
-        estMoi: false
-      };
+  // Trouver la chambre où l'élève est actuellement
+  const getMaChambre = (): { chambre: Chambre; affectation: Affectation } | null => {
+    if (!isEleve || !currentUserEleveId) return null;
+    
+    for (const chambre of chambres) {
+      const affectationsChambre = getAffectationsForChambre(chambre.id);
+      const monAffectation = affectationsChambre.find(a => 
+        a.participant_type === 'eleve' && 
+        'eleve_id' in a.participant && 
+        a.participant.eleve_id === currentUserEleveId
+      );
+      if (monAffectation) {
+        return { chambre, affectation: monAffectation };
+      }
     }
+    return null;
   };
 
-  if (loading) return <div className="text-center py-8">Chargement des chambres...</div>;
+  if (loading) return <div className="text-center py-8">Chargement...</div>;
 
-  const currentUserChambreId = getCurrentUserChambreId();
+  const maChambre = getMaChambre();
 
   return (
     <div className="space-y-4">
-      {/* Header des chambres */}
+      {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <div>
           <h3 className="text-base font-semibold text-gray-900">Plan des chambres</h3>
@@ -446,81 +346,47 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
           </p>
         </div>
         
-        {/* Bouton ajouter chambre - uniquement pour les responsables */}
         {canEdit && (
           <button
             onClick={() => setShowAddChambre(true)}
             className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700"
           >
-            + Ajouter
+            + Ajouter une chambre
           </button>
         )}
       </div>
 
-      {/* Message pour les élèves selon la configuration */}
+      {/* Message pour les élèves */}
       {isEleve && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-2">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <p className="text-xs text-blue-700">
-            {voyageConfig.auto_affectation_eleves 
-              ? "👋 Vous pouvez vous inscrire dans les chambres disponibles. Vous ne voyez que les chambres où vous êtes inscrit."
-              : "👋 Les inscriptions ne sont pas ouvertes. Vous pouvez voir votre chambre mais pas en changer."}
+            {autoAffectation 
+              ? "👋 Vous pouvez choisir une chambre libre. Une fois inscrit, vous verrez vos camarades de chambre."
+              : "👋 Les inscriptions ne sont pas ouvertes pour le moment."}
           </p>
         </div>
       )}
 
-      {/* Légende */}
-      <div className="flex gap-3 text-xs">
-        <div className="flex items-center">
-          <div className="w-2 h-2 bg-indigo-200 border border-indigo-300 rounded-full mr-1.5"></div>
-          <span>Garçons</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-2 h-2 bg-amber-200 border border-amber-300 rounded-full mr-1.5"></div>
-          <span>Filles</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-2 h-2 bg-purple-200 border border-purple-300 rounded-full mr-1.5"></div>
-          <span>Profs</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-2 h-2 bg-emerald-200 border border-emerald-300 rounded-full mr-1.5"></div>
-          <span>Mixte</span>
-        </div>
-      </div>
-
       {/* Grille des chambres */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {chambres
-          .filter(chambre => {
-            // Filtrer les chambres pour les élèves si visibilite_restreinte_eleves est true
-            if (isEleve && voyageConfig.visibilite_restreinte_eleves) {
-              return chambre.id === currentUserChambreId;
-            }
-            return true;
-          })
-          .map((chambre) => {
+        {chambres.map((chambre) => {
           const affectationsChambre = getAffectationsForChambre(chambre.id);
           const placesLibres = chambre.capacite - affectationsChambre.length;
-          const isComplete = placesLibres === 0;
-          const estMaChambre = chambre.id === currentUserChambreId;
+          const estComplete = placesLibres === 0;
           
-          // Participants disponibles selon le type de chambre
-          const elevesPossibles = chambre.genre === 'M' ? getElevesParGenre('M') :
-                                 chambre.genre === 'F' ? getElevesParGenre('F') :
-                                 chambre.genre === 'mixte' ? elevesDisponibles : [];
-          
-          const professeursPossibles = chambre.genre === 'prof' ? professeursDisponibles : [];
+          // Pour les élèves : ne voir que les chambres de leur genre, pas complètes
+          const estChambrePourMoi = isEleve && 
+            (chambre.genre === currentUserGenre || chambre.genre === 'mixte') && 
+            !estComplete;
 
-          // Pour les élèves, ne montrer que les élèves de leur propre chambre
-          const affectationsAffichees = (isEleve && voyageConfig.visibilite_restreinte_eleves && !estMaChambre) 
-            ? [] 
-            : affectationsChambre;
+          // Est-ce que l'élève est dans cette chambre ?
+          const jeSuisDansCetteChambre = maChambre?.chambre.id === chambre.id;
 
           return (
             <div
               key={chambre.id}
               className={`border rounded-lg p-3 ${getGenreColor(chambre.genre)} ${
-                estMaChambre ? 'ring-2 ring-blue-500' : ''
+                jeSuisDansCetteChambre ? 'ring-2 ring-green-500' : ''
               }`}
             >
               {/* En-tête chambre */}
@@ -530,23 +396,18 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                     <h4 className="text-sm font-bold text-gray-900">
                       Ch. {chambre.numero_chambre}
                     </h4>
-                    {chambre.nom_chambre && (
-                      <span className="text-xs text-gray-600">• {chambre.nom_chambre}</span>
-                    )}
-                    {estMaChambre && (
-                      <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">
+                    {jeSuisDansCetteChambre && (
+                      <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
                         Ma chambre
                       </span>
                     )}
                   </div>
                 </div>
                 
-                {/* Bouton supprimer - uniquement pour les responsables */}
                 {canEdit && (
                   <button
                     onClick={() => deleteChambre(chambre.id)}
                     className="text-gray-400 hover:text-red-600 text-xs"
-                    title="Supprimer"
                   >
                     ✕
                   </button>
@@ -568,188 +429,105 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                 </div>
               </div>
 
-              {/* Liste des occupants */}
-              <div className="space-y-1 mb-2 min-h-[60px] max-h-[120px] overflow-y-auto">
-                {affectationsAffichees.map((aff) => {
-                  const display = getParticipantDisplay(aff.participant);
-                  return (
-                    <div
-                      key={aff.id}
-                      className={`flex justify-between items-center py-1 px-1.5 bg-white bg-opacity-50 rounded text-xs ${
-                        display.estMoi ? 'bg-blue-100 font-medium' : ''
-                      }`}
-                    >
-                      <span className="font-medium truncate max-w-[120px]">
-                        {display.icone} {display.prenom} {display.nom}.
-                        {display.estMoi && ' (moi)'}
-                      </span>
-                      <span className="text-xs text-gray-500 ml-1 truncate max-w-[60px]">
-                        {display.detail}
-                      </span>
-                      
-                      {/* Bouton retirer - pour les responsables OU pour l'élève lui-même si auto-affectation */}
-                      {(canEdit || (isEleve && display.estMoi && voyageConfig.auto_affectation_eleves)) && (
-                        <button
-                          onClick={() => retirerParticipant(aff.id, aff.participant_type, 
-                            aff.participant.type === 'eleve' ? aff.participant.eleve_id.toString() : undefined
-                          )}
-                          className="text-red-600 hover:text-red-800 text-xs ml-auto"
-                          title="Retirer"
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-                {affectationsAffichees.length === 0 && (
-                  <div className="text-center py-2 text-gray-400 text-xs">
-                    {isEleve && !estMaChambre ? 'Chambre privée' : 'Vide'}
-                  </div>
-                )}
-              </div>
-
-              {/* Ajout d'élèves ou professeurs */}
-              {!isComplete && (
-                <div className="space-y-1">
-                  {/* Pour les responsables : peuvent ajouter n'importe qui */}
-                  {canEdit && (
-                    <>
-                      {elevesPossibles.length > 0 && (
-                        <select
-                          onChange={(e) => {
-                            if (e.target.value) {
-                              assignerParticipant(chambre.id, e.target.value, 'eleve');
-                              e.target.value = '';
-                            }
-                          }}
-                          value=""
-                          className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
-                        >
-                          <option value="">+ Ajouter élève...</option>
-                          {elevesPossibles.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              👤 {p.eleve.prenom} {p.eleve.nom}. - {p.classe}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-
-                      {professeursPossibles.length > 0 && (
-                        <select
-                          onChange={(e) => {
-                            if (e.target.value) {
-                              assignerParticipant(chambre.id, e.target.value, 'professeur');
-                              e.target.value = '';
-                            }
-                          }}
-                          value=""
-                          className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
-                        >
-                          <option value="">+ Ajouter professeur...</option>
-                          {professeursPossibles.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              👨‍🏫 {p.professeur.prenom} {p.professeur.nom}. - {p.role}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    </>
-                  )}
-
-                  {/* Pour les élèves : peuvent s'ajouter eux-mêmes si autorisé */}
-                  {isEleve && voyageConfig.auto_affectation_eleves && !estMaChambre && (
-                    <>
-                      {elevesDisponibles
-                        .filter(p => p.eleve_id === currentUserEleveId)
-                        .map(p => (
+              {/* Liste des occupants - visible pour les responsables OU si l'élève est dans la chambre */}
+              {(canEdit || jeSuisDansCetteChambre) && (
+                <div className="space-y-1 mb-2 min-h-[60px] max-h-[120px] overflow-y-auto">
+                  {affectationsChambre.map((aff) => {
+                    const estMoi = aff.participant_type === 'eleve' && 
+                      'eleve_id' in aff.participant && 
+                      aff.participant.eleve_id === currentUserEleveId;
+                    
+                    return (
+                      <div
+                        key={aff.id}
+                        className={`flex justify-between items-center py-1 px-1.5 bg-white bg-opacity-50 rounded text-xs ${
+                          estMoi ? 'bg-green-100 font-medium' : ''
+                        }`}
+                      >
+                        <span>
+                          {aff.participant_type === 'eleve' ? '👤' : '👨‍🏫'} 
+                          {'prenom' in aff.participant ? 
+                            `${aff.participant.prenom} ${aff.participant.nom}.` : 
+                            `${aff.participant.professeur.prenom} ${aff.participant.professeur.nom}.`}
+                          {estMoi && ' (moi)'}
+                        </span>
+                        
+                        {/* Bouton de désinscription pour l'élève lui-même */}
+                        {isEleve && estMoi && autoAffectation && (
                           <button
-                            key={p.id}
-                            onClick={() => assignerParticipant(chambre.id, p.id, 'eleve')}
-                            className="w-full px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                            onClick={() => desinscrireEleve(aff.id)}
+                            className="text-red-600 hover:text-red-800 text-xs"
                           >
-                            + M'inscrire dans cette chambre
+                            Quitter
                           </button>
-                        ))}
-                    </>
+                        )}
+                        
+                        {/* Bouton de retrait pour les responsables */}
+                        {canEdit && (
+                          <button
+                            onClick={() => desinscrireEleve(aff.id)}
+                            className="text-red-600 hover:text-red-800 text-xs"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {affectationsChambre.length === 0 && (
+                    <div className="text-center py-2 text-gray-400 text-xs">
+                      Vide
+                    </div>
                   )}
                 </div>
+              )}
+
+              {/* Pour les élèves sans chambre : bouton d'inscription */}
+              {isEleve && !maChambre && estChambrePourMoi && autoAffectation && (
+                <button
+                  onClick={() => inscrireEleve(chambre.id)}
+                  className="w-full px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  M'inscrire dans cette chambre
+                </button>
               )}
             </div>
           );
         })}
       </div>
 
-      {/* Modal ajout chambre - uniquement pour les responsables */}
+      {/* Modal ajout chambre - pour les responsables uniquement */}
       {canEdit && showAddChambre && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold mb-4">Ajouter une chambre</h3>
             <form onSubmit={addChambre} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Numéro de chambre</label>
-                <input
-                  name="numero"
-                  type="text"
-                  required
-                  className="w-full px-3 py-2 border rounded-lg"
-                  placeholder="Ex: 101, A12, ..."
-                />
+                <label className="block text-sm font-medium mb-1">Numéro</label>
+                <input name="numero" type="text" required className="w-full px-3 py-2 border rounded-lg" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Nom (optionnel)</label>
-                <input
-                  name="nom"
-                  type="text"
-                  className="w-full px-3 py-2 border rounded-lg"
-                  placeholder="Ex: Suite des profs"
-                />
+                <input name="nom" type="text" className="w-full px-3 py-2 border rounded-lg" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Capacité</label>
-                <input
-                  name="capacite"
-                  type="number"
-                  min="1"
-                  max="8"
-                  required
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
+                <input name="capacite" type="number" min="1" max="8" required className="w-full px-3 py-2 border rounded-lg" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Genre</label>
-                <select
-                  name="genre"
-                  required
-                  className="w-full px-3 py-2 border rounded-lg"
-                >
+                <select name="genre" required className="w-full px-3 py-2 border rounded-lg">
                   <option value="M">Garçons</option>
                   <option value="F">Filles</option>
                   <option value="prof">Professeurs</option>
                   <option value="mixte">Mixte</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Notes (optionnel)</label>
-                <textarea
-                  name="notes"
-                  rows={2}
-                  className="w-full px-3 py-2 border rounded-lg"
-                  placeholder="Informations supplémentaires..."
-                />
-              </div>
               <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAddChambre(false)}
-                  className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-                >
+                <button type="button" onClick={() => setShowAddChambre(false)} className="px-4 py-2 border rounded-lg">
                   Annuler
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                >
+                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg">
                   Ajouter
                 </button>
               </div>
