@@ -60,14 +60,16 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
   const [affectations, setAffectations] = useState<Affectation[]>([]);
   const [elevesDisponibles, setElevesDisponibles] = useState<EleveParticipant[]>([]);
   const [professeursDisponibles, setProfesseursDisponibles] = useState<ProfesseurParticipant[]>([]);
+  const [professeursParticipants, setProfesseursParticipants] = useState<ProfesseurParticipant[]>([]);
   const [showAddChambre, setShowAddChambre] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [currentUserGenre, setCurrentUserGenre] = useState<string | null>(null);
   const [currentUserEleveId, setCurrentUserEleveId] = useState<number | null>(null);
+  const [currentUserGenre, setCurrentUserGenre] = useState<string | null>(null);
   const [autoAffectation, setAutoAffectation] = useState(false);
 
   const canEdit = userType === 'employee' && isResponsable;
+  const isEmployee = userType === 'employee';
   const isEleve = userType === 'student';
 
   useEffect(() => {
@@ -82,7 +84,20 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
     loadVoyageConfig();
     loadChambres();
     loadParticipantsDisponibles();
+    loadProfesseursParticipants();
   }, [configId]);
+
+  const loadCurrentUserGenre = async (eleveId: number) => {
+    const { data } = await supabase
+      .from('students')
+      .select('sexe')
+      .eq('matricule', eleveId)
+      .single();
+    
+    if (data) {
+      setCurrentUserGenre(data.sexe);
+    }
+  };
 
   const loadVoyageConfig = async () => {
     const { data } = await supabase
@@ -93,6 +108,35 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
 
     if (data) {
       setAutoAffectation(data.auto_affectation_eleves);
+    }
+  };
+
+  const loadProfesseursParticipants = async () => {
+    const { data } = await supabase
+      .from('voyage_professeurs')
+      .select(`
+        id,
+        professeur_id,
+        role,
+        professeur:employees!inner (
+          id,
+          nom,
+          prenom,
+          email,
+          initiale
+        )
+      `)
+      .eq('voyage_id', voyageId);
+
+    if (data) {
+      const professeursFormates = data.map((item: any) => ({
+        id: item.id,
+        professeur_id: item.professeur_id,
+        role: item.role,
+        type: 'professeur' as const,
+        professeur: Array.isArray(item.professeur) ? item.professeur[0] : item.professeur
+      }));
+      setProfesseursParticipants(professeursFormates);
     }
   };
 
@@ -260,7 +304,6 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
   const inscrireEleve = async (chambreId: string) => {
     if (!currentUserEleveId || !autoAffectation) return;
 
-    // Trouver l'ID du participant (pas l'eleve_id)
     const participant = elevesDisponibles.find(e => e.eleve_id === currentUserEleveId);
     if (!participant) return;
 
@@ -276,9 +319,30 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
     loadParticipantsDisponibles();
   };
 
-  const desinscrireEleve = async (affectationId: string) => {
+  const assignerParticipant = async (chambreId: string, participantId: string, type: 'eleve' | 'professeur') => {
+    if (!isEmployee) return;
+    
+    const table = type === 'eleve' ? 'chambre_affectations' : 'chambre_affectations_professeurs';
+    
     await supabase
-      .from('chambre_affectations')
+      .from(table)
+      .insert({
+        chambre_id: chambreId,
+        participant_id: participantId,
+        created_by: currentUserId
+      });
+
+    loadChambres();
+    loadParticipantsDisponibles();
+  };
+
+  const retirerParticipant = async (affectationId: string, type: 'eleve' | 'professeur') => {
+    if (!isEmployee && !canEdit) return;
+    
+    const table = type === 'eleve' ? 'chambre_affectations' : 'chambre_affectations_professeurs';
+    
+    await supabase
+      .from(table)
       .delete()
       .eq('id', affectationId);
 
@@ -292,6 +356,14 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
 
   const getElevesParGenre = (genre: string) => {
     return elevesDisponibles.filter(p => p.genre === genre);
+  };
+
+  const getProfesseursDisponibles = () => {
+    const professeursAffectesIds = affectations
+      .filter(a => a.participant_type === 'professeur')
+      .map(a => a.participant_id);
+    
+    return professeursParticipants.filter(p => !professeursAffectesIds.includes(p.id));
   };
 
   const getGenreColor = (genre: string) => {
@@ -314,6 +386,16 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
     }
   };
 
+  const getParticipantName = (aff: Affectation) => {
+    if (aff.participant_type === 'eleve') {
+      const p = aff.participant as any;
+      return `${p.eleve?.prenom || ''} ${p.eleve?.nom || ''}.`;
+    } else {
+      const p = aff.participant as any;
+      return `${p.professeur?.prenom || ''} ${p.professeur?.nom || ''}.`;
+    }
+  };
+
   // Trouver la chambre où l'élève est actuellement
   const getMaChambre = (): { chambre: Chambre; affectation: Affectation } | null => {
     if (!isEleve || !currentUserEleveId) return null;
@@ -332,21 +414,10 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
     return null;
   };
 
-  const loadCurrentUserGenre = async (eleveId: number) => {
-    const { data } = await supabase
-      .from('students')
-      .select('sexe')
-      .eq('matricule', eleveId)
-      .single();
-    
-    if (data) {
-      setCurrentUserGenre(data.sexe);
-    }
-  };
-  
   if (loading) return <div className="text-center py-8">Chargement...</div>;
 
   const maChambre = getMaChambre();
+  const professeursDispos = getProfesseursDisponibles();
 
   return (
     <div className="space-y-4">
@@ -354,6 +425,184 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
       <div className="flex justify-between items-center mb-2">
         <div>
           <h3 className="text-base font-semibold text-gray-900">Plan des chambres</h3>
+          <p className="text-xs text-gray-600">
+            {chambres.length} chambre{chambres.length > 1 ? 's' : ''} • 
+            {affectations.length} personne{affectations.length > 1 ? 's' : ''} affectée{affectations.length > 1 ? 's' : ''}
+          </p>
+        </div>
+        
+        {/* Ajout de chambre - uniquement pour les responsables */}
+        {canEdit && (
+          <button
+            onClick={() => setShowAddChambre(true)}
+            className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700"
+          >
+            + Ajouter une chambre
+          </button>
+        )}
+      </div>
+
+      {/* Message pour les élèves */}
+      {isEleve && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <p className="text-xs text-blue-700">
+            {autoAffectation 
+              ? "👋 Vous pouvez choisir une chambre libre. Une fois inscrit, vous verrez vos camarades de chambre."
+              : "👋 Les inscriptions ne sont pas ouvertes pour le moment."}
+          </p>
+        </div>
+      )}
+
+      {/* Message pour les employés non-responsables */}
+      {isEmployee && !canEdit && (
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+          <p className="text-xs text-purple-700">
+            👋 Vous pouvez voir toutes les chambres et vous inscrire si vous le souhaitez.
+          </p>
+        </div>
+      )}
+
+      {/* Grille des chambres */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {chambres.map((chambre) => {
+          const affectationsChambre = getAffectationsForChambre(chambre.id);
+          const placesLibres = chambre.capacite - affectationsChambre.length;
+          const estComplete = placesLibres === 0;
+          
+          // Pour les élèves : ne voir que les chambres de leur genre, pas complètes
+          const estChambrePourMoi = isEleve && 
+            (chambre.genre === currentUserGenre || chambre.genre === 'mixte') && 
+            !estComplete;
+
+          // Est-ce que l'élève est dans cette chambre ?
+          const jeSuisDansCetteChambre = maChambre?.chambre.id === chambre.id;
+
+          return (
+            <div
+              key={chambre.id}
+              className={`border rounded-lg p-3 ${getGenreColor(chambre.genre)} ${
+                jeSuisDansCetteChambre ? 'ring-2 ring-green-500' : ''
+              }`}
+            >
+              {/* En-tête chambre */}
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-gray-900">
+                      Ch. {chambre.numero_chambre}
+                    </h4>
+                    {chambre.nom_chambre && (
+                      <span className="text-xs text-gray-600">• {chambre.nom_chambre}</span>
+                    )}
+                    {jeSuisDansCetteChambre && (
+                      <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
+                        Ma chambre
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Bouton supprimer - uniquement pour les responsables */}
+                {canEdit && (
+                  <button
+                    onClick={() => deleteChambre(chambre.id)}
+                    className="text-gray-400 hover:text-red-600 text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Barre d'occupation */}
+              <div className="mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${getGenreBarColor(chambre.genre)} transition-all`}
+                      style={{ width: `${(affectationsChambre.length / chambre.capacite) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium whitespace-nowrap">
+                    {affectationsChambre.length}/{chambre.capacite}
+                  </span>
+                </div>
+              </div>
+
+              {/* Liste des occupants - visible pour les employés OU si l'élève est dans la chambre */}
+              {(isEmployee || jeSuisDansCetteChambre) && (
+                <div className="space-y-1 mb-2 min-h-[60px] max-h-[120px] overflow-y-auto">
+                  {affectationsChambre.map((aff) => {
+                    const estMoi = aff.participant_type === 'eleve' && 
+                      'eleve_id' in aff.participant && 
+                      aff.participant.eleve_id === currentUserEleveId;
+                    
+                    return (
+                      <div
+                        key={aff.id}
+                        className={`flex justify-between items-center py-1 px-1.5 bg-white bg-opacity-50 rounded text-xs ${
+                          estMoi ? 'bg-green-100 font-medium' : ''
+                        }`}
+                      >
+                        <span>
+                          {aff.participant_type === 'eleve' ? '👤' : '👨‍🏫'} 
+                          {getParticipantName(aff)}
+                          {estMoi && ' (moi)'}
+                        </span>
+                        
+                        {/* Bouton de désinscription pour l'élève lui-même */}
+                        {isEleve && estMoi && autoAffectation && (
+                          <button
+                            onClick={() => retirerParticipant(aff.id, aff.participant_type)}
+                            className="text-red-600 hover:text-red-800 text-xs"
+                          >
+                            Quitter
+                          </button>
+                        )}
+                        
+                        {/* Bouton de retrait pour les employés */}
+                        {isEmployee && (
+                          <button
+                            onClick={() => retirerParticipant(aff.id, aff.participant_type)}
+                            className="text-red-600 hover:text-red-800 text-xs"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {affectationsChambre.length === 0 && (
+                    <div className="text-center py-2 text-gray-400 text-xs">
+                      Vide
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Pour les élèves sans chambre : bouton d'inscription */}
+              {isEleve && !maChambre && estChambrePourMoi && autoAffectation && (
+                <button
+                  onClick={() => inscrireEleve(chambre.id)}
+                  className="w-full px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  M'inscrire dans cette chambre
+                </button>
+              )}
+
+              {/* Pour les employés : sélecteurs d'ajout */}
+              {isEmployee && !estComplete && (
+                <div className="space-y-1">
+                  {/* Ajout d'élèves */}
+                  {getElevesParGenre(chambre.genre).length > 0 && (
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          assignerParticipant(chambre.id, e.target.value, 'eleve');
+                          e.target.value = '';
+                        }
+                      }}
+                      value=""
+                   ibold text-gray-900">Plan des chambres</h3>
           <p className="text-xs text-gray-600">
             {chambres.length} chambre{chambres.length > 1 ? 's' : ''} • 
             {affectations.length} personne{affectations.length > 1 ? 's' : ''} affectée{affectations.length > 1 ? 's' : ''}
