@@ -14,6 +14,8 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
+    localStorage.clear();
+    
     e.preventDefault();
     setError('');
     setLoading(true);
