@@ -1,10 +1,11 @@
 // components/voyages/HebergementConfigs.tsx
-  
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import PlanChambres from './PlanChambres';
+import PrisePresences from './PrisePresences'; // ← Ajouter cet import
 
 interface Props {
   voyageId: string;
@@ -83,14 +84,15 @@ const ConfigurationVoyage = ({ voyageId, isResponsable }: { voyageId: string; is
   );
 };
 
-// Composant principal avec export default
 export default function HebergementConfigs({ voyageId, isResponsable, userType, onConfigSelect }: Props) {
   const [configs, setConfigs] = useState<HebergementConfig[]>([]);
   const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
   const [showNewConfig, setShowNewConfig] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [hebergementTab, setHebergementTab] = useState<'presences' | 'composition'>('presences'); // ← AJOUTÉ
 
-  const canEdit = userType === 'employee' && isResponsable;
+  const isEmployee = userType === 'employee';
+  const canEdit = isEmployee && isResponsable;
 
   useEffect(() => {
     loadConfigs();
@@ -202,14 +204,52 @@ export default function HebergementConfigs({ voyageId, isResponsable, userType, 
             ))}
           </div>
 
-          {/* Plan des chambres */}
+          {/* Sous-onglets pour l'hébergement */}
           {selectedConfig && (
-            <PlanChambres 
-              configId={selectedConfig} 
-              voyageId={voyageId}
-              isResponsable={isResponsable}
-              userType={userType}
-            />
+            <div className="space-y-4">
+              {/* Sous-onglets - visibles pour tous mais contenu différent selon userType */}
+              <div className="border-b border-gray-200">
+                <nav className="flex gap-4" aria-label="Tabs">
+                  <button
+                    onClick={() => setHebergementTab('presences')}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      hebergementTab === 'presences'
+                        ? 'border-indigo-500 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    📋 Présences
+                  </button>
+                  <button
+                    onClick={() => setHebergementTab('composition')}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      hebergementTab === 'composition'
+                        ? 'border-indigo-500 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    🛏️ Composition des chambres
+                  </button>
+                </nav>
+              </div>
+
+              {/* Contenu des sous-onglets */}
+              {hebergementTab === 'composition' ? (
+                <PlanChambres 
+                  configId={selectedConfig} 
+                  voyageId={voyageId}
+                  isResponsable={isResponsable}
+                  userType={userType}
+                />
+              ) : (
+                <PrisePresences
+                  configId={selectedConfig}
+                  voyageId={voyageId}
+                  isResponsable={isResponsable}
+                  userType={userType}
+                />
+              )}
+            </div>
           )}
         </>
       ) : (
