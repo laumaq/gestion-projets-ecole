@@ -605,8 +605,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                 </button>
               )}
 
-              {/* Pour les employés : sélecteurs d'ajout */}
-              {isEmployee && !estComplete && (
+              {canEdit && !estComplete && (
                 <div className="space-y-1">
                   {/* Ajout d'élèves */}
                   {getElevesParGenre(chambre.genre).length > 0 && (
@@ -628,7 +627,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                       ))}
                     </select>
                   )}
-
+              
                   {/* Ajout de professeurs pour les chambres prof ou mixte */}
                   {(chambre.genre === 'prof' || chambre.genre === 'mixte') && professeursDispos.length > 0 && (
                     <select
