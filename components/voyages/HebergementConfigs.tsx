@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import PlanChambres from './PlanChambres';
-import PrisePresences from './PrisePresences'; // ← Ajouter cet import
+import PrisePresences from './PrisePresences';
 
 interface Props {
   voyageId: string;
@@ -89,9 +89,10 @@ export default function HebergementConfigs({ voyageId, isResponsable, userType, 
   const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
   const [showNewConfig, setShowNewConfig] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [hebergementTab, setHebergementTab] = useState<'presences' | 'composition'>('presences'); // ← AJOUTÉ
+  const [hebergementTab, setHebergementTab] = useState<'presences' | 'composition'>('presences');
 
   const isEmployee = userType === 'employee';
+  const isEleve = userType === 'student';
   const canEdit = isEmployee && isResponsable;
 
   useEffect(() => {
@@ -172,11 +173,20 @@ export default function HebergementConfigs({ voyageId, isResponsable, userType, 
       </div>
 
       {/* Message pour les non-éditeurs */}
-      {!canEdit && (
+      {!canEdit && isEmployee && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-blue-700">
             👋 Vous êtes en mode consultation. Vous pouvez voir les configurations d'hébergement, 
             mais vous ne pouvez pas les modifier.
+          </p>
+        </div>
+      )}
+
+      {/* Message pour les élèves */}
+      {isEleve && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-blue-700">
+            👋 Vous pouvez voir les chambres et vous inscrire si les inscriptions sont ouvertes.
           </p>
         </div>
       )}
@@ -207,43 +217,56 @@ export default function HebergementConfigs({ voyageId, isResponsable, userType, 
           {/* Sous-onglets pour l'hébergement */}
           {selectedConfig && (
             <div className="space-y-4">
-              {/* Sous-onglets - visibles pour tous mais contenu différent selon userType */}
-              <div className="border-b border-gray-200">
-                <nav className="flex gap-4" aria-label="Tabs">
-                  <button
-                    onClick={() => setHebergementTab('presences')}
-                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                      hebergementTab === 'presences'
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    📋 Présences
-                  </button>
-                  <button
-                    onClick={() => setHebergementTab('composition')}
-                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                      hebergementTab === 'composition'
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    🛏️ Composition des chambres
-                  </button>
-                </nav>
-              </div>
+              {/* Sous-onglets - différents selon le type d'utilisateur */}
+              {isEmployee ? (
+                // Employés : voient les deux onglets
+                <>
+                  <div className="border-b border-gray-200">
+                    <nav className="flex gap-4" aria-label="Tabs">
+                      <button
+                        onClick={() => setHebergementTab('presences')}
+                        className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                          hebergementTab === 'presences'
+                            ? 'border-indigo-500 text-indigo-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                      >
+                        📋 Présences
+                      </button>
+                      <button
+                        onClick={() => setHebergementTab('composition')}
+                        className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                          hebergementTab === 'composition'
+                            ? 'border-indigo-500 text-indigo-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                      >
+                        🛏️ Composition des chambres
+                      </button>
+                    </nav>
+                  </div>
 
-              {/* Contenu des sous-onglets */}
-              {hebergementTab === 'composition' ? (
+                  {/* Contenu des sous-onglets pour employés */}
+                  {hebergementTab === 'composition' ? (
+                    <PlanChambres 
+                      configId={selectedConfig} 
+                      voyageId={voyageId}
+                      isResponsable={isResponsable}
+                      userType={userType}
+                    />
+                  ) : (
+                    <PrisePresences
+                      configId={selectedConfig}
+                      voyageId={voyageId}
+                      isResponsable={isResponsable}
+                      userType={userType}
+                    />
+                  )}
+                </>
+              ) : (
+                // Élèves : voient directement la composition des chambres
                 <PlanChambres 
                   configId={selectedConfig} 
-                  voyageId={voyageId}
-                  isResponsable={isResponsable}
-                  userType={userType}
-                />
-              ) : (
-                <PrisePresences
-                  configId={selectedConfig}
                   voyageId={voyageId}
                   isResponsable={isResponsable}
                   userType={userType}
@@ -259,7 +282,9 @@ export default function HebergementConfigs({ voyageId, isResponsable, userType, 
             Aucune configuration d'hébergement
           </h3>
           <p className="text-gray-600 mb-4">
-            Créez une première configuration pour commencer à organiser les chambres
+            {isEmployee 
+              ? "Créez une première configuration pour commencer à organiser les chambres"
+              : "Les organisateurs du voyage n'ont pas encore créé de configurations d'hébergement"}
           </p>
           
           {canEdit && (
