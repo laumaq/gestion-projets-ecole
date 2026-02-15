@@ -101,9 +101,6 @@ export default function Voyage3emePage() {
           </div>
         </div>
       </div>
-
-      {/* Gestion des chambres */}
-      <GestionChambres projet="Voyage 3ème" />
     </div>
   );
 }
