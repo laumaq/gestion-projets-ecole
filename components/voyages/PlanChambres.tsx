@@ -681,4 +681,4 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
       )}
     </div>
   );
-                                              }
+}
