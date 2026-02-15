@@ -551,6 +551,10 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                     const estMoi = aff.participant_type === 'eleve' && 
                       'eleve_id' in aff.participant && 
                       aff.participant.eleve_id === currentUserEleveId;
+
+                    const estMoiEmploye = aff.participant_type === 'professeur' && 
+                      'professeur_id' in aff.participant && 
+                      aff.participant.professeur_id === currentUserId;
                     
                     return (
                       <div
