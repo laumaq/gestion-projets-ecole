@@ -1,3 +1,5 @@
+// components/voyages/HebergementConfigs.tsx
+  
 'use client';
 
 import { useState, useEffect } from 'react';
