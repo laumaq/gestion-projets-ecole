@@ -498,6 +498,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                 jeSuisDansCetteChambre ? 'ring-2 ring-green-500' : ''
               }`}
             >
+              
               {/* En-tête chambre */}
               <div className="flex justify-between items-start mb-2">
                 <div>
@@ -516,11 +517,12 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                   </div>
                 </div>
                 
-                {/* Bouton supprimer - uniquement pour les responsables */}
+                {/* Bouton supprimer - UNIQUEMENT pour les responsables */}
                 {canEdit && (
                   <button
                     onClick={() => deleteChambre(chambre.id)}
                     className="text-gray-400 hover:text-red-600 text-xs"
+                    title="Supprimer la chambre"
                   >
                     ✕
                   </button>
