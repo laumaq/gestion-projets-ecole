@@ -578,7 +578,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                         )}
                         
                         {/* Bouton de retrait pour les employés */}
-                        {isEmployee && (
+                        {canedit && (
                           <button
                             onClick={() => retirerParticipant(aff.id, aff.participant_type)}
                             className="text-red-600 hover:text-red-800 text-xs"
@@ -605,6 +605,25 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                 >
                   M'inscrire dans cette chambre
                 </button>
+              )}
+
+              {/* Pour les employés non-responsables : s'inscrire dans les chambres de profs */}
+              {isEmployee && !canEdit && !jeSuisDansCetteChambre && !estComplete && 
+               (chambre.genre === 'prof' || chambre.genre === 'mixte') && (
+                
+                {/* Trouver si l'employé est déjà dans le voyage */}
+                {professeursParticipants
+                  .filter(p => p.professeur_id === currentUserId)
+                  .map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => assignerParticipant(chambre.id, p.id, 'professeur')}
+                      className="w-full px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
+                    >
+                      M'inscrire dans cette chambre
+                    </button>
+                  ))
+                }
               )}
 
               {canEdit && !estComplete && (
