@@ -626,6 +626,16 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                 }
               )}
 
+              {/* Bouton de désinscription pour l'employé lui-même */}
+              {isEmployee && !canEdit && estMoi && (
+                <button
+                  onClick={() => retirerParticipant(aff.id, aff.participant_type)}
+                  className="text-red-600 hover:text-red-800 text-xs"
+                >
+                  Quitter
+                </button>
+              )}
+
               {canEdit && !estComplete && (
                 <div className="space-y-1">
                   {/* Ajout d'élèves */}
