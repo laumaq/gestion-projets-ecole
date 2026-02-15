@@ -581,7 +581,6 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                           </button>
                         )}
                         
-                        {/* BOUTON DE DÉSINSCRIPTION POUR L'EMPLOYÉ - COLLEZ ICI */}
                         {isEmployee && !canEdit && estMoiEmploye  && (
                           <button
                             onClick={() => retirerParticipant(aff.id, aff.participant_type)}
