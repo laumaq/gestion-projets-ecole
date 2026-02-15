@@ -577,8 +577,18 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                           </button>
                         )}
                         
-                        {/* Bouton de retrait pour les employés */}
-                        {canedit && (
+                        {/* BOUTON DE DÉSINSCRIPTION POUR L'EMPLOYÉ - COLLEZ ICI */}
+                        {isEmployee && !canEdit && estMoi && (
+                          <button
+                            onClick={() => retirerParticipant(aff.id, aff.participant_type)}
+                            className="text-red-600 hover:text-red-800 text-xs"
+                          >
+                            Quitter
+                          </button>
+                        )}
+                        
+                        {/* Bouton de retrait pour les responsables */}
+                        {canEdit && (
                           <button
                             onClick={() => retirerParticipant(aff.id, aff.participant_type)}
                             className="text-red-600 hover:text-red-800 text-xs"
@@ -624,16 +634,6 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                     </button>
                   ))
                 }
-              )}
-
-              {/* Bouton de désinscription pour l'employé lui-même */}
-              {isEmployee && !canEdit && estMoi && (
-                <button
-                  onClick={() => retirerParticipant(aff.id, aff.participant_type)}
-                  className="text-red-600 hover:text-red-800 text-xs"
-                >
-                  Quitter
-                </button>
               )}
 
               {canEdit && !estComplete && (
