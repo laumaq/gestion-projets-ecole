@@ -73,6 +73,11 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
   const isEleve = userType === 'student';
 
   useEffect(() => {
+    setChambres([]);
+    setAffectations([]);
+    setElevesDisponibles([]);
+    setProfesseursDisponibles([]);
+    
     const id = localStorage.getItem('userId');
     setCurrentUserId(id);
     
@@ -139,17 +144,23 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
       setProfesseursParticipants(professeursFormates);
     }
   };
-
+  
   const loadChambres = async () => {
     const { data, error } = await supabase
       .from('chambres')
       .select('*')
       .eq('hebergement_config_id', configId)
       .order('numero_chambre');
-
+  
     if (!error && data) {
       setChambres(data);
-      await loadAffectations(data.map(c => c.id));
+      // S'il y a des chambres, charge leurs affectations
+      if (data.length > 0) {
+        await loadAffectations(data.map(c => c.id));
+      } else {
+        // S'il n'y a pas de chambres, on vide les affectations
+        setAffectations([]);
+      }
     }
     setLoading(false);
   };
