@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import GestionChambres from '@/components/GestionChambres';
 
 export default function Voyage3emePage() {
   return (
