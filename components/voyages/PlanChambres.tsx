@@ -432,7 +432,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
 
   const maChambre = getMaChambre();
   const professeursDispos = getProfesseursDisponibles();
-
+  
   return (
     <div className="space-y-4">
       {/* Header */}
