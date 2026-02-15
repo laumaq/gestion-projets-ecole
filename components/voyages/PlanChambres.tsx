@@ -349,8 +349,17 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
           affectation.participant.eleve_id !== currentUserEleveId) {
         return;
       }
-    } else if (!isEmployee && !canEdit) {
-      return; // Ni élève, ni employé → bloqué
+    } else if (isEmployee && !canEdit) {
+      // Employé non-responsable : ne peut retirer que lui-même
+      const affectation = affectations.find(a => a.id === affectationId);
+      if (!affectation || 
+          affectation.participant_type !== 'professeur' || 
+          !('professeur_id' in affectation.participant) ||
+          affectation.participant.professeur_id !== currentUserId) {
+        return;
+      }
+    } else if (!canEdit) {
+      return; // Ni élève, ni employé responsable → bloqué
     }
     
     const table = type === 'eleve' ? 'chambre_affectations' : 'chambre_affectations_professeurs';
@@ -552,17 +561,21 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                       'eleve_id' in aff.participant && 
                       aff.participant.eleve_id === currentUserEleveId;
                     
+                    const estMoiEmploye = aff.participant_type === 'professeur' && 
+                      'professeur_id' in aff.participant && 
+                      aff.participant.professeur_id === currentUserId;
+                    
                     return (
                       <div
                         key={aff.id}
                         className={`flex justify-between items-center py-1 px-1.5 bg-white bg-opacity-50 rounded text-xs ${
-                          estMoi ? 'bg-green-100 font-medium' : ''
+                          estMoi || estMoiEmploye ? 'bg-green-100 font-medium' : ''
                         }`}
                       >
                         <span>
                           {aff.participant_type === 'eleve' ? '👤' : '👨‍🏫'} 
                           {getParticipantName(aff)}
-                          {estMoi && ' (moi)'}
+                          {(estMoi || estMoiEmploye) && ' (moi)'}
                         </span>
                         
                         {/* Bouton de désinscription pour l'élève lui-même */}
@@ -577,8 +590,18 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                           </button>
                         )}
                         
-                        {/* Bouton de retrait pour les employés */}
-                        {isEmployee && (
+                        {/* Bouton de désinscription pour l'employé non-responsable (lui-même) */}
+                        {isEmployee && !canEdit && estMoiEmploye && (
+                          <button
+                            onClick={() => retirerParticipant(aff.id, aff.participant_type)}
+                            className="text-red-600 hover:text-red-800 text-xs"
+                          >
+                            Quitter
+                          </button>
+                        )}
+                        
+                        {/* Bouton de retrait pour les responsables (peuvent retirer n'importe qui) */}
+                        {canEdit && (
                           <button
                             onClick={() => retirerParticipant(aff.id, aff.participant_type)}
                             className="text-red-600 hover:text-red-800 text-xs"
@@ -607,6 +630,25 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                 </button>
               )}
 
+              {/* Pour les employés non-responsables : s'inscrire dans les chambres de profs/mixte */}
+              {isEmployee && !canEdit && !jeSuisDansCetteChambre && !estComplete && 
+               (chambre.genre === 'prof' || chambre.genre === 'mixte') && (
+                
+                // Trouver si l'employé est déjà dans le voyage
+                professeursParticipants
+                  .filter(p => p.professeur_id === currentUserId)
+                  .map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => assignerParticipant(chambre.id, p.id, 'professeur')}
+                      className="w-full px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
+                    >
+                      M'inscrire dans cette chambre
+                    </button>
+                  ))
+              )}
+
+              {/* Pour les responsables : ajout d'élèves/professeurs */}
               {canEdit && !estComplete && (
                 <div className="space-y-1">
                   {/* Ajout d'élèves */}
