@@ -1,3 +1,5 @@
+//components/voyages/ParticipantsList.tsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
