@@ -336,8 +336,22 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
     loadParticipantsDisponibles();
   };
 
-  const retirerParticipant = async (affectationId: string, type: 'eleve' | 'professeur') => {
-    if (!isEmployee && !canEdit) return;
+  const retirerParticipant = async (affectationId: string, type: 'eleve' | 'professeur', participantId?: string) => {
+    // Permettre aux élèves de se retirer eux-mêmes si autoAffectation est true
+    if (isEleve) {
+      if (!autoAffectation) return;
+      
+      // Vérifier que l'élève retire bien sa propre affectation
+      const affectation = affectations.find(a => a.id === affectationId);
+      if (!affectation || 
+          affectation.participant_type !== 'eleve' || 
+          !('eleve_id' in affectation.participant) ||
+          affectation.participant.eleve_id !== currentUserEleveId) {
+        return;
+      }
+    } else if (!isEmployee && !canEdit) {
+      return; // Ni élève, ni employé → bloqué
+    }
     
     const table = type === 'eleve' ? 'chambre_affectations' : 'chambre_affectations_professeurs';
     
@@ -345,7 +359,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
       .from(table)
       .delete()
       .eq('id', affectationId);
-
+  
     loadChambres();
     loadParticipantsDisponibles();
   };
@@ -552,7 +566,9 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
                         {/* Bouton de désinscription pour l'élève lui-même */}
                         {isEleve && estMoi && autoAffectation && (
                           <button
-                            onClick={() => retirerParticipant(aff.id, aff.participant_type)}
+                            onClick={() => retirerParticipant(aff.id, aff.participant_type, 
+                              aff.participant_type === 'eleve' ? (aff.participant as any).eleve_id : undefined
+                            )}
                             className="text-red-600 hover:text-red-800 text-xs"
                           >
                             Quitter
