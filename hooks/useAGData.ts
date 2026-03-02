@@ -53,9 +53,9 @@ export function useAGData() {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (configError && configError.code !== 'PGRST116') { // PGRST116 = pas de résultat
+      if (configError && configError.code !== 'PGRST116') {
         throw configError;
       }
 
@@ -81,8 +81,8 @@ export function useAGData() {
         setBureau(bureauData?.map(b => ({
           id: b.id,
           employee_id: b.employee_id,
-          nom: b.employees.nom,
-          prenom: b.employees.prenom,
+          nom: b.employees?.nom || '',
+          prenom: b.employees?.prenom || '',
           role: b.role
         })) || []);
       }
@@ -151,23 +151,22 @@ export function useAGData() {
           .insert([{
             ...newConfig,
             created_by: localStorage.getItem('userId'),
-            statut: 'preparation' // Par défaut en préparation
+            statut: 'preparation'
           }]);
 
         if (error) throw error;
       }
 
       await loadData();
-      return { success: true };
     } catch (err) {
       console.error('Erreur sauvegarde config:', err);
-      return { success: false, error: 'Erreur lors de la sauvegarde' };
+      throw err; // On throw l'erreur pour la gérer dans le composant
     }
   };
 
   // Ajouter un membre au bureau
   const addBureau = async (employeeId: string, role: 'maitre_du_temps' | 'animateur') => {
-    if (!config) return { success: false, error: 'Aucune configuration AG' };
+    if (!config) throw new Error('Aucune configuration AG');
 
     try {
       const { error } = await supabase
@@ -181,10 +180,9 @@ export function useAGData() {
       if (error) throw error;
 
       await loadData();
-      return { success: true };
     } catch (err) {
       console.error('Erreur ajout bureau:', err);
-      return { success: false, error: 'Erreur lors de l\'ajout' };
+      throw err;
     }
   };
 
@@ -199,10 +197,9 @@ export function useAGData() {
       if (error) throw error;
 
       await loadData();
-      return { success: true };
     } catch (err) {
       console.error('Erreur suppression bureau:', err);
-      return { success: false, error: 'Erreur lors de la suppression' };
+      throw err;
     }
   };
 
@@ -217,10 +214,9 @@ export function useAGData() {
       if (error) throw error;
 
       await loadData();
-      return { success: true };
     } catch (err) {
       console.error('Erreur assignation groupe:', err);
-      return { success: false, error: 'Erreur lors de l\'assignation' };
+      throw err;
     }
   };
 
