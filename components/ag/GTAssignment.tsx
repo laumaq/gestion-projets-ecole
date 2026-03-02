@@ -2,7 +2,20 @@
 'use client';
 
 import { useState } from 'react';
-import { Employee, GT } from '@/hooks/useAGData';
+
+interface Employee {
+  id: string;
+  nom: string;
+  prenom: string;
+  job: string;
+  groupe_id: string | null;
+  groupe_nom?: string;
+}
+
+interface GT {
+  id: string;
+  nom: string;
+}
 
 interface GTAssignmentProps {
   employees: Employee[];
@@ -13,6 +26,7 @@ interface GTAssignmentProps {
 export default function GTAssignment({ employees, groupes, onAssign }: GTAssignmentProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [updating, setUpdating] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Filtrer les employés (uniquement profs ? ou tous ?)
   const filteredEmployees = employees.filter(emp => 
@@ -23,8 +37,16 @@ export default function GTAssignment({ employees, groupes, onAssign }: GTAssignm
 
   const handleAssign = async (employeeId: string, groupeId: string | null) => {
     setUpdating(employeeId);
-    await onAssign(employeeId, groupeId);
-    setUpdating(null);
+    setError(null);
+    
+    try {
+      await onAssign(employeeId, groupeId);
+    } catch (err) {
+      setError('Erreur lors de l\'assignation');
+      console.error(err);
+    } finally {
+      setUpdating(null);
+    }
   };
 
   // Grouper les employés par GT
@@ -42,6 +64,12 @@ export default function GTAssignment({ employees, groupes, onAssign }: GTAssignm
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h3 className="text-lg font-medium text-gray-900 mb-4">Groupes de Travail</h3>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
 
       {/* Recherche */}
       <div className="mb-4">
