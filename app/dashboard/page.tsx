@@ -123,16 +123,26 @@ export default function DashboardPage() {
       <div className="mb-12">
         <h2 className="text-lg font-semibold text-gray-700 mb-4">Outils disponibles</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Assemblée Générale */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 opacity-75 cursor-not-allowed">
-            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
-              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        
+        {/* Assemblée Générale */}
+        <Link href="/tools/ag" className="block">
+          <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition ${agStatut === 'pas_ag' ? 'opacity-75 cursor-not-allowed pointer-events-none' : ''}`}>
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">Assemblée Générale</h3>
-            <p className="text-sm text-gray-500">Bientôt disponible</p>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900 mb-1">Assemblée Générale</h3>
+              {agStatut && <AGStatusBadge statut={agStatut} />}
+            </div>
+            <p className="text-sm text-gray-500">
+              {agStatut === 'preparation' && "Préparez votre intervention"}
+              {agStatut === 'planning_etabli' && "Consultez le planning"}
+              {agStatut === 'pas_ag' && "Pas d'AG en préparation"}
+            </p>
           </div>
+        </Link>
 
           {/* Groupe de Travail - Prof only */}
           {userType === 'employee' && userJob === 'prof' && (
