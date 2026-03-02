@@ -2,7 +2,21 @@
 'use client';
 
 import { useState } from 'react';
-import { Bureau, Employee } from '@/hooks/useAGData';
+
+interface Bureau {
+  id: string;
+  employee_id: string;
+  nom: string;
+  prenom: string;
+  role: 'maitre_du_temps' | 'animateur';
+}
+
+interface Employee {
+  id: string;
+  nom: string;
+  prenom: string;
+  job: string;
+}
 
 interface BureauManagementProps {
   bureau: Bureau[];
@@ -15,6 +29,7 @@ export default function BureauManagement({ bureau, employees, onAdd, onRemove }:
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [selectedRole, setSelectedRole] = useState<'maitre_du_temps' | 'animateur'>('maitre_du_temps');
   const [isAdding, setIsAdding] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Filtrer les employés qui ne sont pas déjà au bureau
   const availableEmployees = employees.filter(
@@ -26,15 +41,38 @@ export default function BureauManagement({ bureau, employees, onAdd, onRemove }:
     if (!selectedEmployee) return;
 
     setIsAdding(true);
-    await onAdd(selectedEmployee, selectedRole);
-    setSelectedEmployee('');
-    setSelectedRole('maitre_du_temps');
-    setIsAdding(false);
+    setError(null);
+    
+    try {
+      await onAdd(selectedEmployee, selectedRole);
+      setSelectedEmployee('');
+      setSelectedRole('maitre_du_temps');
+    } catch (err) {
+      setError('Erreur lors de l\'ajout');
+      console.error(err);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleRemove = async (bureauId: string) => {
+    try {
+      await onRemove(bureauId);
+    } catch (err) {
+      setError('Erreur lors de la suppression');
+      console.error(err);
+    }
   };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h3 className="text-lg font-medium text-gray-900 mb-4">Bureau de l'AG</h3>
+      
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
       
       {/* Liste des membres actuels */}
       <div className="space-y-2 mb-6">
@@ -52,8 +90,8 @@ export default function BureauManagement({ bureau, employees, onAdd, onRemove }:
                 </p>
               </div>
               <button
-                onClick={() => onRemove(membre.id)}
-                className="text-red-600 hover:text-red-800 text-sm"
+                onClick={() => handleRemove(membre.id)}
+                className="text-red-600 hover:text-red-800 text-sm font-medium"
               >
                 Retirer
               </button>
