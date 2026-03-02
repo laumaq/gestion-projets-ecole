@@ -78,13 +78,18 @@ export function useAGData() {
 
         if (bureauError) throw bureauError;
 
-        setBureau(bureauData?.map(b => ({
-          id: b.id,
-          employee_id: b.employee_id,
-          nom: b.employees?.nom || '',
-          prenom: b.employees?.prenom || '',
-          role: b.role
-        })) || []);
+        // Correction: employees est un tableau, on prend le premier élément
+        setBureau(bureauData?.map(b => {
+          // employees peut être un tableau ou un objet selon la requête
+          const employeeData = Array.isArray(b.employees) ? b.employees[0] : b.employees;
+          return {
+            id: b.id,
+            employee_id: b.employee_id,
+            nom: employeeData?.nom || '',
+            prenom: employeeData?.prenom || '',
+            role: b.role
+          };
+        }) || []);
       }
 
       // 3. Charger tous les groupes
@@ -113,14 +118,18 @@ export function useAGData() {
 
       if (employeesError) throw employeesError;
 
-      setEmployees(employeesData?.map(e => ({
-        id: e.id,
-        nom: e.nom,
-        prenom: e.prenom,
-        job: e.job,
-        groupe_id: e.groupe_id,
-        groupe_nom: e.ag_groupes?.nom
-      })) || []);
+      setEmployees(employeesData?.map(e => {
+        // Même correction pour ag_groupes
+        const groupeData = Array.isArray(e.ag_groupes) ? e.ag_groupes[0] : e.ag_groupes;
+        return {
+          id: e.id,
+          nom: e.nom,
+          prenom: e.prenom,
+          job: e.job,
+          groupe_id: e.groupe_id,
+          groupe_nom: groupeData?.nom
+        };
+      }) || []);
 
     } catch (err) {
       console.error('Erreur chargement données AG:', err);
@@ -160,7 +169,7 @@ export function useAGData() {
       await loadData();
     } catch (err) {
       console.error('Erreur sauvegarde config:', err);
-      throw err; // On throw l'erreur pour la gérer dans le composant
+      throw err;
     }
   };
 
