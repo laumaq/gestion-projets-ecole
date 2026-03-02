@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
+
 export function useAGPermissions() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userJob, setUserJob] = useState<string | null>(null);
