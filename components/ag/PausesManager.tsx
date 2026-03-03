@@ -6,15 +6,16 @@ import { useState } from 'react';
 interface Pause {
   id: string;
   duree: number;
-  position: number; // On garde position mais on l'utilisera pour l'ordre d'affichage
+  heure_debut: string; // On ajoute l'heure de début
+  position: number;
 }
 
 interface PausesManagerProps {
   pauses: Pause[];
   heureDebut: string;
   heureFin: string;
-  onAdd: (duree: number, position: number) => Promise<void>;
-  onUpdate: (pauseId: string, duree: number, position: number) => Promise<void>;
+  onAdd: (duree: number, heure_debut: string) => Promise<void>;
+  onUpdate: (pauseId: string, duree: number, heure_debut: string) => Promise<void>;
   onRemove: (pauseId: string) => Promise<void>;
 }
 
@@ -33,21 +34,24 @@ export default function PausesManager({
   const [editHeure, setEditHeure] = useState('');
   const [editDuree, setEditDuree] = useState('');
 
-  // Convertir une heure en minutes depuis minuit pour les comparaisons
-  const heureToMinutes = (heure: string) => {
-    const [h, m] = heure.split(':').map(Number);
-    return h * 60 + m;
+  // Générer des suggestions d'heures (tranches de 30 min)
+  const getHeureSuggestions = () => {
+    const suggestions = [];
+    const debut = heureToMinutes(heureDebut);
+    const fin = heureToMinutes(heureFin);
+    
+    for (let minutes = debut + 30; minutes < fin - 30; minutes += 30) {
+      suggestions.push(minutesToHeure(minutes));
+    }
+    return suggestions;
   };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const duree = parseInt(newDuree);
-    
     if (isNaN(duree) || duree < 1) return;
 
-    // La position sera déterminée par l'ordre chronologique
-    // On met une position provisoire (sera réordonnée dans l'affichage)
-    await onAdd(duree, pauses.length);
+    await onAdd(duree, newHeure);
     
     setIsAdding(false);
     setNewHeure('10:00');
@@ -56,21 +60,22 @@ export default function PausesManager({
 
   const handleUpdate = async (pauseId: string) => {
     const duree = parseInt(editDuree);
-    
     if (isNaN(duree) || duree < 1) return;
 
-    await onUpdate(pauseId, duree, 0); // La position sera réordonnée
+    await onUpdate(pauseId, duree, editHeure);
     setEditingId(null);
   };
 
   const startEdit = (pause: Pause) => {
     setEditingId(pause.id);
+    setEditHeure(pause.heure_debut);
     setEditDuree(pause.duree.toString());
-    // Note: l'heure n'est pas stockée, on ne peut pas l'éditer
   };
 
-  // Trier les pauses par heure (simulé ici - en vrai il faudrait stocker l'heure)
-  const sortedPauses = [...pauses].sort((a, b) => a.position - b.position);
+  // Trier les pauses par heure
+  const sortedPauses = [...pauses].sort((a, b) => 
+    heureToMinutes(a.heure_debut) - heureToMinutes(b.heure_debut)
+  );
 
   return (
     <div>
@@ -89,46 +94,67 @@ export default function PausesManager({
             <div key={pause.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               {editingId === pause.id ? (
                 // Mode édition
-                <div className="flex-1 flex items-center space-x-3">
-                  <input
-                    type="number"
-                    min="1"
-                    max="120"
-                    value={editDuree}
-                    onChange={(e) => setEditDuree(e.target.value)}
-                    className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                  />
-                  <span className="text-sm text-gray-500">minutes</span>
-                  <button
-                    onClick={() => handleUpdate(pause.id)}
-                    className="text-green-600 hover:text-green-800 text-sm font-medium"
-                  >
-                    OK
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="text-gray-500 hover:text-gray-700 text-sm"
-                  >
-                    Annuler
-                  </button>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-500 w-16">Heure:</span>
+                    <input
+                      type="time"
+                      value={editHeure}
+                      onChange={(e) => setEditHeure(e.target.value)}
+                      min={heureDebut}
+                      max={heureFin}
+                      className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-500 w-16">Durée:</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="120"
+                      value={editDuree}
+                      onChange={(e) => setEditDuree(e.target.value)}
+                      className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                    />
+                    <span className="text-sm text-gray-500">min</span>
+                  </div>
+                  <div className="flex space-x-2 pt-1">
+                    <button
+                      onClick={() => handleUpdate(pause.id)}
+                      className="text-green-600 hover:text-green-800 text-sm font-medium"
+                    >
+                      OK
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="text-gray-500 hover:text-gray-700 text-sm"
+                    >
+                      Annuler
+                    </button>
+                  </div>
                 </div>
               ) : (
                 // Mode affichage
                 <>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      Pause {index + 1} • {pause.duree} minutes
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Idéalement vers {Math.floor((pause.position * 30) + 30)}e minute
-                    </p>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm font-mono text-gray-500 w-16">
+                      {pause.heure_debut}
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        Pause {index + 1}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {pause.duree} minutes
+                      </p>
+                    </div>
                   </div>
                   <div className="flex space-x-2">
                     <button
                       onClick={() => startEdit(pause)}
                       className="text-blue-600 hover:text-blue-800 text-sm"
                     >
-                      Modifier durée
+                      Modifier
                     </button>
                     <button
                       onClick={() => onRemove(pause.id)}
@@ -149,6 +175,33 @@ export default function PausesManager({
         <form onSubmit={handleAdd} className="border-t pt-4">
           <h4 className="text-sm font-medium text-gray-700 mb-3">Ajouter une pause</h4>
           <div className="space-y-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Heure de début</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="time"
+                  value={newHeure}
+                  onChange={(e) => setNewHeure(e.target.value)}
+                  min={heureDebut}
+                  max={heureFin}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  required
+                />
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1">
+                {getHeureSuggestions().map(heure => (
+                  <button
+                    key={heure}
+                    type="button"
+                    onClick={() => setNewHeure(heure)}
+                    className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                  >
+                    {heure}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs text-gray-500 mb-1">Durée</label>
               <div className="flex items-center space-x-2">
@@ -201,4 +254,16 @@ export default function PausesManager({
       )}
     </div>
   );
+}
+
+// Fonctions utilitaires
+function heureToMinutes(heure: string): number {
+  const [h, m] = heure.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function minutesToHeure(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h.toString().padStart(2, '0')}:${h.toString().padStart(2, '0')}`;
 }
