@@ -27,6 +27,7 @@ export default function AGConfigurationPage() {
     error,
     updateConfig,
     addBureau,
+    interventionsLibres,
     removeBureau,
     assignGroupe,
     addPause,
