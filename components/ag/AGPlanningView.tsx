@@ -25,7 +25,7 @@ interface AGPlanningViewProps {
   communications: any[];
   pauses: any[];
   interventionsLibres: any[];
-  onReorder?: (newOrder: string[]) => void;
+  onReorder?: (newOrder: { id: string; type: 'gt' | 'libre' }[]) => void;
   isEditable?: boolean;
 }
 
