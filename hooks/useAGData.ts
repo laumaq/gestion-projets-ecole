@@ -14,6 +14,12 @@ export interface AGConfig {
   statut: 'pas_ag' | 'preparation' | 'planning_etabli';
 }
 
+export interface Pause {
+  id: string;
+  duree: number;
+  position: number;
+}
+
 export interface Bureau {
   id: string;
   employee_id: string;
@@ -54,6 +60,7 @@ export function useAGData() {
   const [communications, setCommunications] = useState<Communication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pauses, setPauses] = useState<Pause[]>([]);
 
   const loadData = async () => {
     try {
@@ -182,6 +189,65 @@ export function useAGData() {
           created_at: c.created_at
         };
       }) || []);
+
+      // 6. Charger les pauses
+      const { data: pausesData, error: pausesError } = await supabase
+        .from('ag_pauses')
+        .select('*')
+        .eq('ag_id', AG_ID)
+        .order('position');
+      
+      if (pausesError) throw pausesError;
+      setPauses(pausesData || []);
+      
+      // Ajouter les fonctions de gestion des pauses
+      const addPause = async (duree: number, position: number) => {
+        try {
+          const { error } = await supabase
+            .from('ag_pauses')
+            .insert([{
+              ag_id: AG_ID,
+              duree,
+              position
+            }]);
+      
+          if (error) throw error;
+          await loadData();
+        } catch (err) {
+          console.error('Erreur ajout pause:', err);
+          throw err;
+        }
+      };
+      
+      const updatePause = async (pauseId: string, duree: number, position: number) => {
+        try {
+          const { error } = await supabase
+            .from('ag_pauses')
+            .update({ duree, position })
+            .eq('id', pauseId);
+      
+          if (error) throw error;
+          await loadData();
+        } catch (err) {
+          console.error('Erreur mise à jour pause:', err);
+          throw err;
+        }
+      };
+      
+      const removePause = async (pauseId: string) => {
+        try {
+          const { error } = await supabase
+            .from('ag_pauses')
+            .delete()
+            .eq('id', pauseId);
+      
+          if (error) throw error;
+          await loadData();
+        } catch (err) {
+          console.error('Erreur suppression pause:', err);
+          throw err;
+        }
+      };
 
     } catch (err) {
       console.error('Erreur chargement données AG:', err);
@@ -336,6 +402,10 @@ export function useAGData() {
     assignGroupe,
     saveCommunication,
     resetCommunications,
+    pauses,
+    addPause,
+    updatePause,
+    removePause,
     refresh: loadData
   };
 }
