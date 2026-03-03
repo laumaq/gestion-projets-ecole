@@ -173,11 +173,14 @@ export default function AGPlanningView({
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
   
-    // Créer un tableau d'objets avec id et type
-    const newOrder = items.map(item => ({
-      id: item.id,
-      type: item.type
-    }));
+    // Ne garder que les interventions (pas les pauses) et formater pour onReorder
+    const newOrder = items
+      .filter(item => item.type !== 'pause') // Exclure les pauses
+      .map(item => ({
+        id: item.id,
+        type: item.type === 'intervention' ? 
+          (item as any).type_intervention || 'gt' : 'gt' // 'gt' ou 'libre'
+      }));
     
     onReorder(newOrder);
   };
