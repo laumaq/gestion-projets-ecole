@@ -4,6 +4,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
+const AG_ID = '11111111-1111-1111-1111-111111111111'; // ID fixe
+
 export interface AGConfig {
   id: string;
   date_ag: string;
@@ -34,11 +36,22 @@ export interface Employee {
   groupe_nom?: string;
 }
 
+export interface Communication {
+  id: string;
+  groupe_id: string;
+  groupe_nom: string;
+  temps_demande: number;
+  type_communication: string;
+  resume: string;
+  created_at: string;
+}
+
 export function useAGData() {
   const [config, setConfig] = useState<AGConfig | null>(null);
   const [bureau, setBureau] = useState<Bureau[]>([]);
   const [groupes, setGroupes] = useState<GT[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [communications, setCommunications] = useState<Communication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,48 +60,64 @@ export function useAGData() {
       setLoading(true);
       setError(null);
 
-      // 1. Charger la configuration AG (la plus récente)
+      // 1. Charger la configuration AG (toujours la même)
       const { data: configData, error: configError } = await supabase
         .from('ag_configs')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(1)
+        .eq('id', AG_ID)
         .maybeSingle();
 
       if (configError && configError.code !== 'PGRST116') {
         throw configError;
       }
 
-      setConfig(configData);
+      // Si pas de config, en créer une par défaut
+      if (!configData) {
+        const { data: newConfig, error: createError } = await supabase
+          .from('ag_configs')
+          .insert([{
+            id: AG_ID,
+            date_ag: new Date().toISOString().split('T')[0],
+            heure_debut: '09:00',
+            heure_fin: '12:00',
+            statut: 'pas_ag',
+            created_by: localStorage.getItem('userId')
+          }])
+          .select()
+          .single();
 
-      // 2. Si une config existe, charger le bureau
-      if (configData) {
-        const { data: bureauData, error: bureauError } = await supabase
-          .from('ag_bureau')
-          .select(`
-            id,
-            role,
-            employee_id,
-            employees:employee_id (
-              nom,
-              prenom
-            )
-          `)
-          .eq('ag_id', configData.id);
-
-        if (bureauError) throw bureauError;
-
-        setBureau(bureauData?.map(b => {
-          const employeeData = Array.isArray(b.employees) ? b.employees[0] : b.employees;
-          return {
-            id: b.id,
-            employee_id: b.employee_id,
-            nom: employeeData?.nom || '',
-            prenom: employeeData?.prenom || '',
-            role: b.role
-          };
-        }) || []);
+        if (createError) throw createError;
+        setConfig(newConfig);
+      } else {
+        setConfig(configData);
       }
+
+      // 2. Charger le bureau
+      const { data: bureauData, error: bureauError } = await supabase
+        .from('ag_bureau')
+        .select(`
+          id,
+          role,
+          employee_id,
+          employees:employee_id (
+            nom,
+            prenom
+          )
+        `)
+        .eq('ag_id', AG_ID);
+
+      if (bureauError) throw bureauError;
+
+      setBureau(bureauData?.map(b => {
+        const employeeData = Array.isArray(b.employees) ? b.employees[0] : b.employees;
+        return {
+          id: b.id,
+          employee_id: b.employee_id,
+          nom: employeeData?.nom || '',
+          prenom: employeeData?.prenom || '',
+          role: b.role
+        };
+      }) || []);
 
       // 3. Charger tous les groupes
       const { data: groupesData, error: groupesError } = await supabase
@@ -128,6 +157,32 @@ export function useAGData() {
         };
       }) || []);
 
+      // 5. Charger les communications
+      const { data: commData, error: commError } = await supabase
+        .from('ag_communications')
+        .select(`
+          *,
+          ag_groupes (
+            nom
+          )
+        `)
+        .eq('ag_id', AG_ID);
+
+      if (commError) throw commError;
+
+      setCommunications(commData?.map(c => {
+        const groupeData = Array.isArray(c.ag_groupes) ? c.ag_groupes[0] : c.ag_groupes;
+        return {
+          id: c.id,
+          groupe_id: c.groupe_id,
+          groupe_nom: groupeData?.nom || 'Groupe inconnu',
+          temps_demande: c.temps_demande,
+          type_communication: c.type_communication,
+          resume: c.resume,
+          created_at: c.created_at
+        };
+      }) || []);
+
     } catch (err) {
       console.error('Erreur chargement données AG:', err);
       setError('Erreur lors du chargement des données');
@@ -136,49 +191,41 @@ export function useAGData() {
     }
   };
 
-  // Créer ou mettre à jour la config
-  const saveConfig = async (newConfig: Partial<AGConfig>) => {
+  // Mettre à jour la config
+  const updateConfig = async (newConfig: Partial<AGConfig>) => {
     try {
-      if (config?.id) {
-        // Mise à jour
-        const { error } = await supabase
-          .from('ag_configs')
-          .update({
-            ...newConfig,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', config.id);
-
-        if (error) throw error;
-      } else {
-        // Création
-        const { error } = await supabase
-          .from('ag_configs')
-          .insert([{
-            ...newConfig,
-            created_by: localStorage.getItem('userId'),
-            statut: 'preparation'
-          }]);
-
-        if (error) throw error;
+      // Si on repasse en préparation, on efface les anciennes communications
+      if (newConfig.statut === 'preparation' && config?.statut !== 'preparation') {
+        await supabase
+          .from('ag_communications')
+          .delete()
+          .eq('ag_id', AG_ID);
       }
+
+      const { error } = await supabase
+        .from('ag_configs')
+        .update({
+          ...newConfig,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', AG_ID);
+
+      if (error) throw error;
 
       await loadData();
     } catch (err) {
-      console.error('Erreur sauvegarde config:', err);
+      console.error('Erreur mise à jour config:', err);
       throw err;
     }
   };
 
   // Ajouter un membre au bureau
   const addBureau = async (employeeId: string, role: 'maitre_du_temps' | 'animateur') => {
-    if (!config) throw new Error('Aucune configuration AG');
-
     try {
       const { error } = await supabase
         .from('ag_bureau')
         .insert([{
-          ag_id: config.id,
+          ag_id: AG_ID,
           employee_id: employeeId,
           role
         }]);
@@ -226,6 +273,51 @@ export function useAGData() {
     }
   };
 
+  // Sauvegarder une communication (écrase l'ancienne)
+  const saveCommunication = async (groupeId: string, data: {
+    temps_demande: number;
+    type_communication: string;
+    resume: string;
+  }) => {
+    try {
+      // UPSERT : si existe, écrase ; sinon, crée
+      const { error } = await supabase
+        .from('ag_communications')
+        .upsert({
+          ag_id: AG_ID,
+          groupe_id: groupeId,
+          ...data,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'ag_id,groupe_id'
+        });
+
+      if (error) throw error;
+
+      await loadData();
+    } catch (err) {
+      console.error('Erreur sauvegarde communication:', err);
+      throw err;
+    }
+  };
+
+  // Réinitialiser toutes les communications (quand on repart en préparation)
+  const resetCommunications = async () => {
+    try {
+      const { error } = await supabase
+        .from('ag_communications')
+        .delete()
+        .eq('ag_id', AG_ID);
+
+      if (error) throw error;
+
+      await loadData();
+    } catch (err) {
+      console.error('Erreur reset communications:', err);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -235,12 +327,15 @@ export function useAGData() {
     bureau,
     groupes,
     employees,
+    communications,
     loading,
     error,
-    saveConfig,
+    updateConfig,
     addBureau,
     removeBureau,
     assignGroupe,
+    saveCommunication,
+    resetCommunications,
     refresh: loadData
   };
 }
