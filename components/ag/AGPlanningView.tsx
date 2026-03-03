@@ -24,6 +24,7 @@ interface AGPlanningViewProps {
 
 export default function AGPlanningView({ config, communications, pauses }: AGPlanningViewProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [planning, setPlanning] = useState<PlanningItem[]>([]);
 
   // Mettre à jour l'heure toutes les minutes
   useEffect(() => {
@@ -32,6 +33,62 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
     }, 60000); // Toutes les minutes
     return () => clearInterval(timer);
   }, []);
+
+  // Recalculer le planning quand les données changent
+  useEffect(() => {
+    if (!config || communications.length === 0) return;
+
+    // Calculer le ratio temps disponible / temps demandé
+    const tempsDispo = heureToMinutes(config.heure_fin) - heureToMinutes(config.heure_debut);
+    const pausesTotal = pauses.reduce((acc, p) => acc + p.duree, 0);
+    const tempsDispoReel = tempsDispo - pausesTotal;
+    
+    const tempsDemandeTotal = communications.reduce((acc, c) => acc + c.temps_demande, 0);
+    const ratio = tempsDispoReel / tempsDemandeTotal;
+
+    // Calculer le planning avec les heures ajustées
+    const newPlanning: PlanningItem[] = [];
+    let currentTimeMinutes = heureToMinutes(config.heure_debut);
+
+    // Trier les communications par ordre (si ordre défini) ou par groupe
+    const sortedComms = [...communications].sort((a, b) => {
+      if (a.ordre && b.ordre) return a.ordre - b.ordre;
+      return a.groupe_nom.localeCompare(b.groupe_nom);
+    });
+
+    for (let i = 0; i < sortedComms.length; i++) {
+      const comm = sortedComms[i];
+      
+      // Vérifier si une pause est prévue avant cette intervention
+      const pauseAvant = pauses.find(p => p.position === i);
+      if (pauseAvant) {
+        currentTimeMinutes += pauseAvant.duree;
+      }
+
+      const debut = currentTimeMinutes;
+      // Appliquer le ratio au temps demandé
+      const tempsAjuste = Math.round(comm.temps_demande * ratio);
+      const fin = currentTimeMinutes + tempsAjuste;
+      
+      newPlanning.push({
+        id: comm.id,
+        groupe_nom: comm.groupe_nom,
+        type_communication: comm.type_communication,
+        temps_demande: comm.temps_demande,
+        temps_ajuste: tempsAjuste,
+        resume: comm.resume,
+        heure_debut: minutesToHeure(debut),
+        heure_fin: minutesToHeure(fin),
+        debutMinutes: debut,
+        finMinutes: fin,
+        ordre: comm.ordre
+      });
+      
+      currentTimeMinutes = fin;
+    }
+
+    setPlanning(newPlanning);
+  }, [config, communications, pauses, currentTime]); // Recalcul à chaque minute
 
   if (!config) {
     return <p className="text-gray-500">Aucune configuration AG</p>;
@@ -43,37 +100,6 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
         <p className="text-gray-500">Aucune communication n'a encore été enregistrée.</p>
       </div>
     );
-  }
-
-  // Calculer le planning avec les heures
-  const planning: PlanningItem[] = [];
-  let currentTimeMinutes = heureToMinutes(config.heure_debut);
-
-  // Trier les communications par ordre (si ordre défini) ou par groupe
-  const sortedComms = [...communications].sort((a, b) => {
-    if (a.ordre && b.ordre) return a.ordre - b.ordre;
-    return a.groupe_nom.localeCompare(b.groupe_nom);
-  });
-
-  for (let i = 0; i < sortedComms.length; i++) {
-    const comm = sortedComms[i];
-    const debut = currentTimeMinutes;
-    const fin = currentTimeMinutes + comm.temps_demande;
-    
-    planning.push({
-      id: comm.id,
-      groupe_nom: comm.groupe_nom,
-      type_communication: comm.type_communication,
-      temps_demande: comm.temps_demande,
-      resume: comm.resume,
-      heure_debut: minutesToHeure(debut),
-      heure_fin: minutesToHeure(fin),
-      debutMinutes: debut,
-      finMinutes: fin,
-      ordre: comm.ordre
-    });
-    
-    currentTimeMinutes = fin;
   }
 
   // Calculer le pourcentage de progression pour une intervention
@@ -116,9 +142,16 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
     }
   };
 
+  // Afficher le ratio
+  const tempsDispo = heureToMinutes(config.heure_fin) - heureToMinutes(config.heure_debut);
+  const pausesTotal = pauses.reduce((acc, p) => acc + p.duree, 0);
+  const tempsDemandeTotal = communications.reduce((acc, c) => acc + c.temps_demande, 0);
+  const ratio = (tempsDispo - pausesTotal) / tempsDemandeTotal;
+  const ratioPercent = Math.round(ratio * 100);
+
   return (
     <div className="space-y-4">
-      {/* En-tête avec horaires */}
+      {/* En-tête avec horaires et ratio */}
       <div className="flex items-center justify-between text-sm border-b border-gray-200 pb-3">
         <div className="font-medium text-gray-700">
           {new Date(config.date_ag).toLocaleDateString('fr-FR', { 
@@ -131,6 +164,11 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
           <span className="text-gray-600">Début: {config.heure_debut}</span>
           <span className="text-gray-400">→</span>
           <span className="text-gray-600">Fin: {config.heure_fin}</span>
+          {ratio !== 1 && (
+            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+              Ratio: {ratioPercent}%
+            </span>
+          )}
         </div>
       </div>
 
@@ -169,7 +207,12 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
                         {getTypeBadge(item.type_communication)}
                       </div>
                       <span className="text-xs text-gray-400">
-                        {item.temps_demande}min
+                        {item.temps_ajuste || item.temps_demande}min
+                        {item.temps_ajuste && item.temps_ajuste !== item.temps_demande && (
+                          <span className="text-gray-300 ml-1">
+                            (demandé: {item.temps_demande}min)
+                          </span>
+                        )}
                       </span>
                     </div>
                     
@@ -200,14 +243,13 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
           </h4>
           <div className="space-y-2 ml-20">
             {pauses.map((pause, index) => {
-              // Trouver après quelle intervention placer la pause
-              const position = pause.position || index;
-              const beforeIntervention = planning[Math.min(position, planning.length - 1)];
+              // Trouver avant quelle intervention placer la pause
+              const heurePause = pause.heure_debut;
               
               return (
                 <div key={pause.id} className="flex items-center text-sm py-1 px-3 bg-purple-50 rounded-lg">
                   <span className="text-xs font-mono text-purple-400 w-12">
-                    {beforeIntervention?.heure_fin || '??:??'}
+                    {pause.heure_debut}
                   </span>
                   <span className="text-purple-600 font-medium">Pause {index + 1}</span>
                   <span className="text-xs text-purple-400 ml-2">{pause.duree} min</span>
