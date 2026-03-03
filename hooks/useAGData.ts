@@ -22,6 +22,19 @@ export interface Bureau {
   role: 'maitre_du_temps' | 'animateur';
 }
 
+export interface InterventionLibre {
+  id: string;
+  employee_id: string;
+  employee_nom: string;
+  employee_prenom: string;
+  titre: string;
+  temps_demande: number;
+  type_communication: string;
+  resume: string;
+  created_at: string;
+  ordre?: number;
+}
+
 export interface GT {
   id: string;
   nom: string;
@@ -63,6 +76,7 @@ export function useAGData() {
   const [pauses, setPauses] = useState<Pause[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [interventionsLibres, setInterventionsLibres] = useState<InterventionLibre[]>([]);
 
   const loadData = async () => {
     try {
@@ -202,6 +216,83 @@ export function useAGData() {
 
       if (pausesError) throw pausesError;
       setPauses(pausesData || []);
+
+
+      // 7. Charger les interventions libres
+      const { data: libresData, error: libresError } = await supabase
+        .from('ag_interventions_libres')
+        .select(`
+          *,
+          employees:employee_id (
+            nom,
+            prenom
+          )
+        `)
+        .eq('ag_id', AG_ID)
+        .order('ordre', { ascending: true });
+      
+      if (libresError) throw libresError;
+      
+      setInterventionsLibres(libresData?.map(l => {
+        const employeeData = Array.isArray(l.employees) ? l.employees[0] : l.employees;
+        return {
+          id: l.id,
+          employee_id: l.employee_id,
+          employee_nom: employeeData?.nom || '',
+          employee_prenom: employeeData?.prenom || '',
+          titre: l.titre,
+          temps_demande: l.temps_demande,
+          type_communication: l.type_communication,
+          resume: l.resume,
+          created_at: l.created_at,
+          ordre: l.ordre
+        };
+      }) || []);
+      
+      // Fonctions pour les interventions libres
+      const saveInterventionLibre = async (data: {
+        titre: string;
+        temps_demande: number;
+        type_communication: string;
+        resume: string;
+      }) => {
+        const employeeId = localStorage.getItem('userId');
+        if (!employeeId) throw new Error('Utilisateur non connecté');
+      
+        try {
+          const { error } = await supabase
+            .from('ag_interventions_libres')
+            .upsert({
+              ag_id: AG_ID,
+              employee_id: employeeId,
+              ...data,
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'ag_id,employee_id'
+            });
+      
+          if (error) throw error;
+          await loadData();
+        } catch (err) {
+          console.error('Erreur sauvegarde intervention libre:', err);
+          throw err;
+        }
+      };
+      
+      const deleteInterventionLibre = async (interventionId: string) => {
+        try {
+          const { error } = await supabase
+            .from('ag_interventions_libres')
+            .delete()
+            .eq('id', interventionId);
+      
+          if (error) throw error;
+          await loadData();
+        } catch (err) {
+          console.error('Erreur suppression intervention libre:', err);
+          throw err;
+        }
+      };
 
     } catch (err) {
       console.error('Erreur chargement données AG:', err);
@@ -418,6 +509,9 @@ export function useAGData() {
     updatePause,
     removePause,
     updateOrdre,
+    interventionsLibres,
+    saveInterventionLibre,
+    deleteInterventionLibre,
     refresh: loadData
   };
 }
