@@ -1,9 +1,8 @@
-// hooks/useAGPermissions.ts
+// hooks/useAGPermissions.ts (déjà correct mais vérifions)
 'use client';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-
 
 export function useAGPermissions() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -30,7 +29,7 @@ export function useAGPermissions() {
           .select('id, statut')
           .order('created_at', { ascending: false })
           .limit(1)
-          .maybeSingle(); // Utiliser maybeSingle() au lieu de single() pour éviter l'erreur si pas de résultat
+          .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
           console.error('Erreur récupération AG:', error);
@@ -54,7 +53,6 @@ export function useAGPermissions() {
             }
           }
         } else {
-          // Pas d'AG configurée
           setAgStatut('pas_ag');
           setAgId(null);
         }
