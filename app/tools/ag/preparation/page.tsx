@@ -4,32 +4,25 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAGPermissions } from '@/hooks/useAGPermissions';
-import { supabase } from '@/lib/supabase';
+import { useAGData } from '@/hooks/useAGData';
 import LoadingSpinner from '@/components/LoadingSpinner';
-
-interface Groupe {
-  id: string;
-  nom: string;
-}
-
-interface Communication {
-  id: string;
-  temps_demande: number;
-  type_communication: string;
-  resume: string;
-  groupe_id: string;
-  groupe_nom: string;
-}
 
 export default function AGPreparationPage() {
   const router = useRouter();
-  const { agStatut, canSubmit, agId, loading: permissionsLoading } = useAGPermissions();
-  const [monGroupe, setMonGroupe] = useState<Groupe | null>(null);
-  const [maCommunication, setMaCommunication] = useState<Communication | null>(null);
+  const { agStatut, canSubmit, loading: permissionsLoading } = useAGPermissions();
+  const { 
+    groupes, 
+    employees, 
+    communications, 
+    saveCommunication,
+    loading: dataLoading 
+  } = useAGData();
+  
+  const [monGroupe, setMonGroupe] = useState<{ id: string; nom: string } | null>(null);
+  const [maCommunication, setMaCommunication] = useState<any>(null);
   const [temps, setTemps] = useState('5');
   const [type, setType] = useState<'information' | 'consultation' | 'decision'>('information');
   const [resume, setResume] = useState('');
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -41,71 +34,32 @@ export default function AGPreparationPage() {
   }, [canSubmit, permissionsLoading, router]);
 
   useEffect(() => {
-    if (canSubmit && agId) {
-      chargerDonnees();
-    }
-  }, [canSubmit, agId]);
-
-  const chargerDonnees = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
+    if (!dataLoading && employees.length > 0) {
       const userId = localStorage.getItem('userId');
-      if (!userId) return;
-
-      // Récupérer le groupe de l'employé
-      const { data: employee, error: empError } = await supabase
-        .from('employees')
-        .select(`
-          groupe_id,
-          ag_groupes:groupe_id (
-            id,
-            nom
-          )
-        `)
-        .eq('id', userId)
-        .single();
-
-      if (empError) throw empError;
-
-      if (employee?.ag_groupes) {
-        const groupeData = Array.isArray(employee.ag_groupes) ? employee.ag_groupes[0] : employee.ag_groupes;
+      const employee = employees.find(e => e.id === userId);
+      
+      if (employee?.groupe_id) {
+        const groupe = groupes.find(g => g.id === employee.groupe_id);
         setMonGroupe({
           id: employee.groupe_id,
-          nom: groupeData?.nom || 'Groupe inconnu'
+          nom: groupe?.nom || 'Groupe inconnu'
         });
 
-        // Récupérer la communication existante pour ce groupe
-        const { data: comm, error: commError } = await supabase
-          .from('ag_communications')
-          .select('*')
-          .eq('ag_id', agId)
-          .eq('groupe_id', employee.groupe_id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (commError && commError.code !== 'PGRST116') throw commError;
-
+        // Chercher la communication existante pour ce groupe
+        const comm = communications.find(c => c.groupe_id === employee.groupe_id);
         if (comm) {
           setMaCommunication(comm);
           setTemps(comm.temps_demande.toString());
-          setType(comm.type_communication);
+          setType(comm.type_communication as any);
           setResume(comm.resume || '');
         }
       }
-    } catch (err) {
-      console.error('Erreur chargement données:', err);
-      setError('Erreur lors du chargement de vos données');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [dataLoading, employees, groupes, communications]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!monGroupe || !agId) return;
+    if (!monGroupe) return;
 
     setSaving(true);
     setError(null);
@@ -117,24 +71,14 @@ export default function AGPreparationPage() {
         throw new Error('Le temps doit être un nombre positif');
       }
 
-      const { error } = await supabase
-        .from('ag_communications')
-        .upsert({
-          ag_id: agId,
-          groupe_id: monGroupe.id,
-          temps_demande: tempsValue,
-          type_communication: type,
-          resume: resume,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'ag_id,groupe_id'
-        });
-
-      if (error) throw error;
+      await saveCommunication(monGroupe.id, {
+        temps_demande: tempsValue,
+        type_communication: type,
+        resume: resume
+      });
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-      chargerDonnees(); // Recharger pour avoir l'ID
     } catch (err) {
       console.error('Erreur sauvegarde:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
@@ -143,7 +87,7 @@ export default function AGPreparationPage() {
     }
   };
 
-  if (permissionsLoading || loading) {
+  if (permissionsLoading || dataLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <LoadingSpinner />
@@ -272,7 +216,7 @@ export default function AGPreparationPage() {
 
           {maCommunication && (
             <div className="text-xs text-gray-500 border-t pt-4">
-              Dernière mise à jour : {new Date(maCommunication.created_at || '').toLocaleString('fr-FR')}
+              Dernière mise à jour : {new Date().toLocaleString('fr-FR')}
             </div>
           )}
         </div>
