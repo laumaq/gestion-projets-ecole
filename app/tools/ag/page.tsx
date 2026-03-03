@@ -16,7 +16,6 @@ export default function AGPage() {
     console.log('AG Statut:', agStatut); // Pour debug
 
     if (agStatut === 'pas_ag') {
-      // Si pas d'AG programmée, rediriger vers dashboard avec un message
       router.push('/dashboard?ag=desactivee');
       return;
     }
@@ -28,8 +27,7 @@ export default function AGPage() {
     } else if (agStatut === 'planning_etabli' && canViewPlanning) {
       router.push('/tools/ag/planning');
     } else {
-      // Par défaut, essayer le planning
-      router.push('/tools/ag/planning');
+      router.push('/dashboard');
     }
   }, [agStatut, canConfigure, canSubmit, canViewPlanning, loading, router]);
 
