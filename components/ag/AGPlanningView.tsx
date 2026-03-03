@@ -24,6 +24,7 @@ interface AGPlanningViewProps {
   config: any;
   communications: any[];
   pauses: any[];
+  interventionsLibres: any[];
   onReorder?: (newOrder: string[]) => void;
   isEditable?: boolean;
 }
@@ -167,12 +168,17 @@ export default function AGPlanningView({
 
   const handleDragEnd = (result: any) => {
     if (!result.destination || !onReorder) return;
-
+  
     const items = Array.from(planning);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-
-    const newOrder = items.map(item => item.id);
+  
+    // Créer un tableau avec les IDs et les types
+    const newOrder = items.map(item => ({
+      id: item.id,
+      type: item.type // 'gt' ou 'libre'
+    }));
+    
     onReorder(newOrder);
   };
 
