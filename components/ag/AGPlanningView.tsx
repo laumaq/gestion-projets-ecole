@@ -15,8 +15,8 @@ interface PlanningItem {
   debutMinutes: number;
   finMinutes: number;
   ordre?: number;
-  type: 'intervention' | 'pause'; // Ajout du type
-  duree?: number; // Pour les pauses
+  type: 'intervention' | 'pause';
+  duree?: number;
 }
 
 interface AGPlanningViewProps {
@@ -29,12 +29,12 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
   const [currentTime, setCurrentTime] = useState(new Date());
   const [planning, setPlanning] = useState<PlanningItem[]>([]);
 
-  // Mettre à jour l'heure toutes les minutes
+  // Mettre à jour l'heure toutes les SECONDES pour un rafraîchissement plus fluide
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
       console.log('Mise à jour du planning:', new Date().toLocaleTimeString());
-    }, 60000);
+    }, 1000); // Toutes les secondes au lieu de toutes les minutes
     
     return () => clearInterval(timer);
   }, []);
@@ -48,7 +48,7 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
 
     console.log('Recalcul du planning avec', communications.length, 'communications');
 
-    // Calculer le ratio temps disponible / temps demandé
+    // 1. Calculer le ratio
     const tempsDispo = heureToMinutes(config.heure_fin) - heureToMinutes(config.heure_debut);
     const pausesTotal = pauses.reduce((acc, p) => acc + p.duree, 0);
     const tempsDispoReel = tempsDispo - pausesTotal;
@@ -58,83 +58,131 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
 
     console.log('Ratio calculé:', ratio, 'Temps dispo:', tempsDispoReel, 'Demandé:', tempsDemandeTotal);
 
-    // Créer un tableau mixte d'événements (interventions + pauses)
-    const events: PlanningItem[] = [];
+    // 2. Créer un tableau des interventions avec leurs heures ajustées
+    let currentTimeMinutes = heureToMinutes(config.heure_debut);
+    const interventionsAjustees: PlanningItem[] = [];
     
-    // Ajouter toutes les interventions avec leurs heures non ajustées pour l'instant
-    const interventions = communications.map(c => ({
-      ...c,
-      type: 'intervention' as const,
-      temps_original: c.temps_demande
-    }));
-
-    // Ajouter toutes les pauses
-    const pausesEvents = pauses.map(p => ({
-      id: p.id,
-      type: 'pause' as const,
-      groupe_nom: 'PAUSE',
-      type_communication: 'pause',
-      temps_demande: p.duree,
-      temps_ajuste: p.duree, // Les pauses ne sont pas ajustées par le ratio
-      resume: '',
-      heure_debut: p.heure_debut,
-      heure_fin: '', // Sera calculé
-      debutMinutes: heureToMinutes(p.heure_debut),
-      finMinutes: heureToMinutes(p.heure_debut) + p.duree,
-      duree: p.duree
-    }));
-
-    // Fusionner et trier par heure de début
-    const allEvents = [...interventions, ...pausesEvents].sort((a, b) => {
-      const heureA = 'heure_debut' in a ? heureToMinutes(a.heure_debut) : a.debutMinutes;
-      const heureB = 'heure_debut' in b ? heureToMinutes(b.heure_debut) : b.debutMinutes;
-      return heureA - heureB;
+    // Trier les communications par ordre (si défini) ou par nom
+    const sortedComms = [...communications].sort((a, b) => {
+      if (a.ordre && b.ordre) return a.ordre - b.ordre;
+      return a.groupe_nom.localeCompare(b.groupe_nom);
     });
 
-    // Recalculer les heures en tenant compte du ratio pour les interventions
-    let currentTimeMinutes = heureToMinutes(config.heure_debut);
-    const finalPlanning: PlanningItem[] = [];
+    // 3. Créer une MAP des pauses par heure pour pouvoir les insérer au bon moment
+    const pausesParHeure = pauses.reduce((acc, pause) => {
+      const minutes = heureToMinutes(pause.heure_debut);
+      if (!acc[minutes]) acc[minutes] = [];
+      acc[minutes].push(pause);
+      return acc;
+    }, {} as Record<number, any[]>);
 
-    for (const event of allEvents) {
-      if (event.type === 'pause') {
-        // Les pauses restent à leur heure fixe
-        const pauseTime = heureToMinutes(event.heure_debut);
-        if (pauseTime > currentTimeMinutes) {
-          // S'il y a un trou avant la pause, on l'ignore (normalement pas)
-          currentTimeMinutes = pauseTime;
+    // 4. Construire le planning en insérant les pauses aux bons endroits
+    for (let i = 0; i < sortedComms.length; i++) {
+      const comm = sortedComms[i];
+      
+      // Vérifier s'il y a une pause programmée à cette heure précise
+      const pauseAMaintenant = pausesParHeure[currentTimeMinutes];
+      if (pauseAMaintenant) {
+        for (const pause of pauseAMaintenant) {
+          const debutPause = currentTimeMinutes;
+          const finPause = debutPause + pause.duree;
+          
+          interventionsAjustees.push({
+            id: pause.id,
+            type: 'pause',
+            groupe_nom: 'PAUSE',
+            type_communication: 'pause',
+            temps_demande: pause.duree,
+            temps_ajuste: pause.duree,
+            resume: '',
+            heure_debut: minutesToHeure(debutPause),
+            heure_fin: minutesToHeure(finPause),
+            debutMinutes: debutPause,
+            finMinutes: finPause,
+            duree: pause.duree
+          });
+          
+          currentTimeMinutes = finPause;
         }
-        
-        const fin = pauseTime + event.duree!;
-        finalPlanning.push({
-          ...event,
-          heure_debut: minutesToHeure(pauseTime),
-          heure_fin: minutesToHeure(fin),
-          debutMinutes: pauseTime,
-          finMinutes: fin
-        });
-        
-        currentTimeMinutes = fin;
-      } else {
-        // Les interventions sont ajustées et placées séquentiellement
-        const debut = currentTimeMinutes;
-        const tempsAjuste = Math.max(1, Math.round(event.temps_demande * ratio));
-        const fin = debut + tempsAjuste;
-        
-        finalPlanning.push({
-          ...event,
-          temps_ajuste: tempsAjuste,
-          heure_debut: minutesToHeure(debut),
-          heure_fin: minutesToHeure(fin),
-          debutMinutes: debut,
-          finMinutes: fin
-        });
-        
-        currentTimeMinutes = fin;
       }
+
+      // Ajouter l'intervention
+      const debut = currentTimeMinutes;
+      const tempsAjuste = Math.max(1, Math.round(comm.temps_demande * ratio));
+      const fin = debut + tempsAjuste;
+      
+      interventionsAjustees.push({
+        id: comm.id,
+        type: 'intervention',
+        groupe_nom: comm.groupe_nom,
+        type_communication: comm.type_communication,
+        temps_demande: comm.temps_demande,
+        temps_ajuste: tempsAjuste,
+        resume: comm.resume,
+        heure_debut: minutesToHeure(debut),
+        heure_fin: minutesToHeure(fin),
+        debutMinutes: debut,
+        finMinutes: fin
+      });
+      
+      currentTimeMinutes = fin;
     }
 
-    setPlanning(finalPlanning);
+    // 5. Vérifier les pauses après la dernière intervention
+    const pausesRestantes = pauses.filter(p => {
+      const minutesPause = heureToMinutes(p.heure_debut);
+      return minutesPause > currentTimeMinutes;
+    });
+
+    for (const pause of pausesRestantes) {
+      const debutPause = currentTimeMinutes;
+      const finPause = debutPause + pause.duree;
+      
+      interventionsAjustees.push({
+        id: pause.id,
+        type: 'pause',
+        groupe_nom: 'PAUSE',
+        type_communication: 'pause',
+        temps_demande: pause.duree,
+        temps_ajuste: pause.duree,
+        resume: '',
+        heure_debut: minutesToHeure(debutPause),
+        heure_fin: minutesToHeure(finPause),
+        debutMinutes: debutPause,
+        finMinutes: finPause,
+        duree: pause.duree
+      });
+      
+      currentTimeMinutes = finPause;
+    }
+
+    setPlanning(interventionsAjustees);
   }, [config, communications, pauses, currentTime]);
+
+  // Calculer le pourcentage de progression (maintenant avec les secondes)
+  const getProgressPercentage = (debutMinutes: number, finMinutes: number) => {
+    const now = currentTime.getHours() * 60 + currentTime.getMinutes() + currentTime.getSeconds() / 60;
+    
+    if (now < debutMinutes) return 0;
+    if (now > finMinutes) return 100;
+    
+    return ((now - debutMinutes) / (finMinutes - debutMinutes)) * 100;
+  };
+
+  // Couleur de fond selon la progression
+  const getBackgroundColor = (debutMinutes: number, finMinutes: number, type: string) => {
+    if (type === 'pause') {
+      return 'bg-purple-50';
+    }
+    
+    const progress = getProgressPercentage(debutMinutes, finMinutes);
+    
+    if (progress === 0) return 'bg-white';
+    if (progress < 50) return 'bg-green-50';
+    if (progress < 80) return 'bg-yellow-50';
+    return 'bg-red-50';
+  };
+
 
   // Calculer le pourcentage de progression
   const getProgressPercentage = (debutMinutes: number, finMinutes: number) => {
