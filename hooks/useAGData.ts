@@ -334,18 +334,19 @@ export function useAGData() {
       throw err;
     }
   };
-
+  
   // Ajouter une pause
-  const addPause = async (duree: number, position: number) => {
+  const addPause = async (duree: number, heure_debut: string) => {
     try {
       const { error } = await supabase
         .from('ag_pauses')
         .insert([{
           ag_id: AG_ID,
           duree,
-          position
+          heure_debut,
+          position: 0 // On met 0 par défaut, l'ordre sera géré par l'heure
         }]);
-
+  
       if (error) throw error;
       await loadData();
     } catch (err) {
@@ -353,15 +354,19 @@ export function useAGData() {
       throw err;
     }
   };
-
+  
   // Mettre à jour une pause
-  const updatePause = async (pauseId: string, duree: number, position: number) => {
+  const updatePause = async (pauseId: string, duree: number, heure_debut: string) => {
     try {
       const { error } = await supabase
         .from('ag_pauses')
-        .update({ duree, position })
+        .update({ 
+          duree, 
+          heure_debut,
+          updated_at: new Date().toISOString() 
+        })
         .eq('id', pauseId);
-
+  
       if (error) throw error;
       await loadData();
     } catch (err) {
