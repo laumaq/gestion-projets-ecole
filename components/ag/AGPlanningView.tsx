@@ -29,12 +29,12 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
   const [currentTime, setCurrentTime] = useState(new Date());
   const [planning, setPlanning] = useState<PlanningItem[]>([]);
 
-  // Mettre à jour l'heure toutes les SECONDES pour un rafraîchissement plus fluide
+  // Mettre à jour l'heure toutes les SECONDES
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
       console.log('Mise à jour du planning:', new Date().toLocaleTimeString());
-    }, 1000); // Toutes les secondes au lieu de toutes les minutes
+    }, 1000);
     
     return () => clearInterval(timer);
   }, []);
@@ -68,7 +68,7 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
       return a.groupe_nom.localeCompare(b.groupe_nom);
     });
 
-    // 3. Créer une MAP des pauses par heure pour pouvoir les insérer au bon moment
+    // 3. Créer une MAP des pauses par heure
     const pausesParHeure = pauses.reduce((acc, pause) => {
       const minutes = heureToMinutes(pause.heure_debut);
       if (!acc[minutes]) acc[minutes] = [];
@@ -76,7 +76,7 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
       return acc;
     }, {} as Record<number, any[]>);
 
-    // 4. Construire le planning en insérant les pauses aux bons endroits
+    // 4. Construire le planning
     for (let i = 0; i < sortedComms.length; i++) {
       const comm = sortedComms[i];
       
@@ -159,7 +159,7 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
     setPlanning(interventionsAjustees);
   }, [config, communications, pauses, currentTime]);
 
-  // Calculer le pourcentage de progression (maintenant avec les secondes)
+  // Calculer le pourcentage de progression (AVEC secondes)
   const getProgressPercentage = (debutMinutes: number, finMinutes: number) => {
     const now = currentTime.getHours() * 60 + currentTime.getMinutes() + currentTime.getSeconds() / 60;
     
@@ -173,31 +173,6 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
   const getBackgroundColor = (debutMinutes: number, finMinutes: number, type: string) => {
     if (type === 'pause') {
       return 'bg-purple-50';
-    }
-    
-    const progress = getProgressPercentage(debutMinutes, finMinutes);
-    
-    if (progress === 0) return 'bg-white';
-    if (progress < 50) return 'bg-green-50';
-    if (progress < 80) return 'bg-yellow-50';
-    return 'bg-red-50';
-  };
-
-
-  // Calculer le pourcentage de progression
-  const getProgressPercentage = (debutMinutes: number, finMinutes: number) => {
-    const now = currentTime.getHours() * 60 + currentTime.getMinutes();
-    
-    if (now < debutMinutes) return 0;
-    if (now > finMinutes) return 100;
-    
-    return ((now - debutMinutes) / (finMinutes - debutMinutes)) * 100;
-  };
-
-  // Couleur de fond selon la progression
-  const getBackgroundColor = (debutMinutes: number, finMinutes: number, type: string) => {
-    if (type === 'pause') {
-      return 'bg-purple-50'; // Couleur fixe pour les pauses
     }
     
     const progress = getProgressPercentage(debutMinutes, finMinutes);
