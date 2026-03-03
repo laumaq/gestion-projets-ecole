@@ -22,19 +22,6 @@ export interface Bureau {
   role: 'maitre_du_temps' | 'animateur';
 }
 
-export interface InterventionLibre {
-  id: string;
-  employee_id: string;
-  employee_nom: string;
-  employee_prenom: string;
-  titre: string;
-  temps_demande: number;
-  type_communication: string;
-  resume: string;
-  created_at: string;
-  ordre?: number;
-}
-
 export interface GT {
   id: string;
   nom: string;
@@ -58,7 +45,24 @@ export interface Communication {
   resume: string;
   created_at: string;
   ordre?: number;
+  type_intervention: 'gt'; // Pour distinguer
 }
+
+export interface InterventionLibre {
+  id: string;
+  employee_id: string;
+  employee_nom: string;
+  employee_prenom: string;
+  titre: string;
+  temps_demande: number;
+  type_communication: string;
+  resume: string;
+  created_at: string;
+  ordre?: number;
+  type_intervention: 'libre'; // Pour distinguer
+}
+
+export type Intervention = Communication | InterventionLibre;
 
 export interface Pause {
   id: string;
@@ -73,10 +77,13 @@ export function useAGData() {
   const [groupes, setGroupes] = useState<GT[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [communications, setCommunications] = useState<Communication[]>([]);
+  const [interventionsLibres, setInterventionsLibres] = useState<InterventionLibre[]>([]);
   const [pauses, setPauses] = useState<Pause[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [interventionsLibres, setInterventionsLibres] = useState<InterventionLibre[]>([]);
+
+  // Liste fusionnée de toutes les interventions pour le planning
+  const [toutesInterventions, setToutesInterventions] = useState<Intervention[]>([]);
 
   const loadData = async () => {
     try {
@@ -179,7 +186,7 @@ export function useAGData() {
         };
       }) || []);
 
-      // 5. Charger les communications
+      // 5. Charger les communications (GT)
       const { data: commData, error: commError } = await supabase
         .from('ag_communications')
         .select(`
@@ -189,11 +196,11 @@ export function useAGData() {
           )
         `)
         .eq('ag_id', AG_ID)
-        .order('ordre', { ascending: true });
+        .order('ordre', { ascending: true, nullsFirst: false });
 
       if (commError) throw commError;
 
-      setCommunications(commData?.map(c => {
+      const comms: Communication[] = commData?.map(c => {
         const groupeData = Array.isArray(c.ag_groupes) ? c.ag_groupes[0] : c.ag_groupes;
         return {
           id: c.id,
@@ -203,21 +210,13 @@ export function useAGData() {
           type_communication: c.type_communication,
           resume: c.resume,
           created_at: c.created_at,
-          ordre: c.ordre
+          ordre: c.ordre,
+          type_intervention: 'gt'
         };
-      }) || []);
+      }) || [];
+      setCommunications(comms);
 
-      // 6. Charger les pauses
-      const { data: pausesData, error: pausesError } = await supabase
-        .from('ag_pauses')
-        .select('*')
-        .eq('ag_id', AG_ID)
-        .order('heure_debut');
-
-      if (pausesError) throw pausesError;
-      setPauses(pausesData || []);
-
-      // 7. Charger les interventions libres
+      // 6. Charger les interventions libres
       const { data: libresData, error: libresError } = await supabase
         .from('ag_interventions_libres')
         .select(`
@@ -228,11 +227,11 @@ export function useAGData() {
           )
         `)
         .eq('ag_id', AG_ID)
-        .order('ordre', { ascending: true });
+        .order('ordre', { ascending: true, nullsFirst: false });
       
       if (libresError) throw libresError;
       
-      setInterventionsLibres(libresData?.map(l => {
+      const libres: InterventionLibre[] = libresData?.map(l => {
         const employeeData = Array.isArray(l.employees) ? l.employees[0] : l.employees;
         return {
           id: l.id,
@@ -244,13 +243,45 @@ export function useAGData() {
           type_communication: l.type_communication,
           resume: l.resume,
           created_at: l.created_at,
-          ordre: l.ordre
+          ordre: l.ordre,
+          type_intervention: 'libre'
         };
-      }) || []);
+      }) || [];
+      setInterventionsLibres(libres);
+
+      // 7. Charger les pauses
+      const { data: pausesData, error: pausesError } = await supabase
+        .from('ag_pauses')
+        .select('*')
+        .eq('ag_id', AG_ID)
+        .order('heure_debut');
+
+      if (pausesError) throw pausesError;
+      setPauses(pausesData || []);
+
+      // 8. Fusionner et trier toutes les interventions
+      const toutes = [...comms, ...libres].sort((a, b) => {
+        // Si les deux ont un ordre, trier par ordre
+        if (a.ordre != null && b.ordre != null) {
+          return a.ordre - b.ordre;
+        }
+        // Si un seul a un ordre, celui avec ordre passe avant
+        if (a.ordre != null) return -1;
+        if (b.ordre != null) return 1;
+        // Sinon, trier par date de création
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
+      setToutesInterventions(toutes);
 
     } catch (err) {
-      console.error('Erreur chargement données AG:', err);
-      setError('Erreur lors du chargement des données');
+      console.error('ERREUR DÉTAILLÉE chargement données AG:', err);
+      if (err && typeof err === 'object' && 'message' in err) {
+        console.error('Message:', err.message);
+      }
+      if (err && typeof err === 'object' && 'code' in err) {
+        console.error('Code:', err.code);
+      }
+      setError(`Erreur lors du chargement des données: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
     } finally {
       setLoading(false);
     }
@@ -326,19 +357,27 @@ export function useAGData() {
     }
   };
 
-  // Sauvegarder une communication
+  // Sauvegarder une communication (GT)
   const saveCommunication = async (groupeId: string, data: {
     temps_demande: number;
     type_communication: string;
     resume: string;
   }) => {
     try {
+      // Récupérer l'ordre maximum pour placer la nouvelle à la fin
+      const maxOrdre = Math.max(
+        ...communications.map(c => c.ordre || 0),
+        ...interventionsLibres.map(i => i.ordre || 0),
+        0
+      );
+
       const { error } = await supabase
         .from('ag_communications')
         .upsert({
           ag_id: AG_ID,
           groupe_id: groupeId,
           ...data,
+          ordre: maxOrdre + 1,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'ag_id,groupe_id'
@@ -352,7 +391,7 @@ export function useAGData() {
     }
   };
 
-  // Réinitialiser toutes les communications
+  // Réinitialiser toutes les communications (GT)
   const resetCommunications = async () => {
     try {
       const { error } = await supabase
@@ -364,6 +403,60 @@ export function useAGData() {
       await loadData();
     } catch (err) {
       console.error('Erreur reset communications:', err);
+      throw err;
+    }
+  };
+
+  // Sauvegarder une intervention libre
+  const saveInterventionLibre = async (data: {
+    titre: string;
+    temps_demande: number;
+    type_communication: string;
+    resume: string;
+  }) => {
+    const employeeId = localStorage.getItem('userId');
+    if (!employeeId) throw new Error('Utilisateur non connecté');
+
+    try {
+      // Récupérer l'ordre maximum pour placer la nouvelle à la fin
+      const maxOrdre = Math.max(
+        ...communications.map(c => c.ordre || 0),
+        ...interventionsLibres.map(i => i.ordre || 0),
+        0
+      );
+
+      const { error } = await supabase
+        .from('ag_interventions_libres')
+        .upsert({
+          ag_id: AG_ID,
+          employee_id: employeeId,
+          ...data,
+          ordre: maxOrdre + 1,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'ag_id,employee_id'
+        });
+
+      if (error) throw error;
+      await loadData();
+    } catch (err) {
+      console.error('Erreur sauvegarde intervention libre:', err);
+      throw err;
+    }
+  };
+
+  // Supprimer une intervention libre
+  const deleteInterventionLibre = async (interventionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('ag_interventions_libres')
+        .delete()
+        .eq('id', interventionId);
+
+      if (error) throw error;
+      await loadData();
+    } catch (err) {
+      console.error('Erreur suppression intervention libre:', err);
       throw err;
     }
   };
@@ -424,64 +517,25 @@ export function useAGData() {
     }
   };
 
-  // Mettre à jour l'ordre des interventions
-  const updateOrdre = async (ordreData: { id: string, position: number }[]) => {
+  // Mettre à jour l'ordre global des interventions (GT et libres)
+  const updateOrdre = async (ordreData: { id: string; position: number; type: 'gt' | 'libre' }[]) => {
     try {
       for (const item of ordreData) {
-        await supabase
-          .from('ag_communications')
-          .update({ ordre: item.position })
-          .eq('id', item.id);
+        if (item.type === 'gt') {
+          await supabase
+            .from('ag_communications')
+            .update({ ordre: item.position })
+            .eq('id', item.id);
+        } else {
+          await supabase
+            .from('ag_interventions_libres')
+            .update({ ordre: item.position })
+            .eq('id', item.id);
+        }
       }
       await loadData();
     } catch (err) {
       console.error('Erreur mise à jour ordre:', err);
-      throw err;
-    }
-  };
-
-  // Sauvegarder une intervention libre
-  const saveInterventionLibre = async (data: {
-    titre: string;
-    temps_demande: number;
-    type_communication: string;
-    resume: string;
-  }) => {
-    const employeeId = localStorage.getItem('userId');
-    if (!employeeId) throw new Error('Utilisateur non connecté');
-
-    try {
-      const { error } = await supabase
-        .from('ag_interventions_libres')
-        .upsert({
-          ag_id: AG_ID,
-          employee_id: employeeId,
-          ...data,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'ag_id,employee_id'
-        });
-
-      if (error) throw error;
-      await loadData();
-    } catch (err) {
-      console.error('Erreur sauvegarde intervention libre:', err);
-      throw err;
-    }
-  };
-
-  // Supprimer une intervention libre
-  const deleteInterventionLibre = async (interventionId: string) => {
-    try {
-      const { error } = await supabase
-        .from('ag_interventions_libres')
-        .delete()
-        .eq('id', interventionId);
-
-      if (error) throw error;
-      await loadData();
-    } catch (err) {
-      console.error('Erreur suppression intervention libre:', err);
       throw err;
     }
   };
@@ -491,27 +545,31 @@ export function useAGData() {
   }, []);
 
   return {
+    // Données brutes
     config,
     bureau,
     groupes,
     employees,
     communications,
-    pauses,
     interventionsLibres,
+    pauses,
+    toutesInterventions, // La liste fusionnée pour le planning
     loading,
     error,
+    
+    // Actions
     updateConfig,
     addBureau,
     removeBureau,
     assignGroupe,
     saveCommunication,
     resetCommunications,
+    saveInterventionLibre,
+    deleteInterventionLibre,
     addPause,
     updatePause,
     removePause,
     updateOrdre,
-    saveInterventionLibre,
-    deleteInterventionLibre,
     refresh: loadData
   };
 }
