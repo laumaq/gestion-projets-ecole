@@ -26,6 +26,8 @@ interface AGPlanningViewProps {
   config: any;
   communications: any[];
   interventionsLibres: any[];
+  onEdit?: (item: PlanningItem) => void;
+  onDelete?: (item: PlanningItem) => void;
   pauses: any[];
   onReorder?: (newOrder: { id: string; type: 'gt' | 'libre' }[]) => void;
   isEditable?: boolean;
@@ -193,22 +195,38 @@ export default function AGPlanningView({
   setPlanning(planningFinal);
   }, [config, toutesInterventions, pauses, currentTime]);
 
-  const handleDragEnd = (result: any) => {
+  
+  const handleDragEnd = async (result: any) => {
     if (!result.destination || !onReorder) return;
-
+  
+    // 1. Mise à jour OPTIMISTE de l'UI
     const items = Array.from(planning);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-
-    // Ne garder que les interventions et formater pour onReorder
+    
+    // Sauvegarder l'état avant modification
+    const previousPlanning = planning;
+    
+    // Mettre à jour l'UI immédiatement
+    setPlanning(items);
+  
+    // 2. Préparer les données pour le backend
     const newOrder = items
       .filter(item => item.type !== 'pause')
-      .map(item => ({
+      .map((item, index) => ({
         id: item.id,
+        position: index + 1,
         type: item.type_intervention || 'gt'
       }));
-    
-    onReorder(newOrder);
+  
+    try {
+      // 3. Envoyer au backend (en arrière-plan)
+      await onReorder(newOrder);
+    } catch (error) {
+      // 4. En cas d'erreur, restaurer l'état précédent
+      console.error('Erreur lors du réordonnancement:', error);
+      setPlanning(previousPlanning);
+    }
   };
 
   const getProgressPercentage = (debutMinutes: number, finMinutes: number) => {
@@ -381,11 +399,48 @@ export default function AGPlanningView({
                                   )}
                                 </div>
                                 
-                                {item.type !== 'pause' && item.resume && (
-                                  <p className="text-sm text-gray-600 mt-1 ml-[60px] line-clamp-2">
-                                    {item.resume}
-                                  </p>
+                                <p 
+                                  className={`text-sm text-gray-600 mt-1 ml-[60px] ${
+                                    item.resume && item.resume.length > 100 
+                                      ? 'line-clamp-2 hover:line-clamp-none hover:bg-white hover:shadow-lg hover:p-2 hover:rounded hover:absolute hover:z-10 hover:w-full hover:left-0 transition-all'
+                                      : ''
+                                  }`}
+                                >
+                                  {item.resume}
+                                </p>
+
+                                // Dans l'affichage de chaque intervention, après le résumé
+                                {isEditable && item.type !== 'pause' && (
+                                  <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEdit?.(item);
+                                      }}
+                                      className="p-1 bg-white rounded-md shadow-sm border border-gray-200 text-gray-600 hover:text-blue-600"
+                                      title="Modifier"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDelete?.(item);
+                                      }}
+                                      className="p-1 bg-white rounded-md shadow-sm border border-gray-200 text-gray-600 hover:text-red-600"
+                                      title="Supprimer"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                    </button>
+                                  </div>
                                 )}
+                                
+                                // Ajouter group-hover sur l'élément parent
+                                <div className={`relative ml-20 p-3 rounded-lg border ... group`}>
                               </div>
                               
                               <span className="text-xs text-gray-400">
