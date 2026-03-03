@@ -362,6 +362,7 @@ export default function AGPlanningView({
                               ></div>
                             )}
                             
+                            {/* Contenu */}
                             <div className="relative flex items-start justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center space-x-3">
@@ -399,17 +400,20 @@ export default function AGPlanningView({
                                   )}
                                 </div>
                                 
-                                <p 
-                                  className={`text-sm text-gray-600 mt-1 ml-[60px] ${
-                                    item.resume && item.resume.length > 100 
-                                      ? 'line-clamp-2 hover:line-clamp-none hover:bg-white hover:shadow-lg hover:p-2 hover:rounded hover:absolute hover:z-10 hover:w-full hover:left-0 transition-all'
-                                      : ''
-                                  }`}
-                                >
-                                  {item.resume}
-                                </p>
-
-                                // Dans l'affichage de chaque intervention, après le résumé
+                                {/* Résumé avec déploiement au survol */}
+                                {item.type !== 'pause' && item.resume && (
+                                  <p 
+                                    className={`text-sm text-gray-600 mt-1 ml-[60px] ${
+                                      item.resume.length > 100 
+                                        ? 'line-clamp-2 hover:line-clamp-none hover:bg-white hover:shadow-lg hover:p-2 hover:rounded hover:absolute hover:z-10 hover:w-full hover:left-0 transition-all'
+                                        : ''
+                                    }`}
+                                  >
+                                    {item.resume}
+                                  </p>
+                                )}
+                            
+                                {/* Boutons d'édition pour la direction */}
                                 {isEditable && item.type !== 'pause' && (
                                   <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
@@ -438,15 +442,13 @@ export default function AGPlanningView({
                                     </button>
                                   </div>
                                 )}
-                                
-                                // Ajouter group-hover sur l'élément parent
-                                <div className={`relative ml-20 p-3 rounded-lg border ... group`}>
                               </div>
                               
                               <span className="text-xs text-gray-400">
                                 {item.heure_fin}
                               </span>
                             </div>
+                            
                           </div>
                         </div>
                       )}
