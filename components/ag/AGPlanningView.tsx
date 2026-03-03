@@ -17,6 +17,7 @@ interface PlanningItem {
   finMinutes: number;
   ordre?: number;
   type: 'intervention' | 'pause';
+  titre?: string; 
   duree?: number;
   type_intervention?: 'gt' | 'libre'; // Pour distinguer GT et libre
 }
