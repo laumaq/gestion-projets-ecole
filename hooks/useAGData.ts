@@ -217,7 +217,6 @@ export function useAGData() {
       if (pausesError) throw pausesError;
       setPauses(pausesData || []);
 
-
       // 7. Charger les interventions libres
       const { data: libresData, error: libresError } = await supabase
         .from('ag_interventions_libres')
@@ -248,51 +247,6 @@ export function useAGData() {
           ordre: l.ordre
         };
       }) || []);
-      
-      // Fonctions pour les interventions libres
-      const saveInterventionLibre = async (data: {
-        titre: string;
-        temps_demande: number;
-        type_communication: string;
-        resume: string;
-      }) => {
-        const employeeId = localStorage.getItem('userId');
-        if (!employeeId) throw new Error('Utilisateur non connecté');
-      
-        try {
-          const { error } = await supabase
-            .from('ag_interventions_libres')
-            .upsert({
-              ag_id: AG_ID,
-              employee_id: employeeId,
-              ...data,
-              updated_at: new Date().toISOString()
-            }, {
-              onConflict: 'ag_id,employee_id'
-            });
-      
-          if (error) throw error;
-          await loadData();
-        } catch (err) {
-          console.error('Erreur sauvegarde intervention libre:', err);
-          throw err;
-        }
-      };
-      
-      const deleteInterventionLibre = async (interventionId: string) => {
-        try {
-          const { error } = await supabase
-            .from('ag_interventions_libres')
-            .delete()
-            .eq('id', interventionId);
-      
-          if (error) throw error;
-          await loadData();
-        } catch (err) {
-          console.error('Erreur suppression intervention libre:', err);
-          throw err;
-        }
-      };
 
     } catch (err) {
       console.error('Erreur chargement données AG:', err);
@@ -486,6 +440,52 @@ export function useAGData() {
     }
   };
 
+  // Sauvegarder une intervention libre
+  const saveInterventionLibre = async (data: {
+    titre: string;
+    temps_demande: number;
+    type_communication: string;
+    resume: string;
+  }) => {
+    const employeeId = localStorage.getItem('userId');
+    if (!employeeId) throw new Error('Utilisateur non connecté');
+
+    try {
+      const { error } = await supabase
+        .from('ag_interventions_libres')
+        .upsert({
+          ag_id: AG_ID,
+          employee_id: employeeId,
+          ...data,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'ag_id,employee_id'
+        });
+
+      if (error) throw error;
+      await loadData();
+    } catch (err) {
+      console.error('Erreur sauvegarde intervention libre:', err);
+      throw err;
+    }
+  };
+
+  // Supprimer une intervention libre
+  const deleteInterventionLibre = async (interventionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('ag_interventions_libres')
+        .delete()
+        .eq('id', interventionId);
+
+      if (error) throw error;
+      await loadData();
+    } catch (err) {
+      console.error('Erreur suppression intervention libre:', err);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -497,6 +497,7 @@ export function useAGData() {
     employees,
     communications,
     pauses,
+    interventionsLibres,
     loading,
     error,
     updateConfig,
@@ -509,7 +510,6 @@ export function useAGData() {
     updatePause,
     removePause,
     updateOrdre,
-    interventionsLibres,
     saveInterventionLibre,
     deleteInterventionLibre,
     refresh: loadData
