@@ -305,9 +305,8 @@ export default function AGConfigurationPage() {
             communications={communications}
             interventionsLibres={interventionsLibres}
             pauses={pauses}
-            isEditable={true}
+            isEditable={config?.statut === 'planning_etabli' ? false : true} // ← ICI
             onReorder={async (newOrder) => {
-              // newOrder est un tableau d'objets avec id et type
               const ordreData = newOrder.map((item, index) => ({
                 id: item.id,
                 position: index + 1,
