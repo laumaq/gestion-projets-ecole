@@ -81,99 +81,116 @@ export default function AGPlanningView({
       return 0;
     });
 
-    // Calculer les heures théoriques sans pauses
-    const interventionsSansPauses: (PlanningItem & { debutTheorique: number; finTheorique: number })[] = [];
-    let currentMinutes = heureToMinutes(config.heure_debut);
+  // 1. Calculer le planning compressé SANS pauses
+  const planningSansPauses: PlanningItem[] = [];
+  let currentMinutes = heureToMinutes(config.heure_debut);
+  
+  for (const intervention of sortedInterventions) {
+    const tempsAjuste = Math.max(1, Math.round(intervention.temps_demande * ratio));
+    const debut = currentMinutes;
+    const fin = debut + tempsAjuste;
     
-    for (const intervention of sortedInterventions) {
-      const tempsAjuste = Math.max(1, Math.round(intervention.temps_demande * ratio));
-      const debut = currentMinutes;
-      const fin = debut + tempsAjuste;
+    planningSansPauses.push({
+      id: intervention.id,
+      type: 'intervention',
+      type_intervention: intervention.type_intervention,
+      groupe_nom: intervention.type_intervention === 'gt' 
+        ? intervention.groupe_nom 
+        : `${intervention.employee_prenom} ${intervention.employee_nom}`,
+      type_communication: intervention.type_communication,
+      temps_demande: intervention.temps_demande,
+      temps_ajuste: tempsAjuste,
+      resume: intervention.resume,
+      heure_debut: minutesToHeure(debut),
+      heure_fin: minutesToHeure(fin),
+      debutMinutes: debut,
+      finMinutes: fin
+    });
+    
+    currentMinutes = fin;
+  }
+  
+  // 2. Insérer les pauses au bon endroit
+  const planningFinal: PlanningItem[] = [];
+  const pausesTriees = [...pauses].sort((a, b) => 
+    heureToMinutes(a.heure_debut) - heureToMinutes(b.heure_debut)
+  );
+  
+  let pauseIndex = 0;
+  
+  for (let i = 0; i < planningSansPauses.length; i++) {
+    const intervention = planningSansPauses[i];
+    
+    // Vérifier s'il y a une pause qui devrait avoir lieu avant cette intervention
+    while (pauseIndex < pausesTriees.length) {
+      const pause = pausesTriees[pauseIndex];
+      const heurePause = heureToMinutes(pause.heure_debut);
       
-      interventionsSansPauses.push({
-        id: intervention.id,
-        type: 'intervention',
-        type_intervention: intervention.type_intervention,
-        groupe_nom: intervention.type_intervention === 'gt' 
-          ? intervention.groupe_nom 
-          : `${intervention.employee_prenom} ${intervention.employee_nom}`,
-        type_communication: intervention.type_communication,
-        temps_demande: intervention.temps_demande,
-        temps_ajuste: tempsAjuste,
-        resume: intervention.resume,
-        titre: intervention.titre,
-        heure_debut: '',
-        heure_fin: '',
-        debutMinutes: 0,
-        finMinutes: 0,
-        debutTheorique: debut,
-        finTheorique: fin
-      });
-      
-      currentMinutes = fin;
-    }
-
-    // Construire le planning final en insérant les pauses
-    const planningFinal: PlanningItem[] = [];
-    let currentTimeMinutes = heureToMinutes(config.heure_debut);
-
-    // Trier les pauses par heure
-    const pausesTriees = [...pauses].sort((a, b) => 
-      heureToMinutes(a.heure_debut) - heureToMinutes(b.heure_debut)
-    );
-
-    let pauseIndex = 0;
-    let interIndex = 0;
-
-    while (interIndex < interventionsSansPauses.length || pauseIndex < pausesTriees.length) {
-      const prochainePause = pauseIndex < pausesTriees.length ? pausesTriees[pauseIndex] : null;
-      const prochaineInter = interIndex < interventionsSansPauses.length ? interventionsSansPauses[interIndex] : null;
-      
-      // Si on a une pause et qu'elle devrait commencer maintenant
-      if (prochainePause && heureToMinutes(prochainePause.heure_debut) <= currentTimeMinutes + 5) {
-        // Insérer la pause
-        const debutPause = currentTimeMinutes;
-        const finPause = debutPause + prochainePause.duree;
+      // Si l'heure de la pause est avant la fin de cette intervention
+      if (heurePause < intervention.finMinutes) {
+        // Insérer la pause MAINTENANT
+        const debutPause = intervention.debutMinutes;
+        const finPause = debutPause + pause.duree;
         
         planningFinal.push({
-          id: prochainePause.id,
+          id: pause.id,
           type: 'pause',
           groupe_nom: 'PAUSE',
           type_communication: 'pause',
-          temps_demande: prochainePause.duree,
-          temps_ajuste: prochainePause.duree,
+          temps_demande: pause.duree,
+          temps_ajuste: pause.duree,
           resume: '',
           heure_debut: minutesToHeure(debutPause),
           heure_fin: minutesToHeure(finPause),
           debutMinutes: debutPause,
           finMinutes: finPause,
-          duree: prochainePause.duree
+          duree: pause.duree
         });
         
-        currentTimeMinutes = finPause;
+        // Décaler toutes les interventions suivantes
+        for (let j = i; j < planningSansPauses.length; j++) {
+          planningSansPauses[j].debutMinutes += pause.duree;
+          planningSansPauses[j].finMinutes += pause.duree;
+          planningSansPauses[j].heure_debut = minutesToHeure(planningSansPauses[j].debutMinutes);
+          planningSansPauses[j].heure_fin = minutesToHeure(planningSansPauses[j].finMinutes);
+        }
+        
         pauseIndex++;
-      } 
-      // Sinon, insérer l'intervention suivante
-      else if (prochaineInter) {
-        const debut = currentTimeMinutes;
-        const fin = debut + prochaineInter.temps_ajuste;
-        
-        planningFinal.push({
-          ...prochaineInter,
-          heure_debut: minutesToHeure(debut),
-          heure_fin: minutesToHeure(fin),
-          debutMinutes: debut,
-          finMinutes: fin
-        });
-        
-        currentTimeMinutes = fin;
-        interIndex++;
       } else {
         break;
       }
     }
-
-    setPlanning(planningFinal);
+    
+    // Ajouter l'intervention courante
+    planningFinal.push(intervention);
+  }
+  
+  // Ajouter les pauses restantes à la fin
+  while (pauseIndex < pausesTriees.length) {
+    const pause = pausesTriees[pauseIndex];
+    const debutPause = currentMinutes;
+    const finPause = debutPause + pause.duree;
+    
+    planningFinal.push({
+      id: pause.id,
+      type: 'pause',
+      groupe_nom: 'PAUSE',
+      type_communication: 'pause',
+      temps_demande: pause.duree,
+      temps_ajuste: pause.duree,
+      resume: '',
+      heure_debut: minutesToHeure(debutPause),
+      heure_fin: minutesToHeure(finPause),
+      debutMinutes: debutPause,
+      finMinutes: finPause,
+      duree: pause.duree
+    });
+    
+    currentMinutes = finPause;
+    pauseIndex++;
+  }
+  
+  setPlanning(planningFinal);
   }, [config, toutesInterventions, pauses, currentTime]);
 
   const handleDragEnd = (result: any) => {
