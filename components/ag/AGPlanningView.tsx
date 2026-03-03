@@ -64,85 +64,101 @@ export default function AGPlanningView({
       return a.groupe_nom.localeCompare(b.groupe_nom);
     });
 
+    
+    // Calculer les heures des interventions sans pauses d'abord
     const interventionsSansPauses: PlanningItem[] = [];
     let currentMinutes = heureToMinutes(config.heure_debut);
     
-    for (const comm of sortedComms) {
+    // Calculer le ratio comme avant
+    const tempsDispo = heureToMinutes(config.heure_fin) - heureToMinutes(config.heure_debut);
+    const pausesTotal = pauses.reduce((acc, p) => acc + p.duree, 0);
+    const tempsDispoReel = tempsDispo - pausesTotal;
+    const tempsDemandeTotal = communications.reduce((acc, c) => acc + c.temps_demande, 0);
+    const ratio = tempsDemandeTotal > 0 ? tempsDispoReel / tempsDemandeTotal : 1;
+    
+    // Calculer les heures théoriques sans pauses
+    for (const intervention of toutesInterventions) {
+      if (intervention.type === 'pause') continue; // On ignore les pauses pour l'instant
+      
+      const tempsAjuste = Math.max(1, Math.round(intervention.temps_demande * ratio));
       const debut = currentMinutes;
-      const tempsAjuste = Math.max(1, Math.round(comm.temps_demande * ratio));
       const fin = debut + tempsAjuste;
       
       interventionsSansPauses.push({
-        id: comm.id,
-        type: 'intervention',
-        groupe_nom: comm.groupe_nom,
-        type_communication: comm.type_communication,
-        temps_demande: comm.temps_demande,
+        ...intervention,
         temps_ajuste: tempsAjuste,
-        resume: comm.resume,
-        heure_debut: minutesToHeure(debut),
-        heure_fin: minutesToHeure(fin),
-        debutMinutes: debut,
-        finMinutes: fin
+        debutTheorique: debut,
+        finTheorique: fin
       });
       
       currentMinutes = fin;
     }
-
-    const pausesRestantes = [...pauses];
-    const planningFinal: PlanningItem[] = [];
-    let minutesEcoulees = heureToMinutes(config.heure_debut);
     
-    for (let i = 0; i < interventionsSansPauses.length; i++) {
-      const intervention = interventionsSansPauses[i];
+    // Maintenant, construire le planning final en insérant les pauses à leurs heures exactes
+    const planningFinal: PlanningItem[] = [];
+    let currentTimeMinutes = heureToMinutes(config.heure_debut);
+    
+    // Trier les pauses par heure
+    const pausesTriees = [...pauses].sort((a, b) => 
+      heureToMinutes(a.heure_debut) - heureToMinutes(b.heure_debut)
+    );
+    
+    let pauseIndex = 0;
+    let interIndex = 0;
+    
+    while (interIndex < interventionsSansPauses.length || pauseIndex < pausesTriees.length) {
+      const prochainePause = pauseIndex < pausesTriees.length ? pausesTriees[pauseIndex] : null;
+      const prochaineInter = interIndex < interventionsSansPauses.length ? interventionsSansPauses[interIndex] : null;
       
-      const pauseAvantIndex = pausesRestantes.findIndex(p => {
-        const heurePause = heureToMinutes(p.heure_debut);
-        return heurePause >= minutesEcoulees && 
-               heurePause < intervention.debutMinutes + (intervention.temps_ajuste / 2);
-      });
-
-      if (pauseAvantIndex !== -1) {
-        const pauseAvant = pausesRestantes[pauseAvantIndex];
-        
-        const debutPause = minutesEcoulees;
-        const finPause = debutPause + pauseAvant.duree;
+      // Si on a une pause et qu'elle devrait commencer maintenant (ou bientôt)
+      if (prochainePause && heureToMinutes(prochainePause.heure_debut) <= currentTimeMinutes + 5) {
+        // Insérer la pause
+        const debutPause = currentTimeMinutes;
+        const finPause = debutPause + prochainePause.duree;
         
         planningFinal.push({
-          id: pauseAvant.id,
+          id: prochainePause.id,
           type: 'pause',
           groupe_nom: 'PAUSE',
           type_communication: 'pause',
-          temps_demande: pauseAvant.duree,
-          temps_ajuste: pauseAvant.duree,
+          temps_demande: prochainePause.duree,
+          temps_ajuste: prochainePause.duree,
           resume: '',
           heure_debut: minutesToHeure(debutPause),
           heure_fin: minutesToHeure(finPause),
           debutMinutes: debutPause,
           finMinutes: finPause,
-          duree: pauseAvant.duree
+          duree: prochainePause.duree
         });
         
-        minutesEcoulees = finPause;
-        pausesRestantes.splice(pauseAvantIndex, 1);
+        currentTimeMinutes = finPause;
+        pauseIndex++;
+      } 
+      // Sinon, insérer l'intervention suivante
+      else if (prochaineInter) {
+        const debut = currentTimeMinutes;
+        const fin = debut + prochaineInter.temps_ajuste;
+        
+        planningFinal.push({
+          ...prochaineInter,
+          heure_debut: minutesToHeure(debut),
+          heure_fin: minutesToHeure(fin),
+          debutMinutes: debut,
+          finMinutes: fin
+        });
+        
+        currentTimeMinutes = fin;
+        interIndex++;
+      } else {
+        // Il reste des pauses après toutes les interventions
+        break;
       }
-
-      const debutIntervention = minutesEcoulees;
-      const finIntervention = debutIntervention + intervention.temps_ajuste;
-      
-      planningFinal.push({
-        ...intervention,
-        heure_debut: minutesToHeure(debutIntervention),
-        heure_fin: minutesToHeure(finIntervention),
-        debutMinutes: debutIntervention,
-        finMinutes: finIntervention
-      });
-      
-      minutesEcoulees = finIntervention;
     }
-
-    for (const pause of pausesRestantes) {
-      const debutPause = minutesEcoulees;
+    
+    // Ajouter les pauses restantes à la fin
+    while (pauseIndex < pausesTriees.length) {
+      const pause = pausesTriees[pauseIndex];
+      const debutPause = currentTimeMinutes;
       const finPause = debutPause + pause.duree;
       
       planningFinal.push({
@@ -160,9 +176,10 @@ export default function AGPlanningView({
         duree: pause.duree
       });
       
-      minutesEcoulees = finPause;
+      currentTimeMinutes = finPause;
+      pauseIndex++;
     }
-
+    
     setPlanning(planningFinal);
   }, [config, communications, pauses, currentTime]);
 
