@@ -38,6 +38,8 @@ export default function AGPlanningView({
   communications, 
   interventionsLibres,
   pauses, 
+  onEdit,     
+  onDelete,
   onReorder,
   isEditable = false 
 }: AGPlanningViewProps) {
