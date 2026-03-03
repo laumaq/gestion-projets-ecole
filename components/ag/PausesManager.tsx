@@ -2,7 +2,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Pause } from '@/hooks/useAGData';
+
+interface Pause {
+  id: string;
+  duree: number;
+  position: number;
+}
 
 interface PausesManagerProps {
   pauses: Pause[];
@@ -59,12 +64,12 @@ export default function PausesManager({
 
   const getPositionLabel = (position: number) => {
     if (position === 0) return 'Avant la 1ère intervention';
-    if (position === nbInterventions) return 'Après la dernière intervention';
+    if (position >= nbInterventions) return 'Après la dernière intervention';
     return `Après l'intervention #${position}`;
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div>
       <h3 className="text-lg font-medium text-gray-900 mb-4">Gestion des pauses</h3>
       
       {/* Liste des pauses existantes */}
