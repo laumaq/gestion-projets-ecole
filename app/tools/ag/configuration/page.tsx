@@ -5,9 +5,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAGPermissions } from '@/hooks/useAGPermissions';
 import { useAGData } from '@/hooks/useAGData';
-import BureauManagement from '@/components/ag/BureauManagement';
-import GTAssignment from '@/components/ag/GTAssignment';
 import AGStatusBadge from '@/components/ag/AGStatusBadge';
+import PausesManager from '@/components/ag/PausesManager';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function AGConfigurationPage() {
@@ -15,16 +14,14 @@ export default function AGConfigurationPage() {
   const { canConfigure, loading: permissionsLoading } = useAGPermissions();
   const {
     config,
-    bureau,
-    groupes,
-    employees,
     communications,
+    pauses,
     loading: dataLoading,
     error,
     updateConfig,
-    addBureau,
-    removeBureau,
-    assignGroupe,
+    addPause,
+    updatePause,
+    removePause,
     resetCommunications
   } = useAGData();
 
@@ -120,9 +117,12 @@ export default function AGConfigurationPage() {
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Configuration de l'Assemblée Générale</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Configuration de l'AG</h1>
           {config && <AGStatusBadge statut={config.statut} />}
         </div>
+        <p className="text-sm text-gray-500 mt-1">
+          Paramètres généraux de l'Assemblée Générale
+        </p>
       </div>
 
       {statusMessage && (
@@ -141,50 +141,7 @@ export default function AGConfigurationPage() {
         </div>
       )}
 
-      {/* Configuration AG */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Paramètres de l'AG</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-            <input
-              type="date"
-              value={dateAG}
-              onChange={(e) => setDateAG(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Début</label>
-            <input
-              type="time"
-              value={heureDebut}
-              onChange={(e) => setHeureDebut(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fin</label>
-            <input
-              type="time"
-              value={heureFin}
-              onChange={(e) => setHeureFin(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-            />
-          </div>
-        </div>
-
-        <button
-          onClick={handleUpdateConfig}
-          disabled={saving}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
-        >
-          {saving ? 'Mise à jour...' : 'Mettre à jour les horaires'}
-        </button>
-      </div>
-
-      {/* Gestion du statut */}
+      {/* Statut */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Statut de l'AG</h3>
         
@@ -251,21 +208,61 @@ export default function AGConfigurationPage() {
         )}
       </div>
 
-      {/* Bureau et GT */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <BureauManagement
-          bureau={bureau}
-          employees={employees}
-          onAdd={addBureau}
-          onRemove={removeBureau}
-        />
+      {/* Horaires */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Horaires</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+            <input
+              type="date"
+              value={dateAG}
+              onChange={(e) => setDateAG(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Début</label>
+            <input
+              type="time"
+              value={heureDebut}
+              onChange={(e) => setHeureDebut(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Fin</label>
+            <input
+              type="time"
+              value={heureFin}
+              onChange={(e) => setHeureFin(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            />
+          </div>
+        </div>
 
-        <GTAssignment
-          employees={employees}
-          groupes={groupes}
-          onAssign={assignGroupe}
-        />
+        <button
+          onClick={handleUpdateConfig}
+          disabled={saving}
+          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
+        >
+          {saving ? 'Mise à jour...' : 'Mettre à jour les horaires'}
+        </button>
       </div>
+
+      {/* Pauses */}
+      {config && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <PausesManager
+            pauses={pauses}
+            nbInterventions={communications.length}
+            onAdd={addPause}
+            onUpdate={updatePause}
+            onRemove={removePause}
+          />
+        </div>
+      )}
     </main>
   );
 }
