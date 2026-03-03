@@ -50,6 +50,7 @@ export interface Pause {
   id: string;
   duree: number;
   position: number;
+  heure_debut: string;
 }
 
 export function useAGData() {
@@ -195,8 +196,8 @@ export function useAGData() {
         .from('ag_pauses')
         .select('*')
         .eq('ag_id', AG_ID)
-        .order('position');
-
+        .order('heure_debut'); // Trier par heure
+      
       if (pausesError) throw pausesError;
       setPauses(pausesData || []);
 
