@@ -18,13 +18,14 @@ interface PlanningItem {
   ordre?: number;
   type: 'intervention' | 'pause';
   duree?: number;
+  type_intervention?: 'gt' | 'libre'; // Pour distinguer GT et libre
 }
 
 interface AGPlanningViewProps {
   config: any;
   communications: any[];
-  pauses: any[];
   interventionsLibres: any[];
+  pauses: any[];
   onReorder?: (newOrder: { id: string; type: 'gt' | 'libre' }[]) => void;
   isEditable?: boolean;
 }
@@ -32,12 +33,19 @@ interface AGPlanningViewProps {
 export default function AGPlanningView({ 
   config, 
   communications, 
+  interventionsLibres,
   pauses, 
   onReorder,
   isEditable = false 
 }: AGPlanningViewProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [planning, setPlanning] = useState<PlanningItem[]>([]);
+
+  // Fusionner toutes les interventions (GT + libres)
+  const toutesInterventions = [
+    ...communications.map(c => ({ ...c, type: 'intervention', type_intervention: 'gt' as const })),
+    ...interventionsLibres.map(i => ({ ...i, type: 'intervention', type_intervention: 'libre' as const }))
+  ];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -47,70 +55,80 @@ export default function AGPlanningView({
   }, []);
 
   useEffect(() => {
-    if (!config || communications.length === 0) {
+    if (!config || (communications.length === 0 && interventionsLibres.length === 0)) {
       setPlanning([]);
       return;
     }
 
+    // Calculer le ratio
     const tempsDispo = heureToMinutes(config.heure_fin) - heureToMinutes(config.heure_debut);
     const pausesTotal = pauses.reduce((acc, p) => acc + p.duree, 0);
     const tempsDispoReel = tempsDispo - pausesTotal;
     
-    const tempsDemandeTotal = communications.reduce((acc, c) => acc + c.temps_demande, 0);
+    const tempsDemandeTotal = [
+      ...communications,
+      ...interventionsLibres
+    ].reduce((acc, c) => acc + c.temps_demande, 0);
+    
     const ratio = tempsDemandeTotal > 0 ? tempsDispoReel / tempsDemandeTotal : 1;
 
-    const sortedComms = [...communications].sort((a, b) => {
+    // Trier les interventions par ordre
+    const sortedInterventions = [...toutesInterventions].sort((a, b) => {
       if (a.ordre && b.ordre) return a.ordre - b.ordre;
-      return a.groupe_nom.localeCompare(b.groupe_nom);
+      if (a.ordre) return -1;
+      if (b.ordre) return 1;
+      return 0;
     });
 
-    
-    // Calculer les heures des interventions sans pauses d'abord
-    const interventionsSansPauses: PlanningItem[] = [];
+    // Calculer les heures théoriques sans pauses
+    const interventionsSansPauses: (PlanningItem & { debutTheorique: number; finTheorique: number })[] = [];
     let currentMinutes = heureToMinutes(config.heure_debut);
     
-    // Calculer le ratio comme avant
-    const tempsDispo = heureToMinutes(config.heure_fin) - heureToMinutes(config.heure_debut);
-    const pausesTotal = pauses.reduce((acc, p) => acc + p.duree, 0);
-    const tempsDispoReel = tempsDispo - pausesTotal;
-    const tempsDemandeTotal = communications.reduce((acc, c) => acc + c.temps_demande, 0);
-    const ratio = tempsDemandeTotal > 0 ? tempsDispoReel / tempsDemandeTotal : 1;
-    
-    // Calculer les heures théoriques sans pauses
-    for (const intervention of toutesInterventions) {
-      if (intervention.type === 'pause') continue; // On ignore les pauses pour l'instant
-      
+    for (const intervention of sortedInterventions) {
       const tempsAjuste = Math.max(1, Math.round(intervention.temps_demande * ratio));
       const debut = currentMinutes;
       const fin = debut + tempsAjuste;
       
       interventionsSansPauses.push({
-        ...intervention,
+        id: intervention.id,
+        type: 'intervention',
+        type_intervention: intervention.type_intervention,
+        groupe_nom: intervention.type_intervention === 'gt' 
+          ? intervention.groupe_nom 
+          : `${intervention.employee_prenom} ${intervention.employee_nom}`,
+        type_communication: intervention.type_communication,
+        temps_demande: intervention.temps_demande,
         temps_ajuste: tempsAjuste,
+        resume: intervention.resume,
+        titre: intervention.titre,
+        heure_debut: '',
+        heure_fin: '',
+        debutMinutes: 0,
+        finMinutes: 0,
         debutTheorique: debut,
         finTheorique: fin
       });
       
       currentMinutes = fin;
     }
-    
-    // Maintenant, construire le planning final en insérant les pauses à leurs heures exactes
+
+    // Construire le planning final en insérant les pauses
     const planningFinal: PlanningItem[] = [];
     let currentTimeMinutes = heureToMinutes(config.heure_debut);
-    
+
     // Trier les pauses par heure
     const pausesTriees = [...pauses].sort((a, b) => 
       heureToMinutes(a.heure_debut) - heureToMinutes(b.heure_debut)
     );
-    
+
     let pauseIndex = 0;
     let interIndex = 0;
-    
+
     while (interIndex < interventionsSansPauses.length || pauseIndex < pausesTriees.length) {
       const prochainePause = pauseIndex < pausesTriees.length ? pausesTriees[pauseIndex] : null;
       const prochaineInter = interIndex < interventionsSansPauses.length ? interventionsSansPauses[interIndex] : null;
       
-      // Si on a une pause et qu'elle devrait commencer maintenant (ou bientôt)
+      // Si on a une pause et qu'elle devrait commencer maintenant
       if (prochainePause && heureToMinutes(prochainePause.heure_debut) <= currentTimeMinutes + 5) {
         // Insérer la pause
         const debutPause = currentTimeMinutes;
@@ -150,53 +168,26 @@ export default function AGPlanningView({
         currentTimeMinutes = fin;
         interIndex++;
       } else {
-        // Il reste des pauses après toutes les interventions
         break;
       }
     }
-    
-    // Ajouter les pauses restantes à la fin
-    while (pauseIndex < pausesTriees.length) {
-      const pause = pausesTriees[pauseIndex];
-      const debutPause = currentTimeMinutes;
-      const finPause = debutPause + pause.duree;
-      
-      planningFinal.push({
-        id: pause.id,
-        type: 'pause',
-        groupe_nom: 'PAUSE',
-        type_communication: 'pause',
-        temps_demande: pause.duree,
-        temps_ajuste: pause.duree,
-        resume: '',
-        heure_debut: minutesToHeure(debutPause),
-        heure_fin: minutesToHeure(finPause),
-        debutMinutes: debutPause,
-        finMinutes: finPause,
-        duree: pause.duree
-      });
-      
-      currentTimeMinutes = finPause;
-      pauseIndex++;
-    }
-    
+
     setPlanning(planningFinal);
-  }, [config, communications, pauses, currentTime]);
+  }, [config, toutesInterventions, pauses, currentTime]);
 
   const handleDragEnd = (result: any) => {
     if (!result.destination || !onReorder) return;
-  
+
     const items = Array.from(planning);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-  
-    // Ne garder que les interventions (pas les pauses) et formater pour onReorder
+
+    // Ne garder que les interventions et formater pour onReorder
     const newOrder = items
-      .filter(item => item.type !== 'pause') // Exclure les pauses
+      .filter(item => item.type !== 'pause')
       .map(item => ({
         id: item.id,
-        type: item.type === 'intervention' ? 
-          (item as any).type_intervention || 'gt' : 'gt' // 'gt' ou 'libre'
+        type: item.type_intervention || 'gt'
       }));
     
     onReorder(newOrder);
@@ -238,9 +229,13 @@ export default function AGPlanningView({
     return 'bg-red-500';
   };
 
-  const getTypeBadge = (type: string, typeCom?: string) => {
+  const getTypeBadge = (type: string, typeCom?: string, typeIntervention?: string) => {
     if (type === 'pause') {
       return <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-800 rounded-full">Pause</span>;
+    }
+    
+    if (typeIntervention === 'libre') {
+      return <span className="px-2 py-0.5 text-xs bg-orange-100 text-orange-800 rounded-full">Libre</span>;
     }
     
     switch (typeCom) {
@@ -259,17 +254,17 @@ export default function AGPlanningView({
     return <p className="text-gray-500">Aucune configuration AG</p>;
   }
 
-  if (communications.length === 0) {
+  if (communications.length === 0 && interventionsLibres.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Aucune communication n'a encore été enregistrée.</p>
+        <p className="text-gray-500">Aucune intervention n'a encore été enregistrée.</p>
       </div>
     );
   }
 
   const tempsDispo = heureToMinutes(config.heure_fin) - heureToMinutes(config.heure_debut);
   const pausesTotal = pauses.reduce((acc, p) => acc + p.duree, 0);
-  const tempsDemandeTotal = communications.reduce((acc, c) => acc + c.temps_demande, 0);
+  const tempsDemandeTotal = [...communications, ...interventionsLibres].reduce((acc, c) => acc + c.temps_demande, 0);
   const ratio = (tempsDispo - pausesTotal) / tempsDemandeTotal;
   const ratioPercent = Math.round(ratio * 100);
 
@@ -305,7 +300,12 @@ export default function AGPlanningView({
                   const bgColor = getBackgroundColor(item.debutMinutes, item.finMinutes, item.type);
                   
                   return (
-                    <Draggable key={item.id} draggableId={item.id} index={index}>
+                    <Draggable 
+                      key={item.id} 
+                      draggableId={item.id} 
+                      index={index}
+                      isDragDisabled={item.type === 'pause'} // Empêcher de draguer les pauses
+                    >
                       {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
@@ -335,9 +335,7 @@ export default function AGPlanningView({
                                   
                                   {item.type === 'pause' ? (
                                     <>
-                                      <h4 className="font-medium text-purple-600">
-                                        {item.groupe_nom}
-                                      </h4>
+                                      <h4 className="font-medium text-purple-600">PAUSE</h4>
                                       <div className="flex-shrink-0">
                                         {getTypeBadge('pause')}
                                       </div>
@@ -351,7 +349,7 @@ export default function AGPlanningView({
                                         {item.groupe_nom}
                                       </h4>
                                       <div className="flex-shrink-0">
-                                        {getTypeBadge('intervention', item.type_communication)}
+                                        {getTypeBadge('intervention', item.type_communication, item.type_intervention)}
                                       </div>
                                       <span className="text-xs text-gray-400">
                                         {item.temps_ajuste}min
@@ -427,9 +425,11 @@ export default function AGPlanningView({
                           </>
                         ) : (
                           <>
-                            <h4 className="font-medium text-gray-900">{item.groupe_nom}</h4>
+                            <h4 className="font-medium text-gray-900">
+                              {item.groupe_nom}
+                            </h4>
                             <div className="flex-shrink-0">
-                              {getTypeBadge('intervention', item.type_communication)}
+                              {getTypeBadge('intervention', item.type_communication, item.type_intervention)}
                             </div>
                             <span className="text-xs text-gray-400">
                               {item.temps_ajuste}min
@@ -475,6 +475,10 @@ export default function AGPlanningView({
         <div className="flex items-center">
           <span className="w-3 h-3 bg-purple-100 rounded mr-1"></span>
           <span>Pause</span>
+        </div>
+        <div className="flex items-center">
+          <span className="w-3 h-3 bg-orange-100 rounded mr-1"></span>
+          <span>Libre</span>
         </div>
       </div>
     </div>
