@@ -6,7 +6,7 @@ import { useState } from 'react';
 interface Pause {
   id: string;
   duree: number;
-  heure_debut: string; // On ajoute l'heure de début
+  heure_debut: string;
   position: number;
 }
 
@@ -33,6 +33,7 @@ export default function PausesManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editHeure, setEditHeure] = useState('');
   const [editDuree, setEditDuree] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Générer des suggestions d'heures (tranches de 30 min)
   const getHeureSuggestions = () => {
@@ -51,19 +52,29 @@ export default function PausesManager({
     const duree = parseInt(newDuree);
     if (isNaN(duree) || duree < 1) return;
 
-    await onAdd(duree, newHeure);
-    
-    setIsAdding(false);
-    setNewHeure('10:00');
-    setNewDuree('15');
+    try {
+      await onAdd(duree, newHeure);
+      setIsAdding(false);
+      setNewHeure('10:00');
+      setNewDuree('15');
+    } catch (error) {
+      console.error('Erreur ajout pause:', error);
+    }
   };
 
   const handleUpdate = async (pauseId: string) => {
     const duree = parseInt(editDuree);
     if (isNaN(duree) || duree < 1) return;
 
-    await onUpdate(pauseId, duree, editHeure);
-    setEditingId(null);
+    setIsUpdating(true);
+    try {
+      await onUpdate(pauseId, duree, editHeure);
+      setEditingId(null);
+    } catch (error) {
+      console.error('Erreur mise à jour pause:', error);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const startEdit = (pause: Pause) => {
@@ -121,13 +132,14 @@ export default function PausesManager({
                   <div className="flex space-x-2 pt-1">
                     <button
                       onClick={() => handleUpdate(pause.id)}
-                      className="text-green-600 hover:text-green-800 text-sm font-medium"
+                      disabled={isUpdating}
+                      className="px-3 py-1 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 disabled:opacity-50"
                     >
-                      OK
+                      {isUpdating ? '...' : 'OK'}
                     </button>
                     <button
                       onClick={() => setEditingId(null)}
-                      className="text-gray-500 hover:text-gray-700 text-sm"
+                      className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200"
                     >
                       Annuler
                     </button>
@@ -177,17 +189,15 @@ export default function PausesManager({
           <div className="space-y-3">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Heure de début</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="time"
-                  value={newHeure}
-                  onChange={(e) => setNewHeure(e.target.value)}
-                  min={heureDebut}
-                  max={heureFin}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  required
-                />
-              </div>
+              <input
+                type="time"
+                value={newHeure}
+                onChange={(e) => setNewHeure(e.target.value)}
+                min={heureDebut}
+                max={heureFin}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                required
+              />
               <div className="mt-2 flex flex-wrap gap-1">
                 {getHeureSuggestions().map(heure => (
                   <button
@@ -265,5 +275,5 @@ function heureToMinutes(heure: string): number {
 function minutesToHeure(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return `${h.toString().padStart(2, '0')}:${h.toString().padStart(2, '0')}`;
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 }
