@@ -25,15 +25,21 @@ interface GTAssignmentProps {
 
 export default function GTAssignment({ employees, groupes, onAssign }: GTAssignmentProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterJob, setFilterJob] = useState<string>('all');
   const [updating, setUpdating] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Filtrer les employés (uniquement profs ? ou tous ?)
-  const filteredEmployees = employees.filter(emp => 
-    emp.job === 'prof' && // Seulement les profs ?
-    (emp.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     emp.prenom.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Obtenir la liste unique des jobs
+  const jobs = ['all', ...new Set(employees.map(e => e.job))];
+
+  // Filtrer les employés
+  const filteredEmployees = employees.filter(emp => {
+    const matchesSearch = 
+      emp.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.prenom.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesJob = filterJob === 'all' || emp.job === filterJob;
+    return matchesSearch && matchesJob;
+  });
 
   const handleAssign = async (employeeId: string, groupeId: string | null) => {
     setUpdating(employeeId);
@@ -71,19 +77,31 @@ export default function GTAssignment({ employees, groupes, onAssign }: GTAssignm
         </div>
       )}
 
-      {/* Recherche */}
-      <div className="mb-4">
+      {/* Filtres */}
+      <div className="mb-4 space-y-2">
         <input
           type="text"
-          placeholder="Rechercher un professeur..."
+          placeholder="Rechercher un employé..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
         />
+        
+        <select
+          value={filterJob}
+          onChange={(e) => setFilterJob(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+        >
+          {jobs.map(job => (
+            <option key={job} value={job}>
+              {job === 'all' ? 'Tous les emplois' : job}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Liste des GT */}
-      <div className="space-y-6">
+      <div className="space-y-6 max-h-[600px] overflow-y-auto">
         {groupes.map((groupe) => (
           <div key={groupe.id} className="border rounded-lg overflow-hidden">
             <div className="bg-gray-50 px-4 py-2 border-b">
@@ -93,9 +111,14 @@ export default function GTAssignment({ employees, groupes, onAssign }: GTAssignm
               {employeesByGT[groupe.id]?.employees.length > 0 ? (
                 employeesByGT[groupe.id].employees.map((emp) => (
                   <div key={emp.id} className="px-4 py-2 flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      {emp.prenom} {emp.nom}
-                    </span>
+                    <div>
+                      <span className="text-sm text-gray-600">
+                        {emp.prenom} {emp.nom}
+                      </span>
+                      <span className="text-xs text-gray-400 ml-2">
+                        ({emp.job})
+                      </span>
+                    </div>
                     <select
                       value={emp.groupe_id || ''}
                       onChange={(e) => handleAssign(emp.id, e.target.value || null)}
@@ -113,7 +136,7 @@ export default function GTAssignment({ employees, groupes, onAssign }: GTAssignm
                 ))
               ) : (
                 <div className="px-4 py-3 text-sm text-gray-500 italic">
-                  Aucun professeur dans ce GT
+                  Aucun employé dans ce GT
                 </div>
               )}
             </div>
@@ -126,12 +149,17 @@ export default function GTAssignment({ employees, groupes, onAssign }: GTAssignm
             <div className="bg-yellow-50 px-4 py-2 border-b border-yellow-200">
               <h4 className="font-medium text-yellow-800">Sans GT ⚠️</h4>
             </div>
-            <div className="divide-y">
+            <div className="divide-y max-h-64 overflow-y-auto">
               {sansGT.map((emp) => (
                 <div key={emp.id} className="px-4 py-2 flex items-center justify-between">
-                  <span className="text-sm text-gray-600">
-                    {emp.prenom} {emp.nom}
-                  </span>
+                  <div>
+                    <span className="text-sm text-gray-600">
+                      {emp.prenom} {emp.nom}
+                    </span>
+                    <span className="text-xs text-gray-400 ml-2">
+                      ({emp.job})
+                    </span>
+                  </div>
                   <select
                     value={emp.groupe_id || ''}
                     onChange={(e) => handleAssign(emp.id, e.target.value || null)}
