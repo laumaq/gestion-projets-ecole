@@ -29,8 +29,9 @@ export default function GTAssignment({ employees, groupes, onAssign }: GTAssignm
   const [updating, setUpdating] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Obtenir la liste unique des jobs
-  const jobs = ['all', ...new Set(employees.map(e => e.job))];
+  // Obtenir la liste unique des jobs (version compatible)
+  const uniqueJobs = Array.from(new Set(employees.map(e => e.job)));
+  const jobs = ['all', ...uniqueJobs];
 
   // Filtrer les employés
   const filteredEmployees = employees.filter(emp => {
@@ -100,6 +101,11 @@ export default function GTAssignment({ employees, groupes, onAssign }: GTAssignm
         </select>
       </div>
 
+      {/* Stats */}
+      <div className="mb-4 text-xs text-gray-500">
+        {filteredEmployees.length} employé(s) affiché(s)
+      </div>
+
       {/* Liste des GT */}
       <div className="space-y-6 max-h-[600px] overflow-y-auto">
         {groupes.map((groupe) => (
@@ -110,7 +116,7 @@ export default function GTAssignment({ employees, groupes, onAssign }: GTAssignm
             <div className="divide-y">
               {employeesByGT[groupe.id]?.employees.length > 0 ? (
                 employeesByGT[groupe.id].employees.map((emp) => (
-                  <div key={emp.id} className="px-4 py-2 flex items-center justify-between">
+                  <div key={emp.id} className="px-4 py-2 flex items-center justify-between hover:bg-gray-50">
                     <div>
                       <span className="text-sm text-gray-600">
                         {emp.prenom} {emp.nom}
@@ -151,7 +157,7 @@ export default function GTAssignment({ employees, groupes, onAssign }: GTAssignm
             </div>
             <div className="divide-y max-h-64 overflow-y-auto">
               {sansGT.map((emp) => (
-                <div key={emp.id} className="px-4 py-2 flex items-center justify-between">
+                <div key={emp.id} className="px-4 py-2 flex items-center justify-between hover:bg-yellow-50">
                   <div>
                     <span className="text-sm text-gray-600">
                       {emp.prenom} {emp.nom}
