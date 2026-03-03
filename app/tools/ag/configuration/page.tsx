@@ -32,7 +32,8 @@ export default function AGConfigurationPage() {
     addPause,
     updatePause,
     removePause,
-    resetCommunications
+    resetCommunications,
+    updateOrdre
   } = useAGData();
 
   const [activeTab, setActiveTab] = useState('preparation');
@@ -201,22 +202,21 @@ export default function AGConfigurationPage() {
                 {config?.statut === 'preparation' && 'Les GT peuvent soumettre leurs demandes'}
                 {config?.statut === 'planning_etabli' && 'Planning visible par tous'}
               </p>
-              
-              {config?.statut === 'preparation' && (
-                <button
-                  onClick={handleResetCommunications}
-                  className="text-sm text-red-600 hover:text-red-800"
-                >
-                  Effacer toutes les demandes
-                </button>
-              )}
             </div>
 
             {config?.statut === 'preparation' && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                <p className="text-sm text-blue-700">
-                  📊 {communications.length} GT ont déjà soumis une demande
-                </p>
+              <div className="mt-4 flex items-center justify-between">
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex-1 mr-4">
+                  <p className="text-sm text-blue-700">
+                    📊 {communications.length} GT ont déjà soumis une demande
+                  </p>
+                </div>
+                <button
+                  onClick={handleResetCommunications}
+                  className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700"
+                >
+                  Effacer toutes les demandes
+                </button>
               </div>
             )}
           </div>
@@ -264,7 +264,7 @@ export default function AGConfigurationPage() {
             </button>
           </div>
 
-          {/* Pauses - basées sur des horaires, pas des positions */}
+          {/* Pauses */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <PausesManager
               pauses={pauses}
@@ -303,6 +303,14 @@ export default function AGConfigurationPage() {
             config={config}
             communications={communications}
             pauses={pauses}
+            isEditable={true}
+            onReorder={async (newOrder) => {
+              const ordreData = newOrder.map((id, index) => ({
+                id,
+                position: index + 1
+              }));
+              await updateOrdre(ordreData);
+            }}
           />
         </div>
       )}
