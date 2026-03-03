@@ -11,6 +11,7 @@ interface PlanningItem {
   resume: string;
   heure_debut: string;
   heure_fin: string;
+  temps_ajuste: number;
   debutMinutes: number;
   finMinutes: number;
   ordre?: number;
