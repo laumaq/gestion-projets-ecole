@@ -229,6 +229,40 @@ export function useAGData() {
     }
   };
 
+  
+  const saveConfig = async (newConfig: Partial<AGConfig>) => {
+  try {
+    if (config?.id) {
+      // Mise à jour
+      const { error } = await supabase
+        .from('ag_configs')
+        .update({
+          ...newConfig,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', config.id);
+
+      if (error) throw error;
+    } else {
+      // Création
+      const { error } = await supabase
+        .from('ag_configs')
+        .insert([{
+          ...newConfig,
+          created_by: localStorage.getItem('userId'),
+          statut: 'preparation' // Par défaut en préparation
+        }]);
+
+      if (error) throw error;
+    }
+
+    await loadData();
+  } catch (err) {
+    console.error('Erreur sauvegarde config:', err);
+    throw err;
+  }
+};
+
   useEffect(() => {
     loadData();
   }, []);
