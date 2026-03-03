@@ -78,9 +78,7 @@ export function useAGData() {
 
         if (bureauError) throw bureauError;
 
-        // Correction: employees est un tableau, on prend le premier élément
         setBureau(bureauData?.map(b => {
-          // employees peut être un tableau ou un objet selon la requête
           const employeeData = Array.isArray(b.employees) ? b.employees[0] : b.employees;
           return {
             id: b.id,
@@ -119,7 +117,6 @@ export function useAGData() {
       if (employeesError) throw employeesError;
 
       setEmployees(employeesData?.map(e => {
-        // Même correction pour ag_groupes
         const groupeData = Array.isArray(e.ag_groupes) ? e.ag_groupes[0] : e.ag_groupes;
         return {
           id: e.id,
@@ -228,40 +225,6 @@ export function useAGData() {
       throw err;
     }
   };
-
-  
-  const saveConfig = async (newConfig: Partial<AGConfig>) => {
-  try {
-    if (config?.id) {
-      // Mise à jour
-      const { error } = await supabase
-        .from('ag_configs')
-        .update({
-          ...newConfig,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', config.id);
-
-      if (error) throw error;
-    } else {
-      // Création
-      const { error } = await supabase
-        .from('ag_configs')
-        .insert([{
-          ...newConfig,
-          created_by: localStorage.getItem('userId'),
-          statut: 'preparation' // Par défaut en préparation
-        }]);
-
-      if (error) throw error;
-    }
-
-    await loadData();
-  } catch (err) {
-    console.error('Erreur sauvegarde config:', err);
-    throw err;
-  }
-};
 
   useEffect(() => {
     loadData();
