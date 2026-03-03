@@ -14,12 +14,6 @@ export interface AGConfig {
   statut: 'pas_ag' | 'preparation' | 'planning_etabli';
 }
 
-export interface Pause {
-  id: string;
-  duree: number;
-  position: number;
-}
-
 export interface Bureau {
   id: string;
   employee_id: string;
@@ -52,15 +46,21 @@ export interface Communication {
   created_at: string;
 }
 
+export interface Pause {
+  id: string;
+  duree: number;
+  position: number;
+}
+
 export function useAGData() {
   const [config, setConfig] = useState<AGConfig | null>(null);
   const [bureau, setBureau] = useState<Bureau[]>([]);
   const [groupes, setGroupes] = useState<GT[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [communications, setCommunications] = useState<Communication[]>([]);
+  const [pauses, setPauses] = useState<Pause[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pauses, setPauses] = useState<Pause[]>([]);
 
   const loadData = async () => {
     try {
@@ -196,58 +196,9 @@ export function useAGData() {
         .select('*')
         .eq('ag_id', AG_ID)
         .order('position');
-      
+
       if (pausesError) throw pausesError;
       setPauses(pausesData || []);
-      
-      // Ajouter les fonctions de gestion des pauses
-      const addPause = async (duree: number, position: number) => {
-        try {
-          const { error } = await supabase
-            .from('ag_pauses')
-            .insert([{
-              ag_id: AG_ID,
-              duree,
-              position
-            }]);
-      
-          if (error) throw error;
-          await loadData();
-        } catch (err) {
-          console.error('Erreur ajout pause:', err);
-          throw err;
-        }
-      };
-      
-      const updatePause = async (pauseId: string, duree: number, position: number) => {
-        try {
-          const { error } = await supabase
-            .from('ag_pauses')
-            .update({ duree, position })
-            .eq('id', pauseId);
-      
-          if (error) throw error;
-          await loadData();
-        } catch (err) {
-          console.error('Erreur mise à jour pause:', err);
-          throw err;
-        }
-      };
-      
-      const removePause = async (pauseId: string) => {
-        try {
-          const { error } = await supabase
-            .from('ag_pauses')
-            .delete()
-            .eq('id', pauseId);
-      
-          if (error) throw error;
-          await loadData();
-        } catch (err) {
-          console.error('Erreur suppression pause:', err);
-          throw err;
-        }
-      };
 
     } catch (err) {
       console.error('Erreur chargement données AG:', err);
@@ -346,7 +297,6 @@ export function useAGData() {
     resume: string;
   }) => {
     try {
-      // UPSERT : si existe, écrase ; sinon, crée
       const { error } = await supabase
         .from('ag_communications')
         .upsert({
@@ -367,7 +317,7 @@ export function useAGData() {
     }
   };
 
-  // Réinitialiser toutes les communications (quand on repart en préparation)
+  // Réinitialiser toutes les communications
   const resetCommunications = async () => {
     try {
       const { error } = await supabase
@@ -384,6 +334,57 @@ export function useAGData() {
     }
   };
 
+  // Ajouter une pause
+  const addPause = async (duree: number, position: number) => {
+    try {
+      const { error } = await supabase
+        .from('ag_pauses')
+        .insert([{
+          ag_id: AG_ID,
+          duree,
+          position
+        }]);
+
+      if (error) throw error;
+      await loadData();
+    } catch (err) {
+      console.error('Erreur ajout pause:', err);
+      throw err;
+    }
+  };
+
+  // Mettre à jour une pause
+  const updatePause = async (pauseId: string, duree: number, position: number) => {
+    try {
+      const { error } = await supabase
+        .from('ag_pauses')
+        .update({ duree, position })
+        .eq('id', pauseId);
+
+      if (error) throw error;
+      await loadData();
+    } catch (err) {
+      console.error('Erreur mise à jour pause:', err);
+      throw err;
+    }
+  };
+
+  // Supprimer une pause
+  const removePause = async (pauseId: string) => {
+    try {
+      const { error } = await supabase
+        .from('ag_pauses')
+        .delete()
+        .eq('id', pauseId);
+
+      if (error) throw error;
+      await loadData();
+    } catch (err) {
+      console.error('Erreur suppression pause:', err);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -394,6 +395,7 @@ export function useAGData() {
     groupes,
     employees,
     communications,
+    pauses,
     loading,
     error,
     updateConfig,
@@ -402,7 +404,6 @@ export function useAGData() {
     assignGroupe,
     saveCommunication,
     resetCommunications,
-    pauses,
     addPause,
     updatePause,
     removePause,
