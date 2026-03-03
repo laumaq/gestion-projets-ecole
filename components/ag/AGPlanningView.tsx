@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'; // À installer
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 interface PlanningItem {
   id: string;
@@ -24,8 +24,8 @@ interface AGPlanningViewProps {
   config: any;
   communications: any[];
   pauses: any[];
-  onReorder?: (newOrder: string[]) => void; // Pour sauvegarder l'ordre
-  isEditable?: boolean; // Pour la direction
+  onReorder?: (newOrder: string[]) => void;
+  isEditable?: boolean;
 }
 
 export default function AGPlanningView({ 
@@ -38,7 +38,6 @@ export default function AGPlanningView({
   const [currentTime, setCurrentTime] = useState(new Date());
   const [planning, setPlanning] = useState<PlanningItem[]>([]);
 
-  // Mettre à jour l'heure toutes les SECONDES
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -46,14 +45,12 @@ export default function AGPlanningView({
     return () => clearInterval(timer);
   }, []);
 
-  // Recalculer le planning
   useEffect(() => {
     if (!config || communications.length === 0) {
       setPlanning([]);
       return;
     }
 
-    // 1. Calculer le ratio
     const tempsDispo = heureToMinutes(config.heure_fin) - heureToMinutes(config.heure_debut);
     const pausesTotal = pauses.reduce((acc, p) => acc + p.duree, 0);
     const tempsDispoReel = tempsDispo - pausesTotal;
@@ -61,13 +58,11 @@ export default function AGPlanningView({
     const tempsDemandeTotal = communications.reduce((acc, c) => acc + c.temps_demande, 0);
     const ratio = tempsDemandeTotal > 0 ? tempsDispoReel / tempsDemandeTotal : 1;
 
-    // 2. Trier les communications par ordre (si défini)
     const sortedComms = [...communications].sort((a, b) => {
       if (a.ordre && b.ordre) return a.ordre - b.ordre;
       return a.groupe_nom.localeCompare(b.groupe_nom);
     });
 
-    // 3. Calculer les heures des interventions sans pauses
     const interventionsSansPauses: PlanningItem[] = [];
     let currentMinutes = heureToMinutes(config.heure_debut);
     
@@ -93,7 +88,6 @@ export default function AGPlanningView({
       currentMinutes = fin;
     }
 
-    // 4. Insérer les pauses au plus proche de leur heure idéale
     const pausesRestantes = [...pauses];
     const planningFinal: PlanningItem[] = [];
     let minutesEcoulees = heureToMinutes(config.heure_debut);
@@ -101,7 +95,6 @@ export default function AGPlanningView({
     for (let i = 0; i < interventionsSansPauses.length; i++) {
       const intervention = interventionsSansPauses[i];
       
-      // Chercher une pause qui devrait avoir lieu AVANT cette intervention
       const pauseAvantIndex = pausesRestantes.findIndex(p => {
         const heurePause = heureToMinutes(p.heure_debut);
         return heurePause >= minutesEcoulees && 
@@ -111,7 +104,6 @@ export default function AGPlanningView({
       if (pauseAvantIndex !== -1) {
         const pauseAvant = pausesRestantes[pauseAvantIndex];
         
-        // Insérer la pause
         const debutPause = minutesEcoulees;
         const finPause = debutPause + pauseAvant.duree;
         
@@ -134,7 +126,6 @@ export default function AGPlanningView({
         pausesRestantes.splice(pauseAvantIndex, 1);
       }
 
-      // Ajouter l'intervention
       const debutIntervention = minutesEcoulees;
       const finIntervention = debutIntervention + intervention.temps_ajuste;
       
@@ -149,7 +140,6 @@ export default function AGPlanningView({
       minutesEcoulees = finIntervention;
     }
 
-    // 5. Ajouter les pauses restantes à la fin
     for (const pause of pausesRestantes) {
       const debutPause = minutesEcoulees;
       const finPause = debutPause + pause.duree;
@@ -175,7 +165,6 @@ export default function AGPlanningView({
     setPlanning(planningFinal);
   }, [config, communications, pauses, currentTime]);
 
-  // Gérer le drag & drop
   const handleDragEnd = (result: any) => {
     if (!result.destination || !onReorder) return;
 
@@ -183,12 +172,10 @@ export default function AGPlanningView({
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
-    // Extraire les IDs dans le nouvel ordre
     const newOrder = items.map(item => item.id);
     onReorder(newOrder);
   };
 
-  // Calculer le pourcentage de progression (AVEC secondes)
   const getProgressPercentage = (debutMinutes: number, finMinutes: number) => {
     const now = currentTime.getHours() * 60 + currentTime.getMinutes() + currentTime.getSeconds() / 60;
     
@@ -198,7 +185,6 @@ export default function AGPlanningView({
     return ((now - debutMinutes) / (finMinutes - debutMinutes)) * 100;
   };
 
-  // Couleur de fond selon la progression
   const getBackgroundColor = (debutMinutes: number, finMinutes: number, type: string) => {
     const progress = getProgressPercentage(debutMinutes, finMinutes);
     
@@ -215,7 +201,6 @@ export default function AGPlanningView({
     return 'bg-red-50';
   };
 
-  // Couleur de la barre de progression
   const getProgressBarColor = (progress: number, type: string) => {
     if (type === 'pause') {
       if (progress < 50) return 'bg-purple-500';
@@ -256,7 +241,6 @@ export default function AGPlanningView({
     );
   }
 
-  // Afficher le ratio
   const tempsDispo = heureToMinutes(config.heure_fin) - heureToMinutes(config.heure_debut);
   const pausesTotal = pauses.reduce((acc, p) => acc + p.duree, 0);
   const tempsDemandeTotal = communications.reduce((acc, c) => acc + c.temps_demande, 0);
@@ -265,7 +249,6 @@ export default function AGPlanningView({
 
   return (
     <div className="space-y-4">
-      {/* En-tête avec horaires et ratio */}
       <div className="flex items-center justify-between text-sm border-b border-gray-200 pb-3">
         <div className="font-medium text-gray-700">
           {new Date(config.date_ag).toLocaleDateString('fr-FR', { 
@@ -286,14 +269,13 @@ export default function AGPlanningView({
         </div>
       </div>
 
-      {/* Planning avec drag & drop si éditable */}
       {isEditable ? (
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="planning">
             {(provided) => (
               <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
                 {planning.map((item, index) => {
-                  const progress = item.type !== 'pause' ? getProgressPercentage(item.debutMinutes, item.finMinutes) : 0;
+                  const progress = getProgressPercentage(item.debutMinutes, item.finMinutes);
                   const bgColor = getBackgroundColor(item.debutMinutes, item.finMinutes, item.type);
                   
                   return (
@@ -305,15 +287,12 @@ export default function AGPlanningView({
                           {...provided.dragHandleProps}
                           className={`relative ${snapshot.isDragging ? 'opacity-50' : ''}`}
                         >
-                          {/* Ligne de temps verticale */}
                           <div className="absolute left-16 top-0 bottom-0 w-px bg-gray-200"></div>
                           
-                          {/* Événement */}
                           <div className={`relative ml-20 p-3 rounded-lg border ${
                             item.type === 'pause' ? 'border-purple-200' : 'border-gray-200'
                           } ${bgColor} transition-colors`}>
                             
-                            {/* Barre de progression pour tous (interventions ET pauses) */}
                             {progress > 0 && progress < 100 && (
                               <div 
                                 className={`absolute left-0 top-0 bottom-0 rounded-l-lg ${getProgressBarColor(progress, item.type)} opacity-20`}
@@ -321,7 +300,6 @@ export default function AGPlanningView({
                               ></div>
                             )}
                             
-                            {/* Contenu */}
                             <div className="relative flex items-start justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center space-x-3">
@@ -368,7 +346,6 @@ export default function AGPlanningView({
                                 )}
                               </div>
                               
-                              {/* Heure de fin */}
                               <span className="text-xs text-gray-400">
                                 {item.heure_fin}
                               </span>
@@ -385,10 +362,9 @@ export default function AGPlanningView({
           </Droppable>
         </DragDropContext>
       ) : (
-        // Version sans drag & drop pour les employés
         <div className="space-y-2">
           {planning.map((item) => {
-            const progress = item.type !== 'pause' ? getProgressPercentage(item.debutMinutes, item.finMinutes) : 0;
+            const progress = getProgressPercentage(item.debutMinutes, item.finMinutes);
             const bgColor = getBackgroundColor(item.debutMinutes, item.finMinutes, item.type);
             
             return (
@@ -457,7 +433,6 @@ export default function AGPlanningView({
         </div>
       )}
 
-      {/* Légende */}
       <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-400 flex items-center space-x-4">
         <div className="flex items-center">
           <span className="w-3 h-3 bg-green-100 rounded mr-1"></span>
@@ -480,7 +455,6 @@ export default function AGPlanningView({
   );
 }
 
-// Fonctions utilitaires
 function heureToMinutes(heure: string): number {
   const [h, m] = heure.split(':').map(Number);
   return h * 60 + m;
