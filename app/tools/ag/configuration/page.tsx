@@ -302,12 +302,15 @@ export default function AGConfigurationPage() {
           <AGPlanningView
             config={config}
             communications={communications}
+            interventionsLibres={interventionsLibres}
             pauses={pauses}
             isEditable={true}
             onReorder={async (newOrder) => {
-              const ordreData = newOrder.map((id, index) => ({
-                id,
-                position: index + 1
+              // newOrder est un tableau d'objets avec id et type
+              const ordreData = newOrder.map((item, index) => ({
+                id: item.id,
+                position: index + 1,
+                type: item.type
               }));
               await updateOrdre(ordreData);
             }}
