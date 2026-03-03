@@ -5,8 +5,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAGPermissions } from '@/hooks/useAGPermissions';
 import { useAGData } from '@/hooks/useAGData';
+import DirectionTabs from '@/components/ag/DirectionTabs';
 import AGStatusBadge from '@/components/ag/AGStatusBadge';
 import PausesManager from '@/components/ag/PausesManager';
+import BureauManagement from '@/components/ag/BureauManagement';
+import GTAssignment from '@/components/ag/GTAssignment';
+import AGPlanningView from '@/components/ag/AGPlanningView';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function AGConfigurationPage() {
@@ -14,17 +18,24 @@ export default function AGConfigurationPage() {
   const { canConfigure, loading: permissionsLoading } = useAGPermissions();
   const {
     config,
+    bureau,
+    groupes,
+    employees,
     communications,
     pauses,
     loading: dataLoading,
     error,
     updateConfig,
+    addBureau,
+    removeBureau,
+    assignGroupe,
     addPause,
     updatePause,
     removePause,
     resetCommunications
   } = useAGData();
 
+  const [activeTab, setActiveTab] = useState('preparation');
   const [dateAG, setDateAG] = useState('');
   const [heureDebut, setHeureDebut] = useState('09:00');
   const [heureFin, setHeureFin] = useState('12:00');
@@ -120,10 +131,9 @@ export default function AGConfigurationPage() {
           <h1 className="text-2xl font-bold text-gray-900">Configuration de l'AG</h1>
           {config && <AGStatusBadge statut={config.statut} />}
         </div>
-        <p className="text-sm text-gray-500 mt-1">
-          Paramètres généraux de l'Assemblée Générale
-        </p>
       </div>
+
+      <DirectionTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {statusMessage && (
         <div className={`mb-6 p-4 rounded-lg ${
@@ -141,125 +151,158 @@ export default function AGConfigurationPage() {
         </div>
       )}
 
-      {/* Statut */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Statut de l'AG</h3>
-        
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => handleChangeStatut('pas_ag')}
-            disabled={config?.statut === 'pas_ag' || saving}
-            className={`px-4 py-2 text-sm font-medium rounded-md ${
-              config?.statut === 'pas_ag'
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-gray-600 text-white hover:bg-gray-700'
-            }`}
-          >
-            Pas d'AG
-          </button>
-          <button
-            onClick={() => handleChangeStatut('preparation')}
-            disabled={config?.statut === 'preparation' || saving}
-            className={`px-4 py-2 text-sm font-medium rounded-md ${
-              config?.statut === 'preparation'
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-yellow-600 text-white hover:bg-yellow-700'
-            }`}
-          >
-            En préparation
-          </button>
-          <button
-            onClick={() => handleChangeStatut('planning_etabli')}
-            disabled={config?.statut === 'planning_etabli' || saving}
-            className={`px-4 py-2 text-sm font-medium rounded-md ${
-              config?.statut === 'planning_etabli'
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-green-600 text-white hover:bg-green-700'
-            }`}
-          >
-            Planning établi
-          </button>
-        </div>
+      {/* ONGLET 1: PRÉPARATION */}
+      {activeTab === 'preparation' && (
+        <div className="space-y-6">
+          {/* Statut */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Statut de l'AG</h3>
+            
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => handleChangeStatut('pas_ag')}
+                disabled={config?.statut === 'pas_ag' || saving}
+                className={`px-4 py-2 text-sm font-medium rounded-md ${
+                  config?.statut === 'pas_ag'
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-600 text-white hover:bg-gray-700'
+                }`}
+              >
+                Pas d'AG
+              </button>
+              <button
+                onClick={() => handleChangeStatut('preparation')}
+                disabled={config?.statut === 'preparation' || saving}
+                className={`px-4 py-2 text-sm font-medium rounded-md ${
+                  config?.statut === 'preparation'
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-yellow-600 text-white hover:bg-yellow-700'
+                }`}
+              >
+                En préparation
+              </button>
+              <button
+                onClick={() => handleChangeStatut('planning_etabli')}
+                disabled={config?.statut === 'planning_etabli' || saving}
+                className={`px-4 py-2 text-sm font-medium rounded-md ${
+                  config?.statut === 'planning_etabli'
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
+              >
+                Planning établi
+              </button>
+            </div>
 
-        <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Statut actuel :</span>{' '}
-            {config?.statut === 'pas_ag' && 'AG désactivée'}
-            {config?.statut === 'preparation' && 'Les GT peuvent soumettre leurs demandes'}
-            {config?.statut === 'planning_etabli' && 'Planning visible par tous'}
-          </p>
-          
-          {config?.statut === 'preparation' && (
+            <div className="mt-4 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Statut actuel :</span>{' '}
+                {config?.statut === 'pas_ag' && 'AG désactivée'}
+                {config?.statut === 'preparation' && 'Les GT peuvent soumettre leurs demandes'}
+                {config?.statut === 'planning_etabli' && 'Planning visible par tous'}
+              </p>
+              
+              {config?.statut === 'preparation' && (
+                <button
+                  onClick={handleResetCommunications}
+                  className="text-sm text-red-600 hover:text-red-800"
+                >
+                  Effacer toutes les demandes
+                </button>
+              )}
+            </div>
+
+            {config?.statut === 'preparation' && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-700">
+                  📊 {communications.length} GT ont déjà soumis une demande
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Horaires */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Horaires</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={dateAG}
+                  onChange={(e) => setDateAG(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Début</label>
+                <input
+                  type="time"
+                  value={heureDebut}
+                  onChange={(e) => setHeureDebut(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Fin</label>
+                <input
+                  type="time"
+                  value={heureFin}
+                  onChange={(e) => setHeureFin(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+            </div>
+
             <button
-              onClick={handleResetCommunications}
-              className="text-sm text-red-600 hover:text-red-800"
+              onClick={handleUpdateConfig}
+              disabled={saving}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
-              Effacer toutes les demandes
+              {saving ? 'Mise à jour...' : 'Mettre à jour les horaires'}
             </button>
-          )}
-        </div>
+          </div>
 
-        {config?.statut === 'preparation' && (
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-sm text-blue-700">
-              📊 {communications.length} GT ont déjà soumis une demande
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Horaires */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Horaires</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-            <input
-              type="date"
-              value={dateAG}
-              onChange={(e) => setDateAG(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Début</label>
-            <input
-              type="time"
-              value={heureDebut}
-              onChange={(e) => setHeureDebut(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fin</label>
-            <input
-              type="time"
-              value={heureFin}
-              onChange={(e) => setHeureFin(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+          {/* Pauses - basées sur des horaires, pas des positions */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <PausesManager
+              pauses={pauses}
+              heureDebut={heureDebut}
+              heureFin={heureFin}
+              onAdd={addPause}
+              onUpdate={updatePause}
+              onRemove={removePause}
             />
           </div>
         </div>
+      )}
 
-        <button
-          onClick={handleUpdateConfig}
-          disabled={saving}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
-        >
-          {saving ? 'Mise à jour...' : 'Mettre à jour les horaires'}
-        </button>
-      </div>
+      {/* ONGLET 2: GESTION DES GT */}
+      {activeTab === 'gt' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <BureauManagement
+            bureau={bureau}
+            employees={employees}
+            onAdd={addBureau}
+            onRemove={removeBureau}
+          />
 
-      {/* Pauses */}
-      {config && (
+          <GTAssignment
+            employees={employees}
+            groupes={groupes}
+            onAssign={assignGroupe}
+          />
+        </div>
+      )}
+
+      {/* ONGLET 3: PLANNING */}
+      {activeTab === 'planning' && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <PausesManager
+          <AGPlanningView
+            config={config}
+            communications={communications}
             pauses={pauses}
-            nbInterventions={communications.length}
-            onAdd={addPause}
-            onUpdate={updatePause}
-            onRemove={removePause}
           />
         </div>
       )}
