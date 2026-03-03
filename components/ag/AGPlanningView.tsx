@@ -3,6 +3,19 @@
 
 import { useEffect, useState } from 'react';
 
+interface PlanningItem {
+  id: string;
+  groupe_nom: string;
+  type_communication: string;
+  temps_demande: number;
+  resume: string;
+  heure_debut: string;
+  heure_fin: string;
+  debutMinutes: number;
+  finMinutes: number;
+  ordre?: number;
+}
+
 interface AGPlanningViewProps {
   config: any;
   communications: any[];
@@ -33,7 +46,7 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
   }
 
   // Calculer le planning avec les heures
-  const planning = [];
+  const planning: PlanningItem[] = [];
   let currentTimeMinutes = heureToMinutes(config.heure_debut);
 
   // Trier les communications par ordre (si ordre défini) ou par groupe
@@ -48,11 +61,16 @@ export default function AGPlanningView({ config, communications, pauses }: AGPla
     const fin = currentTimeMinutes + comm.temps_demande;
     
     planning.push({
-      ...comm,
+      id: comm.id,
+      groupe_nom: comm.groupe_nom,
+      type_communication: comm.type_communication,
+      temps_demande: comm.temps_demande,
+      resume: comm.resume,
       heure_debut: minutesToHeure(debut),
       heure_fin: minutesToHeure(fin),
       debutMinutes: debut,
-      finMinutes: fin
+      finMinutes: fin,
+      ordre: comm.ordre
     });
     
     currentTimeMinutes = fin;
