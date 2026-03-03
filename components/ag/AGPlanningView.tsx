@@ -173,10 +173,10 @@ export default function AGPlanningView({
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
   
-    // Créer un tableau avec les IDs et les types
+    // Créer un tableau d'objets avec id et type
     const newOrder = items.map(item => ({
       id: item.id,
-      type: item.type // 'gt' ou 'libre'
+      type: item.type
     }));
     
     onReorder(newOrder);
