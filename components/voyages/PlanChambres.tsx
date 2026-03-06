@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface Props {
@@ -55,6 +55,7 @@ interface Affectation {
   participant_id: string;
   participant_type: 'eleve' | 'professeur';
   participant: Participant;
+  nuitee: number; 
 }
 
 export default function PlanChambres({ configId, voyageId, isResponsable, userType }: Props) {
@@ -69,6 +70,29 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
   const [currentUserEleveId, setCurrentUserEleveId] = useState<number | null>(null);
   const [currentUserGenre, setCurrentUserGenre] = useState<string | null>(null);
   const [autoAffectation, setAutoAffectation] = useState(false);
+
+  // États pour les dates de la configuration
+  const [configDates, setConfigDates] = useState<{ date_debut: string; date_fin: string } | null>(null);
+
+  // Charger les dates de la config
+  useEffect(() => {
+    const loadConfigDates = async () => {
+      const { data } = await supabase
+        .from('hebergement_configs')
+        .select('date_debut, date_fin')
+        .eq('id', configId)
+        .single();
+      
+      if (data) {
+        setConfigDates(data);
+      }
+    };
+    
+    if (configId) {
+      loadConfigDates();
+    }
+  }, [configId]);
+
 
   const canEdit = userType === 'employee' && isResponsable;
   const isEmployee = userType === 'employee';
@@ -214,6 +238,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
         chambre_id: item.chambre_id,
         participant_id: item.participant_id,
         participant_type: 'eleve' as const,
+        nuitee: item.nuitee || 1, 
         participant: {
           id: item.participant.id,
           eleve_id: item.participant.eleve_id,
@@ -234,6 +259,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
         chambre_id: item.chambre_id,
         participant_id: item.participant_id,
         participant_type: 'professeur' as const,
+        nuitee: item.nuitee || 1,
         participant: {
           id: item.participant.id,
           professeur_id: item.participant.professeur_id,
@@ -325,7 +351,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
       .insert({
         chambre_id: chambreId,
         participant_id: participant.id,
-        created_by: currentUserId
+        created_by: currentUserId,
       });
 
     loadChambres();
@@ -342,7 +368,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
       .insert({
         chambre_id: chambreId,
         participant_id: participantId,
-        created_by: currentUserId
+        created_by: currentUserId,
       });
 
     loadChambres();
@@ -501,6 +527,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
       {/* Grille des chambres */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {chambres.map((chambre) => {
+
           const affectationsChambre = getAffectationsForChambre(chambre.id);
           const placesLibres = chambre.capacite - affectationsChambre.length;
           const estComplete = placesLibres === 0;

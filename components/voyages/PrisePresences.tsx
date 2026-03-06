@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo} from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface Props {
@@ -18,6 +18,12 @@ interface Chambre {
   nom_chambre: string | null;
   capacite: number;
   genre: 'M' | 'F' | 'prof' | 'mixte';
+}
+
+interface Nuit {
+  numero: number;
+  date: Date;
+  label: string;
 }
 
 interface Affectation {
@@ -40,13 +46,59 @@ export default function PrisePresences({ configId, voyageId, isResponsable, user
   const [presences, setPresences] = useState<Map<string, boolean>>(new Map());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [datePresence, setDatePresence] = useState<string>(
-    new Date().toISOString().split('T')[0]
-  );
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const [configDates, setConfigDates] = useState<{ date_debut: string; date_fin: string } | null>(null);
+  const [selectedNuitee, setSelectedNuitee] = useState<number>(1);
+
+  // Générer la liste des nuits
+  const nuits: Nuit[] = useMemo(() => {
+    if (!configDates) return [];
+    
+    const nuits = [];
+    const dateDebut = new Date(configDates.date_debut);
+    const dateFin = new Date(configDates.date_fin);
+    let currentDate = new Date(dateDebut);
+    
+    while (currentDate < dateFin) {
+      nuits.push({
+        numero: nuits.length + 1,
+        date: new Date(currentDate),
+        label: currentDate.toLocaleDateString('fr-FR', { 
+          weekday: 'long', 
+          day: 'numeric', 
+          month: 'long' 
+        })
+      });
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return nuits;
+  }, [configDates]);
+
+
+
 
   const isEmployee = userType === 'employee';
   const canReset = isEmployee && isResponsable;
+
+  // Charger les dates de la config
+  useEffect(() => {
+    const loadConfigDates = async () => {
+      const { data } = await supabase
+        .from('hebergement_configs')
+        .select('date_debut, date_fin')
+        .eq('id', configId)
+        .single();
+      
+      if (data) {
+        setConfigDates(data);
+      }
+    };
+    
+    if (configId) {
+      loadConfigDates();
+    }
+  }, [configId]);
 
   useEffect(() => {
     const id = localStorage.getItem('userId');
@@ -55,7 +107,7 @@ export default function PrisePresences({ configId, voyageId, isResponsable, user
     if (isEmployee) {
       loadChambres();
     }
-  }, [configId, datePresence]);
+  }, [configId, selectedNuitee]);
 
   const loadChambres = async () => {
     const { data: chambresData } = await supabase
@@ -158,7 +210,7 @@ export default function PrisePresences({ configId, voyageId, isResponsable, user
       .from('chambre_presences')
       .select('affectation_id, present')
       .eq('config_id', configId)
-      .eq('date_presence', datePresence)
+      .eq('nuitee', selectedNuitee)
       .in('affectation_id', affectationIds);
 
     const presenceMap = new Map();
@@ -195,10 +247,10 @@ export default function PrisePresences({ configId, voyageId, isResponsable, user
         participant_id: affectations.find(a => a.id === affectationId)?.participant_id,
         participant_type: affectations.find(a => a.id === affectationId)?.participant_type,
         present: nouvelleValeur,
-        date_presence: datePresence,
+        nuitee: selectedNuitee,
         created_by: currentUserId
       }, {
-        onConflict: 'affectation_id, date_presence'
+        onConflict: 'affectation_id, nuitee'
       });
 
     if (error) {
@@ -230,10 +282,10 @@ export default function PrisePresences({ configId, voyageId, isResponsable, user
             participant_id: a.participant_id,
             participant_type: a.participant_type,
             present: false,
-            date_presence: datePresence,
+            nuitee: selectedNuitee,
             created_by: currentUserId
           })),
-          { onConflict: 'affectation_id, date_presence' }
+          { onConflict: 'affectation_id, nuitee' }
         );
 
       if (error) {
@@ -286,26 +338,32 @@ export default function PrisePresences({ configId, voyageId, isResponsable, user
 
   const totalPersonnes = affectations.length;
   const presentes = Array.from(presences.values()).filter(v => v).length;
+  const totalProfesseurs = affectations.filter(a => a.participant_type === 'professeur').length;
 
   return (
+    
     <div className="space-y-4">
-      {/* Header avec sélecteur de date et statistiques */}
+      {/* Header avec sélecteur de nuitée et statistiques */}
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-base font-semibold text-gray-900">Prise des présences</h3>
           <p className="text-xs text-gray-600">
-            {totalPersonnes} personne{totalPersonnes > 1 ? 's' : ''} • 
-            {presentes} présent{presentes > 1 ? 's' : ''}
+            {totalPersonnes-totalProfesseurs  } élève{totalPersonnes-totalProfesseurs  > 1 ? 's' : ''} • {totalPersonnes-presentes-totalProfesseurs } absent{totalPersonnes-presentes-totalProfesseurs  > 1 ? 's' : ''}
           </p>
         </div>
         
         <div className="flex items-center gap-3">
-          <input
-            type="date"
-            value={datePresence}
-            onChange={(e) => setDatePresence(e.target.value)}
+          <select
+            value={selectedNuitee}
+            onChange={(e) => setSelectedNuitee(Number(e.target.value))}
             className="px-3 py-1.5 border rounded-lg text-sm"
-          />
+          >
+            {nuits.map((nuit) => (
+              <option key={nuit.numero} value={nuit.numero}>
+                Nuit {nuit.numero} - {nuit.label}
+              </option>
+            ))}
+          </select>
           
           {canReset && (
             <button

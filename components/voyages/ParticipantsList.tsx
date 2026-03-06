@@ -417,7 +417,9 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
 
   if (loading) return <div className="text-center py-8">Chargement des participants...</div>;
 
-  const totalParticipants = participants.length + professeursParticipants.length;
+  // Calculer le nombre d'élèves confirmés uniquement
+  const elevesConfirmes = participants.filter(p => p.statut === 'confirme').length;
+  const totalParticipants = elevesConfirmes + professeursParticipants.length;
 
   return (
     <div className="space-y-6">
@@ -426,9 +428,7 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Participants</h2>
           <p className="text-gray-600 mt-1">
-            {totalParticipants} participant{totalParticipants > 1 ? 's' : ''} 
-            ({participants.length} élève{participants.length > 1 ? 's' : ''}, 
-            {professeursParticipants.length} professeur{professeursParticipants.length > 1 ? 's' : ''})
+            {totalParticipants} participant{totalParticipants > 1 ? 's' : ''} ({elevesConfirmes} élève{elevesConfirmes > 1 ? 's' : ''} confirmé{elevesConfirmes > 1 ? 's' : ''}, {professeursParticipants.length} professeur{professeursParticipants.length > 1 ? 's' : ''})
           </p>
         </div>
 

@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import 'react-quill/dist/quill.snow.css';
+
 @layer base {
   :root {
     --foreground-rgb: 0, 0, 0;
@@ -77,4 +79,24 @@
 /* Transition par défaut */
 * {
   transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Styles pour l'affichage de l'alignement Quill */
+.ql-editor {
+  text-align: left;
+}
+
+.ql-editor[align="center"],
+.ql-editor .ql-align-center {
+  text-align: center;
+}
+
+.ql-editor[align="right"],
+.ql-editor .ql-align-right {
+  text-align: right;
+}
+
+.ql-editor[align="justify"],
+.ql-editor .ql-align-justify {
+  text-align: justify;
 }
