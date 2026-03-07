@@ -27,9 +27,9 @@ export default function CharteModal({ contenu, tempsLecture, peutAccepter, onAcc
       <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="p-6 border-b bg-gradient-to-r from-blue-600 to-indigo-600 rounded-t-xl">
-          <h2 className="text-2xl font-bold text-white">?? Charte du voyage</h2>
+          <h2 className="text-2xl font-bold text-white">Charte du voyage</h2>
           <p className="text-blue-100 mt-1">
-            Veuillez lire attentivement et accepter les conditions pour acc�der � l'organisation du voyage
+            Veuillez lire attentivement et accepter les conditions pour accéder à l'organisation du voyage
           </p>
         </div>
 
@@ -60,7 +60,7 @@ export default function CharteModal({ contenu, tempsLecture, peutAccepter, onAcc
 
             {!aScrollJusquaLaFin && (
               <p className="text-sm text-amber-600 flex items-center gap-1">
-                <span>?</span> Faites d�filer jusqu'en bas
+                <span>?</span> Faites défiler jusqu'en bas
               </p>
             )}
           </div>

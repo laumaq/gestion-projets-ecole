@@ -134,7 +134,7 @@ export default function GestionCharte({ voyageId, isResponsable, userType }: Pro
       {isEleve && contenu && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <p className="text-sm text-green-700">
-            ? Vous avez accepté cette charte. Vous pouvez la relire à tout moment.
+            Vous avez accepté cette charte. Vous pouvez la relire à tout moment.
           </p>
         </div>
       )}
