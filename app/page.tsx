@@ -35,7 +35,7 @@ export default function LoginPage() {
         .from('employees')
         .select('*')
         .ilike('nom', nomNormalized)
-        .ilike('initiale', initialeNormalized)
+        .ilike('prenom', prenomNormalized)
         .maybeSingle();
 
       // 2. Recherche dans students (nom exact + prénom complet)
