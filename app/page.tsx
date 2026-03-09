@@ -6,11 +6,10 @@ import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const [nom, setNom] = useState('');
-  const [initiale, setInitiale] = useState('');
+  const [prenom, setPrenom] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [userType, setUserType] = useState<'employee' | 'student'>('employee');
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -22,70 +21,51 @@ export default function LoginPage() {
 
     try {
       const nomNormalized = nom.trim().toUpperCase();
-      const initialeNormalized = initiale.trim().toUpperCase();
+      const prenomNormalized = prenom.trim();
 
       console.log("Tentative de connexion:", {
         nom: nomNormalized,
-        initiale: initialeNormalized,
-        userType
+        prenom: prenomNormalized
       });
 
-      // Recherche selon le type d'utilisateur
-      let userData = null;
-      let userError = null;
+      // 1. Recherche dans employees (nom exact + initiale du prénom)
+      const initialeNormalized = prenomNormalized.charAt(0).toUpperCase();
+      
+      const { data: employeeData, error: employeeError } = await supabase
+        .from('employees')
+        .select('*')
+        .ilike('nom', nomNormalized)
+        .ilike('initiale', initialeNormalized)
+        .maybeSingle();
 
-      if (userType === 'employee') {
-        // Recherche dans la table employees
-        const result = await supabase
-          .from('employees')
-          .select('*')
-          .ilike('nom', nomNormalized)
-          .ilike('initiale', initialeNormalized)
-          .maybeSingle();
-        
-        userData = result.data;
-        userError = result.error;
-      } else {
-        // Recherche dans la table students
-        // Pour les élèves, on utilise nom et initiale du prénom
-        const result = await supabase
-          .from('students')
-          .select('*')
-          .ilike('nom', nomNormalized)
-          .ilike('prenom', initialeNormalized + '%') // Les prénoms commençant par l'initiale
-          .maybeSingle();
-        
-        userData = result.data;
-        userError = result.error;
-      }
+      // 2. Recherche dans students (nom exact + prénom complet)
+      const { data: studentData, error: studentError } = await supabase
+        .from('students')
+        .select('*')
+        .ilike('nom', nomNormalized)
+        .ilike('prenom', prenomNormalized)
+        .maybeSingle();
 
-      console.log("Résultat de la requête:", { userData, userError });
+      // Déterminer quel utilisateur a été trouvé
+      const userData = employeeData || studentData;
+      const userType = employeeData ? 'employee' : (studentData ? 'student' : null);
 
-      if (userError) {
-        console.error("Erreur Supabase:", userError);
-        setError('Erreur de connexion à la base de données');
-        setLoading(false);
-        return;
-      }
-
-      if (!userData) {
+      if (!userData || !userType) {
         console.log("Utilisateur non trouvé");
-        setError('Utilisateur non trouvé. Vérifiez votre nom et initiale.');
+        setError('Utilisateur non trouvé. Vérifiez votre nom et prénom.');
         setLoading(false);
         return;
       }
 
       const storedPassword = userData.mot_de_passe;
       
-      // DEBUG: Afficher les infos
+      console.log("🔐 Utilisateur trouvé:", { userType, userData });
       console.log("🔐 Mot de passe stocké:", `"${storedPassword}"`);
-      console.log("🔐 Mot de passe fourni:", `"${password}"`);
-      
-      // CAS 1: PREMIÈRE CONNEXION (NULL ou chaîne vide)
+
+      // CAS 1: PREMIÈRE CONNEXION
       if (!storedPassword || storedPassword === '') {
         console.log("Première connexion - enregistrement du mot de passe");
         
-        // Mise à jour selon le type d'utilisateur
         let updateError = null;
         
         if (userType === 'employee') {
@@ -113,9 +93,8 @@ export default function LoginPage() {
         if (userType === 'employee') {
           localStorage.setItem('userType', 'employee');
           localStorage.setItem('userId', userData.id);
-          localStorage.setItem('userName', `${userData.nom} ${userData.initiale}.`);
+          localStorage.setItem('userName', `${userData.nom} ${userData.prenom || userData.initiale}.`);
           localStorage.setItem('userRole', userData.role || 'employee');
-          localStorage.setItem('userJob', userData.job || 'employee');
         } else {
           localStorage.setItem('userType', 'student');
           localStorage.setItem('userId', userData.matricule.toString());
@@ -136,9 +115,8 @@ export default function LoginPage() {
         if (userType === 'employee') {
           localStorage.setItem('userType', 'employee');
           localStorage.setItem('userId', userData.id);
-          localStorage.setItem('userName', `${userData.nom} ${userData.initiale}.`);
+          localStorage.setItem('userName', `${userData.nom} ${userData.prenom || userData.initiale}.`);
           localStorage.setItem('userRole', userData.role || 'employee');
-          localStorage.setItem('userJob', userData.job || 'employee');
         } else {
           localStorage.setItem('userType', 'student');
           localStorage.setItem('userId', userData.matricule.toString());
@@ -173,39 +151,13 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
             Portail numérique de l'école
           </h1>
-          <p className="text-gray-600">Outils pédagogiques</p>
-        </div>
-
-        {/* Sélecteur de type d'utilisateur */}
-        <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
-          <button
-            type="button"
-            onClick={() => setUserType('employee')}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition ${
-              userType === 'employee'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            Personnel
-          </button>
-          <button
-            type="button"
-            onClick={() => setUserType('student')}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition ${
-              userType === 'student'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            Élève
-          </button>
+          <p className="text-gray-600">Connexion unique pour tous</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {userType === 'employee' ? 'Nom' : 'Nom de famille'}
+              Nom de famille
             </label>
             <input
               type="text"
@@ -213,22 +165,21 @@ export default function LoginPage() {
               onChange={(e) => setNom(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
-              placeholder={userType === 'employee' ? "Ex: DUPONT" : "Ex: MARTIN"}
+              placeholder="Ex: DUPONT"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {userType === 'employee' ? 'Initiale du prénom' : 'Première lettre du prénom'}
+              Prénom
             </label>
             <input
               type="text"
-              value={initiale}
-              onChange={(e) => setInitiale(e.target.value.toUpperCase())}
-              maxLength={1}
+              value={prenom}
+              onChange={(e) => setPrenom(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
-              placeholder="Ex: M"
+              placeholder="Ex: Jean"
             />
           </div>
 
@@ -265,7 +216,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-500">
-          <p>Utilisez votre nom et la première lettre de votre prénom</p>
+          <p>Personnel et élèves : utilisez votre nom et prénom</p>
         </div>
       </div>
     </div>
