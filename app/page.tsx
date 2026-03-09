@@ -168,10 +168,10 @@ export default function LoginPage() {
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <span className="text-white text-2xl font-bold">TFH</span>
+            <span className="text-white text-2xl font-bold">Waha</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Portail TFH
+            Portail numérique de l'école
           </h1>
           <p className="text-gray-600">Outils pédagogiques</p>
         </div>
