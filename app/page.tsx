@@ -103,7 +103,6 @@ export default function LoginPage() {
           localStorage.setItem('userLevel', userData.niveau || '');
         }
         
-        console.log("Connexion réussie (première fois)");
         router.push('/dashboard');
         return;
       }
@@ -151,7 +150,7 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
             Portail numérique de l'école
           </h1>
-          <p className="text-gray-600">Connexion unique pour tous</p>
+          <p className="text-gray-600">Connexion</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
