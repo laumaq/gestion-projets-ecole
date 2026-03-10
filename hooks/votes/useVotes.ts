@@ -106,8 +106,9 @@ export const useVotes = (context: {
     options: string[];
     type_scrutin: Vote['type_scrutin'];
     parametres?: Partial<Vote['parametres']>;
-    communicationId?: string;  // NOUVEAU
-    interventionLibreId?: string; // NOUVEAU
+    communicationId?: string; 
+    interventionLibreId?: string;
+    electorate_type?: string; 
   }) => {
     if (!user) throw new Error('Utilisateur non authentifié');
     if (!context.id) throw new Error('ID de contexte manquant');
