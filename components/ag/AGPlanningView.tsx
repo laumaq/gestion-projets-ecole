@@ -1,7 +1,7 @@
 // components/ag/AGPlanningView.tsx
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 interface PlanningItem {
@@ -11,13 +11,13 @@ interface PlanningItem {
   temps_demande: number;
   temps_ajuste: number;
   resume: string;
+  titre?: string;
   heure_debut: string;
   heure_fin: string;
   debutMinutes: number;
   finMinutes: number;
   ordre?: number;
   type: 'intervention' | 'pause';
-  titre?: string; 
   duree?: number;
   type_intervention?: 'gt' | 'libre';
 }
@@ -26,11 +26,11 @@ interface AGPlanningViewProps {
   config: any;
   communications: any[];
   interventionsLibres: any[];
-  onEdit?: (item: PlanningItem) => void;
-  onDelete?: (item: PlanningItem) => void;
   pauses: any[];
   onReorder?: (newOrder: { id: string; type: 'gt' | 'libre' }[]) => void;
   isEditable?: boolean;
+  onEdit?: (item: PlanningItem) => void;
+  onDelete?: (item: PlanningItem) => void;
 }
 
 export default function AGPlanningView({ 
@@ -38,14 +38,20 @@ export default function AGPlanningView({
   communications, 
   interventionsLibres,
   pauses, 
-  onEdit,     
-  onDelete,
   onReorder,
-  isEditable = false 
+  isEditable = false,
+  onEdit,
+  onDelete
 }: AGPlanningViewProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [planning, setPlanning] = useState<PlanningItem[]>([]);
 
-  // Timer pour la progression - SEULEMENT pour l'affichage
+  // Fusionner toutes les interventions (GT + libres)
+  const toutesInterventions = [
+    ...communications.map(c => ({ ...c, type: 'intervention', type_intervention: 'gt' as const })),
+    ...interventionsLibres.map(i => ({ ...i, type: 'intervention', type_intervention: 'libre' as const }))
+  ];
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -53,22 +59,22 @@ export default function AGPlanningView({
     return () => clearInterval(timer);
   }, []);
 
-  // Fusionner toutes les interventions (GT + libres)
-  const toutesInterventions = useMemo(() => [
-    ...communications.map(c => ({ ...c, type: 'intervention', type_intervention: 'gt' as const })),
-    ...interventionsLibres.map(i => ({ ...i, type: 'intervention', type_intervention: 'libre' as const }))
-  ], [communications, interventionsLibres]);
-
-  // Calculer le planning de BASE (sans progression)
-  const planningBase = useMemo(() => {
-    if (!config || toutesInterventions.length === 0) return [];
+  useEffect(() => {
+    if (!config || (communications.length === 0 && interventionsLibres.length === 0)) {
+      setPlanning([]);
+      return;
+    }
 
     // Calculer le ratio
     const tempsDispo = heureToMinutes(config.heure_fin) - heureToMinutes(config.heure_debut);
     const pausesTotal = pauses.reduce((acc, p) => acc + p.duree, 0);
     const tempsDispoReel = tempsDispo - pausesTotal;
     
-    const tempsDemandeTotal = toutesInterventions.reduce((acc, c) => acc + c.temps_demande, 0);
+    const tempsDemandeTotal = [
+      ...communications,
+      ...interventionsLibres
+    ].reduce((acc, c) => acc + c.temps_demande, 0);
+    
     const ratio = tempsDemandeTotal > 0 ? tempsDispoReel / tempsDemandeTotal : 1;
 
     // Trier les interventions par ordre
@@ -99,6 +105,7 @@ export default function AGPlanningView({
         temps_demande: intervention.temps_demande,
         temps_ajuste: tempsAjuste,
         resume: intervention.resume,
+        titre: intervention.titre,
         heure_debut: minutesToHeure(debut),
         heure_fin: minutesToHeure(fin),
         debutMinutes: debut,
@@ -108,24 +115,23 @@ export default function AGPlanningView({
       currentMinutes = fin;
     }
     
-    // 2. Insérer les pauses
+    // 2. Insérer les pauses au bon endroit
     const planningFinal: PlanningItem[] = [];
     const pausesTriees = [...pauses].sort((a, b) => 
       heureToMinutes(a.heure_debut) - heureToMinutes(b.heure_debut)
     );
     
     let pauseIndex = 0;
-    let currentPos = 0;
     
-    while (currentPos < planningSansPauses.length || pauseIndex < pausesTriees.length) {
-      // Vérifier s'il y a une pause à insérer maintenant
-      if (pauseIndex < pausesTriees.length) {
+    for (let i = 0; i < planningSansPauses.length; i++) {
+      const intervention = planningSansPauses[i];
+      
+      while (pauseIndex < pausesTriees.length) {
         const pause = pausesTriees[pauseIndex];
         const heurePause = heureToMinutes(pause.heure_debut);
         
-        if (currentPos >= planningSansPauses.length || heurePause < planningSansPauses[currentPos].debutMinutes) {
-          // Insérer la pause
-          const debutPause = currentPos > 0 ? planningSansPauses[currentPos - 1].finMinutes : heureToMinutes(config.heure_debut);
+        if (heurePause < intervention.finMinutes) {
+          const debutPause = intervention.debutMinutes;
           const finPause = debutPause + pause.duree;
           
           planningFinal.push({
@@ -143,8 +149,7 @@ export default function AGPlanningView({
             duree: pause.duree
           });
           
-          // Décaler toutes les interventions suivantes
-          for (let j = currentPos; j < planningSansPauses.length; j++) {
+          for (let j = i; j < planningSansPauses.length; j++) {
             planningSansPauses[j].debutMinutes += pause.duree;
             planningSansPauses[j].finMinutes += pause.duree;
             planningSansPauses[j].heure_debut = minutesToHeure(planningSansPauses[j].debutMinutes);
@@ -152,19 +157,66 @@ export default function AGPlanningView({
           }
           
           pauseIndex++;
-          continue;
+        } else {
+          break;
         }
       }
       
-      // Ajouter l'intervention courante
-      if (currentPos < planningSansPauses.length) {
-        planningFinal.push(planningSansPauses[currentPos]);
-        currentPos++;
-      }
+      planningFinal.push(intervention);
     }
     
-    return planningFinal;
-  }, [config, toutesInterventions, pauses]);
+    while (pauseIndex < pausesTriees.length) {
+      const pause = pausesTriees[pauseIndex];
+      const debutPause = currentMinutes;
+      const finPause = debutPause + pause.duree;
+      
+      planningFinal.push({
+        id: pause.id,
+        type: 'pause',
+        groupe_nom: 'PAUSE',
+        type_communication: 'pause',
+        temps_demande: pause.duree,
+        temps_ajuste: pause.duree,
+        resume: '',
+        heure_debut: minutesToHeure(debutPause),
+        heure_fin: minutesToHeure(finPause),
+        debutMinutes: debutPause,
+        finMinutes: finPause,
+        duree: pause.duree
+      });
+      
+      currentMinutes = finPause;
+      pauseIndex++;
+    }
+    
+    setPlanning(planningFinal);
+  }, [config, toutesInterventions, pauses, currentTime]);
+
+  const handleDragEnd = async (result: any) => {
+    if (!result.destination || !onReorder) return;
+  
+    const items = Array.from(planning);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    const previousPlanning = planning;
+    setPlanning(items);
+  
+    const newOrder = items
+      .filter(item => item.type !== 'pause')
+      .map((item, index) => ({
+        id: item.id,
+        position: index + 1,
+        type: item.type_intervention || 'gt'
+      }));
+  
+    try {
+      await onReorder(newOrder);
+    } catch (error) {
+      console.error('Erreur lors du réordonnancement:', error);
+      setPlanning(previousPlanning);
+    }
+  };
 
   const getProgressPercentage = (debutMinutes: number, finMinutes: number) => {
     const now = currentTime.getHours() * 60 + currentTime.getMinutes() + currentTime.getSeconds() / 60;
@@ -223,34 +275,6 @@ export default function AGPlanningView({
     }
   };
 
-  const handleDragEnd = async (result: any) => {
-    if (!result.destination || !onReorder) return;
-  
-    // 1. Mise à jour OPTIMISTE de l'UI
-    const items = Array.from(planningBase);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-    
-    // Sauvegarder l'état avant modification
-    const previousPlanning = planningBase;
-    
-    // 2. Préparer les données pour le backend
-    const newOrder = items
-      .filter(item => item.type !== 'pause')
-      .map((item, index) => ({
-        id: item.id,
-        position: index + 1,
-        type: item.type_intervention || 'gt'
-      }));
-  
-    try {
-      // 3. Envoyer au backend
-      await onReorder(newOrder);
-    } catch (error) {
-      console.error('Erreur lors du réordonnancement:', error);
-    }
-  };
-
   if (!config) {
     return <p className="text-gray-500">Aucune configuration AG</p>;
   }
@@ -271,7 +295,8 @@ export default function AGPlanningView({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between text-sm border-b border-gray-200 pb-3">
+      {/* En-tête avec horaires et ratio - version responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm border-b border-gray-200 pb-3 gap-2">
         <div className="font-medium text-gray-700">
           {new Date(config.date_ag).toLocaleDateString('fr-FR', { 
             weekday: 'long', 
@@ -279,9 +304,9 @@ export default function AGPlanningView({
             month: 'long' 
           })}
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           <span className="text-gray-600">Début: {config.heure_debut}</span>
-          <span className="text-gray-400">→</span>
+          <span className="text-gray-400 hidden sm:inline">→</span>
           <span className="text-gray-600">Fin: {config.heure_fin}</span>
           {ratio !== 1 && (
             <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
@@ -296,7 +321,7 @@ export default function AGPlanningView({
           <Droppable droppableId="planning">
             {(provided) => (
               <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
-                {planningBase.map((item, index) => {
+                {planning.map((item, index) => {
                   const progress = getProgressPercentage(item.debutMinutes, item.finMinutes);
                   const bgColor = getBackgroundColor(item.debutMinutes, item.finMinutes, item.type);
                   
@@ -312,105 +337,122 @@ export default function AGPlanningView({
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className={`relative ${snapshot.isDragging ? 'opacity-50' : ''}`}
+                          className={`relative group ${snapshot.isDragging ? 'opacity-50' : ''}`}
                         >
-                          <div className="absolute left-16 top-0 bottom-0 w-px bg-gray-200"></div>
-                          
-                          <div className={`relative ml-20 p-3 rounded-lg border ${
-                            item.type === 'pause' ? 'border-purple-200' : 'border-gray-200'
-                          } ${bgColor} transition-colors group`}>
+                          {/* Version mobile : plus de ligne verticale, on utilise un padding réduit */}
+                          <div className="pl-2 sm:pl-20 relative">
+                            {/* Heure sur mobile : affichée au-dessus */}
+                            <div className="sm:hidden text-xs font-mono text-gray-400 mb-1">
+                              {item.heure_debut} → {item.heure_fin}
+                            </div>
                             
-                            {progress > 0 && progress < 100 && (
-                              <div 
-                                className={`absolute left-0 top-0 bottom-0 rounded-l-lg ${getProgressBarColor(progress, item.type)} opacity-20`}
-                                style={{ width: `${progress}%` }}
-                              ></div>
-                            )}
+                            {/* Ligne verticale (cachée sur mobile) */}
+                            <div className="hidden sm:block absolute left-16 top-0 bottom-0 w-px bg-gray-200"></div>
                             
-                            <div className="relative flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-3">
-                                  <span className="text-xs font-mono text-gray-400 w-12">
-                                    {item.heure_debut}
-                                  </span>
+                            <div className={`p-3 rounded-lg border ${
+                              item.type === 'pause' ? 'border-purple-200' : 'border-gray-200'
+                            } ${bgColor} transition-colors relative`}>
+                              
+                              {progress > 0 && progress < 100 && (
+                                <div 
+                                  className={`absolute left-0 top-0 bottom-0 rounded-l-lg ${getProgressBarColor(progress, item.type)} opacity-20`}
+                                  style={{ width: `${progress}%` }}
+                                ></div>
+                              )}
+                              
+                              {/* Boutons d'édition pour la direction */}
+                              {isEditable && item.type !== 'pause' && (
+                                <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onEdit?.(item);
+                                    }}
+                                    className="p-1 bg-white rounded-md shadow-sm border border-gray-200 text-gray-600 hover:text-blue-600"
+                                    title="Modifier"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onDelete?.(item);
+                                    }}
+                                    className="p-1 bg-white rounded-md shadow-sm border border-gray-200 text-gray-600 hover:text-red-600"
+                                    title="Supprimer"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              )}
+                              
+                              {/* Contenu */}
+                              <div className="relative flex flex-col sm:flex-row sm:items-start sm:justify-between">
+                                <div className="flex-1">
+                                  <div className="flex flex-wrap items-center gap-2 sm:space-x-3">
+                                    {/* Heure sur desktop */}
+                                    <span className="hidden sm:block text-xs font-mono text-gray-400 w-12">
+                                      {item.heure_debut}
+                                    </span>
+                                    
+                                    {item.type === 'pause' ? (
+                                      <>
+                                        <h4 className="font-medium text-purple-600">PAUSE</h4>
+                                        <div className="flex-shrink-0">
+                                          {getTypeBadge('pause')}
+                                        </div>
+                                        <span className="text-xs text-purple-400">
+                                          {item.duree}min
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <h4 className="font-medium text-gray-900">
+                                          {item.groupe_nom}
+                                        </h4>
+                                        <div className="flex-shrink-0">
+                                          {getTypeBadge('intervention', item.type_communication, item.type_intervention)}
+                                        </div>
+                                        <span className="text-xs text-gray-400">
+                                          {item.temps_ajuste}min
+                                          {item.temps_ajuste !== item.temps_demande && (
+                                            <span className="text-gray-300 ml-1 hidden sm:inline">
+                                              (demandé: {item.temps_demande}min)
+                                            </span>
+                                          )}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
                                   
-                                  {item.type === 'pause' ? (
+                                  {item.type !== 'pause' && (
                                     <>
-                                      <h4 className="font-medium text-purple-600">PAUSE</h4>
-                                      <div className="flex-shrink-0">
-                                        {getTypeBadge('pause')}
-                                      </div>
-                                      <span className="text-xs text-purple-400">
-                                        {item.duree}min
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <h4 className="font-medium text-gray-900">
-                                        {item.groupe_nom}
-                                      </h4>
-                                      <div className="flex-shrink-0">
-                                        {getTypeBadge('intervention', item.type_communication, item.type_intervention)}
-                                      </div>
-                                      <span className="text-xs text-gray-400">
-                                        {item.temps_ajuste}min
-                                        {item.temps_ajuste !== item.temps_demande && (
-                                          <span className="text-gray-300 ml-1">
-                                            (demandé: {item.temps_demande}min)
-                                          </span>
-                                        )}
-                                      </span>
+                                      {item.titre && (
+                                        <p className="text-xs font-medium text-gray-500 mt-2 sm:mt-1">
+                                          {item.titre}
+                                        </p>
+                                      )}
+                                      {item.resume && (
+                                        <p className={`text-sm text-gray-600 mt-2 sm:mt-1 ${
+                                          item.resume.length > 100 ? 'line-clamp-3 sm:line-clamp-2 hover:line-clamp-none' : ''
+                                        }`}>
+                                          {item.resume}
+                                        </p>
+                                      )}
                                     </>
                                   )}
                                 </div>
                                 
-                                {item.type !== 'pause' && item.resume && (
-                                  <p 
-                                    className={`text-sm text-gray-600 mt-1 ml-[60px] ${
-                                      item.resume.length > 100 
-                                        ? 'line-clamp-2 hover:line-clamp-none hover:bg-white hover:shadow-lg hover:p-2 hover:rounded hover:absolute hover:z-10 hover:w-full hover:left-0 transition-all'
-                                        : ''
-                                    }`}
-                                  >
-                                    {item.resume}
-                                  </p>
-                                )}
-                            
-                                {isEditable && item.type !== 'pause' && (
-                                  <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onEdit?.(item);
-                                      }}
-                                      className="p-1 bg-white rounded-md shadow-sm border border-gray-200 text-gray-600 hover:text-blue-600"
-                                      title="Modifier"
-                                    >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                      </svg>
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDelete?.(item);
-                                      }}
-                                      className="p-1 bg-white rounded-md shadow-sm border border-gray-200 text-gray-600 hover:text-red-600"
-                                      title="Supprimer"
-                                    >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                      </svg>
-                                    </button>
-                                  </div>
-                                )}
+                                {/* Heure de fin sur desktop */}
+                                <span className="hidden sm:block text-xs text-gray-400 mt-2 sm:mt-0">
+                                  {item.heure_fin}
+                                </span>
                               </div>
-                              
-                              <span className="text-xs text-gray-400">
-                                {item.heure_fin}
-                              </span>
                             </div>
-                            
                           </div>
                         </div>
                       )}
@@ -424,70 +466,93 @@ export default function AGPlanningView({
         </DragDropContext>
       ) : (
         <div className="space-y-2">
-          {planningBase.map((item) => {
+          {planning.map((item) => {
             const progress = getProgressPercentage(item.debutMinutes, item.finMinutes);
             const bgColor = getBackgroundColor(item.debutMinutes, item.finMinutes, item.type);
             
             return (
-              <div key={item.id} className="relative">
-                <div className="absolute left-16 top-0 bottom-0 w-px bg-gray-200"></div>
-                
-                <div className={`relative ml-20 p-3 rounded-lg border ${
-                  item.type === 'pause' ? 'border-purple-200' : 'border-gray-200'
-                } ${bgColor} transition-colors`}>
+              <div key={item.id} className="relative group">
+                {/* Version mobile : plus de ligne verticale */}
+                <div className="pl-2 sm:pl-20 relative">
+                  {/* Heure sur mobile */}
+                  <div className="sm:hidden text-xs font-mono text-gray-400 mb-1">
+                    {item.heure_debut} → {item.heure_fin}
+                  </div>
                   
-                  {progress > 0 && progress < 100 && (
-                    <div 
-                      className={`absolute left-0 top-0 bottom-0 rounded-l-lg ${getProgressBarColor(progress, item.type)} opacity-20`}
-                      style={{ width: `${progress}%` }}
-                    ></div>
-                  )}
+                  {/* Ligne verticale (cachée sur mobile) */}
+                  <div className="hidden sm:block absolute left-16 top-0 bottom-0 w-px bg-gray-200"></div>
                   
-                  <div className="relative flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-xs font-mono text-gray-400 w-12">
-                          {item.heure_debut}
-                        </span>
+                  <div className={`p-3 rounded-lg border ${
+                    item.type === 'pause' ? 'border-purple-200' : 'border-gray-200'
+                  } ${bgColor} transition-colors relative`}>
+                    
+                    {progress > 0 && progress < 100 && (
+                      <div 
+                        className={`absolute left-0 top-0 bottom-0 rounded-l-lg ${getProgressBarColor(progress, item.type)} opacity-20`}
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    )}
+                    
+                    <div className="relative flex flex-col sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2 sm:space-x-3">
+                          {/* Heure sur desktop */}
+                          <span className="hidden sm:block text-xs font-mono text-gray-400 w-12">
+                            {item.heure_debut}
+                          </span>
+                          
+                          {item.type === 'pause' ? (
+                            <>
+                              <h4 className="font-medium text-purple-600">PAUSE</h4>
+                              <div className="flex-shrink-0">
+                                {getTypeBadge('pause')}
+                              </div>
+                              <span className="text-xs text-purple-400">
+                                {item.duree}min
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <h4 className="font-medium text-gray-900">
+                                {item.groupe_nom}
+                              </h4>
+                              <div className="flex-shrink-0">
+                                {getTypeBadge('intervention', item.type_communication, item.type_intervention)}
+                              </div>
+                              <span className="text-xs text-gray-400">
+                                {item.temps_ajuste}min
+                                {item.temps_ajuste !== item.temps_demande && (
+                                  <span className="text-gray-300 ml-1 hidden sm:inline">
+                                    (demandé: {item.temps_demande}min)
+                                  </span>
+                                )}
+                              </span>
+                            </>
+                          )}
+                        </div>
                         
-                        {item.type === 'pause' ? (
+                        {item.type !== 'pause' && (
                           <>
-                            <h4 className="font-medium text-purple-600">PAUSE</h4>
-                            <div className="flex-shrink-0">
-                              {getTypeBadge('pause')}
-                            </div>
-                            <span className="text-xs text-purple-400">
-                              {item.duree}min
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <h4 className="font-medium text-gray-900">
-                              {item.groupe_nom}
-                            </h4>
-                            <div className="flex-shrink-0">
-                              {getTypeBadge('intervention', item.type_communication, item.type_intervention)}
-                            </div>
-                            <span className="text-xs text-gray-400">
-                              {item.temps_ajuste}min
-                              {item.temps_ajuste !== item.temps_demande && (
-                                <span className="text-gray-300 ml-1">
-                                  (demandé: {item.temps_demande}min)
-                                </span>
-                              )}
-                            </span>
+                            {item.titre && (
+                              <p className="text-xs font-medium text-gray-500 mt-2 sm:mt-1">
+                                {item.titre}
+                              </p>
+                            )}
+                            {item.resume && (
+                              <p className={`text-sm text-gray-600 mt-2 sm:mt-1 ${
+                                item.resume.length > 100 ? 'line-clamp-3 sm:line-clamp-2 hover:line-clamp-none' : ''
+                              }`}>
+                                {item.resume}
+                              </p>
+                            )}
                           </>
                         )}
                       </div>
                       
-                      {item.type !== 'pause' && item.resume && (
-                        <p className="text-sm text-gray-600 mt-1 ml-[60px] line-clamp-2">
-                          {item.resume}
-                        </p>
-                      )}
+                      <span className="hidden sm:block text-xs text-gray-400 mt-2 sm:mt-0">
+                        {item.heure_fin}
+                      </span>
                     </div>
-                    
-                    <span className="text-xs text-gray-400">{item.heure_fin}</span>
                   </div>
                 </div>
               </div>
@@ -496,26 +561,29 @@ export default function AGPlanningView({
         </div>
       )}
 
-      <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-400 flex items-center space-x-4">
-        <div className="flex items-center">
-          <span className="w-3 h-3 bg-green-100 rounded mr-1"></span>
-          <span>&lt;50%</span>
-        </div>
-        <div className="flex items-center">
-          <span className="w-3 h-3 bg-yellow-100 rounded mr-1"></span>
-          <span>50-80%</span>
-        </div>
-        <div className="flex items-center">
-          <span className="w-3 h-3 bg-red-100 rounded mr-1"></span>
-          <span>&gt;80%</span>
-        </div>
-        <div className="flex items-center">
-          <span className="w-3 h-3 bg-purple-100 rounded mr-1"></span>
-          <span>Pause</span>
-        </div>
-        <div className="flex items-center">
-          <span className="w-3 h-3 bg-orange-100 rounded mr-1"></span>
-          <span>Libre</span>
+      {/* Légende responsive */}
+      <div className="mt-4 pt-3 border-t border-gray-100">
+        <div className="flex flex-wrap gap-3 sm:gap-4 text-xs text-gray-400">
+          <div className="flex items-center">
+            <span className="w-3 h-3 bg-green-100 rounded mr-1"></span>
+            <span>&lt;50%</span>
+          </div>
+          <div className="flex items-center">
+            <span className="w-3 h-3 bg-yellow-100 rounded mr-1"></span>
+            <span>50-80%</span>
+          </div>
+          <div className="flex items-center">
+            <span className="w-3 h-3 bg-red-100 rounded mr-1"></span>
+            <span>&gt;80%</span>
+          </div>
+          <div className="flex items-center">
+            <span className="w-3 h-3 bg-purple-100 rounded mr-1"></span>
+            <span>Pause</span>
+          </div>
+          <div className="flex items-center">
+            <span className="w-3 h-3 bg-orange-100 rounded mr-1"></span>
+            <span>Libre</span>
+          </div>
         </div>
       </div>
     </div>
