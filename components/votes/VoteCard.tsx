@@ -22,8 +22,8 @@ interface VoteCardProps {
 
 const MENTIONS = [
   { value: 6, label: 'Très bien', color: 'bg-green-600' },
-  { value: 5, label: 'Bien', color: 'bg-green-500' },
-  { value: 4, label: 'Assez bien', color: 'bg-green-400' },
+  { value: 5, label: 'Bien', color: 'bg-green-400' },
+  { value: 4, label: 'Assez bien', color: 'bg-lime-400' },
   { value: 3, label: 'Passable', color: 'bg-yellow-400' },
   { value: 2, label: 'Insuffisant', color: 'bg-orange-400' },
   { value: 1, label: 'À rejeter', color: 'bg-red-500' }
