@@ -222,19 +222,17 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
     
     {/* Jugement majoritaire */}
     {vote.type_scrutin === 'jugement' && results.resultats && (
-      <div className="space-y-4">
+      <div className="space-y-1">
         {results.resultats
-          .sort((a: any, b: any) => a.mentionMajoritaire - b.mentionMajoritaire) // Meilleurs en premier
+          .sort((a: any, b: any) => b.mentionMajoritaire - a.mentionMajoritaire) // 6 d'abord (meilleurs)
           .map((result: any) => {
-            // Trouver la mention majoritaire
             const mention = MENTIONS.find(m => m.value === result.mentionMajoritaire);
             
-            // Calculer la position de la médiane dans la barre (en %)
+            // Calculer la position de la médiane
             const total = result.totalVotes;
             let cumulative = 0;
             let medianPosition = 0;
             
-            // Trouver où se situe l'électeur médian
             for (let i = 0; i < MENTIONS.length; i++) {
               const m = MENTIONS[i];
               const rep = result.repartition?.find((r: any) => r.mention === m.label);
@@ -243,7 +241,6 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
               cumulative += count;
               
               if (cumulative > total / 2) {
-                // L'électeur médian est dans cette mention
                 const positionInMention = (total / 2 - prevCumulative) / count;
                 medianPosition = (prevCumulative / total + positionInMention * (count / total)) * 100;
                 break;
@@ -251,17 +248,14 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
             }
 
             return (
-              <div key={result.optionId} className="border rounded-lg p-3 bg-white">
-                {/* En-tête avec nom et mention */}
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-semibold">{result.texte}</h4>
-                  <div className={`px-2 py-0.5 rounded-full text-xs font-medium text-white ${mention?.color || 'bg-gray-500'}`}>
-                    {mention?.label || '?'}
-                  </div>
-                </div>
+              <div key={result.optionId} className="flex items-center gap-2 py-1">
+                {/* Nom - largeur fixe */}
+                <span className="w-24 text-sm font-medium truncate" title={result.texte}>
+                  {result.texte}
+                </span>
                 
-                {/* Barre de progression avec dégradé */}
-                <div className="relative h-8 w-full bg-gray-100 rounded-lg overflow-hidden">
+                {/* Barre de progression */}
+                <div className="flex-1 relative h-5 bg-gray-100 rounded overflow-hidden">
                   <div className="absolute inset-0 flex">
                     {MENTIONS.map((m, idx) => {
                       const rep = result.repartition?.find((r: any) => r.mention === m.label);
@@ -269,14 +263,13 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
                       
                       if (percentage === 0) return null;
                       
-                      // Dégradé : Vert → Jaune → Orange → Rouge
                       const gradientColors = [
-                        'bg-green-500',  // Très bien
-                        'bg-green-400',  // Bien
-                        'bg-lime-400',   // Assez bien
-                        'bg-yellow-400', // Passable
-                        'bg-orange-400', // Insuffisant
-                        'bg-red-500'     // À rejeter
+                        'bg-red-500',     // 1: À rejeter
+                        'bg-orange-400',  // 2: Insuffisant
+                        'bg-yellow-400',  // 3: Passable
+                        'bg-lime-400',    // 4: Assez bien
+                        'bg-green-400',   // 5: Bien
+                        'bg-green-600'    // 6: Très bien
                       ];
                       
                       return (
@@ -284,53 +277,23 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
                           key={idx}
                           className={`h-full ${gradientColors[idx]}`}
                           style={{ width: `${percentage}%` }}
-                          title={`${m.label}: ${rep?.count || 0} voix (${Math.round(percentage)}%)`}
+                          title={`${m.label}: ${rep?.count || 0}`}
                         />
                       );
                     })}
                   </div>
                   
-                  {/* Marqueur de médiane */}
+                  {/* Marqueur médiane */}
                   <div 
-                    className="absolute top-0 bottom-0 w-0.5 bg-black z-10 shadow-lg"
-                    style={{ left: `${medianPosition}%`, transform: 'translateX(-50%)' }}
-                  >
-                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 -translate-y-full">
-                      <div className="bg-black text-white text-xs px-1 rounded whitespace-nowrap">
-                        Médiane
-                      </div>
-                    </div>
-                  </div>
+                    className="absolute top-0 bottom-0 w-0.5 bg-white shadow-md"
+                    style={{ left: `${medianPosition}%` }}
+                  />
                 </div>
                 
-                {/* Mini légende des couleurs */}
-                <div className="flex flex-wrap gap-3 mt-2 text-xs">
-                  {MENTIONS.map((m, idx) => {
-                    const rep = result.repartition?.find((r: any) => r.mention === m.label);
-                    const count = rep?.count || 0;
-                    if (count === 0) return null;
-                    
-                    const gradientColors = [
-                      'bg-green-500',
-                      'bg-green-400',
-                      'bg-lime-400',
-                      'bg-yellow-400',
-                      'bg-orange-400',
-                      'bg-red-500'
-                    ];
-                    
-                    return (
-                      <div key={idx} className="flex items-center gap-1">
-                        <div className={`w-3 h-3 rounded-full ${gradientColors[idx]}`} />
-                        <span>{count}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                
-                <p className="text-xs text-gray-500 mt-1">
-                  Total: {result.totalVotes} votant{result.totalVotes > 1 ? 's' : ''}
-                </p>
+                {/* Mention - largeur fixe */}
+                <span className="w-16 text-xs text-right" style={{ color: mention?.color.replace('bg-', 'text-') }}>
+                  {mention?.label}
+                </span>
               </div>
             );
           })}
