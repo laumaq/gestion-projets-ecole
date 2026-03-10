@@ -475,9 +475,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                       disabled={submitting}
                     />
                     <span className="text-sm text-gray-700 flex-1">{opt.texte}</span>
-                    {hasVoted && userPreviousVote.includes(opt.id) && (
-                      <span className="text-xs text-blue-600">(votre choix)</span>
-                    )}
                   </label>
                 ))}
               </div>
