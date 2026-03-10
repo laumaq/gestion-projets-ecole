@@ -264,12 +264,12 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
                       if (percentage === 0) return null;
                       
                       const gradientColors = [
-                        'bg-red-500',     // 1: À rejeter
-                        'bg-orange-400',  // 2: Insuffisant
-                        'bg-yellow-400',  // 3: Passable
-                        'bg-lime-400',    // 4: Assez bien
+                        'bg-green-600',    // 6: Très bien
                         'bg-green-400',   // 5: Bien
-                        'bg-green-600'    // 6: Très bien
+                        'bg-lime-400',    // 4: Assez bien
+                        'bg-yellow-400',  // 3: Passable
+                        'bg-orange-400',  // 2: Insuffisant
+                        'bg-red-500'     // 1: À rejeter
                       ];
                       
                       return (
