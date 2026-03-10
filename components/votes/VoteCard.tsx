@@ -455,11 +455,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                         </button>
                       ))}
                     </div>
-                    {hasVoted && userPreviousVote[opt.id] && (
-                      <p className="text-xs text-blue-600 mt-1">
-                        Votre choix: {MENTIONS.find(m => m.value === userPreviousVote[opt.id])?.label}
-                      </p>
-                    )}
                   </div>
                 ))}
               </div>
