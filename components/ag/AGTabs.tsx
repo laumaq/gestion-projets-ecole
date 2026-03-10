@@ -23,11 +23,6 @@ export default function AGTabs({
   
   const tabs = [];
 
-  console.log('🎯 AGTabs - canConfigure:', canConfigure);
-  console.log('🎯 AGTabs - canSubmit:', canSubmit);
-  console.log('🎯 AGTabs - canViewPlanning:', canViewPlanning);
-  console.log('🎯 AGTabs - agStatut:', agStatut);
-
   // Onglet 1 : Préparer l'AG (uniquement pour la direction)
   if (canConfigure) {
     tabs.push({ id: 'preparer-ag', label: 'Préparer l\'AG' });

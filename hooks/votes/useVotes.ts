@@ -4,6 +4,16 @@ import { supabase } from '@/lib/supabase';
 import { useUser } from '@/hooks/useUser';
 import { getErrorMessage } from '@/lib/errors';
 
+// Définir MENTIONS ici pour l'utiliser dans les calculs
+const MENTIONS = [
+  { value: 6, label: 'Très bien', color: 'bg-green-600' },
+  { value: 5, label: 'Bien', color: 'bg-green-500' },
+  { value: 4, label: 'Assez bien', color: 'bg-green-400' },
+  { value: 3, label: 'Passable', color: 'bg-yellow-400' },
+  { value: 2, label: 'Insuffisant', color: 'bg-orange-400' },
+  { value: 1, label: 'À rejeter', color: 'bg-red-500' }
+];
+
 export interface Vote {
   id: string;
   created_by: string;
@@ -142,8 +152,8 @@ export const useVotes = (context: {
           electorate_type: voteData.electorate_type || 'all_employees',
           module_contexte: context.module,
           module_id: context.id,
-          communication_id: voteData.communicationId, // NOUVEAU
-          intervention_libre_id: voteData.interventionLibreId, // NOUVEAU
+          communication_id: voteData.communicationId,
+          intervention_libre_id: voteData.interventionLibreId,
           statut: 'brouillon'
         }])
         .select()
@@ -234,15 +244,7 @@ export const useVotes = (context: {
     if (!user) return false;
 
     try {
-      const { data: existing } = await supabase
-        .from('vote_ballots')
-        .select('id')
-        .eq('vote_id', voteId)
-        .eq('voter_id', user.id)
-        .eq('voter_type', user.type)
-        .maybeSingle();
-
-      if (existing) return false;
+      // On permet de revoter (pas de vérification d'existence)
 
       const { data: vote } = await supabase
         .from('votes')
@@ -283,23 +285,41 @@ export const useVotes = (context: {
     if (!user) throw new Error('Utilisateur non authentifié');
 
     try {
-      const peutVoter = await canVote(voteId);
-      if (!peutVoter) {
-        throw new Error('Vous ne pouvez pas voter pour ce scrutin');
-      }
-
-      const { error } = await supabase
+      // Vérifier si l'utilisateur a déjà voté
+      const { data: existingBallot } = await supabase
         .from('vote_ballots')
-        .insert([{
-          vote_id: voteId,
-          voter_id: user.id,
-          voter_type: user.type,
-          choix: choix,
-          ip_address: window.clientInformation?.platform,
-          user_agent: navigator.userAgent
-        }]);
+        .select('id')
+        .eq('vote_id', voteId)
+        .eq('voter_id', user.id)
+        .eq('voter_type', user.type)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (existingBallot) {
+        // MISE À JOUR : l'utilisateur a déjà voté, on met à jour
+        const { error } = await supabase
+          .from('vote_ballots')
+          .update({
+            choix: choix,
+            vote_timestamp: new Date().toISOString()
+          })
+          .eq('id', existingBallot.id);
+
+        if (error) throw error;
+      } else {
+        // CRÉATION : premier vote
+        const { error } = await supabase
+          .from('vote_ballots')
+          .insert([{
+            vote_id: voteId,
+            voter_id: user.id,
+            voter_type: user.type,
+            choix: choix,
+            ip_address: window.clientInformation?.platform,
+            user_agent: navigator.userAgent
+          }]);
+
+        if (error) throw error;
+      }
       
       await fetchVotes();
     } catch (err) {
@@ -363,18 +383,28 @@ export const useVotes = (context: {
     };
   };
 
+  // Remplacer calculatePlurinominal par ceci
   const calculatePlurinominal = (ballots: any[], options: any[]) => {
-    const compteurs: Record<string, number> = {};
-    options.forEach(opt => compteurs[opt.id] = 0);
+    console.log('🔍 CALCUL PLURINOMINAL - Ballots reçus:', ballots.length);
     
-    ballots.forEach(ballot => {
-      ballot.choix.forEach((choix: any) => {
-        if (choix.selected) {
-          compteurs[choix.option_id]++;
-        }
-      });
+    const compteurs: Record<string, number> = {};
+    options.forEach((opt: any) => compteurs[opt.id] = 0);
+    
+    ballots.forEach((ballot: any, index: number) => {
+      console.log(`🔍 Ballot ${index}:`, ballot.choix);
+      
+      if (Array.isArray(ballot.choix)) {
+        ballot.choix.forEach((choix: any) => {
+          console.log('  → Choix:', choix);
+          if (choix && choix.optionId && choix.selected === true) {
+            compteurs[choix.optionId] = (compteurs[choix.optionId] || 0) + 1;
+          }
+        });
+      }
     });
-
+    
+    console.log('🔍 COMPTEURS FINAUX:', compteurs);
+    
     return {
       type: 'plurinominal',
       compteurs,
@@ -382,41 +412,109 @@ export const useVotes = (context: {
     };
   };
 
+  // Version unique et corrigée de calculateJugement
   const calculateJugement = (ballots: any[], options: any[]) => {
-    const resultats: Record<string, { notes: number[], moyenne: number }> = {};
+    // 1. Pour chaque option, récupérer toutes les mentions
+    const mentionsParOption: Record<string, number[]> = {};
+    options.forEach((opt: any) => mentionsParOption[opt.id] = []);
     
-    options.forEach(opt => {
-      const notes = ballots
-        .map(b => b.choix.find((c: any) => c.option_id === opt.id)?.note)
-        .filter((n): n is number => n !== undefined);
-      
-      const moyenne = notes.length > 0 
-        ? notes.reduce((a, b) => a + b, 0) / notes.length 
-        : 0;
-
-      resultats[opt.id] = { notes, moyenne };
+    ballots.forEach((ballot: any) => {
+      if (Array.isArray(ballot.choix)) {
+        ballot.choix.forEach((choix: any) => {
+          if (mentionsParOption[choix.optionId] && typeof choix.valeur === 'number') {
+            mentionsParOption[choix.optionId].push(choix.valeur);
+          }
+        });
+      }
     });
 
-    return {
-      type: 'jugement',
-      resultats,
-      totalVotants: ballots.length
-    };
-  };
+    console.log('🔍 CALCUL JUGEMENT - Ballots:', ballots.length);
+    ballots.forEach((b, i) => console.log(`Ballot ${i}:`, b.choix));
 
-  const calculateRang = (ballots: any[], options: any[]) => {
-    const points: Record<string, number> = {};
-    options.forEach(opt => points[opt.id] = 0);
-    
-    ballots.forEach(ballot => {
-      ballot.choix.forEach((choix: any) => {
-        points[choix.option_id] += (options.length - choix.rang + 1);
+    // 2. Pour chaque option, trier les mentions et trouver la médiane
+    const resultats = options.map((opt: any) => {
+      const mentions = (mentionsParOption[opt.id] || []).sort((a, b) => a - b);
+      const total = mentions.length;
+      
+      // Trouver la mention majoritaire (médiane)
+      const medianIndex = Math.floor((total - 1) / 2);
+      const mentionMajoritaire = total > 0 ? mentions[medianIndex] : 0;
+      
+      // Calculer les pourcentages pour l'affichage
+      const repartition = [
+        { mention: 'Très bien', count: mentions.filter(v => v === 6).length, percentage: 0 },
+        { mention: 'Bien', count: mentions.filter(v => v === 5).length, percentage: 0 },
+        { mention: 'Assez bien', count: mentions.filter(v => v === 4).length, percentage: 0 },
+        { mention: 'Passable', count: mentions.filter(v => v === 3).length, percentage: 0 },
+        { mention: 'Insuffisant', count: mentions.filter(v => v === 2).length, percentage: 0 },
+        { mention: 'À rejeter', count: mentions.filter(v => v === 1).length, percentage: 0 }
+      ];
+
+      // Calculer les pourcentages
+      repartition.forEach(r => {
+        r.percentage = total > 0 ? (r.count / total) * 100 : 0;
       });
+
+      return {
+        optionId: opt.id,
+        texte: opt.texte,
+        mentionMajoritaire,
+        repartition,
+        totalVotes: total
+      };
+    });
+
+  return {
+    type: 'jugement',
+    resultats,
+    totalVotants: ballots.length
+  };
+};
+
+  // Remplacer calculateRang par cette version
+  const calculateRang = (ballots: any[], options: any[]) => {
+    // Système de points : plus le rang est petit, plus de points
+    // Exemple: pour 4 options, 1er choix = 4 points, 2e = 3, 3e = 2, 4e = 1
+    const points: Record<string, number> = {};
+    options.forEach((opt: any) => points[opt.id] = 0);
+    
+    // Compter aussi les premières positions
+    const premiersChoix: Record<string, number> = {};
+    options.forEach((opt: any) => premiersChoix[opt.id] = 0);
+    
+    ballots.forEach((ballot: any) => {
+      ballot.choix.forEach((choix: any) => {
+        // Attribuer des points selon le rang
+        const pointsGagnes = options.length - choix.rang + 1;
+        points[choix.optionId] += pointsGagnes;
+        
+        // Compter les premières positions
+        if (choix.rang === 1) {
+          premiersChoix[choix.optionId] = (premiersChoix[choix.optionId] || 0) + 1;
+        }
+      });
+    });
+
+    // Créer un tableau de résultats triés
+    const resultats = options.map((opt: any) => ({
+      optionId: opt.id,
+      texte: opt.texte,
+      points: points[opt.id],
+      premiersChoix: premiersChoix[opt.id] || 0
+    }));
+
+    // Trier par points (et par premiers choix en cas d'égalité)
+    resultats.sort((a, b) => {
+      if (a.points !== b.points) {
+        return b.points - a.points;
+      }
+      return b.premiersChoix - a.premiersChoix;
     });
 
     return {
       type: 'rang',
-      points,
+      resultats,
+      gagnant: resultats[0]?.optionId,
       totalVotants: ballots.length
     };
   };

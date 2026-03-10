@@ -67,10 +67,6 @@ export default function AGPage() {
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-  console.log('📌 AGPage - canConfigure:', canConfigure);
-  console.log('📌 AGPage - canSubmit:', canSubmit);
-  console.log('📌 AGPage - canViewPlanning:', canViewPlanning);
-  console.log('📌 AGPage - agStatut:', agStatut);
 
   useEffect(() => {
     if (config) {

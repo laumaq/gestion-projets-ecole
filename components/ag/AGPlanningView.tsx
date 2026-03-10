@@ -1,7 +1,7 @@
 // components/ag/AGPlanningView.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 interface PlanningItem {
@@ -19,7 +19,7 @@ interface PlanningItem {
   type: 'intervention' | 'pause';
   titre?: string; 
   duree?: number;
-  type_intervention?: 'gt' | 'libre'; // Pour distinguer GT et libre
+  type_intervention?: 'gt' | 'libre';
 }
 
 interface AGPlanningViewProps {
@@ -44,14 +44,8 @@ export default function AGPlanningView({
   isEditable = false 
 }: AGPlanningViewProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [planning, setPlanning] = useState<PlanningItem[]>([]);
 
-  // Fusionner toutes les interventions (GT + libres)
-  const toutesInterventions = [
-    ...communications.map(c => ({ ...c, type: 'intervention', type_intervention: 'gt' as const })),
-    ...interventionsLibres.map(i => ({ ...i, type: 'intervention', type_intervention: 'libre' as const }))
-  ];
-
+  // Timer pour la progression - SEULEMENT pour l'affichage
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -59,22 +53,22 @@ export default function AGPlanningView({
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    if (!config || (communications.length === 0 && interventionsLibres.length === 0)) {
-      setPlanning([]);
-      return;
-    }
+  // Fusionner toutes les interventions (GT + libres)
+  const toutesInterventions = useMemo(() => [
+    ...communications.map(c => ({ ...c, type: 'intervention', type_intervention: 'gt' as const })),
+    ...interventionsLibres.map(i => ({ ...i, type: 'intervention', type_intervention: 'libre' as const }))
+  ], [communications, interventionsLibres]);
+
+  // Calculer le planning de BASE (sans progression)
+  const planningBase = useMemo(() => {
+    if (!config || toutesInterventions.length === 0) return [];
 
     // Calculer le ratio
     const tempsDispo = heureToMinutes(config.heure_fin) - heureToMinutes(config.heure_debut);
     const pausesTotal = pauses.reduce((acc, p) => acc + p.duree, 0);
     const tempsDispoReel = tempsDispo - pausesTotal;
     
-    const tempsDemandeTotal = [
-      ...communications,
-      ...interventionsLibres
-    ].reduce((acc, c) => acc + c.temps_demande, 0);
-    
+    const tempsDemandeTotal = toutesInterventions.reduce((acc, c) => acc + c.temps_demande, 0);
     const ratio = tempsDemandeTotal > 0 ? tempsDispoReel / tempsDemandeTotal : 1;
 
     // Trier les interventions par ordre
@@ -85,151 +79,92 @@ export default function AGPlanningView({
       return 0;
     });
 
-  // 1. Calculer le planning compressé SANS pauses
-  const planningSansPauses: PlanningItem[] = [];
-  let currentMinutes = heureToMinutes(config.heure_debut);
-  
-  for (const intervention of sortedInterventions) {
-    const tempsAjuste = Math.max(1, Math.round(intervention.temps_demande * ratio));
-    const debut = currentMinutes;
-    const fin = debut + tempsAjuste;
+    // 1. Calculer le planning compressé SANS pauses
+    const planningSansPauses: PlanningItem[] = [];
+    let currentMinutes = heureToMinutes(config.heure_debut);
     
-    planningSansPauses.push({
-      id: intervention.id,
-      type: 'intervention',
-      type_intervention: intervention.type_intervention,
-      groupe_nom: intervention.type_intervention === 'gt' 
-        ? intervention.groupe_nom 
-        : `${intervention.employee_prenom} ${intervention.employee_nom}`,
-      type_communication: intervention.type_communication,
-      temps_demande: intervention.temps_demande,
-      temps_ajuste: tempsAjuste,
-      resume: intervention.resume,
-      heure_debut: minutesToHeure(debut),
-      heure_fin: minutesToHeure(fin),
-      debutMinutes: debut,
-      finMinutes: fin
-    });
-    
-    currentMinutes = fin;
-  }
-  
-  // 2. Insérer les pauses au bon endroit
-  const planningFinal: PlanningItem[] = [];
-  const pausesTriees = [...pauses].sort((a, b) => 
-    heureToMinutes(a.heure_debut) - heureToMinutes(b.heure_debut)
-  );
-  
-  let pauseIndex = 0;
-  
-  for (let i = 0; i < planningSansPauses.length; i++) {
-    const intervention = planningSansPauses[i];
-    
-    // Vérifier s'il y a une pause qui devrait avoir lieu avant cette intervention
-    while (pauseIndex < pausesTriees.length) {
-      const pause = pausesTriees[pauseIndex];
-      const heurePause = heureToMinutes(pause.heure_debut);
+    for (const intervention of sortedInterventions) {
+      const tempsAjuste = Math.max(1, Math.round(intervention.temps_demande * ratio));
+      const debut = currentMinutes;
+      const fin = debut + tempsAjuste;
       
-      // Si l'heure de la pause est avant la fin de cette intervention
-      if (heurePause < intervention.finMinutes) {
-        // Insérer la pause MAINTENANT
-        const debutPause = intervention.debutMinutes;
-        const finPause = debutPause + pause.duree;
+      planningSansPauses.push({
+        id: intervention.id,
+        type: 'intervention',
+        type_intervention: intervention.type_intervention,
+        groupe_nom: intervention.type_intervention === 'gt' 
+          ? intervention.groupe_nom 
+          : `${intervention.employee_prenom} ${intervention.employee_nom}`,
+        type_communication: intervention.type_communication,
+        temps_demande: intervention.temps_demande,
+        temps_ajuste: tempsAjuste,
+        resume: intervention.resume,
+        heure_debut: minutesToHeure(debut),
+        heure_fin: minutesToHeure(fin),
+        debutMinutes: debut,
+        finMinutes: fin
+      });
+      
+      currentMinutes = fin;
+    }
+    
+    // 2. Insérer les pauses
+    const planningFinal: PlanningItem[] = [];
+    const pausesTriees = [...pauses].sort((a, b) => 
+      heureToMinutes(a.heure_debut) - heureToMinutes(b.heure_debut)
+    );
+    
+    let pauseIndex = 0;
+    let currentPos = 0;
+    
+    while (currentPos < planningSansPauses.length || pauseIndex < pausesTriees.length) {
+      // Vérifier s'il y a une pause à insérer maintenant
+      if (pauseIndex < pausesTriees.length) {
+        const pause = pausesTriees[pauseIndex];
+        const heurePause = heureToMinutes(pause.heure_debut);
         
-        planningFinal.push({
-          id: pause.id,
-          type: 'pause',
-          groupe_nom: 'PAUSE',
-          type_communication: 'pause',
-          temps_demande: pause.duree,
-          temps_ajuste: pause.duree,
-          resume: '',
-          heure_debut: minutesToHeure(debutPause),
-          heure_fin: minutesToHeure(finPause),
-          debutMinutes: debutPause,
-          finMinutes: finPause,
-          duree: pause.duree
-        });
-        
-        // Décaler toutes les interventions suivantes
-        for (let j = i; j < planningSansPauses.length; j++) {
-          planningSansPauses[j].debutMinutes += pause.duree;
-          planningSansPauses[j].finMinutes += pause.duree;
-          planningSansPauses[j].heure_debut = minutesToHeure(planningSansPauses[j].debutMinutes);
-          planningSansPauses[j].heure_fin = minutesToHeure(planningSansPauses[j].finMinutes);
+        if (currentPos >= planningSansPauses.length || heurePause < planningSansPauses[currentPos].debutMinutes) {
+          // Insérer la pause
+          const debutPause = currentPos > 0 ? planningSansPauses[currentPos - 1].finMinutes : heureToMinutes(config.heure_debut);
+          const finPause = debutPause + pause.duree;
+          
+          planningFinal.push({
+            id: pause.id,
+            type: 'pause',
+            groupe_nom: 'PAUSE',
+            type_communication: 'pause',
+            temps_demande: pause.duree,
+            temps_ajuste: pause.duree,
+            resume: '',
+            heure_debut: minutesToHeure(debutPause),
+            heure_fin: minutesToHeure(finPause),
+            debutMinutes: debutPause,
+            finMinutes: finPause,
+            duree: pause.duree
+          });
+          
+          // Décaler toutes les interventions suivantes
+          for (let j = currentPos; j < planningSansPauses.length; j++) {
+            planningSansPauses[j].debutMinutes += pause.duree;
+            planningSansPauses[j].finMinutes += pause.duree;
+            planningSansPauses[j].heure_debut = minutesToHeure(planningSansPauses[j].debutMinutes);
+            planningSansPauses[j].heure_fin = minutesToHeure(planningSansPauses[j].finMinutes);
+          }
+          
+          pauseIndex++;
+          continue;
         }
-        
-        pauseIndex++;
-      } else {
-        break;
+      }
+      
+      // Ajouter l'intervention courante
+      if (currentPos < planningSansPauses.length) {
+        planningFinal.push(planningSansPauses[currentPos]);
+        currentPos++;
       }
     }
     
-    // Ajouter l'intervention courante
-    planningFinal.push(intervention);
-  }
-  
-  // Ajouter les pauses restantes à la fin
-  while (pauseIndex < pausesTriees.length) {
-    const pause = pausesTriees[pauseIndex];
-    const debutPause = currentMinutes;
-    const finPause = debutPause + pause.duree;
-    
-    planningFinal.push({
-      id: pause.id,
-      type: 'pause',
-      groupe_nom: 'PAUSE',
-      type_communication: 'pause',
-      temps_demande: pause.duree,
-      temps_ajuste: pause.duree,
-      resume: '',
-      heure_debut: minutesToHeure(debutPause),
-      heure_fin: minutesToHeure(finPause),
-      debutMinutes: debutPause,
-      finMinutes: finPause,
-      duree: pause.duree
-    });
-    
-    currentMinutes = finPause;
-    pauseIndex++;
-  }
-  
-  setPlanning(planningFinal);
-  }, [config, toutesInterventions, pauses, currentTime]);
-
-  
-  const handleDragEnd = async (result: any) => {
-    if (!result.destination || !onReorder) return;
-  
-    // 1. Mise à jour OPTIMISTE de l'UI
-    const items = Array.from(planning);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-    
-    // Sauvegarder l'état avant modification
-    const previousPlanning = planning;
-    
-    // Mettre à jour l'UI immédiatement
-    setPlanning(items);
-  
-    // 2. Préparer les données pour le backend
-    const newOrder = items
-      .filter(item => item.type !== 'pause')
-      .map((item, index) => ({
-        id: item.id,
-        position: index + 1,
-        type: item.type_intervention || 'gt'
-      }));
-  
-    try {
-      // 3. Envoyer au backend (en arrière-plan)
-      await onReorder(newOrder);
-    } catch (error) {
-      // 4. En cas d'erreur, restaurer l'état précédent
-      console.error('Erreur lors du réordonnancement:', error);
-      setPlanning(previousPlanning);
-    }
-  };
+    return planningFinal;
+  }, [config, toutesInterventions, pauses]);
 
   const getProgressPercentage = (debutMinutes: number, finMinutes: number) => {
     const now = currentTime.getHours() * 60 + currentTime.getMinutes() + currentTime.getSeconds() / 60;
@@ -288,6 +223,34 @@ export default function AGPlanningView({
     }
   };
 
+  const handleDragEnd = async (result: any) => {
+    if (!result.destination || !onReorder) return;
+  
+    // 1. Mise à jour OPTIMISTE de l'UI
+    const items = Array.from(planningBase);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    // Sauvegarder l'état avant modification
+    const previousPlanning = planningBase;
+    
+    // 2. Préparer les données pour le backend
+    const newOrder = items
+      .filter(item => item.type !== 'pause')
+      .map((item, index) => ({
+        id: item.id,
+        position: index + 1,
+        type: item.type_intervention || 'gt'
+      }));
+  
+    try {
+      // 3. Envoyer au backend
+      await onReorder(newOrder);
+    } catch (error) {
+      console.error('Erreur lors du réordonnancement:', error);
+    }
+  };
+
   if (!config) {
     return <p className="text-gray-500">Aucune configuration AG</p>;
   }
@@ -333,7 +296,7 @@ export default function AGPlanningView({
           <Droppable droppableId="planning">
             {(provided) => (
               <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
-                {planning.map((item, index) => {
+                {planningBase.map((item, index) => {
                   const progress = getProgressPercentage(item.debutMinutes, item.finMinutes);
                   const bgColor = getBackgroundColor(item.debutMinutes, item.finMinutes, item.type);
                   
@@ -342,7 +305,7 @@ export default function AGPlanningView({
                       key={item.id} 
                       draggableId={item.id} 
                       index={index}
-                      isDragDisabled={item.type === 'pause'} // Empêcher de draguer les pauses
+                      isDragDisabled={item.type === 'pause'}
                     >
                       {(provided, snapshot) => (
                         <div
@@ -355,7 +318,7 @@ export default function AGPlanningView({
                           
                           <div className={`relative ml-20 p-3 rounded-lg border ${
                             item.type === 'pause' ? 'border-purple-200' : 'border-gray-200'
-                          } ${bgColor} transition-colors`}>
+                          } ${bgColor} transition-colors group`}>
                             
                             {progress > 0 && progress < 100 && (
                               <div 
@@ -364,7 +327,6 @@ export default function AGPlanningView({
                               ></div>
                             )}
                             
-                            {/* Contenu */}
                             <div className="relative flex items-start justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center space-x-3">
@@ -402,7 +364,6 @@ export default function AGPlanningView({
                                   )}
                                 </div>
                                 
-                                {/* Résumé avec déploiement au survol */}
                                 {item.type !== 'pause' && item.resume && (
                                   <p 
                                     className={`text-sm text-gray-600 mt-1 ml-[60px] ${
@@ -415,7 +376,6 @@ export default function AGPlanningView({
                                   </p>
                                 )}
                             
-                                {/* Boutons d'édition pour la direction */}
                                 {isEditable && item.type !== 'pause' && (
                                   <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
@@ -464,7 +424,7 @@ export default function AGPlanningView({
         </DragDropContext>
       ) : (
         <div className="space-y-2">
-          {planning.map((item) => {
+          {planningBase.map((item) => {
             const progress = getProgressPercentage(item.debutMinutes, item.finMinutes);
             const bgColor = getBackgroundColor(item.debutMinutes, item.finMinutes, item.type);
             

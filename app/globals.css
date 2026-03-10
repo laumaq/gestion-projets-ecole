@@ -100,3 +100,8 @@
 .ql-editor .ql-align-justify {
   text-align: justify;
 }
+
+input[type="radio"]:not(:disabled) {
+  cursor: pointer;
+  opacity: 1 !important;
+}

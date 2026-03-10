@@ -11,7 +11,7 @@ interface AGVotesViewProps {
 }
 
 export default function AGVotesView({ agId }: AGVotesViewProps) {
-  const { votes, loading } = useVotes({ module: 'ag', id: agId });
+  const { votes, loading, refresh } = useVotes({ module: 'ag', id: agId });  
   const [filter, setFilter] = useState<'all' | 'actif' | 'cloture'>('all');
 
   // Regrouper les votes par intervention
@@ -91,7 +91,7 @@ export default function AGVotesView({ agId }: AGVotesViewProps) {
       ) : (
         <div className="space-y-4">
           {votesFiltres.map(vote => (
-            <VoteCard key={vote.id} vote={vote} />
+            <VoteCard key={vote.id} vote={vote} onUpdate={refresh} />
           ))}
         </div>
       )}
