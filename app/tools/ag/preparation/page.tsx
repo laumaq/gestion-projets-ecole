@@ -1,4 +1,3 @@
-// app/tools/ag/preparation/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -206,7 +205,6 @@ export default function AGPreparationPage() {
       {mode === 'gt' && monGroupe ? (
         <form onSubmit={handleSubmitGT} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Intervention pour {monGroupe.nom}</h2>
-          {/* Formulaire GT (identique à avant) */}
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

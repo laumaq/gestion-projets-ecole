@@ -1,8 +1,8 @@
-// app/tools/ag/configuration/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAGPermissions } from '@/hooks/useAGPermissions';
 import { useAGData } from '@/hooks/useAGData';
 import DirectionTabs from '@/components/ag/DirectionTabs';
@@ -12,6 +12,7 @@ import BureauManagement from '@/components/ag/BureauManagement';
 import GTAssignment from '@/components/ag/GTAssignment';
 import AGPlanningView from '@/components/ag/AGPlanningView';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { supabase } from '@/lib/supabase';
 
 export default function AGConfigurationPage() {
   const router = useRouter();
@@ -22,19 +23,21 @@ export default function AGConfigurationPage() {
     groupes,
     employees,
     communications,
+    interventionsLibres,
     pauses,
     loading: dataLoading,
     error,
     updateConfig,
     addBureau,
-    interventionsLibres,
     removeBureau,
     assignGroupe,
     addPause,
     updatePause,
     removePause,
     resetCommunications,
-    updateOrdre
+    updateOrdre,
+    deleteInterventionLibre,
+    refresh
   } = useAGData();
 
   const [activeTab, setActiveTab] = useState('preparation');
@@ -115,6 +118,30 @@ export default function AGConfigurationPage() {
       setStatusMessage({ type: 'error', text: 'Erreur lors de l\'effacement' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleEditIntervention = (item: any) => {
+    // Rediriger vers la page de préparation
+    router.push('/tools/ag/preparation');
+  };
+
+  const handleDeleteIntervention = async (item: any) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer cette intervention ?`)) return;
+    
+    try {
+      if (item.type_intervention === 'gt') {
+        await supabase
+          .from('ag_communications')
+          .delete()
+          .eq('id', item.id);
+      } else {
+        await deleteInterventionLibre(item.id);
+      }
+      await refresh();
+      setStatusMessage({ type: 'success', text: 'Intervention supprimée' });
+    } catch (err) {
+      setStatusMessage({ type: 'error', text: 'Erreur lors de la suppression' });
     }
   };
 
@@ -210,6 +237,11 @@ export default function AGConfigurationPage() {
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex-1 mr-4">
                   <p className="text-sm text-blue-700">
                     📊 {communications.length} GT ont déjà soumis une demande
+                    {interventionsLibres.length > 0 && (
+                      <span className="ml-2">
+                        (+ {interventionsLibres.length} intervention{interventionsLibres.length > 1 ? 's' : ''} libre{interventionsLibres.length > 1 ? 's' : ''})
+                      </span>
+                    )}
                   </p>
                 </div>
                 <button
@@ -276,6 +308,24 @@ export default function AGConfigurationPage() {
               onRemove={removePause}
             />
           </div>
+
+          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-medium text-green-800">Vous aussi, préparez votre intervention</h4>
+                <p className="text-xs text-green-600 mt-1">
+                  En tant que membre de la direction/bureau, vous pouvez aussi soumettre 
+                  une intervention pour votre GT ou une intervention libre.
+                </p>
+              </div>
+              <Link
+                href="/tools/ag/preparation"
+                className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 whitespace-nowrap"
+              >
+                Préparer mon intervention
+              </Link>
+            </div>
+          </div>
         </div>
       )}
 
@@ -305,7 +355,9 @@ export default function AGConfigurationPage() {
             communications={communications}
             interventionsLibres={interventionsLibres}
             pauses={pauses}
-            isEditable={config?.statut === 'planning_etabli' ? false : true} // ← ICI
+            isEditable={config?.statut === 'preparation'} // Drag & drop seulement en préparation
+            onEdit={handleEditIntervention}
+            onDelete={handleDeleteIntervention}
             onReorder={async (newOrder) => {
               const ordreData = newOrder.map((item, index) => ({
                 id: item.id,

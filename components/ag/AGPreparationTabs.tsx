@@ -1,22 +1,17 @@
-// components/ag/ACTabs.tsx
+// components/ag/AGPreparationTabs.tsx
 'use client';
 
-interface TabProps {
+interface AGPreparationTabsProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  isDirection: boolean;
-  isBureau: boolean;
 }
 
-export default function ACTabs({ activeTab, onTabChange, isDirection, isBureau }: TabProps) {
-  const canSeeAll = isDirection || isBureau;
-
+export default function AGPreparationTabs({ activeTab, onTabChange }: AGPreparationTabsProps) {
   const tabs = [
-    { id: 'config', label: 'Configuration AG', visible: canSeeAll },
-    { id: 'gt', label: 'Groupes de travail', visible: canSeeAll },
-    { id: 'preparation', label: 'Préparation', visible: !canSeeAll },
-    { id: 'planning', label: 'Planning', visible: true }
-  ].filter(tab => tab.visible);
+    { id: 'configuration', label: 'Configuration' },
+    { id: 'planning', label: 'Gestion du planning' },
+    { id: 'gt', label: 'Gestion des GT' }
+  ];
 
   return (
     <div className="border-b border-gray-200 mb-6">

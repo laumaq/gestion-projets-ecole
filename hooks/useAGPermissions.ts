@@ -16,6 +16,7 @@ export function useAGPermissions() {
   useEffect(() => {
     const checkPermissions = async () => {
       try {
+
         const id = localStorage.getItem('userId');
         const job = localStorage.getItem('userJob');
         
@@ -55,7 +56,14 @@ export function useAGPermissions() {
         } else {
           setAgStatut('pas_ag');
           setAgId(null);
+
         }
+
+        console.log('🔍 useAGPermissions - userId:', id);
+        console.log('🔍 useAGPermissions - job:', job);
+        console.log('🔍 useAGPermissions - isDirection:', job === 'direction');
+        console.log('🔍 useAGPermissions - agStatut récupéré:', ag?.statut);
+        
       } catch (error) {
         console.error('Erreur dans useAGPermissions:', error);
       } finally {
@@ -67,9 +75,18 @@ export function useAGPermissions() {
   }, []);
 
   const canConfigure = isDirection || isBureau;
-  const canSubmit = agStatut === 'preparation' && !isDirection && !isBureau;
+  const canSubmit = agStatut === 'preparation';
   const canViewPlanning = agStatut === 'planning_etabli';
   const canBuildPlanning = isDirection || isBureau;
+
+  console.log('🔐 useAGPermissions - userId:', userId);
+  console.log('🔐 useAGPermissions - userJob:', userJob);
+  console.log('🔐 useAGPermissions - isDirection:', isDirection);
+  console.log('🔐 useAGPermissions - isBureau:', isBureau);
+  console.log('🔐 useAGPermissions - agStatut:', agStatut);
+  console.log('🔐 useAGPermissions - canConfigure:', canConfigure);
+  console.log('🔐 useAGPermissions - canSubmit:', canSubmit);
+  console.log('🔐 useAGPermissions - canViewPlanning:', canViewPlanning);
 
   return {
     agStatut,

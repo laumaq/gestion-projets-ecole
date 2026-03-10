@@ -1,4 +1,3 @@
-// app/tools/ag/gt/page.tsx
 'use client';
 
 import { useEffect } from 'react';
