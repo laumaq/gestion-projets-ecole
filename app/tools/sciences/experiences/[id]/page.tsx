@@ -5,7 +5,18 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import DataTable from '@/components/sciences/experiences/DataTable';
-import CollaborativeChart from '@/components/sciences/experiences/CollaborativeChart';
+import GraphiqueIntelligent from '@/components/sciences/experiences/GraphiqueIntelligent';
+import GraphiqueConfigurator from '@/components/sciences/experiences/GraphiqueConfigurator';
+
+// Types
+interface GraphiqueConfig {
+  nom: string;
+  type: 'scatter' | 'line' | 'bar';
+  tableau_index: number;
+  axe_x: string;
+  axe_y: string;
+  groupe_par?: string;
+}
 
 interface Experience {
   id: string;
@@ -24,16 +35,7 @@ interface Experience {
         type: string;
       }[];
     }[];
-    graphiques: {
-      nom: string;
-      type: 'scatter' | 'line' | 'bar' | 'pie';
-      tableau_source: number;
-      series: {
-        nom: string;
-        x_colonne: string;
-        y_colonne: string;
-      }[];
-    }[];
+    graphiques: GraphiqueConfig[];
   };
 }
 
@@ -55,14 +57,24 @@ export default function ExperienceDetailPage() {
   const params = useParams();
   const experienceId = params.id as string;
 
+  // États utilisateur
   const [userType, setUserType] = useState<'employee' | 'student'>('employee');
   const [userId, setUserId] = useState('');
   const [userName, setUserName] = useState('');
+
+  // États données
   const [experience, setExperience] = useState<Experience | null>(null);
   const [mesures, setMesures] = useState<Mesure[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(0); // 0: données, 1: graphiques
   const [submitting, setSubmitting] = useState(false);
+
+  // États UI
+  const [activeTab, setActiveTab] = useState(0); // 0: données, 1: graphiques, 2: configuration
+  const [editingGraphiques, setEditingGraphiques] = useState(false);
+  const [tempGraphiques, setTempGraphiques] = useState<GraphiqueConfig[]>([]);
+  const [showConfigurator, setShowConfigurator] = useState(false);
+  const [currentGraphique, setCurrentGraphique] = useState<GraphiqueConfig | null>(null);
+  const [currentGraphiqueIndex, setCurrentGraphiqueIndex] = useState(-1);
 
   useEffect(() => {
     const type = localStorage.getItem('userType') as 'employee' | 'student';
@@ -153,6 +165,7 @@ export default function ExperienceDetailPage() {
     }
   };
 
+  // Gestion des mesures
   const ajouterMesure = async (tableauIndex: number, valeurs: Record<string, number | null>) => {
     if (userType !== 'student') return;
 
@@ -160,14 +173,12 @@ export default function ExperienceDetailPage() {
     try {
       const { error } = await supabase
         .from('experience_mesures')
-        .insert([
-          {
-            experience_id: experienceId,
-            eleve_matricule: parseInt(userId),
-            tableau_index: tableauIndex,
-            mesures: valeurs
-          }
-        ]);
+        .insert([{
+          experience_id: experienceId,
+          eleve_matricule: parseInt(userId),
+          tableau_index: tableauIndex,
+          mesures: valeurs
+        }]);
 
       if (error) throw error;
     } catch (error) {
@@ -179,8 +190,6 @@ export default function ExperienceDetailPage() {
   };
 
   const modifierMesure = async (mesureId: string, valeurs: Record<string, number | null>) => {
-    if (userType !== 'student') return;
-
     setSubmitting(true);
     try {
       const { error } = await supabase
@@ -189,6 +198,7 @@ export default function ExperienceDetailPage() {
         .eq('id', mesureId);
 
       if (error) throw error;
+      await chargerExperience();
     } catch (error) {
       console.error('Erreur modification mesure:', error);
       alert('Erreur lors de la modification');
@@ -198,8 +208,6 @@ export default function ExperienceDetailPage() {
   };
 
   const supprimerMesure = async (mesureId: string) => {
-    if (userType !== 'student') return;
-
     if (!confirm('Voulez-vous vraiment supprimer cette mesure ?')) return;
 
     try {
@@ -209,15 +217,84 @@ export default function ExperienceDetailPage() {
         .eq('id', mesureId);
 
       if (error) throw error;
+      await chargerExperience();
     } catch (error) {
       console.error('Erreur suppression mesure:', error);
       alert('Erreur lors de la suppression');
     }
   };
 
+  // Gestion des graphiques
+  const handleEditGraphiques = () => {
+    setTempGraphiques(experience?.config.graphiques || []);
+    setEditingGraphiques(true);
+  };
+
+  const handleAddGraphique = () => {
+    setCurrentGraphique(null);
+    setCurrentGraphiqueIndex(-1);
+    setShowConfigurator(true);
+  };
+
+  const handleEditGraphique = (graphique: GraphiqueConfig, index: number) => {
+    setCurrentGraphique(graphique);
+    setCurrentGraphiqueIndex(index);
+    setShowConfigurator(true);
+  };
+
+  const handleRemoveGraphique = (index: number) => {
+    setTempGraphiques(tempGraphiques.filter((_, i) => i !== index));
+  };
+
+  const handleSaveGraphique = (graphiqueConfig: GraphiqueConfig) => {
+    if (currentGraphiqueIndex === -1) {
+      // Nouveau graphique
+      setTempGraphiques([...tempGraphiques, graphiqueConfig]);
+    } else {
+      // Mise à jour
+      const newGraphiques = [...tempGraphiques];
+      newGraphiques[currentGraphiqueIndex] = graphiqueConfig;
+      setTempGraphiques(newGraphiques);
+    }
+    setShowConfigurator(false);
+    setCurrentGraphique(null);
+  };
+
+  const handleSaveGraphiquesConfig = async () => {
+    try {
+      const newConfig = {
+        tableaux: experience?.config.tableaux || [],
+        graphiques: tempGraphiques
+      };
+
+      const { error } = await supabase
+        .from('experiences')
+        .update({ config: newConfig })
+        .eq('id', experienceId);
+
+      if (error) throw error;
+
+      setExperience(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          config: {
+            tableaux: prev.config.tableaux,
+            graphiques: tempGraphiques
+          }
+        };
+      });
+      
+      setEditingGraphiques(false);
+    } catch (error) {
+      console.error('Erreur sauvegarde graphiques:', error);
+      alert('Erreur lors de la sauvegarde');
+    }
+  };
+
+
   const supprimerExperience = async () => {
     if (userType !== 'employee') return;
-
     if (!confirm('Voulez-vous vraiment supprimer cette expérience ? Toutes les données seront perdues.')) return;
 
     try {
@@ -309,11 +386,23 @@ export default function ExperienceDetailPage() {
           >
             Graphiques
           </button>
+          {userType === 'employee' && (
+            <button
+              onClick={() => setActiveTab(2)}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 2
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Configuration
+            </button>
+          )}
         </nav>
       </div>
 
       {/* Contenu des onglets */}
-      {activeTab === 0 ? (
+      {activeTab === 0 && (
         <div className="space-y-8">
           {experience.config.tableaux.map((tableau, index) => (
             <DataTable
@@ -331,20 +420,138 @@ export default function ExperienceDetailPage() {
             />
           ))}
         </div>
-      ) : (
+      )}
+
+      {activeTab === 1 && (
         <div className="space-y-8">
-          {experience.config.graphiques.map((graphique, index) => (
-            <CollaborativeChart
-              key={index}
-              graphique={graphique}
-              tableau={experience.config.tableaux[graphique.tableau_source]}
-              mesures={mesuresParTableau[graphique.tableau_source] || []}
+          {experience.config.graphiques.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+              <p className="text-gray-500 mb-4">Aucun graphique configuré pour cette expérience</p>
+              {userType === 'employee' && (
+                <button
+                  onClick={() => setActiveTab(2)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  Configurer les graphiques
+                </button>
+              )}
+            </div>
+          ) : (
+            experience.config.graphiques.map((graphique, index) => (
+              <GraphiqueIntelligent
+                key={index}
+                config={graphique}
+                tableaux={experience.config.tableaux}
+                mesuresParTableau={mesuresParTableau}
+                userType={userType}
+                userId={parseInt(userId)}
+                onModifierMesure={modifierMesure}
+                onSupprimerMesure={supprimerMesure}
+              />
+            ))
+          )}
+        </div>
+      )}
+
+      {activeTab === 2 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">Configuration des graphiques</h2>
+            {!editingGraphiques ? (
+              <button
+                onClick={handleEditGraphiques}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Modifier
+              </button>
+            ) : (
+              <div className="space-x-2">
+                <button
+                  onClick={handleSaveGraphiquesConfig}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  Sauvegarder
+                </button>
+                <button
+                  onClick={() => setEditingGraphiques(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                >
+                  Annuler
+                </button>
+              </div>
+            )}
+          </div>
+
+          {!editingGraphiques ? (
+            // Vue lecture seule
+            <div className="space-y-4">
+              {experience.config.graphiques.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">Aucun graphique configuré</p>
+              ) : (
+                experience.config.graphiques.map((graphique, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-900">{graphique.nom}</h3>
+                    <p className="text-sm text-gray-600">
+                      {graphique.axe_y} en fonction de {graphique.axe_x}
+                      {graphique.groupe_par && ` (groupé par ${graphique.groupe_par})`}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : showConfigurator ? (
+            // Afficher le configurateur
+            <GraphiqueConfigurator
+              tableaux={experience.config.tableaux}  // Maintenant un tableau
+              config={currentGraphique || undefined}
+              onSave={handleSaveGraphique}
+              onCancel={() => {
+                setShowConfigurator(false);
+                setCurrentGraphique(null);
+              }}
             />
-          ))}
-          {experience.config.graphiques.length === 0 && (
-            <p className="text-center text-gray-500 py-12">
-              Aucun graphique configuré pour cette expérience
-            </p>
+          ) : (
+            // Vue édition avec liste des graphiques
+            <div className="space-y-6">
+              <button
+                onClick={handleAddGraphique}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                + Ajouter un graphique
+              </button>
+
+              {tempGraphiques.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">Aucun graphique configuré</p>
+              ) : (
+                tempGraphiques.map((graphique, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium text-gray-900">{graphique.nom}</h3>
+                        <p className="text-sm text-gray-600">
+                          {graphique.axe_y} en fonction de {graphique.axe_x}
+                          {graphique.groupe_par && ` (groupé par ${graphique.groupe_par})`}
+                        </p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEditGraphique(graphique, index)}
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Modifier
+                        </button>
+                        <button
+                          onClick={() => handleRemoveGraphique(index)}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           )}
         </div>
       )}

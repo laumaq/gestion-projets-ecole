@@ -1,4 +1,4 @@
-// /app/tools/circuit-constructor/page.tsx
+// /app/tools/sciences/circuit-constructor/page.tsx
 
 "use client";
 

@@ -54,19 +54,51 @@ export default function DataTable({
   const [editingMesure, setEditingMesure] = useState<Mesure | null>(null);
   const [valeurs, setValeurs] = useState<Record<string, string>>({});
 
+
+  const handleEdit = (mesure: Mesure) => {
+    console.log('=== handleEdit appelé ===');
+    console.log('Mesure à éditer:', mesure);
+    console.log('Colonnes du tableau:', tableau.colonnes);
+    
+    // Pré-remplir le formulaire avec les valeurs existantes
+    const valeursInitiales: Record<string, string> = {};
+    Object.entries(mesure.mesures).forEach(([key, value]) => {
+      console.log(`Valeur originale pour ${key}:`, value, 'type:', typeof value);
+      valeursInitiales[key] = value?.toString() || '';
+    });
+    
+    console.log('Valeurs initiales pour le formulaire:', valeursInitiales);
+    
+    setValeurs(valeursInitiales);
+    setEditingMesure(mesure);
+    setShowForm(true);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log('=== handleSubmit appelé ===');
+    console.log('editingMesure:', editingMesure);
+    console.log('valeurs du formulaire:', valeurs);
     
     // Convertir les valeurs en nombres (ou null si vide)
     const mesuresNumeriques: Record<string, number | null> = {};
     tableau.colonnes.forEach(col => {
       const valeur = valeurs[col.nom];
       mesuresNumeriques[col.nom] = valeur === '' ? null : parseFloat(valeur);
+      console.log(`Conversion ${col.nom}: "${valeur}" → ${mesuresNumeriques[col.nom]}`);
     });
 
+    console.log('Valeurs à envoyer:', mesuresNumeriques);
+
     if (editingMesure) {
+      console.log('Appel de onModifierMesure avec:', {
+        id: editingMesure.id,
+        valeurs: mesuresNumeriques
+      });
       onModifierMesure(editingMesure.id, mesuresNumeriques);
     } else {
+      console.log('Appel de onAjouterMesure avec:', mesuresNumeriques);
       onAjouterMesure(mesuresNumeriques);
     }
 
@@ -74,17 +106,6 @@ export default function DataTable({
     setValeurs({});
     setShowForm(false);
     setEditingMesure(null);
-  };
-
-  const handleEdit = (mesure: Mesure) => {
-    // Pré-remplir le formulaire avec les valeurs existantes
-    const valeursInitiales: Record<string, string> = {};
-    Object.entries(mesure.mesures).forEach(([key, value]) => {
-      valeursInitiales[key] = value?.toString() || '';
-    });
-    setValeurs(valeursInitiales);
-    setEditingMesure(mesure);
-    setShowForm(true);
   };
 
   const handleCancel = () => {
@@ -190,9 +211,12 @@ export default function DataTable({
                     )}
                   </td>
                   {tableau.colonnes.map((colonne) => (
-                    <td key={colonne.nom} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {mesure.mesures[colonne.nom] !== null && mesure.mesures[colonne.nom] !== undefined
-                        ? mesure.mesures[colonne.nom]
+                        ? (mesure.mesures[colonne.nom] as number).toLocaleString('fr-FR', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 2
+                          })
                         : '-'
                       }
                     </td>
@@ -212,6 +236,37 @@ export default function DataTable({
                         <button
                           onClick={() => onSupprimerMesure(mesure.id)}
                           className="text-red-600 hover:text-red-800"
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Ajout pour l'enseignant */}
+                    {userType === 'employee' && (
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            // L'enseignant peut éditer n'importe quelle mesure
+                            const valeursInitiales: Record<string, string> = {};
+                            Object.entries(mesure.mesures).forEach(([key, value]) => {
+                              valeursInitiales[key] = value?.toString() || '';
+                            });
+                            setValeurs(valeursInitiales);
+                            setEditingMesure(mesure);
+                            setShowForm(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Modifier
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm('Voulez-vous vraiment supprimer cette mesure ?')) {
+                              onSupprimerMesure(mesure.id);
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-800 text-sm"
                         >
                           Supprimer
                         </button>
