@@ -75,6 +75,7 @@ export default function ExperienceDetailPage() {
   const [showConfigurator, setShowConfigurator] = useState(false);
   const [currentGraphique, setCurrentGraphique] = useState<GraphiqueConfig | null>(null);
   const [currentGraphiqueIndex, setCurrentGraphiqueIndex] = useState(-1);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const type = localStorage.getItem('userType') as 'employee' | 'student';
@@ -229,6 +230,7 @@ export default function ExperienceDetailPage() {
     setTempGraphiques(experience?.config.graphiques || []);
     setEditingGraphiques(true);
   };
+  
 
   const handleAddGraphique = () => {
     setCurrentGraphique(null);

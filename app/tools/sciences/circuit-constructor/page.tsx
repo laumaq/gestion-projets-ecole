@@ -93,23 +93,11 @@ const CircuitCanvas = dynamic(
 );
 
 const CircuitConstructorPage = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
   const [components, setComponents] = useState<(Battery | Resistor | Ammeter | Voltmeter | Wattmeter | EnergyMeter)[]>([
-    {
-      id: 'default-battery',
-      type: 'battery',
-      x: 150,
-      y: 200,
-      voltage: 230,
-    },
-    {
-      id: 'default-resistor',
-      type: 'resistor',
-      x: 400,
-      y: 200,
-      resistance: 1000,
-    },
+    { id: 'default-battery', type: 'battery', x: 50, y: 150, voltage: 230 },
+    { id: 'default-resistor', type: 'resistor', x: 200, y: 150, resistance: 1000 },
   ]);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [totalEnergy, setTotalEnergy] = useState(0);
   const [stageWidth, setStageWidth] = useState(0);
@@ -120,6 +108,7 @@ const CircuitConstructorPage = () => {
   const [hoveredTerminal, setHoveredTerminal] = useState<string | null>(null);
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
   const [energyReadings, setEnergyReadings] = useState<Map<string, number>>(new Map());
+  const [isDragging, setIsDragging] = useState(false);
 
   // Gestion des fils et bornes
   const handleTerminalClick = (terminalId: string, componentId: string) => {
@@ -361,12 +350,16 @@ const CircuitConstructorPage = () => {
 
   // Mettre à jour la position après drag
   const handleComponentDrag = (id: string, x: number, y: number) => {
+    setIsDragging(true);
     setComponents(components.map(c => c.id === id ? { ...c, x, y } : c));
   };
 
   // Sélectionner un composant
   const handleComponentClick = (id: string) => {
-    setSelectedComponentId(id);
+    if (!isDragging) {
+      setSelectedComponentId(id);
+    }
+    setTimeout(() => setIsDragging(false), 100);
   };
 
   // Mettre à jour une propriété
@@ -484,7 +477,7 @@ const CircuitConstructorPage = () => {
       </div>
 
       {/* Légende des couleurs */}
-      <div className="mb-4 p-3 bg-gray-50 rounded-lg text-sm grid grid-cols-5 gap-2">
+      <div className="mb-4 p-3 bg-gray-50 rounded-lg text-sm grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-2">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-[#0066CC] rounded"></div>
           <span>Ampèremètre (bleu) : mesure I</span>

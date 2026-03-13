@@ -612,7 +612,7 @@ const CircuitCanvas: React.FC<CircuitCanvasProps> = (props) => {
                 key={term.id}
                 x={term.x}
                 y={term.y}
-                radius={mode === 'wire' ? (isSelected ? 10 : (isHovered ? 9 : 8)) : 4}
+                radius={mode === 'wire' ? (isSelected ? 16 : (isHovered ? 14 : 12)) : 6}
                 fill={
                   mode === 'wire' 
                     ? (isSelected ? '#ffaa00' : (isHovered ? '#66ccff' : '#ff4444'))
