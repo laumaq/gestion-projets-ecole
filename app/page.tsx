@@ -94,7 +94,7 @@ export default function LoginPage() {
         if (userType === 'employee') {
           localStorage.setItem('userType', 'employee');
           localStorage.setItem('userId', userData.id);
-          localStorage.setItem('userName', `${userData.nom} ${userData.prenom || userData.initiale}.`);
+          localStorage.setItem('userName', `${userData.nom} ${userData.prenom || userData.initiale}`);
           localStorage.setItem('userRole', userData.role || 'employee');
           localStorage.setItem('userJob', userData.job || '');
         } else {

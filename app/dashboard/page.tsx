@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import AGStatusBadge from '@/components/ag/AGStatusBadge'; // Ajout de l'import
+import AGStatusBadge from '@/components/ag/AGStatusBadge';
 
 interface Voyage {
   id: string;
@@ -23,11 +23,9 @@ export default function DashboardPage() {
   const [userJob, setUserJob] = useState('');
   const [mesVoyages, setMesVoyages] = useState<Voyage[]>([]);
   const [loading, setLoading] = useState(true);
-  // Ajout de l'état pour le statut AG
   const [agStatut, setAgStatut] = useState<'pas_ag' | 'preparation' | 'planning_etabli'>('pas_ag');
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est connecté
     const type = localStorage.getItem('userType') as 'employee' | 'student';
     const id = localStorage.getItem('userId');
     const job = localStorage.getItem('userJob');
@@ -41,10 +39,7 @@ export default function DashboardPage() {
     setUserId(id);
     setUserJob(job || '');
 
-    // Charger les voyages où l'utilisateur est impliqué
     chargerMesVoyages(type, id);
-    
-    // Charger le statut de l'AG
     chargerStatutAG();
   }, [router]);
 
@@ -140,37 +135,62 @@ export default function DashboardPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Tableau de bord</h1>
+      {/* Bannière de bienvenue personnalisée */}
+      <div className="mb-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
+        <h2 className="text-xl font-semibold mb-2">
+          Bonjour {localStorage.getItem('userName') || 'utilisateur'} !
+        </h2>
+        <p>Bienvenue sur votre espace pédagogique.</p>
+      </div>
 
       {/* Outils généraux */}
       <div className="mb-12">
         <h2 className="text-lg font-semibold text-gray-700 mb-4">Outils disponibles</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-
-        {/* Assemblée Générale */}
-
-        {userType === 'employee' && (
-          <Link href="/tools/ag" className="block">
-            <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition ${
-              agStatut === 'pas_ag' ? 'opacity-60' : ''
-            }`}>
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          
+          {/* NOUVEAU : Sciences - Expériences collaboratives */}
+          <Link href="/tools/sciences" className="block">
+            <div className="bg-white rounded-lg shadow-sm border-2 border-green-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                 </svg>
               </div>
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900 mb-1">Assemblée Générale</h3>
-                {agStatut && <AGStatusBadge statut={agStatut} />}
-              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-1">🔬 Sciences</h3>
               <p className="text-sm text-gray-500">
-                {agStatut === 'preparation' && "Préparez votre intervention"}
-                {agStatut === 'planning_etabli' && "Consultez le planning"}
-                {agStatut === 'pas_ag' && "Aucune AG programmée pour le moment"}
+                Expériences collaboratives en temps réel
               </p>
+              <span className="inline-block mt-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                Nouveau !
+              </span>
             </div>
           </Link>
-        )}
+
+
+
+          {/* Assemblée Générale - Prof only */}
+          {userType === 'employee' && (
+            <Link href="/tools/ag" className="block">
+              <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition ${
+                agStatut === 'pas_ag' ? 'opacity-60' : ''
+              }`}>
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">Assemblée Générale</h3>
+                  {agStatut && <AGStatusBadge statut={agStatut} />}
+                </div>
+                <p className="text-sm text-gray-500">
+                  {agStatut === 'preparation' && "Préparez votre intervention"}
+                  {agStatut === 'planning_etabli' && "Consultez le planning"}
+                  {agStatut === 'pas_ag' && "Aucune AG programmée pour le moment"}
+                </p>
+              </div>
+            </Link>
+          )}
 
           {/* Groupe de Travail - Prof only */}
           {userType === 'employee' && userJob === 'prof' && (
