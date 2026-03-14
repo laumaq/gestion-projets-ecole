@@ -52,16 +52,13 @@ export default function LoginPage() {
       const userType = employeeData ? 'employee' : (studentData ? 'student' : null);
 
       if (!userData || !userType) {
-        console.log("Utilisateur non trouvé");
         setError('Utilisateur non trouvé. Vérifiez votre nom et prénom.');
         setLoading(false);
         return;
       }
 
       const storedPassword = userData.mot_de_passe;
-      
-      console.log("🔐 Utilisateur trouvé:", { userType, userData });
-      console.log("🔐 Mot de passe stocké:", `"${storedPassword}"`);
+
 
       // CAS 1: PREMIÈRE CONNEXION
       if (!storedPassword || storedPassword === '') {
@@ -94,7 +91,7 @@ export default function LoginPage() {
         if (userType === 'employee') {
           localStorage.setItem('userType', 'employee');
           localStorage.setItem('userId', userData.id);
-          localStorage.setItem('userName', `${userData.nom} ${userData.prenom || userData.initiale}`);
+          localStorage.setItem('userName', `${userData.prenom} ${userData.nom} `);
           localStorage.setItem('userRole', userData.role || 'employee');
           localStorage.setItem('userJob', userData.job || '');
         } else {
