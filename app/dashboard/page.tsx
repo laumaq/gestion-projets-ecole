@@ -169,7 +169,7 @@ export default function DashboardPage() {
           </Link>
 
           {/* Assemblée Générale - Prof only */}
-          {userType === 'employee' && (
+          {userType === 'employee' && (agStatut !== 'pas_ag' || userJob === 'direction') && (
             <Link href="/tools/ag" className="block h-full">
               <div className={`h-40 bg-white rounded-lg shadow-sm border-2 border-blue-300 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group ${
                 agStatut === 'pas_ag' ? 'opacity-60' : ''
