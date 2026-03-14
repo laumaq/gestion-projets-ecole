@@ -77,10 +77,10 @@ export default function AGPage() {
   }, [config]);
 
   useEffect(() => {
-    if (!permissionsLoading && agStatut === 'pas_ag') {
+    if (!permissionsLoading && agStatut === 'pas_ag' && !canConfigure) {
       router.push('/dashboard?ag=desactivee');
     }
-  }, [agStatut, permissionsLoading, router]);
+  }, [agStatut, permissionsLoading, canConfigure, router]);
 
   useEffect(() => {
     if (!permissionsLoading && !dataLoading) {
