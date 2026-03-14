@@ -147,88 +147,104 @@ export default function DashboardPage() {
       <div className="mb-12">
         <h2 className="text-lg font-semibold text-gray-700 mb-4">Outils disponibles</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          
-          {/* NOUVEAU : Sciences - Expériences collaboratives */}
-          <Link href="/tools/sciences" className="block">
-            <div className="bg-white rounded-lg shadow-sm border-2 border-green-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                </svg>
+
+          {/* Sciences */}
+          <Link href="/tools/sciences" className="block h-full">
+            <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-green-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900">Sciences</h3>
+                </div>
+                <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
+                  Expériences collaboratives en temps réel
+                </p>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-1">🔬 Sciences</h3>
-              <p className="text-sm text-gray-500">
-                Expériences collaboratives en temps réel
-              </p>
-              <span className="inline-block mt-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                Nouveau !
-              </span>
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full w-fit">Nouveau !</span>
             </div>
           </Link>
 
-
-
           {/* Assemblée Générale - Prof only */}
           {userType === 'employee' && (
-            <Link href="/tools/ag" className="block">
-              <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition ${
+            <Link href="/tools/ag" className="block h-full">
+              <div className={`h-40 bg-white rounded-lg shadow-sm border-2 border-blue-300 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group ${
                 agStatut === 'pas_ag' ? 'opacity-60' : ''
               }`}>
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">Assemblée Générale</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
+                    {agStatut === 'preparation' && "Préparez votre intervention"}
+                    {agStatut === 'planning_etabli' && "Consultez le planning"}
+                    {agStatut === 'pas_ag' && "Aucune AG programmée pour le moment"}
+                  </p>
                 </div>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-gray-900 mb-1">Assemblée Générale</h3>
-                  {agStatut && <AGStatusBadge statut={agStatut} />}
-                </div>
-                <p className="text-sm text-gray-500">
-                  {agStatut === 'preparation' && "Préparez votre intervention"}
-                  {agStatut === 'planning_etabli' && "Consultez le planning"}
-                  {agStatut === 'pas_ag' && "Aucune AG programmée pour le moment"}
-                </p>
+                {agStatut && <AGStatusBadge statut={agStatut} />}
               </div>
             </Link>
           )}
 
           {/* Groupe de Travail - Prof only */}
           {userType === 'employee' && userJob === 'prof' && (
-            <Link href="/tools/projet-5eme" className="block">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition cursor-pointer">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-3">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
+            <Link href="/tools/projet-5eme" className="block h-full">
+              <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-purple-300 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">Groupe de Travail</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">Projet 5e</p>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">Groupe de Travail</h3>
-                <p className="text-sm text-gray-500">Projet 5e</p>
               </div>
             </Link>
           )}
 
           {/* Travail de fin d'humanité */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 opacity-75 cursor-not-allowed">
-            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
-              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
+          <div className="h-40 bg-white rounded-lg shadow-sm border border-gray-200 p-6 opacity-50 cursor-not-allowed flex flex-col justify-between overflow-hidden">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900">Travail de fin d'humanité</h3>
+              </div>
+              <p className="text-sm text-gray-500">Bientôt disponible</p>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">Travail de fin d'humanité</h3>
-            <p className="text-sm text-gray-500">Bientôt disponible</p>
           </div>
 
           {/* Gestion de projets */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 opacity-75 cursor-not-allowed">
-            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
-              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
+          <div className="h-40 bg-white rounded-lg shadow-sm border border-gray-200 p-6 opacity-50 cursor-not-allowed flex flex-col justify-between overflow-hidden">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900">Gestion de projets</h3>
+              </div>
+              <p className="text-sm text-gray-500">Bientôt disponible</p>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">Gestion de projets</h3>
-            <p className="text-sm text-gray-500">Bientôt disponible</p>
           </div>
+
         </div>
+
       </div>
 
       {/* Mes voyages */}
