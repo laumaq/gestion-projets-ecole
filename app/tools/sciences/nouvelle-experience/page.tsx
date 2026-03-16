@@ -38,7 +38,12 @@ export default function NouvelleExperiencePage() {
   const [userId, setUserId] = useState('');
   const [classes, setClasses] = useState<string[]>([]);
   const [groupes, setGroupes] = useState<string[]>([]);
+  const [filteredClasses, setFilteredClasses] = useState<string[]>([]);
+  const [filteredGroupes, setFilteredGroupes] = useState<string[]>([]);
+  const [classSearch, setClassSearch] = useState('');
+  const [groupeSearch, setGroupeSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
 
   // États du formulaire
   const [nom, setNom] = useState('');
@@ -62,36 +67,63 @@ export default function NouvelleExperiencePage() {
     chargerClassesEtGroupes();
   }, [router]);
 
+  // Filtrer les classes quand la recherche change
+  useEffect(() => {
+    const filtered = classes
+      .filter(c => c.toLowerCase().includes(classSearch.toLowerCase()))
+      .slice(0, 20);
+    setFilteredClasses(filtered);
+  }, [classSearch, classes]);
+
+  // Filtrer les groupes quand la recherche change
+  useEffect(() => {
+    const filtered = groupes
+      .filter(g => g.toLowerCase().includes(groupeSearch.toLowerCase()))
+      .slice(0, 20);
+    setFilteredGroupes(filtered);
+  }, [groupeSearch, groupes]);
+
   const chargerClassesEtGroupes = async () => {
     try {
+      setLoadingData(true);
+      
       // Charger les classes depuis students
-      const { data: students } = await supabase
+      const { data: students, error: studentsError } = await supabase
         .from('students')
         .select('classe')
         .not('classe', 'is', null);
 
-      if (students) {
+      if (studentsError) {
+        console.error('Erreur chargement classes:', studentsError);
+      } else if (students) {
         const classesUniques = students
           .map(s => s.classe)
           .filter((c, i, self) => self.indexOf(c) === i)
           .sort();
         setClasses(classesUniques);
+        setFilteredClasses(classesUniques.slice(0, 20));
       }
 
       // Charger les groupes pédagogiques depuis students_groups
-      const { data: groupesData } = await supabase
+      const { data: groupesData, error: groupesError } = await supabase
         .from('students_groups')
         .select('groupe_code');
 
-      if (groupesData) {
+      if (groupesError) {
+        console.error('Erreur chargement groupes:', groupesError);
+      } else if (groupesData) {
+        console.log('Groupes chargés:', groupesData); // Debug
         const groupesUniques = groupesData
           .map(g => g.groupe_code)
           .filter((g, i, self) => self.indexOf(g) === i)
           .sort();
         setGroupes(groupesUniques);
+        setFilteredGroupes(groupesUniques.slice(0, 20));
       }
     } catch (error) {
       console.error('Erreur chargement classes/groupes:', error);
+    } finally {
+      setLoadingData(false);
     }
   };
 
@@ -182,7 +214,6 @@ export default function NouvelleExperiencePage() {
         .insert([{
           nom,
           description,
-          // On garde classe pour compatibilité (première classe sélectionnée, ou vide)
           classe: cibles.classes[0] || '',
           created_by: userId,
           config: { tableaux, graphiques },
@@ -253,46 +284,84 @@ export default function NouvelleExperiencePage() {
             )}
           </div>
 
-          {/* Classes */}
+          {/* Classes avec recherche */}
           <div className="mb-6">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Classes</h3>
-            <div className="flex flex-wrap gap-2">
-              {classes.map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => toggleClasse(c)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
-                    cibles.classes.includes(c)
-                      ? 'bg-green-600 text-white border-green-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-green-400'
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
+            <input
+              type="text"
+              value={classSearch}
+              onChange={(e) => setClassSearch(e.target.value)}
+              placeholder="Rechercher une classe..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            {loadingData ? (
+              <p className="text-gray-500 text-sm">Chargement des classes...</p>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 border border-gray-100 rounded-lg">
+                  {filteredClasses.map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => toggleClasse(c)}
+                      className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+                        cibles.classes.includes(c)
+                          ? 'bg-green-600 text-white border-green-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-green-400'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+                {classes.length > 20 && classSearch === '' && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Affichage des 20 premières classes. Utilisez la recherche pour trouver plus de résultats.
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
-          {/* Groupes pédagogiques */}
+          {/* Groupes pédagogiques avec recherche */}
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">Groupes pédagogiques</h3>
-            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-              {groupes.map(g => (
-                <button
-                  key={g}
-                  type="button"
-                  onClick={() => toggleGroupe(g)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
-                    cibles.groupes.includes(g)
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
-                  }`}
-                >
-                  {g}
-                </button>
-              ))}
-            </div>
+            <input
+              type="text"
+              value={groupeSearch}
+              onChange={(e) => setGroupeSearch(e.target.value)}
+              placeholder="Rechercher un groupe..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            {loadingData ? (
+              <p className="text-gray-500 text-sm">Chargement des groupes...</p>
+            ) : groupes.length === 0 ? (
+              <p className="text-gray-500 text-sm">Aucun groupe trouvé</p>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 border border-gray-100 rounded-lg">
+                  {filteredGroupes.map(g => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => toggleGroupe(g)}
+                      className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+                        cibles.groupes.includes(g)
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+                {groupes.length > 20 && groupeSearch === '' && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Affichage des 20 premiers groupes. Utilisez la recherche pour trouver plus de résultats.
+                  </p>
+                )}
+              </>
+            )}
           </div>
         </div>
 
