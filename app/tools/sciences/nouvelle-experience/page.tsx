@@ -1,4 +1,3 @@
-// app/tools/sciences/nouvelle-experience/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -29,16 +28,22 @@ interface Graphique {
   series: Serie[];
 }
 
+interface Cibles {
+  classes: string[];
+  groupes: string[];
+}
+
 export default function NouvelleExperiencePage() {
   const router = useRouter();
   const [userId, setUserId] = useState('');
   const [classes, setClasses] = useState<string[]>([]);
+  const [groupes, setGroupes] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   // États du formulaire
   const [nom, setNom] = useState('');
   const [description, setDescription] = useState('');
-  const [classe, setClasse] = useState('');
+  const [cibles, setCibles] = useState<Cibles>({ classes: [], groupes: [] });
   const [tableaux, setTableaux] = useState<Tableau[]>([
     { nom: 'Mesures', colonnes: [{ nom: 'Valeur', unite: '', type: 'number' }] }
   ]);
@@ -54,72 +59,99 @@ export default function NouvelleExperiencePage() {
     }
 
     setUserId(id);
-    chargerClasses();
+    chargerClassesEtGroupes();
   }, [router]);
 
-  const chargerClasses = async () => {
+  const chargerClassesEtGroupes = async () => {
     try {
+      // Charger les classes depuis students
       const { data: students } = await supabase
         .from('students')
         .select('classe')
         .not('classe', 'is', null);
 
       if (students) {
-        // Utiliser reduce pour créer un tableau de classes uniques
         const classesUniques = students
           .map(s => s.classe)
-          .filter((classe, index, self) => self.indexOf(classe) === index)
+          .filter((c, i, self) => self.indexOf(c) === i)
           .sort();
-        
         setClasses(classesUniques);
-        if (classesUniques.length > 0) setClasse(classesUniques[0]);
+      }
+
+      // Charger les groupes pédagogiques depuis students_groups
+      const { data: groupesData } = await supabase
+        .from('students_groups')
+        .select('groupe_code');
+
+      if (groupesData) {
+        const groupesUniques = groupesData
+          .map(g => g.groupe_code)
+          .filter((g, i, self) => self.indexOf(g) === i)
+          .sort();
+        setGroupes(groupesUniques);
       }
     } catch (error) {
-      console.error('Erreur chargement classes:', error);
+      console.error('Erreur chargement classes/groupes:', error);
     }
   };
 
+  const toggleClasse = (c: string) => {
+    setCibles(prev => ({
+      ...prev,
+      classes: prev.classes.includes(c)
+        ? prev.classes.filter(x => x !== c)
+        : [...prev.classes, c]
+    }));
+  };
+
+  const toggleGroupe = (g: string) => {
+    setCibles(prev => ({
+      ...prev,
+      groupes: prev.groupes.includes(g)
+        ? prev.groupes.filter(x => x !== g)
+        : [...prev.groupes, g]
+    }));
+  };
+
+  const nbCibles = cibles.classes.length + cibles.groupes.length;
+
+  // ── Tableaux ──────────────────────────────────────────────
+
   const ajouterColonne = (tableauIndex: number) => {
     const nouveauxTableaux = [...tableaux];
-    nouveauxTableaux[tableauIndex].colonnes.push({ 
-      nom: '', 
-      unite: '', 
-      type: 'number' 
-    });
+    nouveauxTableaux[tableauIndex].colonnes.push({ nom: '', unite: '', type: 'number' });
     setTableaux(nouveauxTableaux);
   };
 
   const supprimerColonne = (tableauIndex: number, colonneIndex: number) => {
     if (tableaux[tableauIndex].colonnes.length <= 1) return;
-    
     const nouveauxTableaux = [...tableaux];
     nouveauxTableaux[tableauIndex].colonnes.splice(colonneIndex, 1);
     setTableaux(nouveauxTableaux);
   };
 
   const ajouterTableau = () => {
-    setTableaux([...tableaux, { 
-      nom: `Tableau ${tableaux.length + 1}`, 
-      colonnes: [{ nom: 'Valeur', unite: '', type: 'number' }] 
+    setTableaux([...tableaux, {
+      nom: `Tableau ${tableaux.length + 1}`,
+      colonnes: [{ nom: 'Valeur', unite: '', type: 'number' }]
     }]);
   };
 
+  // ── Graphiques ────────────────────────────────────────────
+
   const ajouterGraphique = () => {
     if (tableaux.length === 0) return;
-
-    const nouveauGraphique: Graphique = {
+    setGraphiques([...graphiques, {
       nom: `Graphique ${graphiques.length + 1}`,
       type: 'scatter',
       tableau_source: 0,
       series: []
-    };
-    setGraphiques([...graphiques, nouveauGraphique]);
+    }]);
   };
 
   const ajouterSerie = (graphiqueIndex: number) => {
     const tableau = tableaux[graphiques[graphiqueIndex].tableau_source];
     if (tableau.colonnes.length < 2) return;
-
     const nouveauxGraphiques = [...graphiques];
     nouveauxGraphiques[graphiqueIndex].series.push({
       nom: `Série ${nouveauxGraphiques[graphiqueIndex].series.length + 1}`,
@@ -129,39 +161,38 @@ export default function NouvelleExperiencePage() {
     setGraphiques(nouveauxGraphiques);
   };
 
+  // ── Soumission ────────────────────────────────────────────
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!nom || !classe) {
-      alert('Veuillez remplir tous les champs obligatoires');
+
+    if (!nom) {
+      alert('Veuillez donner un nom à l\'expérience');
+      return;
+    }
+    if (nbCibles === 0) {
+      alert('Veuillez sélectionner au moins une classe ou un groupe pédagogique');
       return;
     }
 
     setLoading(true);
-
     try {
-      const config = {
-        tableaux,
-        graphiques
-      };
-
       const { data, error } = await supabase
         .from('experiences')
-        .insert([
-          {
-            nom,
-            description,
-            classe,
-            created_by: userId,
-            config,
-            statut: 'active'
-          }
-        ])
+        .insert([{
+          nom,
+          description,
+          // On garde classe pour compatibilité (première classe sélectionnée, ou vide)
+          classe: cibles.classes[0] || '',
+          created_by: userId,
+          config: { tableaux, graphiques },
+          cibles,
+          statut: 'active'
+        }])
         .select()
         .single();
 
       if (error) throw error;
-
       router.push(`/tools/sciences/experiences/${data.id}`);
     } catch (error) {
       console.error('Erreur création expérience:', error);
@@ -178,12 +209,10 @@ export default function NouvelleExperiencePage() {
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+
         {/* Informations de base */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Informations générales
-          </h2>
-          
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Informations générales</h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -197,7 +226,6 @@ export default function NouvelleExperiencePage() {
                 required
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Description
@@ -209,22 +237,61 @@ export default function NouvelleExperiencePage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
+          </div>
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Classe *
-              </label>
-              <select
-                value={classe}
-                onChange={(e) => setClasse(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              >
-                <option value="">Sélectionnez une classe</option>
-                {classes.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+        {/* Sélection des cibles */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Destinataires *
+            </h2>
+            {nbCibles > 0 && (
+              <span className="text-sm text-green-700 bg-green-100 px-2 py-1 rounded-full">
+                {nbCibles} sélectionné{nbCibles > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+
+          {/* Classes */}
+          <div className="mb-6">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Classes</h3>
+            <div className="flex flex-wrap gap-2">
+              {classes.map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => toggleClasse(c)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+                    cibles.classes.includes(c)
+                      ? 'bg-green-600 text-white border-green-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-green-400'
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Groupes pédagogiques */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Groupes pédagogiques</h3>
+            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+              {groupes.map(g => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => toggleGroupe(g)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+                    cibles.groupes.includes(g)
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -232,9 +299,7 @@ export default function NouvelleExperiencePage() {
         {/* Configuration des tableaux */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Tableaux de données
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-900">Tableaux de données</h2>
             <button
               type="button"
               onClick={ajouterTableau}
@@ -258,9 +323,7 @@ export default function NouvelleExperiencePage() {
                   className="text-md font-medium bg-transparent border-b border-gray-300 focus:border-green-500 outline-none"
                   placeholder="Nom du tableau"
                 />
-                <span className="text-sm text-gray-500">
-                  {tableau.colonnes.length} colonne(s)
-                </span>
+                <span className="text-sm text-gray-500">{tableau.colonnes.length} colonne(s)</span>
               </div>
 
               <div className="space-y-2">
@@ -313,9 +376,7 @@ export default function NouvelleExperiencePage() {
         {/* Configuration des graphiques */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Graphiques
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-900">Graphiques</h2>
             <button
               type="button"
               onClick={ajouterGraphique}
@@ -326,17 +387,13 @@ export default function NouvelleExperiencePage() {
           </div>
 
           {graphiques.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">
-              Aucun graphique configuré
-            </p>
+            <p className="text-gray-500 text-center py-4">Aucun graphique configuré</p>
           ) : (
             graphiques.map((graphique, gIndex) => (
               <div key={gIndex} className="mb-6 p-4 bg-gray-50 rounded-lg">
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">
-                      Nom du graphique
-                    </label>
+                    <label className="block text-xs text-gray-500 mb-1">Nom du graphique</label>
                     <input
                       type="text"
                       value={graphique.nom}
@@ -349,9 +406,7 @@ export default function NouvelleExperiencePage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">
-                      Type
-                    </label>
+                    <label className="block text-xs text-gray-500 mb-1">Type</label>
                     <select
                       value={graphique.type}
                       onChange={(e) => {
@@ -370,9 +425,7 @@ export default function NouvelleExperiencePage() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Source des données
-                  </label>
+                  <label className="block text-xs text-gray-500 mb-1">Source des données</label>
                   <select
                     value={graphique.tableau_source}
                     onChange={(e) => {
@@ -384,9 +437,7 @@ export default function NouvelleExperiencePage() {
                     className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                   >
                     {tableaux.map((t, index) => (
-                      <option key={index} value={index}>
-                        {t.nom}
-                      </option>
+                      <option key={index} value={index}>{t.nom}</option>
                     ))}
                   </select>
                 </div>
@@ -428,9 +479,7 @@ export default function NouvelleExperiencePage() {
                           className="px-2 py-1 border border-gray-300 rounded text-sm"
                         >
                           {tableau.colonnes.map((col) => (
-                            <option key={col.nom} value={col.nom}>
-                              X: {col.nom} ({col.unite})
-                            </option>
+                            <option key={col.nom} value={col.nom}>X: {col.nom} ({col.unite})</option>
                           ))}
                         </select>
                         <select
@@ -443,9 +492,7 @@ export default function NouvelleExperiencePage() {
                           className="px-2 py-1 border border-gray-300 rounded text-sm"
                         >
                           {tableau.colonnes.map((col) => (
-                            <option key={col.nom} value={col.nom}>
-                              Y: {col.nom} ({col.unite})
-                            </option>
+                            <option key={col.nom} value={col.nom}>Y: {col.nom} ({col.unite})</option>
                           ))}
                         </select>
                       </div>
@@ -457,7 +504,7 @@ export default function NouvelleExperiencePage() {
           )}
         </div>
 
-        {/* Boutons d'action */}
+        {/* Boutons */}
         <div className="flex justify-end space-x-4">
           <button
             type="button"

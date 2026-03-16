@@ -1,4 +1,3 @@
-// app/tools/sciences/experiences/[id]/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,7 +7,13 @@ import DataTable from '@/components/sciences/experiences/DataTable';
 import GraphiqueIntelligent from '@/components/sciences/experiences/GraphiqueIntelligent';
 import GraphiqueConfigurator from '@/components/sciences/experiences/GraphiqueConfigurator';
 
-// Types
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface Cibles {
+  classes: string[];
+  groupes: string[];
+}
+
 interface GraphiqueConfig {
   nom: string;
   type: 'scatter' | 'line' | 'bar';
@@ -23,17 +28,14 @@ interface Experience {
   nom: string;
   description: string;
   classe: string;
+  cibles: Cibles | null;
   created_by: string;
   created_at: string;
   statut: string;
   config: {
     tableaux: {
       nom: string;
-      colonnes: {
-        nom: string;
-        unite: string;
-        type: string;
-      }[];
+      colonnes: { nom: string; unite: string; type: string }[];
     }[];
     graphiques: GraphiqueConfig[];
   };
@@ -46,36 +48,59 @@ interface Mesure {
   mesures: Record<string, number | null>;
   created_at: string;
   updated_at: string;
-  eleve?: {
-    nom: string;
-    prenom: string;
-  };
+  eleve?: { nom: string; prenom: string };
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * Vérifie si un élève a accès à une expérience.
+ * Compatibilité assurée : si cibles est absent, on retombe sur l'ancienne
+ * logique (classe = exp.classe).
+ */
+function eleveAAcces(
+  exp: Experience,
+  classeEleve: string,
+  groupesEleve: string[]
+): boolean {
+  const cibles: Cibles = exp.cibles ?? { classes: [exp.classe], groupes: [] };
+  return (
+    cibles.classes.includes(classeEleve) ||
+    groupesEleve.some(g => cibles.groupes.includes(g))
+  );
+}
+
+/** Résumé lisible des cibles pour l'en-tête */
+function resumeCibles(exp: Experience): string {
+  const cibles = exp.cibles;
+  if (!cibles) return exp.classe || '—';
+  const parts = [...cibles.classes, ...cibles.groupes];
+  if (parts.length === 0) return exp.classe || '—';
+  return parts.join(', ');
+}
+
+// ── Composant ─────────────────────────────────────────────────────────────────
 
 export default function ExperienceDetailPage() {
   const router = useRouter();
   const params = useParams();
   const experienceId = params.id as string;
 
-  // États utilisateur
   const [userType, setUserType] = useState<'employee' | 'student'>('employee');
   const [userId, setUserId] = useState('');
   const [userName, setUserName] = useState('');
 
-  // États données
   const [experience, setExperience] = useState<Experience | null>(null);
   const [mesures, setMesures] = useState<Mesure[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // États UI
-  const [activeTab, setActiveTab] = useState(0); // 0: données, 1: graphiques, 2: configuration
+  const [activeTab, setActiveTab] = useState(0);
   const [editingGraphiques, setEditingGraphiques] = useState(false);
   const [tempGraphiques, setTempGraphiques] = useState<GraphiqueConfig[]>([]);
   const [showConfigurator, setShowConfigurator] = useState(false);
   const [currentGraphique, setCurrentGraphique] = useState<GraphiqueConfig | null>(null);
   const [currentGraphiqueIndex, setCurrentGraphiqueIndex] = useState(-1);
-  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const type = localStorage.getItem('userType') as 'employee' | 'student';
@@ -90,14 +115,15 @@ export default function ExperienceDetailPage() {
     setUserType(type);
     setUserId(id);
     setUserName(name || '');
-    chargerExperience();
+    chargerExperience(type, id);
   }, [router, experienceId]);
 
-  const chargerExperience = async () => {
+  // ── Chargement ─────────────────────────────────────────────
+
+  const chargerExperience = async (type: string, id: string) => {
     try {
       setLoading(true);
 
-      // Charger les détails de l'expérience
       const { data: expData, error: expError } = await supabase
         .from('experiences')
         .select('*')
@@ -105,22 +131,33 @@ export default function ExperienceDetailPage() {
         .single();
 
       if (expError) throw expError;
-      setExperience(expData);
 
-      // Vérifier les permissions
-      if (userType === 'student' && expData.classe !== localStorage.getItem('userClass')) {
-        router.push('/tools/sciences');
-        return;
+      // Vérification d'accès pour les élèves
+      if (type === 'student') {
+        const classeEleve = localStorage.getItem('userClass') || '';
+        const matricule = parseInt(id);
+
+        const { data: groupesData } = await supabase
+          .from('students_groups')
+          .select('groupe_code')
+          .eq('matricule', matricule);
+
+        const groupesEleve = (groupesData || []).map(g => g.groupe_code);
+
+        if (!eleveAAcces(expData, classeEleve, groupesEleve)) {
+          router.push('/tools/sciences');
+          return;
+        }
       }
 
-      // Charger toutes les mesures
+      setExperience(expData);
+
       const { data: mesuresData, error: mesuresError } = await supabase
         .from('experience_mesures')
         .select(`
           *,
           eleve:students!experience_mesures_eleve_matricule_fkey (
-            nom,
-            prenom
+            nom, prenom
           )
         `)
         .eq('experience_id', experienceId)
@@ -129,24 +166,17 @@ export default function ExperienceDetailPage() {
       if (mesuresError) throw mesuresError;
       setMesures(mesuresData || []);
 
-      // S'abonner aux nouvelles mesures en temps réel
+      // Subscription temps réel
       const subscription = supabase
         .channel(`experience-${experienceId}`)
         .on(
           'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'experience_mesures',
-            filter: `experience_id=eq.${experienceId}`
-          },
+          { event: '*', schema: 'public', table: 'experience_mesures', filter: `experience_id=eq.${experienceId}` },
           (payload) => {
             if (payload.eventType === 'INSERT') {
               setMesures(prev => [payload.new as Mesure, ...prev]);
             } else if (payload.eventType === 'UPDATE') {
-              setMesures(prev => prev.map(m => 
-                m.id === payload.new.id ? payload.new as Mesure : m
-              ));
+              setMesures(prev => prev.map(m => m.id === payload.new.id ? payload.new as Mesure : m));
             } else if (payload.eventType === 'DELETE') {
               setMesures(prev => prev.filter(m => m.id !== payload.old.id));
             }
@@ -154,9 +184,7 @@ export default function ExperienceDetailPage() {
         )
         .subscribe();
 
-      return () => {
-        subscription.unsubscribe();
-      };
+      return () => { subscription.unsubscribe(); };
 
     } catch (error) {
       console.error('Erreur chargement expérience:', error);
@@ -166,21 +194,18 @@ export default function ExperienceDetailPage() {
     }
   };
 
-  // Gestion des mesures
+  // ── Mesures ────────────────────────────────────────────────
+
   const ajouterMesure = async (tableauIndex: number, valeurs: Record<string, number | null>) => {
     if (userType !== 'student') return;
-
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('experience_mesures')
-        .insert([{
-          experience_id: experienceId,
-          eleve_matricule: parseInt(userId),
-          tableau_index: tableauIndex,
-          mesures: valeurs
-        }]);
-
+      const { error } = await supabase.from('experience_mesures').insert([{
+        experience_id: experienceId,
+        eleve_matricule: parseInt(userId),
+        tableau_index: tableauIndex,
+        mesures: valeurs
+      }]);
       if (error) throw error;
     } catch (error) {
       console.error('Erreur ajout mesure:', error);
@@ -197,9 +222,8 @@ export default function ExperienceDetailPage() {
         .from('experience_mesures')
         .update({ mesures: valeurs, updated_at: new Date().toISOString() })
         .eq('id', mesureId);
-
       if (error) throw error;
-      await chargerExperience();
+      await chargerExperience(userType, userId);
     } catch (error) {
       console.error('Erreur modification mesure:', error);
       alert('Erreur lors de la modification');
@@ -210,27 +234,22 @@ export default function ExperienceDetailPage() {
 
   const supprimerMesure = async (mesureId: string) => {
     if (!confirm('Voulez-vous vraiment supprimer cette mesure ?')) return;
-
     try {
-      const { error } = await supabase
-        .from('experience_mesures')
-        .delete()
-        .eq('id', mesureId);
-
+      const { error } = await supabase.from('experience_mesures').delete().eq('id', mesureId);
       if (error) throw error;
-      await chargerExperience();
+      await chargerExperience(userType, userId);
     } catch (error) {
       console.error('Erreur suppression mesure:', error);
       alert('Erreur lors de la suppression');
     }
   };
 
-  // Gestion des graphiques
+  // ── Graphiques ─────────────────────────────────────────────
+
   const handleEditGraphiques = () => {
     setTempGraphiques(experience?.config.graphiques || []);
     setEditingGraphiques(true);
   };
-  
 
   const handleAddGraphique = () => {
     setCurrentGraphique(null);
@@ -250,10 +269,8 @@ export default function ExperienceDetailPage() {
 
   const handleSaveGraphique = (graphiqueConfig: GraphiqueConfig) => {
     if (currentGraphiqueIndex === -1) {
-      // Nouveau graphique
       setTempGraphiques([...tempGraphiques, graphiqueConfig]);
     } else {
-      // Mise à jour
       const newGraphiques = [...tempGraphiques];
       newGraphiques[currentGraphiqueIndex] = graphiqueConfig;
       setTempGraphiques(newGraphiques);
@@ -268,25 +285,9 @@ export default function ExperienceDetailPage() {
         tableaux: experience?.config.tableaux || [],
         graphiques: tempGraphiques
       };
-
-      const { error } = await supabase
-        .from('experiences')
-        .update({ config: newConfig })
-        .eq('id', experienceId);
-
+      const { error } = await supabase.from('experiences').update({ config: newConfig }).eq('id', experienceId);
       if (error) throw error;
-
-      setExperience(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          config: {
-            tableaux: prev.config.tableaux,
-            graphiques: tempGraphiques
-          }
-        };
-      });
-      
+      setExperience(prev => prev ? { ...prev, config: { ...prev.config, graphiques: tempGraphiques } } : null);
       setEditingGraphiques(false);
     } catch (error) {
       console.error('Erreur sauvegarde graphiques:', error);
@@ -294,17 +295,11 @@ export default function ExperienceDetailPage() {
     }
   };
 
-
   const supprimerExperience = async () => {
     if (userType !== 'employee') return;
     if (!confirm('Voulez-vous vraiment supprimer cette expérience ? Toutes les données seront perdues.')) return;
-
     try {
-      const { error } = await supabase
-        .from('experiences')
-        .delete()
-        .eq('id', experienceId);
-
+      const { error } = await supabase.from('experiences').delete().eq('id', experienceId);
       if (error) throw error;
       router.push('/tools/sciences');
     } catch (error) {
@@ -312,6 +307,8 @@ export default function ExperienceDetailPage() {
       alert('Erreur lors de la suppression');
     }
   };
+
+  // ── Render ─────────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -330,9 +327,7 @@ export default function ExperienceDetailPage() {
   }
 
   const mesuresParTableau = mesures.reduce((acc, mesure) => {
-    if (!acc[mesure.tableau_index]) {
-      acc[mesure.tableau_index] = [];
-    }
+    if (!acc[mesure.tableau_index]) acc[mesure.tableau_index] = [];
     acc[mesure.tableau_index].push(mesure);
     return acc;
   }, {} as Record<number, Mesure[]>);
@@ -347,13 +342,15 @@ export default function ExperienceDetailPage() {
             {experience.description && (
               <p className="text-gray-600 mt-2">{experience.description}</p>
             )}
-            <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-              <span>Classe: {experience.classe}</span>
+            <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-gray-500">
+              <span>
+                Destinataires : <span className="font-medium text-gray-700">{resumeCibles(experience)}</span>
+              </span>
               <span>•</span>
               <span>Créée le {new Date(experience.created_at).toLocaleDateString('fr-FR')}</span>
             </div>
           </div>
-          
+
           {userType === 'employee' && (
             <button
               onClick={supprimerExperience}
@@ -368,42 +365,27 @@ export default function ExperienceDetailPage() {
       {/* Onglets */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="flex space-x-8">
-          <button
-            onClick={() => setActiveTab(0)}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 0
-                ? 'border-green-500 text-green-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Données ({mesures.length} mesures)
-          </button>
-          <button
-            onClick={() => setActiveTab(1)}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 1
-                ? 'border-green-500 text-green-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Graphiques
-          </button>
-          {userType === 'employee' && (
+          {[
+            { label: `Données (${mesures.length} mesures)`, index: 0 },
+            { label: 'Graphiques', index: 1 },
+            ...(userType === 'employee' ? [{ label: 'Configuration', index: 2 }] : []),
+          ].map(({ label, index }) => (
             <button
-              onClick={() => setActiveTab(2)}
+              key={index}
+              onClick={() => setActiveTab(index)}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 2
+                activeTab === index
                   ? 'border-green-500 text-green-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Configuration
+              {label}
             </button>
-          )}
+          ))}
         </nav>
       </div>
 
-      {/* Contenu des onglets */}
+      {/* Onglet Données */}
       {activeTab === 0 && (
         <div className="space-y-8">
           {experience.config.tableaux.map((tableau, index) => (
@@ -424,6 +406,7 @@ export default function ExperienceDetailPage() {
         </div>
       )}
 
+      {/* Onglet Graphiques */}
       {activeTab === 1 && (
         <div className="space-y-8">
           {experience.config.graphiques.length === 0 ? (
@@ -455,29 +438,21 @@ export default function ExperienceDetailPage() {
         </div>
       )}
 
+      {/* Onglet Configuration */}
       {activeTab === 2 && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold text-gray-900">Configuration des graphiques</h2>
             {!editingGraphiques ? (
-              <button
-                onClick={handleEditGraphiques}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
+              <button onClick={handleEditGraphiques} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                 Modifier
               </button>
             ) : (
               <div className="space-x-2">
-                <button
-                  onClick={handleSaveGraphiquesConfig}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                >
+                <button onClick={handleSaveGraphiquesConfig} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
                   Sauvegarder
                 </button>
-                <button
-                  onClick={() => setEditingGraphiques(false)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-                >
+                <button onClick={() => setEditingGraphiques(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
                   Annuler
                 </button>
               </div>
@@ -485,7 +460,6 @@ export default function ExperienceDetailPage() {
           </div>
 
           {!editingGraphiques ? (
-            // Vue lecture seule
             <div className="space-y-4">
               {experience.config.graphiques.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">Aucun graphique configuré</p>
@@ -502,23 +476,15 @@ export default function ExperienceDetailPage() {
               )}
             </div>
           ) : showConfigurator ? (
-            // Afficher le configurateur
             <GraphiqueConfigurator
-              tableaux={experience.config.tableaux}  // Maintenant un tableau
+              tableaux={experience.config.tableaux}
               config={currentGraphique || undefined}
               onSave={handleSaveGraphique}
-              onCancel={() => {
-                setShowConfigurator(false);
-                setCurrentGraphique(null);
-              }}
+              onCancel={() => { setShowConfigurator(false); setCurrentGraphique(null); }}
             />
           ) : (
-            // Vue édition avec liste des graphiques
             <div className="space-y-6">
-              <button
-                onClick={handleAddGraphique}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-              >
+              <button onClick={handleAddGraphique} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
                 + Ajouter un graphique
               </button>
 
@@ -536,16 +502,10 @@ export default function ExperienceDetailPage() {
                         </p>
                       </div>
                       <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEditGraphique(graphique, index)}
-                          className="text-blue-600 hover:text-blue-800 text-sm"
-                        >
+                        <button onClick={() => handleEditGraphique(graphique, index)} className="text-blue-600 hover:text-blue-800 text-sm">
                           Modifier
                         </button>
-                        <button
-                          onClick={() => handleRemoveGraphique(index)}
-                          className="text-red-600 hover:text-red-800 text-sm"
-                        >
+                        <button onClick={() => handleRemoveGraphique(index)} className="text-red-600 hover:text-red-800 text-sm">
                           Supprimer
                         </button>
                       </div>
