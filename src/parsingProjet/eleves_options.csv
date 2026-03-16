@@ -1,0 +1,3774 @@
+id,matricule,type_option,valeur_option
+2,1,LM1,Anglais
+3,1,LM2,Italien
+4,1,Option,Sciences Économiques
+1,1,Philo,Religion Catholique
+37,10,EP,Fille
+39,10,LM1,Anglais
+40,10,LM2,Espagnol
+41,10,Option,Sciences Sociales
+38,10,Philo,Religion Protestante
+399,100,LM1,Anglais
+400,100,LM2,Néerlandais
+401,100,Option,Histoire
+398,100,Philo,CPC
+402,101,EP,Fille
+404,101,LM1,Anglais
+405,101,LM2,Italien
+406,101,Option,Sciences
+403,101,Philo,CPC
+408,102,LM1,Anglais
+409,102,LM2,Italien
+407,102,Philo,CPC
+411,103,LM1,Anglais
+412,103,LM2,Espagnol
+413,103,Option,Math
+414,103,Option,Sciences
+410,103,Philo,CPC
+415,104,EP,Fille
+417,104,LM1,Néerlandais Immersion
+418,104,LM2,Anglais
+419,104,LM3,Espagnol
+420,104,Option,Langues
+416,104,Philo,CPC
+422,105,LM1,Anglais Immersion
+421,105,Philo,CPC
+423,106,EP,Fille
+425,106,LM1,Anglais
+426,106,LM2,Italien
+424,106,Philo,CPC
+427,107,EP,Fille
+429,107,LM1,Anglais
+430,107,LM2,Italien
+431,107,Option,Sciences Sociales
+428,107,Philo,CPC
+432,108,EP,Fille
+434,108,LM1,Néerlandais
+435,108,LM2,Anglais
+436,108,LM3,Espagnol
+437,108,Option,Langues
+433,108,Philo,CPC
+439,109,LM1,Anglais
+440,109,LM2,Espagnol
+441,109,Option,Sciences
+438,109,Philo,CPC
+42,11,EP,Fille
+44,11,LM1,Anglais
+43,11,Philo,Religion Islamique
+443,110,LM1,Anglais
+442,110,Philo,Religion Islamique
+445,111,LM1,Néerlandais Immersion
+446,111,LM2,Italien
+447,111,Option,Sciences
+444,111,Philo,MORALE
+449,112,LM1,Néerlandais Immersion
+450,112,LM2,Anglais
+451,112,Option,Sciences
+448,112,Philo,MORALE
+452,113,EP,Fille
+454,113,LM1,Anglais
+455,113,LM2,Espagnol
+456,113,Option,Sciences
+453,113,Philo,CPC
+457,114,EP,Fille
+459,114,LM1,Anglais
+458,114,Philo,CPC
+460,115,EP,Fille
+462,115,LM1,Anglais
+463,115,LM2,Espagnol
+464,115,Option,Communication
+461,115,Philo,CPC
+466,116,LM1,Anglais
+465,116,Philo,Religion Islamique
+467,117,EP,Fille
+469,117,LM1,Néerlandais
+470,117,LM2,Anglais
+471,117,Option,Sciences
+468,117,Philo,CPC
+472,118,EP,Fille
+474,118,LM1,Anglais
+475,118,LM2,Espagnol
+476,118,Option,Math
+477,118,Option,Sciences
+473,118,Philo,CPC
+479,119,LM1,Anglais
+480,119,LM2,Espagnol
+481,119,Option,Sciences Économiques
+478,119,Philo,MORALE
+46,12,LM1,Anglais
+45,12,Philo,Religion Islamique
+483,120,LM1,Anglais
+484,120,LM2,Espagnol
+485,120,Option,Histoire
+482,120,Philo,CPC
+487,121,LM1,Anglais
+486,121,Philo,CPC
+488,122,EP,Fille
+490,122,LM1,Allemand Immersion
+491,122,LM2,Anglais
+492,122,Option,Sciences Économiques
+489,122,Philo,MORALE
+494,123,LM1,Anglais
+495,123,LM2,Néerlandais
+496,123,Option,Latin
+497,123,Option,Sciences
+493,123,Philo,MORALE
+499,124,LM1,Anglais
+498,124,Philo,CPC
+500,125,EP,Fille
+502,125,LM1,Anglais
+503,125,LM2,Espagnol
+504,125,Option,Math
+505,125,Option,Sciences
+501,125,Philo,CPC
+507,126,LM1,Anglais
+508,126,LM2,Italien
+509,126,Option,Sciences Économiques
+506,126,Philo,CPC
+510,127,EP,Fille
+512,127,LM1,Anglais
+513,127,LM2,Espagnol
+514,127,Option,Histoire
+511,127,Philo,CPC
+516,128,LM1,Anglais
+517,128,LM2,Néerlandais
+518,128,Option,Math
+519,128,Option,Sciences
+515,128,Philo,CPC
+520,129,EP,Fille
+522,129,LM1,Anglais
+523,129,LM2,Italien
+524,129,LM3,Espagnol
+525,129,Option,Langues
+521,129,Philo,CPC
+48,13,LM1,Anglais Immersion
+47,13,Philo,Religion Islamique
+527,130,LM1,Anglais
+528,130,LM2,Espagnol
+529,130,Option,Sciences Économiques
+526,130,Philo,CPC
+530,131,EP,Fille
+532,131,LM1,Anglais
+533,131,LM2,Italien
+534,131,Option,Communication
+531,131,Philo,CPC
+535,132,EP,Fille
+537,132,LM1,Allemand Immersion
+536,132,Philo,Religion Catholique
+538,133,EP,Fille
+540,133,LM1,Anglais
+539,133,Philo,CPC
+541,134,EP,Fille
+543,134,LM1,Anglais
+544,134,LM2,Espagnol
+545,134,Option,Math
+546,134,Option,Sciences
+542,134,Philo,CPC
+548,135,LM1,Anglais
+549,135,LM2,Espagnol
+550,135,Option,Sciences Sociales
+547,135,Philo,CPC
+551,136,EP,Fille
+553,136,LM1,Anglais
+554,136,LM2,Espagnol
+555,136,Option,Sciences Économiques
+552,136,Philo,CPC
+556,137,EP,Fille
+558,137,LM1,Anglais
+559,137,LM2,Espagnol
+557,137,Philo,MORALE
+561,138,LM1,Néerlandais
+562,138,LM2,Anglais
+563,138,Option,Communication
+560,138,Philo,CPC
+565,139,LM1,Néerlandais
+566,139,LM2,Anglais
+567,139,Option,Sciences
+564,139,Philo,CPC
+49,14,EP,Fille
+51,14,LM1,Anglais
+52,14,LM2,Espagnol
+53,14,Option,Sciences Sociales
+50,14,Philo,Religion Islamique
+568,140,EP,Fille
+570,140,LM1,Anglais
+571,140,LM2,Espagnol
+572,140,Option,Sciences Sociales
+569,140,Philo,CPC
+574,141,LM1,Néerlandais
+575,141,Option,Latin
+576,141,Option,Math
+577,141,Option,Sciences
+573,141,Philo,CPC
+578,142,EP,Fille
+580,142,LM1,Anglais
+579,142,Philo,CPC
+581,143,EP,Fille
+583,143,LM1,Anglais
+584,143,LM2,Néerlandais
+585,143,Option,Sciences
+582,143,Philo,Religion Islamique
+586,144,EP,Fille
+588,144,LM1,Anglais
+589,144,LM2,Néerlandais
+590,144,LM3,Espagnol
+591,144,Option,Langues
+587,144,Philo,CPC
+593,145,LM1,Anglais
+594,145,Option,Latin
+595,145,Option,Histoire
+592,145,Philo,CPC
+597,146,LM1,Anglais
+598,146,LM2,Espagnol
+599,146,Option,Sciences
+596,146,Philo,MORALE
+601,147,LM1,Anglais
+600,147,Philo,CPC
+603,148,LM1,Anglais Immersion
+602,148,Philo,Religion Protestante
+605,149,LM1,Anglais Immersion
+606,149,LM2,Néerlandais
+607,149,Option,Sciences
+604,149,Philo,Religion Protestante
+55,15,LM1,Anglais
+56,15,LM2,Espagnol
+57,15,Option,Sciences Économiques
+54,15,Philo,Religion Islamique
+608,150,EP,Fille
+610,150,LM1,Anglais
+611,150,LM2,Espagnol
+612,150,Option,Sciences Sociales
+609,150,Philo,Religion Islamique
+613,151,EP,Fille
+615,151,LM1,Anglais
+616,151,LM2,Espagnol
+617,151,Option,Sciences Sociales
+614,151,Philo,CPC
+619,152,LM1,Anglais
+618,152,Philo,CPC
+621,153,LM1,Anglais
+622,153,LM2,Néerlandais
+623,153,Option,Sciences
+620,153,Philo,Religion Catholique
+624,154,EP,Fille
+626,154,LM1,Anglais
+627,154,LM2,Espagnol
+628,154,Option,Histoire
+625,154,Philo,CPC
+630,155,LM1,Anglais
+631,155,LM2,Espagnol
+632,155,Option,Sciences
+629,155,Philo,MORALE
+634,156,LM1,Anglais
+633,156,Philo,Religion Protestante
+636,157,LM1,Néerlandais
+637,157,LM2,Anglais
+638,157,Option,Sciences
+635,157,Philo,MORALE
+640,158,LM1,Anglais
+639,158,Philo,CPC
+641,159,EP,Fille
+643,159,LM1,Anglais
+644,159,LM2,Espagnol
+645,159,Option,Sciences Sociales
+642,159,Philo,MORALE
+58,16,EP,Fille
+60,16,LM1,Néerlandais
+61,16,LM2,Italien
+62,16,Option,Sciences Sociales
+59,16,Philo,CPC
+647,160,LM1,Néerlandais
+648,160,LM2,Anglais
+649,160,Option,Sciences
+646,160,Philo,CPC
+650,161,EP,Fille
+652,161,LM1,Anglais
+653,161,LM2,Néerlandais
+654,161,Option,Sciences Économiques
+651,161,Philo,CPC
+655,162,EP,Fille
+657,162,LM1,Anglais
+656,162,Philo,MORALE
+658,163,EP,Fille
+660,163,LM1,Anglais
+661,163,LM2,Néerlandais
+662,163,Option,Communication
+659,163,Philo,CPC
+663,164,EP,Fille
+665,164,LM1,Anglais
+666,164,LM2,Espagnol
+667,164,Option,Sciences Économiques
+664,164,Philo,CPC
+669,165,LM1,Néerlandais
+670,165,LM2,Anglais
+671,165,Option,Histoire
+668,165,Philo,CPC
+673,166,LM1,Néerlandais Immersion
+674,166,LM2,Anglais
+675,166,Option,Sciences Économiques
+672,166,Philo,Religion Catholique
+676,167,EP,Fille
+678,167,LM1,Anglais
+679,167,LM2,Néerlandais
+680,167,Option,Sciences
+677,167,Philo,CPC
+681,168,EP,Fille
+683,168,LM1,Anglais
+684,168,LM2,Néerlandais
+685,168,LM3,Espagnol
+686,168,Option,Langues
+687,168,Option,Math
+682,168,Philo,CPC
+688,169,EP,Fille
+690,169,LM1,Anglais
+691,169,LM2,Néerlandais
+692,169,Option,Sciences
+689,169,Philo,CPC
+64,17,LM1,Anglais Immersion
+65,17,LM2,Néerlandais
+66,17,Option,Sciences
+63,17,Philo,CPC
+694,170,LM1,Anglais
+693,170,Philo,MORALE
+695,171,EP,Fille
+697,171,LM1,Néerlandais
+698,171,LM2,Anglais
+699,171,Option,Sciences Sociales
+696,171,Philo,CPC
+700,172,EP,Fille
+702,172,LM1,Anglais
+703,172,LM2,Espagnol
+704,172,Option,Sciences
+701,172,Philo,CPC
+705,173,EP,Fille
+707,173,LM1,Néerlandais
+706,173,Philo,CPC
+709,174,LM1,Anglais
+708,174,Philo,CPC
+710,175,EP,Fille
+712,175,LM1,Anglais
+711,175,Philo,CPC
+714,176,LM1,Anglais
+715,176,LM2,Italien
+716,176,Option,Sciences
+713,176,Philo,CPC
+717,177,EP,Fille
+719,177,LM1,Anglais
+720,177,LM2,Néerlandais
+721,177,Option,Sciences Sociales
+718,177,Philo,CPC
+723,178,LM1,Anglais
+724,178,LM2,Espagnol
+725,178,Option,Math
+726,178,Option,Sciences
+722,178,Philo,Religion Catholique
+728,179,LM1,Anglais
+727,179,Philo,CPC
+68,18,LM1,Anglais
+69,18,LM2,Néerlandais
+70,18,LM3,Espagnol
+71,18,Option,Langues
+67,18,Philo,CPC
+730,180,LM1,Anglais Immersion
+731,180,LM2,Espagnol
+732,180,Option,Sciences
+729,180,Philo,MORALE
+733,181,EP,Fille
+735,181,LM1,Anglais
+736,181,LM2,Néerlandais
+737,181,Option,Sciences Économiques
+734,181,Philo,Religion Catholique
+739,182,LM1,Anglais
+738,182,Philo,CPC
+741,183,LM1,Anglais
+740,183,Philo,CPC
+743,184,LM1,Anglais
+744,184,LM2,Espagnol
+745,184,Option,Sciences Économiques
+742,184,Philo,MORALE
+746,185,EP,Fille
+748,185,LM1,Anglais
+749,185,LM2,Italien
+750,185,Option,Communication
+747,185,Philo,CPC
+751,186,EP,Fille
+753,186,LM1,Anglais
+754,186,LM2,Italien
+755,186,Option,Sciences Sociales
+752,186,Philo,CPC
+756,187,EP,Fille
+758,187,LM1,Anglais Immersion
+759,187,LM2,Espagnol
+757,187,Philo,MORALE
+761,188,LM1,Anglais
+762,188,LM2,Espagnol
+763,188,Option,Sciences Économiques
+760,188,Philo,MORALE
+765,189,LM1,Néerlandais
+764,189,Philo,CPC
+72,19,EP,Fille
+74,19,LM1,Anglais
+75,19,LM2,Espagnol
+76,19,Option,Sciences Sociales
+73,19,Philo,Religion Islamique
+767,190,LM1,Anglais
+768,190,LM2,Espagnol
+769,190,Option,Sciences Économiques
+766,190,Philo,Religion Islamique
+771,191,LM1,Néerlandais Immersion
+772,191,LM2,Anglais
+773,191,Option,Sciences Économiques
+770,191,Philo,MORALE
+774,192,EP,Fille
+776,192,LM1,Anglais
+775,192,Philo,CPC
+778,193,LM1,Anglais
+779,193,LM2,Espagnol
+780,193,Option,Communication
+777,193,Philo,CPC
+782,194,LM1,Anglais Immersion
+783,194,LM2,Italien
+784,194,Option,Math
+785,194,Option,Sciences
+781,194,Philo,CPC
+786,195,EP,Fille
+788,195,LM1,Anglais
+789,195,LM2,Italien
+790,195,Option,Sciences Économiques
+787,195,Philo,CPC
+791,196,EP,Fille
+793,196,LM1,Anglais
+794,196,LM2,Italien
+795,196,Option,Sciences Économiques
+796,196,Option,Math
+792,196,Philo,CPC
+797,197,EP,Fille
+799,197,LM1,Anglais Immersion
+800,197,LM2,Allemand
+801,197,Option,Sciences Économiques
+798,197,Philo,MORALE
+803,198,LM1,Anglais
+804,198,LM2,Espagnol
+805,198,LM3,Allemand
+806,198,Option,Langues
+807,198,Option,Math
+802,198,Philo,CPC
+808,199,EP,Fille
+810,199,LM1,Anglais
+811,199,LM2,Espagnol
+812,199,Option,Sciences Sociales
+809,199,Philo,CPC
+6,2,LM1,Anglais Immersion
+7,2,LM2,Espagnol
+8,2,Option,Sciences Économiques
+5,2,Philo,Religion Islamique
+77,20,EP,Fille
+79,20,LM1,Anglais
+80,20,LM2,Espagnol
+81,20,Option,Sciences Sociales
+78,20,Philo,CPC
+813,200,EP,Fille
+815,200,LM1,Anglais
+816,200,LM2,Espagnol
+817,200,Option,Sciences
+814,200,Philo,CPC
+819,201,LM1,Néerlandais
+820,201,LM2,Anglais
+821,201,Option,Sciences
+818,201,Philo,CPC
+822,202,EP,Fille
+824,202,LM1,Néerlandais
+825,202,LM2,Anglais
+823,202,Philo,CPC
+827,203,LM1,Néerlandais
+826,203,Philo,CPC
+828,204,EP,Fille
+830,204,LM1,Anglais
+831,204,LM2,Espagnol
+832,204,Option,Sciences Économiques
+829,204,Philo,Religion Islamique
+833,205,EP,Fille
+835,205,LM1,Anglais
+834,205,Philo,CPC
+836,206,EP,Fille
+838,206,LM1,Anglais
+839,206,LM2,Italien
+840,206,Option,Communication
+837,206,Philo,CPC
+842,207,LM1,Anglais Immersion
+841,207,Philo,CPC
+843,208,EP,Fille
+845,208,LM1,Anglais
+844,208,Philo,CPC
+846,209,EP,Fille
+848,209,LM1,Néerlandais
+849,209,LM2,Anglais
+850,209,Option,Sciences Sociales
+847,209,Philo,CPC
+83,21,LM1,Néerlandais
+82,21,Philo,CPC
+851,210,EP,Fille
+853,210,LM1,Anglais
+854,210,LM2,Néerlandais
+855,210,Option,Histoire
+852,210,Philo,CPC
+857,211,LM1,Anglais
+858,211,LM2,Espagnol
+859,211,Option,Math
+860,211,Option,Sciences
+856,211,Philo,CPC
+861,212,EP,Fille
+863,212,LM1,Anglais
+862,212,Philo,CPC
+864,213,EP,Fille
+866,213,LM1,Allemand Immersion
+865,213,Philo,MORALE
+868,214,LM1,Anglais
+869,214,LM2,Néerlandais
+870,214,LM3,Allemand
+871,214,Option,Langues
+872,214,Option,Math
+867,214,Philo,CPC
+874,215,LM1,Anglais
+875,215,LM2,Allemand
+876,215,Option,Communication
+873,215,Philo,MORALE
+878,216,LM1,Anglais
+879,216,LM2,Néerlandais
+880,216,Option,Sciences
+877,216,Philo,CPC
+881,217,EP,Fille
+883,217,LM1,Anglais Immersion
+882,217,Philo,Religion Catholique
+884,218,EP,Fille
+886,218,LM1,Anglais Immersion
+887,218,LM2,Espagnol
+888,218,Option,Sciences
+885,218,Philo,CPC
+889,219,EP,Fille
+891,219,LM1,Anglais
+890,219,Philo,CPC
+85,22,LM1,Anglais Immersion
+86,22,LM2,Néerlandais
+87,22,Option,Sciences
+84,22,Philo,CPC
+893,220,LM1,Néerlandais
+894,220,LM2,Espagnol
+895,220,Option,Communication
+892,220,Philo,MORALE
+896,221,EP,Fille
+898,221,LM1,Anglais
+897,221,Philo,Religion Islamique
+899,222,EP,Fille
+901,222,LM1,Anglais Immersion
+902,222,LM2,Espagnol
+903,222,Option,Sciences
+900,222,Philo,CPC
+905,223,LM1,Anglais
+906,223,LM2,Espagnol
+907,223,Option,Sciences Économiques
+908,223,Option,Math
+904,223,Philo,CPC
+910,224,LM1,Anglais
+911,224,LM2,Allemand
+912,224,Option,Sciences Économiques
+909,224,Philo,CPC
+913,225,EP,Fille
+915,225,LM1,Anglais
+914,225,Philo,CPC
+917,226,LM1,Anglais
+918,226,LM2,Espagnol
+919,226,Option,Histoire
+916,226,Philo,CPC
+921,227,LM1,Anglais
+922,227,LM2,Espagnol
+923,227,Option,Sciences Économiques
+920,227,Philo,CPC
+924,228,EP,Fille
+926,228,LM1,Allemand Immersion
+927,228,LM2,Néerlandais
+928,228,Option,Latin
+929,228,Option,Sciences
+925,228,Philo,Religion Catholique
+931,229,LM1,Anglais
+932,229,LM2,Néerlandais
+933,229,Option,Sciences Économiques
+930,229,Philo,Religion Catholique
+88,23,EP,Fille
+90,23,LM1,Anglais Immersion
+91,23,LM2,Néerlandais
+92,23,Option,Sciences
+89,23,Philo,Religion Islamique
+935,230,LM1,Anglais
+936,230,LM2,Espagnol
+937,230,Option,Sciences
+934,230,Philo,CPC
+938,231,EP,Fille
+940,231,LM1,Anglais
+941,231,LM2,Espagnol
+942,231,Option,Sciences Sociales
+939,231,Philo,MORALE
+943,232,EP,Fille
+945,232,LM1,Anglais
+944,232,Philo,Religion Islamique
+947,233,LM1,Anglais
+946,233,Philo,Religion Islamique
+949,234,LM1,Anglais Immersion
+948,234,Philo,Religion Islamique
+950,235,EP,Fille
+952,235,LM1,Anglais Immersion
+953,235,LM2,Espagnol
+954,235,Option,Sciences Économiques
+951,235,Philo,CPC
+956,236,LM1,Anglais
+957,236,LM2,Néerlandais
+958,236,Option,Math
+959,236,Option,Sciences
+955,236,Philo,CPC
+960,237,EP,Fille
+962,237,LM1,Anglais
+961,237,Philo,Religion Protestante
+964,238,LM1,Anglais
+965,238,LM2,Allemand
+966,238,Option,Sciences
+963,238,Philo,CPC
+967,239,EP,Fille
+969,239,LM1,Anglais Immersion
+970,239,LM2,Espagnol
+971,239,Option,Sciences Économiques
+968,239,Philo,Religion Islamique
+94,24,LM1,Anglais
+95,24,LM2,Néerlandais
+96,24,Option,Communication
+93,24,Philo,CPC
+973,240,LM1,Anglais
+974,240,LM2,Espagnol
+972,240,Philo,CPC
+975,241,EP,Fille
+977,241,LM1,Anglais
+978,241,LM2,Espagnol
+979,241,Option,Histoire
+976,241,Philo,CPC
+980,242,EP,Fille
+982,242,LM1,Anglais
+981,242,Philo,CPC
+983,243,EP,Fille
+985,243,LM1,Anglais
+984,243,Philo,Religion Islamique
+987,244,LM1,Anglais
+988,244,LM2,Espagnol
+989,244,Option,Sciences
+986,244,Philo,MORALE
+991,245,LM1,Anglais
+992,245,LM2,Espagnol
+993,245,Option,Communication
+990,245,Philo,CPC
+995,246,LM1,Anglais
+994,246,Philo,CPC
+997,247,LM1,Néerlandais
+996,247,Philo,CPC
+998,248,EP,Fille
+1000,248,LM1,Anglais Immersion
+1001,248,LM2,Italien
+1002,248,Option,Sciences Sociales
+999,248,Philo,CPC
+1004,249,LM1,Anglais Immersion
+1005,249,LM2,Espagnol
+1006,249,Option,Sciences
+1003,249,Philo,Religion Catholique
+98,25,LM1,Anglais
+99,25,LM2,Espagnol
+100,25,Option,Sciences
+97,25,Philo,CPC
+1008,250,LM1,Néerlandais
+1009,250,LM2,Anglais
+1007,250,Philo,Religion Islamique
+1011,251,LM1,Anglais Immersion
+1010,251,Philo,Religion Catholique
+1012,252,EP,Fille
+1014,252,LM1,Anglais
+1015,252,LM2,Espagnol
+1016,252,Option,Histoire
+1013,252,Philo,CPC
+1018,253,LM1,Anglais
+1019,253,LM2,Néerlandais
+1020,253,Option,Communication
+1017,253,Philo,MORALE
+1021,254,EP,Fille
+1023,254,LM1,Anglais Immersion
+1022,254,Philo,Religion Catholique
+1024,255,EP,Fille
+1026,255,LM1,Allemand Immersion
+1025,255,Philo,MORALE
+1027,256,EP,Fille
+1029,256,LM1,Néerlandais Immersion
+1028,256,Philo,MORALE
+1030,257,EP,Fille
+1032,257,LM1,Anglais
+1031,257,Philo,CPC
+1033,258,EP,Fille
+1035,258,LM1,Néerlandais Immersion
+1036,258,LM2,Anglais
+1037,258,Option,Sciences Économiques
+1034,258,Philo,CPC
+1039,259,LM1,Anglais
+1040,259,LM2,Espagnol
+1041,259,Option,Sciences
+1038,259,Philo,CPC
+102,26,LM1,Anglais
+101,26,Philo,CPC
+1042,260,EP,Fille
+1044,260,LM1,Néerlandais
+1043,260,Philo,CPC
+1046,261,LM1,Anglais
+1047,261,LM2,Italien
+1048,261,Option,Communication
+1045,261,Philo,CPC
+1049,262,EP,Fille
+1051,262,LM1,Néerlandais
+1052,262,LM2,Anglais
+1053,262,Option,Sciences
+1050,262,Philo,CPC
+1055,263,LM1,Anglais
+1056,263,LM2,Espagnol
+1057,263,Option,Sciences Économiques
+1058,263,Option,Math
+1054,263,Philo,MORALE
+1059,264,EP,Fille
+1061,264,LM1,Anglais
+1062,264,LM2,Néerlandais
+1063,264,Option,Math
+1064,264,Option,Sciences
+1060,264,Philo,CPC
+1066,265,LM1,Anglais
+1067,265,LM2,Espagnol
+1068,265,Option,Sciences
+1065,265,Philo,CPC
+1070,266,LM1,Anglais
+1069,266,Philo,CPC
+1072,267,LM1,Anglais
+1073,267,LM2,Espagnol
+1074,267,Option,Communication
+1071,267,Philo,Religion Catholique
+1076,268,LM1,Néerlandais Immersion
+1077,268,LM2,Anglais
+1078,268,Option,Sciences
+1075,268,Philo,CPC
+1079,269,EP,Fille
+1081,269,LM1,Néerlandais Immersion
+1080,269,Philo,CPC
+104,27,LM1,Anglais
+105,27,LM2,Italien
+106,27,Option,Sciences Sociales
+103,27,Philo,Religion Catholique
+1083,270,LM1,Anglais
+1084,270,LM2,Néerlandais
+1085,270,Option,Sciences
+1082,270,Philo,Religion Islamique
+1087,271,LM1,Anglais
+1088,271,LM2,Espagnol
+1089,271,Option,Sciences
+1086,271,Philo,Religion Islamique
+1090,272,EP,Fille
+1092,272,LM1,Néerlandais
+1093,272,LM2,Anglais
+1094,272,Option,Sciences Sociales
+1091,272,Philo,Religion Islamique
+1095,273,EP,Fille
+1097,273,LM1,Anglais
+1098,273,LM2,Néerlandais
+1099,273,Option,Sciences Sociales
+1096,273,Philo,Religion Islamique
+1101,274,LM1,Anglais
+1102,274,LM2,Néerlandais
+1103,274,Option,Sciences Économiques
+1100,274,Philo,Religion Islamique
+1104,275,EP,Fille
+1106,275,LM1,Anglais
+1107,275,LM2,Espagnol
+1108,275,Option,Sciences Sociales
+1105,275,Philo,Religion Islamique
+1110,276,LM1,Anglais
+1111,276,LM2,Espagnol
+1112,276,Option,Sciences Sociales
+1109,276,Philo,Religion Islamique
+1113,277,EP,Fille
+1115,277,LM1,Anglais
+1116,277,LM2,Espagnol
+1117,277,Option,Sciences Économiques
+1114,277,Philo,Religion Islamique
+1119,278,LM1,Néerlandais Immersion
+1118,278,Philo,CPC
+1120,279,EP,Fille
+1122,279,LM1,Néerlandais Immersion
+1123,279,LM2,Anglais
+1124,279,Option,Sciences Sociales
+1121,279,Philo,CPC
+107,28,EP,Fille
+109,28,LM1,Anglais
+110,28,LM2,Italien
+111,28,Option,Sciences
+108,28,Philo,MORALE
+1126,280,LM1,Anglais
+1127,280,LM2,Néerlandais
+1128,280,Option,Sciences Sociales
+1125,280,Philo,MORALE
+1129,281,EP,Fille
+1131,281,LM1,Anglais
+1130,281,Philo,Religion Islamique
+1133,282,LM1,Anglais
+1132,282,Philo,Religion Islamique
+1134,283,EP,Fille
+1136,283,LM1,Néerlandais Immersion
+1137,283,LM2,Anglais
+1138,283,Option,Sciences
+1135,283,Philo,Religion Islamique
+1140,284,LM1,Anglais
+1141,284,LM2,Espagnol
+1142,284,Option,Communication
+1139,284,Philo,CPC
+1144,285,LM1,Anglais
+1145,285,LM2,Allemand
+1146,285,Option,Sciences
+1143,285,Philo,CPC
+1148,286,LM1,Anglais Immersion
+1147,286,Philo,Religion Protestante
+1149,287,EP,Fille
+1151,287,LM1,Anglais
+1152,287,LM2,Espagnol
+1153,287,Option,Communication
+1150,287,Philo,CPC
+1155,288,LM1,Anglais
+1156,288,LM2,Espagnol
+1157,288,Option,Sciences Économiques
+1154,288,Philo,Religion Islamique
+1158,289,EP,Fille
+1160,289,LM1,Anglais
+1161,289,LM2,Espagnol
+1162,289,Option,Histoire
+1159,289,Philo,CPC
+112,29,EP,Fille
+114,29,LM1,Anglais Immersion
+113,29,Philo,CPC
+1164,290,LM1,Allemand Immersion
+1163,290,Philo,CPC
+1165,291,EP,Fille
+1167,291,LM1,Anglais
+1168,291,LM2,Néerlandais
+1169,291,Option,Math
+1170,291,Option,Sciences
+1166,291,Philo,CPC
+1171,292,EP,Fille
+1173,292,LM1,Anglais
+1174,292,LM2,Espagnol
+1175,292,Option,Sciences
+1172,292,Philo,CPC
+1176,293,EP,Fille
+1178,293,LM1,Anglais
+1179,293,LM2,Néerlandais
+1180,293,Option,Math
+1181,293,Option,Sciences
+1177,293,Philo,CPC
+1183,294,LM1,Anglais
+1184,294,LM2,Espagnol
+1185,294,Option,Histoire
+1182,294,Philo,CPC
+1187,295,LM1,Anglais Immersion
+1186,295,Philo,Religion Islamique
+1189,296,LM1,Anglais
+1188,296,Philo,Religion Catholique
+1191,297,LM1,Néerlandais Immersion
+1190,297,Philo,CPC
+1193,298,LM1,Anglais
+1194,298,LM2,Italien
+1195,298,Option,Sciences Économiques
+1192,298,Philo,MORALE
+1197,299,LM1,Anglais
+1198,299,LM2,Allemand
+1199,299,Option,Sciences Sociales
+1196,299,Philo,CPC
+9,3,EP,Fille
+11,3,LM1,Anglais
+12,3,LM2,Néerlandais
+13,3,Option,Histoire
+10,3,Philo,CPC
+115,30,EP,Fille
+117,30,LM1,Anglais
+118,30,LM2,Italien
+119,30,Option,Sciences Sociales
+116,30,Philo,CPC
+1200,300,EP,Fille
+1202,300,LM1,Néerlandais
+1203,300,LM2,Anglais
+1204,300,Option,Sciences
+1201,300,Philo,CPC
+1205,301,EP,Fille
+1207,301,LM1,Anglais
+1208,301,LM2,Italien
+1209,301,Option,Communication
+1206,301,Philo,CPC
+1210,302,EP,Fille
+1212,302,LM1,Anglais
+1213,302,LM2,Néerlandais
+1214,302,Option,Histoire
+1211,302,Philo,CPC
+1216,303,LM1,Anglais
+1217,303,LM2,Espagnol
+1218,303,Option,Math
+1219,303,Option,Sciences
+1215,303,Philo,CPC
+1220,304,EP,Fille
+1222,304,LM1,Anglais
+1221,304,Philo,Religion Islamique
+1223,305,EP,Fille
+1225,305,LM1,Néerlandais Immersion
+1226,305,LM2,Anglais
+1227,305,Option,Sciences
+1224,305,Philo,CPC
+1228,306,EP,Fille
+1230,306,LM1,Anglais
+1231,306,LM2,Néerlandais
+1232,306,Option,Sciences Sociales
+1229,306,Philo,Religion Islamique
+1233,307,EP,Fille
+1235,307,LM1,Anglais
+1236,307,LM2,Espagnol
+1237,307,Option,Math
+1238,307,Option,Sciences
+1234,307,Philo,CPC
+1239,308,EP,Fille
+1241,308,LM1,Anglais
+1240,308,Philo,CPC
+1243,309,LM1,Anglais
+1244,309,LM2,Espagnol
+1245,309,Option,Communication
+1242,309,Philo,CPC
+120,31,EP,Fille
+122,31,LM1,Néerlandais Immersion
+123,31,LM2,Anglais
+124,31,Option,Sciences Sociales
+121,31,Philo,Religion Protestante
+1246,310,EP,Fille
+1248,310,LM1,Anglais
+1249,310,LM2,Néerlandais
+1250,310,Option,Communication
+1247,310,Philo,CPC
+1251,311,EP,Fille
+1253,311,LM1,Anglais
+1254,311,LM2,Espagnol
+1255,311,Option,Sciences
+1252,311,Philo,CPC
+1257,312,LM1,Anglais
+1258,312,LM2,Espagnol
+1259,312,Option,Sciences Économiques
+1260,312,Option,Math
+1256,312,Philo,CPC
+1262,313,LM1,Anglais Immersion
+1261,313,Philo,CPC
+1263,314,EP,Fille
+1265,314,LM1,Anglais
+1266,314,LM2,Néerlandais
+1267,314,Option,Communication
+1264,314,Philo,CPC
+1269,315,LM1,Anglais
+1270,315,LM2,Néerlandais
+1271,315,Option,Communication
+1268,315,Philo,CPC
+1272,316,EP,Fille
+1274,316,LM1,Anglais
+1275,316,LM2,Espagnol
+1276,316,Option,Sciences Sociales
+1273,316,Philo,CPC
+1277,317,EP,Fille
+1279,317,LM1,Anglais
+1280,317,LM2,Espagnol
+1281,317,Option,Sciences
+1278,317,Philo,CPC
+1282,318,EP,Fille
+1284,318,LM1,Anglais
+1285,318,LM2,Espagnol
+1286,318,Option,Sciences Économiques
+1283,318,Philo,CPC
+1287,319,EP,Fille
+1289,319,LM1,Néerlandais
+1290,319,LM2,Espagnol
+1291,319,Option,Sciences Économiques
+1288,319,Philo,CPC
+125,32,EP,Fille
+127,32,LM1,Anglais
+128,32,LM2,Espagnol
+129,32,Option,Sciences
+126,32,Philo,CPC
+1292,320,EP,Fille
+1294,320,LM1,Anglais
+1295,320,LM2,Espagnol
+1296,320,Option,Sciences
+1293,320,Philo,MORALE
+1297,321,EP,Fille
+1299,321,LM1,Anglais
+1300,321,LM2,Allemand
+1301,321,Option,Sciences Sociales
+1298,321,Philo,CPC
+1302,322,EP,Fille
+1304,322,LM1,Anglais
+1305,322,LM2,Allemand
+1306,322,Option,Communication
+1303,322,Philo,CPC
+1308,323,LM1,Anglais
+1309,323,LM2,Espagnol
+1310,323,Option,Sciences Sociales
+1307,323,Philo,MORALE
+1312,324,LM1,Anglais
+1311,324,Philo,CPC
+1314,325,LM1,Anglais
+1315,325,LM2,Espagnol
+1316,325,Option,Sciences
+1313,325,Philo,CPC
+1317,326,EP,Fille
+1319,326,LM1,Néerlandais
+1320,326,LM2,Anglais
+1321,326,Option,Communication
+1318,326,Philo,MORALE
+1323,327,LM1,Néerlandais
+1322,327,Philo,CPC
+1325,328,LM1,Anglais
+1326,328,LM2,Néerlandais
+1327,328,Option,Sciences Sociales
+1324,328,Philo,CPC
+1328,329,EP,Fille
+1330,329,LM1,Anglais
+1331,329,LM2,Italien
+1332,329,Option,Sciences Sociales
+1329,329,Philo,Religion Catholique
+130,33,EP,Fille
+132,33,LM1,Anglais
+133,33,LM2,Allemand
+134,33,Option,Sciences
+131,33,Philo,CPC
+1334,330,LM1,Anglais
+1335,330,LM2,Espagnol
+1336,330,Option,Sciences Économiques
+1333,330,Philo,CPC
+1337,331,EP,Fille
+1339,331,LM1,Anglais
+1340,331,LM2,Espagnol
+1341,331,Option,Histoire
+1338,331,Philo,CPC
+1343,332,LM1,Anglais
+1342,332,Philo,CPC
+1344,333,EP,Fille
+1346,333,LM1,Anglais Immersion
+1345,333,Philo,Religion Protestante
+1347,334,EP,Fille
+1349,334,LM1,Anglais
+1350,334,LM2,Espagnol
+1351,334,Option,Histoire
+1348,334,Philo,CPC
+1353,335,LM1,Anglais
+1354,335,LM2,Espagnol
+1355,335,Option,Sciences Économiques
+1352,335,Philo,CPC
+1356,336,EP,Fille
+1358,336,LM1,Anglais
+1359,336,LM2,Espagnol
+1360,336,Option,Sciences Économiques
+1357,336,Philo,CPC
+1362,337,LM1,Anglais
+1363,337,LM2,Italien
+1364,337,LM3,Allemand
+1365,337,Option,Langues
+1366,337,Option,Math
+1361,337,Philo,CPC
+1368,338,LM1,Anglais
+1369,338,LM2,Espagnol
+1370,338,Option,Latin
+1371,338,Option,Sciences
+1367,338,Philo,CPC
+1372,339,EP,Fille
+1374,339,LM1,Anglais Immersion
+1373,339,Philo,Religion Islamique
+136,34,LM1,Anglais
+137,34,LM2,Espagnol
+138,34,Option,Sciences Sociales
+135,34,Philo,Religion Islamique
+1375,340,EP,Fille
+1377,340,LM1,Anglais Immersion
+1378,340,LM2,Néerlandais
+1379,340,Option,Sciences Économiques
+1376,340,Philo,MORALE
+1380,341,EP,Fille
+1382,341,LM1,Anglais
+1383,341,LM2,Espagnol
+1384,341,Option,Math
+1385,341,Option,Sciences
+1381,341,Philo,CPC
+1386,342,EP,Fille
+1388,342,LM1,Anglais Immersion
+1389,342,LM2,Allemand
+1390,342,Option,Communication
+1387,342,Philo,CPC
+1391,343,EP,Fille
+1393,343,LM1,Anglais Immersion
+1394,343,LM2,Allemand
+1395,343,Option,Sciences
+1392,343,Philo,CPC
+1396,344,EP,Fille
+1398,344,LM1,Anglais
+1399,344,LM2,Italien
+1400,344,Option,Latin
+1401,344,Option,Sciences
+1397,344,Philo,CPC
+1403,345,LM1,Anglais
+1402,345,Philo,CPC
+1404,346,EP,Fille
+1406,346,LM1,Anglais
+1407,346,LM2,Néerlandais
+1408,346,Option,Communication
+1405,346,Philo,CPC
+1409,347,EP,Fille
+1411,347,LM1,Anglais
+1412,347,LM2,Néerlandais
+1413,347,Option,Sciences
+1410,347,Philo,CPC
+1415,348,LM1,Allemand Immersion
+1416,348,LM2,Anglais
+1417,348,Option,Sciences
+1414,348,Philo,Religion Catholique
+1419,349,LM1,Allemand Immersion
+1420,349,LM2,Anglais
+1421,349,Option,Sciences
+1418,349,Philo,Religion Catholique
+140,35,LM1,Anglais Immersion
+139,35,Philo,Religion Catholique
+1423,350,LM1,Anglais
+1424,350,LM2,Néerlandais
+1425,350,Option,Math
+1426,350,Option,Sciences
+1422,350,Philo,CPC
+1428,351,LM1,Anglais
+1427,351,Philo,CPC
+1430,352,LM1,Anglais
+1431,352,LM2,Espagnol
+1432,352,Option,Sciences
+1429,352,Philo,CPC
+1433,353,EP,Fille
+1435,353,LM1,Anglais
+1436,353,LM2,Néerlandais
+1437,353,Option,Sciences Sociales
+1434,353,Philo,CPC
+1439,354,LM1,Anglais
+1440,354,LM2,Espagnol
+1438,354,Philo,CPC
+1441,355,EP,Fille
+1443,355,LM1,Anglais Immersion
+1444,355,LM2,Espagnol
+1445,355,Option,Sciences Sociales
+1442,355,Philo,CPC
+1447,356,LM1,Anglais
+1448,356,LM2,Italien
+1449,356,Option,Communication
+1446,356,Philo,MORALE
+1450,357,EP,Fille
+1452,357,LM1,Néerlandais Immersion
+1453,357,LM2,Anglais
+1454,357,LM3,Allemand
+1455,357,Option,Langues
+1451,357,Philo,CPC
+1456,358,EP,Fille
+1458,358,LM1,Néerlandais
+1459,358,LM2,Anglais
+1460,358,Option,Sciences
+1457,358,Philo,CPC
+1462,359,LM1,Anglais
+1463,359,LM2,Néerlandais
+1464,359,Option,Math
+1465,359,Option,Sciences
+1461,359,Philo,CPC
+142,36,LM1,Néerlandais
+143,36,LM2,Anglais
+144,36,Option,Histoire
+141,36,Philo,CPC
+1466,360,EP,Fille
+1468,360,LM1,Anglais
+1469,360,LM2,Allemand
+1470,360,Option,Histoire
+1467,360,Philo,CPC
+1471,361,EP,Fille
+1473,361,LM1,Anglais
+1474,361,LM2,Néerlandais
+1475,361,Option,Sciences Sociales
+1472,361,Philo,CPC
+1476,362,EP,Fille
+1478,362,LM1,Néerlandais Immersion
+1477,362,Philo,Religion Catholique
+1479,363,EP,Fille
+1481,363,LM1,Anglais
+1482,363,LM2,Néerlandais
+1480,363,Philo,CPC
+1483,364,EP,Fille
+1485,364,LM1,Anglais
+1484,364,Philo,CPC
+1487,365,LM1,Anglais
+1486,365,Philo,MORALE
+1489,366,LM1,Anglais
+1488,366,Philo,CPC
+1490,367,EP,Fille
+1492,367,LM1,Anglais
+1493,367,LM2,Espagnol
+1494,367,Option,Sciences
+1491,367,Philo,CPC
+1495,368,EP,Fille
+1497,368,LM1,Anglais
+1498,368,LM2,Néerlandais
+1499,368,Option,Sciences
+1496,368,Philo,CPC
+1500,369,EP,Fille
+1502,369,LM1,Anglais
+1501,369,Philo,CPC
+146,37,LM1,Anglais
+147,37,LM2,Néerlandais
+148,37,Option,Communication
+145,37,Philo,CPC
+1503,370,EP,Fille
+1505,370,LM1,Anglais
+1506,370,LM2,Espagnol
+1507,370,Option,Histoire
+1504,370,Philo,CPC
+1508,371,EP,Fille
+1510,371,LM1,Anglais Immersion
+1509,371,Philo,MORALE
+1511,372,EP,Fille
+1513,372,LM1,Anglais Immersion
+1514,372,LM2,Espagnol
+1515,372,Option,Sciences
+1512,372,Philo,CPC
+1517,373,LM1,Néerlandais
+1516,373,Philo,CPC
+1519,374,LM1,Anglais Immersion
+1520,374,LM2,Néerlandais
+1521,374,Option,Sciences
+1518,374,Philo,Religion Catholique
+1523,375,LM1,Anglais
+1522,375,Philo,CPC
+1524,376,EP,Fille
+1526,376,LM1,Anglais
+1527,376,LM2,Espagnol
+1528,376,Option,Communication
+1525,376,Philo,CPC
+1529,377,EP,Fille
+1531,377,LM1,Anglais
+1532,377,LM2,Espagnol
+1533,377,Option,Communication
+1530,377,Philo,CPC
+1535,378,LM1,Néerlandais
+1536,378,LM2,Anglais
+1537,378,Option,Histoire
+1534,378,Philo,CPC
+1538,379,EP,Fille
+1540,379,LM1,Anglais
+1541,379,LM2,Espagnol
+1539,379,Philo,Religion Islamique
+150,38,LM1,Anglais
+149,38,Philo,Religion Islamique
+1543,380,LM1,Néerlandais
+1544,380,LM2,Anglais
+1545,380,Option,Histoire
+1542,380,Philo,MORALE
+1547,381,LM1,Anglais
+1548,381,LM2,Espagnol
+1549,381,Option,Communication
+1546,381,Philo,MORALE
+1551,382,LM1,Anglais
+1550,382,Philo,MORALE
+1552,383,EP,Fille
+1554,383,LM1,Anglais Immersion
+1555,383,LM2,Néerlandais
+1556,383,Option,Sciences
+1553,383,Philo,Religion Islamique
+1557,384,EP,Fille
+1559,384,LM1,Anglais
+1560,384,LM2,Espagnol
+1561,384,Option,Sciences Économiques
+1558,384,Philo,CPC
+1563,385,LM1,Anglais
+1564,385,LM2,Espagnol
+1565,385,Option,Histoire
+1562,385,Philo,CPC
+1566,386,EP,Fille
+1568,386,LM1,Néerlandais
+1569,386,LM2,Anglais
+1570,386,Option,Sciences Sociales
+1567,386,Philo,CPC
+1571,387,EP,Fille
+1573,387,LM1,Néerlandais
+1574,387,LM2,Anglais
+1575,387,Option,Communication
+1572,387,Philo,CPC
+1576,388,EP,Fille
+1578,388,LM1,Anglais
+1579,388,LM2,Espagnol
+1580,388,Option,Math
+1581,388,Option,Sciences
+1577,388,Philo,CPC
+1583,389,LM1,Anglais
+1582,389,Philo,CPC
+151,39,EP,Fille
+153,39,LM1,Anglais
+154,39,LM2,Italien
+155,39,Option,Sciences Sociales
+152,39,Philo,Religion Catholique
+1585,390,LM1,Anglais
+1584,390,Philo,CPC
+1586,391,EP,Fille
+1588,391,LM1,Anglais
+1589,391,LM2,Espagnol
+1590,391,LM3,Allemand
+1591,391,Option,Langues
+1587,391,Philo,CPC
+1592,392,EP,Fille
+1594,392,LM1,Néerlandais
+1595,392,LM2,Anglais
+1596,392,Option,Sciences
+1593,392,Philo,CPC
+1597,393,EP,Fille
+1599,393,LM1,Anglais Immersion
+1600,393,LM2,Espagnol
+1601,393,Option,Sciences Économiques
+1598,393,Philo,Religion Islamique
+1603,394,LM1,Anglais Immersion
+1602,394,Philo,Religion Islamique
+1605,395,LM1,Anglais Immersion
+1604,395,Philo,CPC
+1607,396,LM1,Anglais Immersion
+1608,396,LM2,Espagnol
+1609,396,Option,Sciences Économiques
+1606,396,Philo,CPC
+1611,397,LM1,Anglais
+1610,397,Philo,Religion Islamique
+1613,398,LM1,Anglais
+1614,398,LM2,Espagnol
+1615,398,Option,Sciences
+1612,398,Philo,Religion Islamique
+1616,399,EP,Fille
+1618,399,LM1,Anglais
+1617,399,Philo,CPC
+14,4,EP,Fille
+16,4,LM1,Anglais
+17,4,LM2,Italien
+18,4,Option,Sciences Sociales
+15,4,Philo,CPC
+157,40,LM1,Anglais
+156,40,Philo,CPC
+1619,400,EP,Fille
+1621,400,LM1,Allemand Immersion
+1622,400,LM2,Anglais
+1623,400,Option,Sciences Sociales
+1620,400,Philo,CPC
+1624,401,EP,Fille
+1626,401,LM1,Anglais
+1627,401,LM2,Italien
+1628,401,Option,Sciences
+1625,401,Philo,CPC
+1629,402,EP,Fille
+1631,402,LM1,Néerlandais
+1632,402,LM2,Anglais
+1633,402,Option,Sciences
+1630,402,Philo,CPC
+1634,403,EP,Fille
+1636,403,LM1,Néerlandais
+1635,403,Philo,CPC
+1637,404,EP,Fille
+1639,404,LM1,Néerlandais Immersion
+1640,404,LM2,Anglais
+1641,404,Option,Communication
+1638,404,Philo,CPC
+1643,405,LM1,Néerlandais
+1644,405,LM2,Anglais
+1645,405,Option,Math
+1646,405,Option,Sciences
+1642,405,Philo,CPC
+1647,406,EP,Fille
+1649,406,LM1,Néerlandais
+1650,406,LM2,Anglais
+1651,406,LM3,Espagnol
+1652,406,Option,Langues
+1648,406,Philo,CPC
+1654,407,LM1,Néerlandais Immersion
+1655,407,LM2,Anglais
+1656,407,Option,Math
+1657,407,Option,Sciences
+1653,407,Philo,Religion Islamique
+1658,408,EP,Fille
+1660,408,LM1,Anglais
+1661,408,LM2,Espagnol
+1662,408,Option,Histoire
+1659,408,Philo,CPC
+1663,409,EP,Fille
+1665,409,LM1,Anglais
+1666,409,LM2,Néerlandais
+1667,409,Option,Sciences Économiques
+1664,409,Philo,Religion Islamique
+159,41,LM1,Anglais
+160,41,LM2,Espagnol
+161,41,Option,Sciences
+158,41,Philo,MORALE
+1669,410,LM1,Anglais
+1668,410,Philo,CPC
+1670,411,EP,Fille
+1672,411,LM1,Anglais
+1673,411,LM2,Néerlandais
+1674,411,LM3,Espagnol
+1675,411,Option,Langues
+1671,411,Philo,CPC
+1677,412,LM1,Anglais
+1678,412,LM2,Néerlandais
+1679,412,Option,Sciences
+1676,412,Philo,CPC
+1680,413,EP,Fille
+1682,413,LM1,Anglais Immersion
+1681,413,Philo,MORALE
+1684,414,LM1,Anglais Immersion
+1685,414,LM2,Espagnol
+1686,414,Option,Sciences
+1683,414,Philo,MORALE
+1687,415,EP,Fille
+1689,415,LM1,Anglais
+1688,415,Philo,CPC
+1691,416,LM1,Anglais
+1692,416,LM2,Néerlandais
+1693,416,Option,Communication
+1690,416,Philo,CPC
+1695,417,LM1,Anglais
+1696,417,LM2,Néerlandais
+1697,417,Option,Latin
+1698,417,Option,Sciences
+1694,417,Philo,Religion Catholique
+1699,418,EP,Fille
+1701,418,LM1,Néerlandais
+1700,418,Philo,CPC
+1702,419,EP,Fille
+1704,419,LM1,Anglais Immersion
+1705,419,LM2,Espagnol
+1706,419,Option,Sciences
+1703,419,Philo,Religion Catholique
+163,42,LM1,Anglais Immersion
+162,42,Philo,Religion Protestante
+1707,420,EP,Fille
+1709,420,LM1,Anglais
+1710,420,LM2,Espagnol
+1711,420,Option,Sciences Économiques
+1708,420,Philo,Religion Protestante
+1712,421,EP,Fille
+1714,421,LM1,Anglais
+1715,421,LM2,Espagnol
+1716,421,Option,Math
+1717,421,Option,Sciences
+1713,421,Philo,MORALE
+1718,422,EP,Fille
+1720,422,LM1,Anglais
+1719,422,Philo,Religion Protestante
+1722,423,LM1,Anglais
+1723,423,LM2,Espagnol
+1724,423,Option,Sciences Sociales
+1721,423,Philo,Religion Islamique
+1725,424,EP,Fille
+1727,424,LM1,Anglais
+1726,424,Philo,Religion Catholique
+1729,425,LM1,Anglais Immersion
+1730,425,LM2,Espagnol
+1731,425,Option,Sciences Sociales
+1728,425,Philo,Religion Catholique
+1732,426,EP,Fille
+1734,426,LM1,Anglais Immersion
+1733,426,Philo,Religion Protestante
+1736,427,LM1,Anglais
+1737,427,LM2,Espagnol
+1738,427,Option,Math
+1739,427,Option,Sciences
+1735,427,Philo,CPC
+1740,428,EP,Fille
+1742,428,LM1,Néerlandais
+1743,428,LM2,Anglais
+1744,428,Option,Math
+1745,428,Option,Sciences
+1741,428,Philo,Religion Catholique
+1746,429,EP,Fille
+1748,429,LM1,Anglais
+1747,429,Philo,CPC
+164,43,EP,Fille
+166,43,LM1,Anglais
+167,43,LM2,Espagnol
+168,43,Option,Sciences Sociales
+165,43,Philo,Religion Islamique
+1750,430,LM1,Anglais
+1751,430,LM2,Néerlandais
+1752,430,Option,Sciences Économiques
+1749,430,Philo,CPC
+1753,431,EP,Fille
+1755,431,LM1,Anglais
+1756,431,LM2,Néerlandais
+1757,431,LM3,Espagnol
+1758,431,Option,Langues
+1759,431,Option,Math
+1754,431,Philo,CPC
+1760,432,EP,Fille
+1762,432,LM1,Anglais
+1763,432,LM2,Espagnol
+1764,432,Option,Sciences
+1761,432,Philo,CPC
+1766,433,LM1,Anglais Immersion
+1767,433,LM2,Espagnol
+1768,433,Option,Sciences
+1765,433,Philo,MORALE
+1769,434,EP,Fille
+1771,434,LM1,Anglais
+1772,434,LM2,Espagnol
+1773,434,Option,Sciences Sociales
+1770,434,Philo,CPC
+1775,435,LM1,Néerlandais
+1774,435,Philo,Religion Islamique
+1777,436,LM1,Anglais
+1778,436,LM2,Néerlandais
+1779,436,Option,Sciences
+1776,436,Philo,MORALE
+1781,437,LM1,Néerlandais Immersion
+1782,437,LM2,Anglais
+1783,437,Option,Sciences
+1780,437,Philo,CPC
+1784,438,EP,Fille
+1786,438,LM1,Anglais
+1787,438,LM2,Espagnol
+1788,438,Option,Communication
+1785,438,Philo,MORALE
+1790,439,LM1,Anglais
+1791,439,LM2,Espagnol
+1792,439,Option,Sciences
+1789,439,Philo,CPC
+170,44,LM1,Anglais
+171,44,LM2,Néerlandais
+172,44,Option,Sciences Économiques
+169,44,Philo,CPC
+1793,440,EP,Fille
+1795,440,LM1,Anglais
+1796,440,LM2,Espagnol
+1797,440,Option,Sciences Sociales
+1794,440,Philo,CPC
+1799,441,LM1,Anglais Immersion
+1800,441,LM2,Néerlandais
+1801,441,Option,Sciences
+1798,441,Philo,Religion Catholique
+1803,442,LM1,Anglais
+1802,442,Philo,CPC
+1805,443,LM1,Anglais
+1806,443,LM2,Italien
+1807,443,Option,Communication
+1804,443,Philo,CPC
+1808,444,EP,Fille
+1810,444,LM1,Anglais
+1811,444,LM2,Néerlandais
+1809,444,Philo,Religion Catholique
+1812,445,EP,Fille
+1814,445,LM1,Anglais
+1815,445,LM2,Espagnol
+1816,445,Option,Sciences
+1813,445,Philo,MORALE
+1818,446,LM1,Anglais
+1819,446,LM2,Espagnol
+1820,446,Option,Sciences Sociales
+1817,446,Philo,CPC
+1821,447,EP,Fille
+1823,447,LM1,Anglais
+1822,447,Philo,Religion Catholique
+1824,448,EP,Fille
+1826,448,LM1,Néerlandais
+1827,448,LM2,Anglais
+1828,448,Option,Latin
+1829,448,Option,Sciences
+1825,448,Philo,CPC
+1830,449,EP,Fille
+1832,449,LM1,Anglais
+1833,449,LM2,Espagnol
+1834,449,Option,Sciences Sociales
+1831,449,Philo,Religion Catholique
+173,45,EP,Fille
+175,45,LM1,Anglais
+176,45,LM2,Espagnol
+177,45,Option,Sciences Sociales
+174,45,Philo,CPC
+1835,450,EP,Fille
+1837,450,LM1,Anglais
+1836,450,Philo,Religion Protestante
+1838,451,EP,Fille
+1840,451,LM1,Anglais
+1841,451,LM2,Espagnol
+1842,451,Option,Sciences Sociales
+1839,451,Philo,CPC
+1843,452,EP,Fille
+1845,452,LM1,Anglais Immersion
+1844,452,Philo,CPC
+1846,453,EP,Fille
+1848,453,LM1,Anglais
+1849,453,LM2,Néerlandais
+1850,453,Option,Sciences Économiques
+1847,453,Philo,MORALE
+1852,454,LM1,Anglais
+1853,454,LM2,Néerlandais
+1854,454,Option,Sciences Économiques
+1855,454,Option,Math
+1851,454,Philo,CPC
+1856,455,EP,Fille
+1858,455,LM1,Anglais
+1859,455,LM2,Allemand
+1860,455,Option,Sciences Sociales
+1857,455,Philo,Religion Islamique
+1862,456,LM1,Néerlandais
+1861,456,Philo,CPC
+1863,457,EP,Fille
+1865,457,LM1,Néerlandais
+1866,457,LM2,Anglais
+1867,457,Option,Sciences
+1864,457,Philo,CPC
+1869,458,LM1,Anglais Immersion
+1868,458,Philo,Religion Protestante
+1870,459,EP,Fille
+1872,459,LM1,Anglais
+1871,459,Philo,Religion Islamique
+178,46,EP,Fille
+180,46,LM1,Anglais
+181,46,LM2,Italien
+182,46,Option,Sciences Économiques
+179,46,Philo,Religion Islamique
+1874,460,LM1,Anglais
+1875,460,LM2,Espagnol
+1876,460,Option,Histoire
+1873,460,Philo,CPC
+1878,461,LM1,Anglais
+1877,461,Philo,CPC
+1880,462,LM1,Anglais
+1881,462,LM2,Néerlandais
+1882,462,Option,Sciences Sociales
+1879,462,Philo,CPC
+1884,463,LM1,Anglais
+1885,463,LM2,Espagnol
+1886,463,Option,Sciences
+1883,463,Philo,CPC
+1888,464,LM1,Néerlandais
+1889,464,LM2,Anglais
+1890,464,Option,Sciences
+1887,464,Philo,Religion Catholique
+1892,465,LM1,Néerlandais
+1893,465,LM2,Anglais
+1894,465,LM3,Espagnol
+1895,465,Option,Langues
+1896,465,Option,Math
+1891,465,Philo,Religion Catholique
+1897,466,EP,Fille
+1899,466,LM1,Anglais
+1900,466,LM2,Espagnol
+1901,466,Option,Communication
+1898,466,Philo,Religion Catholique
+1902,467,EP,Fille
+1904,467,LM1,Anglais Immersion
+1905,467,LM2,Néerlandais
+1906,467,Option,Math
+1907,467,Option,Sciences
+1903,467,Philo,Religion Catholique
+1909,468,LM1,Anglais
+1910,468,LM2,Néerlandais
+1911,468,LM3,Espagnol
+1912,468,Option,Langues
+1908,468,Philo,CPC
+1914,469,LM1,Allemand Immersion
+1915,469,LM2,Anglais
+1916,469,Option,Latin
+1913,469,Philo,MORALE
+183,47,EP,Fille
+185,47,LM1,Anglais
+186,47,LM2,Espagnol
+187,47,Option,Sciences Sociales
+184,47,Philo,CPC
+1918,470,LM1,Anglais
+1919,470,LM2,Espagnol
+1920,470,Option,Math
+1921,470,Option,Sciences
+1917,470,Philo,MORALE
+1922,471,EP,Fille
+1924,471,LM1,Anglais
+1923,471,Philo,CPC
+1925,472,EP,Fille
+1927,472,LM1,Anglais
+1928,472,LM2,Espagnol
+1929,472,Option,Sciences Économiques
+1926,472,Philo,CPC
+1931,473,LM1,Anglais Immersion
+1932,473,LM2,Allemand
+1933,473,Option,Sciences
+1930,473,Philo,CPC
+1935,474,LM1,Néerlandais Immersion
+1936,474,LM2,Anglais
+1937,474,Option,Sciences Économiques
+1934,474,Philo,MORALE
+1939,475,LM1,Néerlandais Immersion
+1940,475,LM2,Anglais
+1941,475,Option,Sciences
+1938,475,Philo,CPC
+1942,476,EP,Fille
+1944,476,LM1,Anglais
+1945,476,LM2,Néerlandais
+1946,476,Option,Communication
+1943,476,Philo,CPC
+1947,477,EP,Fille
+1949,477,LM1,Anglais
+1950,477,LM2,Espagnol
+1951,477,Option,Communication
+1948,477,Philo,CPC
+1952,478,EP,Fille
+1954,478,LM1,Anglais
+1955,478,LM2,Espagnol
+1956,478,Option,Sciences Sociales
+1953,478,Philo,Religion Catholique
+1958,479,LM1,Anglais
+1959,479,LM2,Espagnol
+1960,479,Option,Sciences
+1957,479,Philo,CPC
+189,48,LM1,Anglais
+190,48,LM2,Italien
+191,48,Option,Communication
+188,48,Philo,CPC
+1962,480,LM1,Anglais
+1963,480,LM2,Néerlandais
+1964,480,Option,Sciences
+1961,480,Philo,Religion Catholique
+1965,481,EP,Fille
+1967,481,LM1,Anglais
+1968,481,LM2,Espagnol
+1969,481,Option,Sciences Sociales
+1966,481,Philo,CPC
+1970,482,EP,Fille
+1972,482,LM1,Néerlandais
+1973,482,LM2,Espagnol
+1974,482,Option,Sciences
+1971,482,Philo,Religion Protestante
+1975,483,EP,Fille
+1977,483,LM1,Anglais
+1978,483,LM2,Espagnol
+1979,483,Option,Sciences Sociales
+1976,483,Philo,CPC
+1981,484,LM1,Anglais
+1980,484,Philo,CPC
+1983,485,LM1,Anglais
+1984,485,LM2,Italien
+1985,485,LM3,Espagnol
+1986,485,Option,Langues
+1987,485,Option,Math
+1982,485,Philo,CPC
+1989,486,LM1,Anglais
+1990,486,LM2,Néerlandais
+1991,486,Option,Math
+1992,486,Option,Sciences
+1988,486,Philo,CPC
+1993,487,EP,Fille
+1995,487,LM1,Néerlandais
+1994,487,Philo,CPC
+1997,488,LM1,Anglais
+1996,488,Philo,MORALE
+1999,489,LM1,Anglais
+2000,489,LM2,Espagnol
+2001,489,Option,Sciences
+1998,489,Philo,CPC
+193,49,LM1,Néerlandais Immersion
+194,49,LM2,Anglais
+195,49,Option,Sciences Sociales
+192,49,Philo,MORALE
+2002,490,EP,Fille
+2004,490,LM1,Anglais
+2003,490,Philo,CPC
+2005,491,EP,Fille
+2007,491,LM1,Allemand Immersion
+2008,491,LM2,Anglais
+2009,491,Option,Sciences Économiques
+2006,491,Philo,CPC
+2011,492,LM1,Anglais
+2012,492,LM2,Néerlandais
+2013,492,Option,Latin
+2014,492,Option,Sciences
+2010,492,Philo,MORALE
+2016,493,LM1,Néerlandais
+2015,493,Philo,MORALE
+2017,494,EP,Fille
+2019,494,LM1,Anglais
+2020,494,LM2,Espagnol
+2021,494,Option,Math
+2022,494,Option,Sciences
+2018,494,Philo,CPC
+2023,495,EP,Fille
+2025,495,LM1,Anglais Immersion
+2026,495,LM2,Espagnol
+2027,495,Option,Sciences Sociales
+2024,495,Philo,CPC
+2028,496,EP,Fille
+2030,496,LM1,Anglais Immersion
+2029,496,Philo,Religion Protestante
+2031,497,EP,Fille
+2033,497,LM1,Allemand Immersion
+2034,497,LM2,Néerlandais
+2035,497,Option,Sciences Économiques
+2032,497,Philo,CPC
+2036,498,EP,Fille
+2038,498,LM1,Anglais
+2037,498,Philo,Religion Catholique
+2040,499,LM1,Anglais
+2041,499,LM2,Néerlandais
+2042,499,Option,Sciences Économiques
+2039,499,Philo,CPC
+19,5,EP,Fille
+21,5,LM1,Néerlandais Immersion
+20,5,Philo,Religion Islamique
+197,50,LM1,Anglais
+198,50,LM2,Espagnol
+199,50,Option,Communication
+196,50,Philo,CPC
+2044,500,LM1,Néerlandais
+2045,500,LM2,Espagnol
+2046,500,Option,Communication
+2043,500,Philo,CPC
+2048,501,LM1,Anglais
+2049,501,LM2,Espagnol
+2050,501,Option,Sciences
+2047,501,Philo,CPC
+2052,502,LM1,Anglais
+2053,502,LM2,Espagnol
+2054,502,Option,Histoire
+2051,502,Philo,CPC
+2056,503,LM1,Néerlandais Immersion
+2057,503,LM2,Anglais
+2058,503,Option,Sciences Économiques
+2055,503,Philo,MORALE
+2059,504,EP,Fille
+2061,504,LM1,Néerlandais
+2062,504,LM2,Anglais
+2063,504,Option,Sciences Économiques
+2060,504,Philo,CPC
+2064,505,EP,Fille
+2066,505,LM1,Anglais
+2067,505,LM2,Néerlandais
+2068,505,Option,Sciences
+2065,505,Philo,CPC
+2069,506,EP,Fille
+2071,506,LM1,Néerlandais Immersion
+2072,506,LM2,Anglais
+2073,506,Option,Sciences Économiques
+2070,506,Philo,CPC
+2075,507,LM1,Néerlandais
+2076,507,LM2,Anglais
+2077,507,Option,Sciences Sociales
+2074,507,Philo,CPC
+2078,508,EP,Fille
+2080,508,LM1,Anglais
+2081,508,LM2,Néerlandais
+2082,508,Option,Sciences
+2079,508,Philo,CPC
+2084,509,LM1,Néerlandais
+2083,509,Philo,CPC
+200,51,EP,Fille
+202,51,LM1,Anglais
+201,51,Philo,Religion Islamique
+2085,510,EP,Fille
+2087,510,LM1,Anglais
+2088,510,LM2,Espagnol
+2089,510,Option,Communication
+2086,510,Philo,CPC
+2090,511,EP,Fille
+2092,511,LM1,Anglais
+2091,511,Philo,CPC
+2093,512,EP,Fille
+2095,512,LM1,Anglais
+2096,512,LM2,Espagnol
+2097,512,Option,Sciences
+2094,512,Philo,CPC
+2098,513,EP,Fille
+2100,513,LM1,Anglais
+2101,513,LM2,Espagnol
+2102,513,Option,Sciences Sociales
+2099,513,Philo,CPC
+2103,514,EP,Fille
+2105,514,LM1,Anglais
+2104,514,Philo,CPC
+2106,515,EP,Fille
+2108,515,LM1,Anglais
+2109,515,LM2,Italien
+2110,515,LM3,Espagnol
+2111,515,Option,Langues
+2107,515,Philo,MORALE
+2113,516,LM1,Anglais
+2114,516,LM2,Espagnol
+2112,516,Philo,MORALE
+2115,517,EP,Fille
+2117,517,LM1,Anglais
+2118,517,LM2,Néerlandais
+2119,517,Option,Histoire
+2116,517,Philo,CPC
+2120,518,EP,Fille
+2122,518,LM1,Anglais
+2121,518,Philo,CPC
+2123,519,EP,Fille
+2125,519,LM1,Néerlandais
+2126,519,LM2,Espagnol
+2127,519,Option,Sciences Économiques
+2124,519,Philo,MORALE
+203,52,EP,Fille
+205,52,LM1,Anglais
+206,52,LM2,Néerlandais
+207,52,Option,Math
+208,52,Option,Sciences
+204,52,Philo,Religion Islamique
+2128,520,EP,Fille
+2130,520,LM1,Néerlandais
+2131,520,LM2,Anglais
+2132,520,Option,Sciences Sociales
+2129,520,Philo,CPC
+2134,521,LM1,Anglais
+2135,521,LM2,Espagnol
+2136,521,Option,Sciences Économiques
+2137,521,Option,Math
+2133,521,Philo,CPC
+2138,522,EP,Fille
+2140,522,LM1,Anglais
+2141,522,LM2,Espagnol
+2142,522,Option,Sciences
+2139,522,Philo,CPC
+2143,523,EP,Fille
+2145,523,LM1,Anglais
+2144,523,Philo,CPC
+2147,524,LM1,Anglais
+2148,524,LM2,Espagnol
+2149,524,Option,Sciences
+2146,524,Philo,CPC
+2150,525,EP,Fille
+2152,525,LM1,Anglais
+2151,525,Philo,CPC
+2154,526,LM1,Anglais Immersion
+2155,526,LM2,Espagnol
+2156,526,Option,Math
+2157,526,Option,Sciences
+2153,526,Philo,CPC
+2159,527,LM1,Anglais Immersion
+2160,527,LM2,Néerlandais
+2161,527,Option,Sciences Économiques
+2158,527,Philo,CPC
+2162,528,EP,Fille
+2164,528,LM1,Néerlandais
+2165,528,LM2,Anglais
+2166,528,Option,Histoire
+2163,528,Philo,MORALE
+2167,529,EP,Fille
+2169,529,LM1,Anglais
+2170,529,LM2,Néerlandais
+2171,529,Option,Sciences Économiques
+2168,529,Philo,CPC
+209,53,EP,Fille
+211,53,LM1,Anglais Immersion
+212,53,LM2,Espagnol
+213,53,Option,Sciences Sociales
+210,53,Philo,MORALE
+2173,530,LM1,Anglais
+2174,530,LM2,Italien
+2175,530,Option,Sciences Économiques
+2172,530,Philo,CPC
+2176,531,EP,Fille
+2178,531,LM1,Anglais
+2179,531,LM2,Espagnol
+2180,531,Option,Sciences
+2177,531,Philo,CPC
+2181,532,EP,Fille
+2183,532,LM1,Néerlandais
+2184,532,LM2,Anglais
+2185,532,Option,Communication
+2182,532,Philo,CPC
+2186,533,EP,Fille
+2188,533,LM1,Anglais
+2189,533,LM2,Espagnol
+2190,533,Option,Communication
+2187,533,Philo,CPC
+2192,534,LM1,Anglais
+2193,534,LM2,Espagnol
+2194,534,Option,Sciences Économiques
+2191,534,Philo,CPC
+2196,535,LM1,Anglais
+2195,535,Philo,MORALE
+2197,536,EP,Fille
+2199,536,LM1,Anglais
+2200,536,LM2,Espagnol
+2201,536,Option,Histoire
+2198,536,Philo,CPC
+2203,537,LM1,Anglais
+2204,537,LM2,Espagnol
+2205,537,Option,Histoire
+2202,537,Philo,CPC
+2206,538,EP,Fille
+2208,538,LM1,Anglais
+2209,538,LM2,Allemand
+2210,538,Option,Sciences
+2207,538,Philo,CPC
+2211,539,EP,Fille
+2213,539,LM1,Anglais Immersion
+2212,539,Philo,CPC
+214,54,EP,Fille
+216,54,LM1,Anglais
+217,54,LM2,Espagnol
+218,54,Option,Sciences Économiques
+215,54,Philo,CPC
+2214,540,EP,Fille
+2216,540,LM1,Anglais
+2217,540,LM2,Néerlandais
+2218,540,Option,Sciences Sociales
+2215,540,Philo,CPC
+2220,541,LM1,Anglais
+2221,541,LM2,Néerlandais
+2222,541,Option,Sciences Économiques
+2219,541,Philo,Religion Islamique
+2223,542,EP,Fille
+2225,542,LM1,Anglais
+2226,542,LM2,Espagnol
+2227,542,Option,Sciences Économiques
+2224,542,Philo,Religion Islamique
+2228,543,EP,Fille
+2230,543,LM1,Anglais
+2231,543,LM2,Espagnol
+2232,543,Option,Sciences Sociales
+2229,543,Philo,CPC
+2234,544,LM1,Anglais
+2233,544,Philo,CPC
+2236,545,LM1,Anglais
+2237,545,LM2,Néerlandais
+2238,545,Option,Communication
+2235,545,Philo,CPC
+2240,546,LM1,Anglais
+2239,546,Philo,CPC
+2242,547,LM1,Anglais
+2243,547,LM2,Italien
+2244,547,LM3,Espagnol
+2245,547,Option,Langues
+2241,547,Philo,CPC
+2246,548,EP,Fille
+2248,548,LM1,Anglais
+2247,548,Philo,CPC
+2249,549,EP,Fille
+2251,549,LM1,Anglais
+2252,549,LM2,Espagnol
+2253,549,Option,Sciences Sociales
+2250,549,Philo,CPC
+219,55,EP,Fille
+221,55,LM1,Anglais Immersion
+220,55,Philo,CPC
+2255,550,LM1,Néerlandais
+2256,550,LM2,Anglais
+2257,550,Option,Sciences
+2254,550,Philo,MORALE
+2259,551,LM1,Anglais
+2260,551,LM2,Espagnol
+2261,551,Option,Communication
+2258,551,Philo,MORALE
+2263,552,LM1,Anglais
+2262,552,Philo,Religion Catholique
+2264,553,EP,Fille
+2266,553,LM1,Allemand Immersion
+2265,553,Philo,CPC
+2268,554,LM1,Anglais
+2269,554,LM2,Espagnol
+2270,554,LM3,Allemand
+2271,554,Option,Langues
+2272,554,Option,Math
+2267,554,Philo,CPC
+2273,555,EP,Fille
+2275,555,LM1,Anglais Immersion
+2276,555,LM2,Néerlandais
+2277,555,Option,Sciences
+2274,555,Philo,CPC
+2279,556,LM1,Anglais Immersion
+2280,556,LM2,Néerlandais
+2281,556,Option,Sciences
+2278,556,Philo,Religion Catholique
+2283,557,LM1,Anglais
+2284,557,LM2,Néerlandais
+2285,557,Option,Sciences
+2282,557,Philo,CPC
+2286,558,EP,Fille
+2288,558,LM1,Anglais
+2289,558,LM2,Espagnol
+2290,558,Option,Histoire
+2287,558,Philo,CPC
+2291,559,EP,Fille
+2293,559,LM1,Anglais
+2294,559,LM2,Espagnol
+2295,559,Option,Sciences
+2292,559,Philo,MORALE
+223,56,LM1,Néerlandais
+224,56,LM2,Anglais
+225,56,Option,Sciences Économiques
+222,56,Philo,CPC
+2296,560,EP,Fille
+2298,560,LM1,Anglais Immersion
+2299,560,LM2,Néerlandais
+2300,560,Option,Math
+2301,560,Option,Sciences
+2297,560,Philo,CPC
+2303,561,LM1,Anglais Immersion
+2302,561,Philo,CPC
+2304,562,EP,Fille
+2306,562,LM1,Anglais
+2305,562,Philo,MORALE
+2308,563,LM1,Néerlandais Immersion
+2309,563,LM2,Espagnol
+2310,563,Option,Sciences Économiques
+2307,563,Philo,Religion Catholique
+2311,564,EP,Fille
+2313,564,LM1,Anglais
+2314,564,LM2,Néerlandais
+2315,564,Option,Sciences Sociales
+2312,564,Philo,CPC
+2317,565,LM1,Anglais
+2318,565,LM2,Néerlandais
+2316,565,Philo,Religion Islamique
+2319,566,EP,Fille
+2321,566,LM1,Anglais
+2322,566,LM2,Italien
+2323,566,Option,Sciences Économiques
+2320,566,Philo,Religion Islamique
+2324,567,EP,Fille
+2326,567,LM1,Anglais Immersion
+2327,567,LM2,Espagnol
+2328,567,Option,Sciences
+2325,567,Philo,CPC
+2329,568,EP,Fille
+2331,568,LM1,Anglais
+2332,568,LM2,Espagnol
+2333,568,Option,Sciences Économiques
+2330,568,Philo,MORALE
+2335,569,LM1,Anglais
+2336,569,LM2,Espagnol
+2337,569,Option,Communication
+2334,569,Philo,CPC
+226,57,EP,Fille
+228,57,LM1,Anglais
+229,57,LM2,Néerlandais
+230,57,Option,Sciences Économiques
+227,57,Philo,CPC
+2339,570,LM1,Anglais
+2338,570,Philo,CPC
+2340,571,EP,Fille
+2342,571,LM1,Anglais
+2343,571,LM2,Néerlandais
+2344,571,Option,Communication
+2341,571,Philo,CPC
+2345,572,EP,Fille
+2347,572,LM1,Néerlandais
+2348,572,LM2,Anglais
+2349,572,Option,Math
+2350,572,Option,Sciences
+2346,572,Philo,CPC
+2351,573,EP,Fille
+2353,573,LM1,Anglais
+2352,573,Philo,CPC
+2354,574,EP,Fille
+2356,574,LM1,Anglais
+2357,574,LM2,Espagnol
+2358,574,Option,Math
+2359,574,Option,Sciences
+2355,574,Philo,CPC
+2361,575,LM1,Néerlandais
+2362,575,LM2,Anglais
+2363,575,Option,Sciences Économiques
+2360,575,Philo,CPC
+2364,576,EP,Fille
+2366,576,LM1,Anglais
+2367,576,LM2,Espagnol
+2368,576,Option,Sciences Sociales
+2365,576,Philo,o
+2369,577,EP,Fille
+2371,577,LM1,Anglais
+2372,577,LM2,Néerlandais
+2373,577,Option,Sciences
+2370,577,Philo,o
+2375,578,LM1,Anglais
+2374,578,Philo,Religion Catholique
+2376,579,EP,Fille
+2378,579,LM1,Anglais
+2379,579,LM2,Espagnol
+2380,579,Option,Sciences
+2377,579,Philo,CPC
+232,58,LM1,Anglais Immersion
+231,58,Philo,MORALE
+2381,580,EP,Fille
+2383,580,LM1,Anglais
+2384,580,LM2,Néerlandais
+2385,580,Option,Sciences Économiques
+2382,580,Philo,CPC
+2387,581,LM1,Anglais
+2388,581,LM2,Italien
+2389,581,LM3,Espagnol
+2390,581,Option,Langues
+2391,581,Option,Math
+2386,581,Philo,CPC
+2392,582,EP,Fille
+2394,582,LM1,Anglais
+2395,582,LM2,Italien
+2396,582,Option,Communication
+2393,582,Philo,CPC
+2397,583,EP,Fille
+2399,583,LM1,Anglais
+2398,583,Philo,CPC
+2400,584,EP,Fille
+2402,584,LM1,Anglais
+2401,584,Philo,CPC
+2403,585,EP,Fille
+2405,585,LM1,Anglais
+2406,585,LM2,Espagnol
+2407,585,Option,Sciences Économiques
+2404,585,Philo,Religion Catholique
+2409,586,LM1,Néerlandais
+2408,586,Philo,MORALE
+2410,587,EP,Fille
+2412,587,LM1,Anglais
+2413,587,LM2,Espagnol
+2414,587,Option,Sciences Économiques
+2411,587,Philo,Religion Catholique
+2415,588,EP,Fille
+2417,588,LM1,Anglais
+2418,588,LM2,Néerlandais
+2419,588,Option,Latin
+2416,588,Philo,CPC
+2421,589,LM1,Anglais
+2422,589,LM2,Espagnol
+2423,589,Option,Sciences Sociales
+2420,589,Philo,MORALE
+234,59,LM1,Anglais
+233,59,Philo,MORALE
+2424,590,EP,Fille
+2426,590,LM1,Anglais Immersion
+2425,590,Philo,Religion Protestante
+2427,591,EP,Fille
+2429,591,LM1,Anglais Immersion
+2430,591,LM2,Néerlandais
+2431,591,Option,Sciences Économiques
+2428,591,Philo,Religion Protestante
+2432,592,EP,Fille
+2434,592,LM1,Anglais
+2435,592,LM2,Italien
+2436,592,Option,Sciences Économiques
+2433,592,Philo,CPC
+2437,593,EP,Fille
+2439,593,LM1,Anglais Immersion
+2440,593,LM2,Espagnol
+2441,593,Option,Sciences Sociales
+2438,593,Philo,Religion Protestante
+2442,594,EP,Fille
+2444,594,LM1,Anglais
+2445,594,LM2,Espagnol
+2443,594,Philo,Religion Islamique
+2446,595,EP,Fille
+2448,595,LM1,Anglais
+2447,595,Philo,MORALE
+2449,596,EP,Fille
+2451,596,LM1,Néerlandais
+2452,596,LM2,Anglais
+2453,596,Option,Math
+2454,596,Option,Sciences
+2450,596,Philo,MORALE
+2456,597,LM1,Anglais
+2457,597,LM2,Italien
+2458,597,Option,Sciences
+2455,597,Philo,CPC
+2459,598,EP,Fille
+2461,598,LM1,Néerlandais Immersion
+2462,598,LM2,Espagnol
+2460,598,Philo,Religion Catholique
+2464,599,LM1,Néerlandais Immersion
+2465,599,LM2,Anglais
+2466,599,Option,Sciences
+2463,599,Philo,CPC
+22,6,EP,Fille
+24,6,LM1,Anglais
+23,6,Philo,MORALE
+235,60,EP,Fille
+237,60,LM1,Anglais Immersion
+238,60,LM2,Italien
+239,60,Option,Sciences Économiques
+236,60,Philo,CPC
+2468,600,LM1,Néerlandais Immersion
+2467,600,Philo,MORALE
+2469,601,EP,Fille
+2471,601,LM1,Anglais Immersion
+2472,601,LM2,Espagnol
+2473,601,Option,Sciences Sociales
+2470,601,Philo,Religion Islamique
+2474,602,EP,Fille
+2476,602,LM1,Anglais
+2477,602,LM2,Espagnol
+2478,602,Option,Sciences Sociales
+2475,602,Philo,CPC
+2479,603,EP,Fille
+2481,603,LM1,Anglais Immersion
+2482,603,LM2,Espagnol
+2483,603,Option,Sciences
+2480,603,Philo,CPC
+2484,604,EP,Fille
+2486,604,LM1,Néerlandais
+2487,604,LM2,Espagnol
+2488,604,Option,Sciences Sociales
+2485,604,Philo,Religion Islamique
+2490,605,LM1,Anglais
+2491,605,LM2,Néerlandais
+2492,605,Option,Sciences
+2489,605,Philo,CPC
+2494,606,LM1,Anglais
+2495,606,LM2,Espagnol
+2496,606,Option,Sciences Économiques
+2493,606,Philo,Religion Islamique
+2498,607,LM1,Anglais Immersion
+2497,607,Philo,MORALE
+2499,608,EP,Fille
+2501,608,LM1,Anglais Immersion
+2502,608,LM2,Néerlandais
+2503,608,Option,Sciences
+2500,608,Philo,MORALE
+2505,609,LM1,Anglais
+2506,609,LM2,Néerlandais
+2507,609,Option,Sciences
+2504,609,Philo,CPC
+241,61,LM1,Anglais Immersion
+240,61,Philo,MORALE
+2509,610,LM1,Anglais
+2510,610,LM2,Espagnol
+2511,610,Option,Histoire
+2508,610,Philo,CPC
+2513,611,LM1,Anglais
+2512,611,Philo,CPC
+2515,612,LM1,Anglais Immersion
+2516,612,LM2,Néerlandais
+2517,612,Option,Sciences Économiques
+2514,612,Philo,MORALE
+2518,613,EP,Fille
+2520,613,LM1,Anglais
+2521,613,LM2,Espagnol
+2522,613,Option,Math
+2523,613,Option,Sciences
+2519,613,Philo,CPC
+2525,614,LM1,Anglais Immersion
+2524,614,Philo,Religion Protestante
+2526,615,EP,Fille
+2528,615,LM1,Anglais
+2529,615,LM2,Espagnol
+2530,615,Option,Sciences Sociales
+2527,615,Philo,CPC
+2531,616,EP,Fille
+2533,616,LM1,Anglais Immersion
+2534,616,LM2,Espagnol
+2535,616,Option,Sciences
+2532,616,Philo,CPC
+2536,617,EP,Fille
+2538,617,LM1,Anglais
+2539,617,LM2,Néerlandais
+2540,617,Option,Sciences
+2537,617,Philo,Religion Catholique
+2542,618,LM1,Anglais
+2541,618,Philo,Religion Islamique
+2543,619,EP,Fille
+2545,619,LM1,Anglais
+2546,619,LM2,Néerlandais
+2547,619,Option,Sciences
+2544,619,Philo,Religion Catholique
+243,62,LM1,Anglais
+244,62,LM2,Espagnol
+245,62,Option,Communication
+242,62,Philo,CPC
+2549,620,LM1,Anglais
+2550,620,LM2,Italien
+2551,620,LM3,Allemand
+2552,620,Option,Langues
+2548,620,Philo,CPC
+2554,621,LM1,Anglais Immersion
+2555,621,LM2,Espagnol
+2556,621,Option,Sciences Économiques
+2553,621,Philo,Religion Catholique
+2558,622,LM1,Néerlandais
+2559,622,LM2,Anglais
+2560,622,Option,Math
+2561,622,Option,Sciences
+2557,622,Philo,CPC
+2562,623,EP,Fille
+2564,623,LM1,Anglais Immersion
+2565,623,LM2,Néerlandais
+2566,623,Option,Sciences
+2563,623,Philo,CPC
+2567,624,EP,Fille
+2569,624,LM1,Anglais Immersion
+2570,624,LM2,Espagnol
+2571,624,Option,Sciences
+2568,624,Philo,Religion Islamique
+2573,625,LM1,Néerlandais
+2574,625,LM2,Anglais
+2575,625,Option,Math
+2576,625,Option,Sciences
+2572,625,Philo,CPC
+2577,626,EP,Fille
+2579,626,LM1,Anglais
+2580,626,LM2,Espagnol
+2581,626,Option,Communication
+2578,626,Philo,CPC
+2582,627,EP,Fille
+2584,627,LM1,Anglais
+2585,627,LM2,Espagnol
+2586,627,Option,Sciences
+2583,627,Philo,Religion Catholique
+2587,628,EP,Fille
+2589,628,LM1,Anglais
+2590,628,LM2,Espagnol
+2591,628,Option,Sciences Sociales
+2588,628,Philo,MORALE
+2593,629,LM1,Allemand Immersion
+2594,629,LM2,Anglais
+2595,629,Option,Histoire
+2592,629,Philo,CPC
+247,63,LM1,Anglais
+246,63,Philo,o
+2596,630,EP,Fille
+2598,630,LM1,Anglais
+2599,630,LM2,Espagnol
+2600,630,Option,Sciences
+2597,630,Philo,CPC
+2602,631,LM1,Anglais
+2603,631,LM2,Espagnol
+2604,631,Option,Sciences
+2601,631,Philo,CPC
+2606,632,LM1,Anglais Immersion
+2607,632,LM2,Espagnol
+2605,632,Philo,Religion Islamique
+2609,633,LM1,Anglais
+2610,633,LM2,Espagnol
+2611,633,Option,Sciences
+2608,633,Philo,MORALE
+2612,634,EP,Fille
+2614,634,LM1,Anglais Immersion
+2615,634,LM2,Espagnol
+2616,634,Option,Sciences
+2613,634,Philo,Religion Catholique
+2617,635,EP,Fille
+2619,635,LM1,Anglais
+2618,635,Philo,Religion Protestante
+2621,636,LM1,Allemand Immersion
+2622,636,LM2,Anglais
+2623,636,Option,Sciences
+2620,636,Philo,CPC
+2624,637,EP,Fille
+2626,637,LM1,Anglais
+2625,637,Philo,Religion Islamique
+2627,638,EP,Fille
+2629,638,LM1,Anglais
+2628,638,Philo,MORALE
+2630,639,EP,Fille
+2632,639,LM1,Anglais Immersion
+2633,639,LM2,Néerlandais
+2634,639,Option,Sciences
+2631,639,Philo,Religion Protestante
+248,64,EP,Fille
+250,64,LM1,Anglais
+249,64,Philo,CPC
+2635,640,EP,Fille
+2637,640,LM1,Anglais
+2636,640,Philo,CPC
+2638,641,EP,Fille
+2640,641,LM1,Anglais
+2641,641,LM2,Néerlandais
+2639,641,Philo,Religion Islamique
+2643,642,LM1,Anglais
+2644,642,LM2,Espagnol
+2645,642,Option,Sciences Sociales
+2642,642,Philo,Religion Islamique
+2647,643,LM1,Anglais
+2648,643,LM2,Néerlandais
+2649,643,Option,Sciences
+2646,643,Philo,CPC
+2650,644,EP,Fille
+2652,644,LM1,Anglais
+2653,644,LM2,Néerlandais
+2654,644,Option,Sciences Sociales
+2651,644,Philo,Religion Protestante
+2655,645,EP,Fille
+2657,645,LM1,Anglais Immersion
+2656,645,Philo,Religion Protestante
+2659,646,LM1,Anglais
+2658,646,Philo,MORALE
+2660,647,EP,Fille
+2662,647,LM1,Anglais
+2663,647,LM2,Espagnol
+2664,647,Option,Sciences Sociales
+2661,647,Philo,CPC
+2665,648,EP,Fille
+2667,648,LM1,Anglais
+2668,648,LM2,Espagnol
+2669,648,Option,Sciences Sociales
+2666,648,Philo,MORALE
+2670,649,EP,Fille
+2672,649,LM1,Anglais
+2673,649,LM2,Italien
+2674,649,Option,Sciences Sociales
+2671,649,Philo,Religion Islamique
+252,65,LM1,Anglais
+251,65,Philo,Religion Islamique
+2675,650,EP,Fille
+2677,650,LM1,Anglais Immersion
+2676,650,Philo,Religion Protestante
+2678,651,EP,Fille
+2680,651,LM1,Allemand Immersion
+2681,651,LM2,Anglais
+2682,651,LM3,Espagnol
+2683,651,Option,Langues
+2679,651,Philo,Religion Catholique
+2685,652,LM1,Anglais
+2686,652,LM2,Espagnol
+2687,652,Option,Math
+2688,652,Option,Sciences
+2684,652,Philo,CPC
+2689,653,EP,Fille
+2691,653,LM1,Anglais
+2692,653,LM2,Néerlandais
+2693,653,Option,Math
+2694,653,Option,Sciences
+2690,653,Philo,CPC
+2695,654,EP,Fille
+2697,654,LM1,Anglais
+2698,654,LM2,Espagnol
+2699,654,Option,Histoire
+2696,654,Philo,Religion Islamique
+2701,655,LM1,Anglais
+2700,655,Philo,Religion Catholique
+2702,656,EP,Fille
+2704,656,LM1,Anglais
+2703,656,Philo,CPC
+2706,657,LM1,Néerlandais
+2707,657,LM2,Anglais
+2708,657,Option,Sciences
+2705,657,Philo,CPC
+2710,658,LM1,Néerlandais Immersion
+2709,658,Philo,CPC
+2712,659,LM1,Anglais
+2713,659,LM2,Espagnol
+2714,659,Option,Sciences Économiques
+2711,659,Philo,MORALE
+253,66,EP,Fille
+255,66,LM1,Anglais
+256,66,LM2,Espagnol
+257,66,Option,Communication
+254,66,Philo,CPC
+2715,660,EP,Fille
+2717,660,LM1,Anglais
+2718,660,LM2,Allemand
+2719,660,LM3,Espagnol
+2720,660,Option,Langues
+2716,660,Philo,CPC
+2721,661,EP,Fille
+2723,661,LM1,Anglais
+2722,661,Philo,CPC
+2725,662,LM1,Anglais
+2726,662,LM2,Italien
+2727,662,Option,Sciences Sociales
+2724,662,Philo,CPC
+2729,663,LM1,Anglais
+2730,663,LM2,Espagnol
+2731,663,Option,Sciences
+2728,663,Philo,CPC
+2733,664,LM1,Anglais Immersion
+2734,664,LM2,Néerlandais
+2735,664,Option,Sciences
+2732,664,Philo,Religion Catholique
+2737,665,LM1,Anglais
+2738,665,LM2,Italien
+2739,665,Option,Sciences Sociales
+2736,665,Philo,CPC
+2741,666,LM1,Anglais
+2742,666,LM2,Néerlandais
+2743,666,Option,Sciences Économiques
+2740,666,Philo,Religion Islamique
+2745,667,LM1,Anglais
+2744,667,Philo,Religion Catholique
+2746,668,EP,Fille
+2748,668,LM1,Anglais
+2747,668,Philo,Religion Islamique
+2749,669,EP,Fille
+2751,669,LM1,Anglais
+2752,669,LM2,Espagnol
+2753,669,Option,Sciences Sociales
+2750,669,Philo,MORALE
+259,67,LM1,Anglais
+258,67,Philo,Religion Islamique
+2754,670,EP,Fille
+2756,670,LM1,Néerlandais
+2757,670,LM2,Anglais
+2758,670,Option,Sciences
+2755,670,Philo,CPC
+2760,671,LM1,Néerlandais
+2759,671,Philo,MORALE
+2761,672,EP,Fille
+2763,672,LM1,Néerlandais
+2764,672,LM2,Anglais
+2765,672,Option,Sciences
+2762,672,Philo,CPC
+2766,673,EP,Fille
+2768,673,LM1,Anglais
+2769,673,LM2,Espagnol
+2770,673,Option,Sciences
+2767,673,Philo,CPC
+2771,674,EP,Fille
+2773,674,LM1,Anglais
+2772,674,Philo,Religion Islamique
+2774,675,EP,Fille
+2776,675,LM1,Anglais
+2775,675,Philo,Religion Islamique
+2778,676,LM1,Anglais
+2777,676,Philo,CPC
+2779,677,EP,Fille
+2781,677,LM1,Anglais
+2782,677,LM2,Espagnol
+2783,677,Option,Sciences Sociales
+2780,677,Philo,Religion Islamique
+2784,678,EP,Fille
+2786,678,LM1,Anglais
+2787,678,LM2,Espagnol
+2788,678,Option,Math
+2789,678,Option,Sciences
+2785,678,Philo,MORALE
+2791,679,LM1,Anglais
+2792,679,LM2,Espagnol
+2793,679,Option,Sciences Économiques
+2790,679,Philo,CPC
+261,68,LM1,Anglais
+262,68,LM2,Néerlandais
+263,68,Option,Communication
+260,68,Philo,CPC
+2794,680,EP,Fille
+2796,680,LM1,Anglais
+2797,680,LM2,Italien
+2798,680,Option,Sciences Sociales
+2795,680,Philo,Religion Catholique
+2799,681,EP,Fille
+2801,681,LM1,Néerlandais
+2800,681,Philo,CPC
+2802,682,EP,Fille
+2804,682,LM1,Anglais
+2803,682,Philo,Religion Catholique
+2805,683,EP,Fille
+2807,683,LM1,Néerlandais
+2808,683,LM2,Anglais
+2809,683,LM3,Espagnol
+2810,683,Option,Langues
+2806,683,Philo,CPC
+2811,684,EP,Fille
+2813,684,LM1,Anglais
+2814,684,LM2,Néerlandais
+2815,684,LM3,Espagnol
+2816,684,Option,Langues
+2812,684,Philo,CPC
+2817,685,EP,Fille
+2819,685,LM1,Anglais
+2818,685,Philo,CPC
+2820,686,EP,Fille
+2822,686,LM1,Anglais
+2823,686,LM2,Espagnol
+2824,686,Option,Math
+2825,686,Option,Sciences
+2821,686,Philo,CPC
+2826,687,EP,Fille
+2828,687,LM1,Anglais
+2829,687,LM2,Espagnol
+2830,687,Option,Histoire
+2827,687,Philo,CPC
+2832,688,LM1,Anglais
+2833,688,LM2,Néerlandais
+2834,688,Option,Sciences
+2831,688,Philo,CPC
+2835,689,EP,Fille
+2837,689,LM1,Néerlandais
+2838,689,LM2,Anglais
+2839,689,Option,Sciences Économiques
+2836,689,Philo,Religion Catholique
+265,69,LM1,Anglais
+266,69,LM2,Espagnol
+267,69,LM3,Allemand
+268,69,Option,Langues
+264,69,Philo,CPC
+2841,690,LM1,Anglais
+2842,690,LM2,Espagnol
+2843,690,Option,Histoire
+2840,690,Philo,CPC
+2844,691,EP,Fille
+2846,691,LM1,Anglais
+2847,691,LM2,Italien
+2848,691,Option,Sciences Sociales
+2845,691,Philo,CPC
+2850,692,LM1,Anglais
+2851,692,LM2,Espagnol
+2852,692,Option,Sciences Économiques
+2849,692,Philo,CPC
+2854,693,LM1,Anglais
+2853,693,Philo,CPC
+2856,694,LM1,Anglais
+2857,694,LM2,Espagnol
+2858,694,Option,Communication
+2855,694,Philo,CPC
+2860,695,LM1,Anglais
+2859,695,Philo,CPC
+2861,696,EP,Fille
+2863,696,LM1,Anglais
+2864,696,LM2,Espagnol
+2865,696,Option,Sciences
+2862,696,Philo,MORALE
+2866,697,EP,Fille
+2868,697,LM1,Anglais
+2869,697,LM2,Néerlandais
+2870,697,Option,Histoire
+2867,697,Philo,CPC
+2871,698,EP,Fille
+2873,698,LM1,Anglais
+2872,698,Philo,MORALE
+2874,699,EP,Fille
+2876,699,LM1,Anglais
+2877,699,LM2,Espagnol
+2878,699,Option,Sciences
+2875,699,Philo,MORALE
+25,7,EP,Fille
+27,7,LM1,Anglais
+26,7,Philo,CPC
+269,70,EP,Fille
+271,70,LM1,Néerlandais Immersion
+272,70,LM2,Anglais
+273,70,Option,Sciences Sociales
+270,70,Philo,CPC
+2880,700,LM1,Anglais
+2881,700,LM2,Néerlandais
+2882,700,Option,Sciences
+2879,700,Philo,MORALE
+2883,701,EP,Fille
+2885,701,LM1,Anglais
+2886,701,LM2,Espagnol
+2887,701,Option,Sciences Économiques
+2884,701,Philo,CPC
+2888,702,EP,Fille
+2890,702,LM1,Anglais
+2889,702,Philo,CPC
+2891,703,EP,Fille
+2893,703,LM1,Anglais
+2892,703,Philo,MORALE
+2894,704,EP,Fille
+2896,704,LM1,Anglais
+2897,704,LM2,Espagnol
+2898,704,Option,Communication
+2895,704,Philo,Religion Catholique
+2900,705,LM1,Anglais
+2901,705,LM2,Espagnol
+2902,705,Option,Sciences Sociales
+2899,705,Philo,Religion Catholique
+2904,706,LM1,Anglais
+2905,706,LM2,Espagnol
+2906,706,Option,Sciences Sociales
+2903,706,Philo,CPC
+2908,707,LM1,Anglais Immersion
+2909,707,LM2,Espagnol
+2910,707,Option,Sciences Économiques
+2907,707,Philo,Religion Catholique
+2912,708,LM1,Anglais
+2911,708,Philo,MORALE
+2913,709,EP,Fille
+2915,709,LM1,Anglais
+2916,709,LM2,Espagnol
+2917,709,Option,Sciences
+2914,709,Philo,CPC
+275,71,LM1,Anglais
+276,71,LM2,Espagnol
+277,71,Option,Sciences Économiques
+274,71,Philo,MORALE
+2919,710,LM1,Anglais
+2920,710,LM2,Espagnol
+2921,710,Option,Histoire
+2918,710,Philo,CPC
+2922,711,EP,Fille
+2924,711,LM1,Néerlandais
+2925,711,LM2,Anglais
+2926,711,Option,Sciences
+2923,711,Philo,CPC
+2927,712,EP,Fille
+2929,712,LM1,Anglais
+2930,712,LM2,Espagnol
+2931,712,Option,Sciences Sociales
+2928,712,Philo,CPC
+2932,713,EP,Fille
+2934,713,LM1,Anglais
+2935,713,LM2,Italien
+2936,713,Option,Latin
+2937,713,Option,Sciences
+2933,713,Philo,CPC
+2939,714,LM1,Anglais Immersion
+2940,714,LM2,Néerlandais
+2941,714,Option,Latin
+2938,714,Philo,CPC
+2943,715,LM1,Anglais
+2942,715,Philo,MORALE
+2944,716,EP,Fille
+2946,716,LM1,Anglais
+2947,716,LM2,Espagnol
+2948,716,Option,Sciences Sociales
+2945,716,Philo,Religion Catholique
+2950,717,LM1,Anglais
+2951,717,LM2,Italien
+2952,717,LM3,Allemand
+2953,717,Option,Langues
+2954,717,Option,Math
+2949,717,Philo,CPC
+2956,718,LM1,Anglais
+2957,718,LM2,Espagnol
+2958,718,Option,Sciences
+2955,718,Philo,MORALE
+2960,719,LM1,Néerlandais
+2961,719,LM2,Anglais
+2962,719,Option,Sciences Sociales
+2959,719,Philo,CPC
+278,72,EP,Fille
+280,72,LM1,Anglais
+281,72,LM2,Espagnol
+282,72,Option,Sciences Économiques
+279,72,Philo,Religion Islamique
+2964,720,LM1,Anglais
+2965,720,LM2,Italien
+2966,720,Option,Communication
+2963,720,Philo,CPC
+2967,721,EP,Fille
+2969,721,LM1,Néerlandais
+2968,721,Philo,CPC
+2970,722,EP,Fille
+2972,722,LM1,Anglais
+2971,722,Philo,CPC
+2973,723,EP,Fille
+2975,723,LM1,Anglais
+2974,723,Philo,CPC
+2977,724,LM1,Anglais
+2978,724,LM2,Allemand
+2979,724,Option,Sciences Économiques
+2976,724,Philo,Religion Islamique
+2981,725,LM1,Anglais
+2980,725,Philo,Religion Catholique
+2982,726,EP,Fille
+2984,726,LM1,Anglais
+2985,726,LM2,Espagnol
+2986,726,Option,Sciences Sociales
+2983,726,Philo,Religion Catholique
+2988,727,LM1,Anglais
+2987,727,Philo,Religion Catholique
+2989,728,EP,Fille
+2991,728,LM1,Néerlandais
+2992,728,LM2,Anglais
+2993,728,Option,Math
+2994,728,Option,Sciences
+2990,728,Philo,CPC
+2996,729,LM1,Anglais
+2997,729,LM2,Néerlandais
+2998,729,Option,Sciences Économiques
+2995,729,Philo,CPC
+283,73,EP,Fille
+285,73,LM1,Anglais
+286,73,LM2,Espagnol
+284,73,Philo,CPC
+3000,730,LM1,Anglais
+2999,730,Philo,MORALE
+3001,731,EP,Fille
+3003,731,LM1,Anglais
+3004,731,LM2,Italien
+3005,731,Option,Communication
+3002,731,Philo,Religion Catholique
+3007,732,LM1,Néerlandais
+3008,732,LM2,Anglais
+3009,732,Option,Math
+3010,732,Option,Sciences
+3006,732,Philo,CPC
+3012,733,LM1,Anglais
+3013,733,LM2,Espagnol
+3014,733,Option,Sciences
+3011,733,Philo,CPC
+3015,734,EP,Fille
+3017,734,LM1,Néerlandais
+3018,734,LM2,Anglais
+3019,734,Option,Sciences
+3016,734,Philo,CPC
+3021,735,LM1,Néerlandais
+3020,735,Philo,CPC
+3023,736,LM1,Anglais Immersion
+3024,736,LM2,Néerlandais
+3025,736,Option,Sciences Économiques
+3022,736,Philo,CPC
+3027,737,LM1,Anglais Immersion
+3028,737,LM2,Allemand
+3029,737,Option,Sciences Économiques
+3026,737,Philo,CPC
+3030,738,EP,Fille
+3032,738,LM1,Anglais
+3033,738,LM2,Italien
+3034,738,Option,Communication
+3031,738,Philo,CPC
+3036,739,LM1,Anglais
+3037,739,LM2,Espagnol
+3038,739,Option,Sciences Sociales
+3035,739,Philo,CPC
+288,74,LM1,Néerlandais Immersion
+289,74,LM2,Anglais
+290,74,Option,Sciences Économiques
+287,74,Philo,Religion Islamique
+3040,740,LM1,Anglais
+3039,740,Philo,MORALE
+3042,741,LM1,Néerlandais
+3043,741,LM2,Anglais
+3044,741,Option,Sciences
+3041,741,Philo,CPC
+3045,742,EP,Fille
+3047,742,LM1,Anglais
+3048,742,LM2,Espagnol
+3049,742,Option,Sciences Sociales
+3046,742,Philo,CPC
+3051,743,LM1,Anglais
+3052,743,LM2,Espagnol
+3053,743,Option,Communication
+3050,743,Philo,CPC
+3054,744,EP,Fille
+3056,744,LM1,Anglais
+3057,744,LM2,Allemand
+3058,744,Option,Communication
+3055,744,Philo,CPC
+3060,745,LM1,Anglais
+3059,745,Philo,CPC
+3062,746,LM1,Néerlandais
+3061,746,Philo,CPC
+3063,747,EP,Fille
+3065,747,LM1,Anglais
+3066,747,LM2,Allemand
+3067,747,Option,Math
+3068,747,Option,Sciences
+3064,747,Philo,CPC
+3070,748,LM1,Anglais
+3071,748,LM2,Espagnol
+3072,748,Option,Communication
+3069,748,Philo,CPC
+3074,749,LM1,Anglais Immersion
+3075,749,LM2,Espagnol
+3076,749,Option,Sciences Économiques
+3073,749,Philo,Religion Islamique
+291,75,EP,Fille
+293,75,LM1,Anglais
+292,75,Philo,Religion Islamique
+3077,750,EP,Fille
+3079,750,LM1,Anglais Immersion
+3080,750,LM2,Espagnol
+3081,750,Option,Sciences Sociales
+3078,750,Philo,Religion Islamique
+3082,751,EP,Fille
+3084,751,LM1,Anglais Immersion
+3085,751,LM2,Néerlandais
+3086,751,Option,Sciences Économiques
+3083,751,Philo,CPC
+3087,752,EP,Fille
+3089,752,LM1,Néerlandais Immersion
+3090,752,LM2,Anglais
+3091,752,Option,Sciences
+3088,752,Philo,CPC
+3092,753,EP,Fille
+3094,753,LM1,Anglais Immersion
+3095,753,LM2,Néerlandais
+3096,753,Option,Sciences
+3093,753,Philo,CPC
+3097,754,EP,Fille
+3099,754,LM1,Anglais
+3100,754,LM2,Espagnol
+3101,754,Option,Sciences Sociales
+3098,754,Philo,CPC
+3103,755,LM1,Anglais
+3102,755,Philo,CPC
+3104,756,EP,Fille
+3106,756,LM1,Anglais
+3105,756,Philo,CPC
+3108,757,LM1,Anglais
+3109,757,LM2,Italien
+3110,757,Option,Math
+3111,757,Option,Sciences
+3107,757,Philo,CPC
+3112,758,EP,Fille
+3114,758,LM1,Anglais
+3115,758,LM2,Espagnol
+3116,758,Option,Histoire
+3113,758,Philo,CPC
+3117,759,EP,Fille
+3119,759,LM1,Anglais
+3120,759,LM2,Italien
+3121,759,Option,Sciences Sociales
+3118,759,Philo,CPC
+294,76,EP,Fille
+296,76,LM1,Néerlandais
+297,76,LM2,Anglais
+298,76,Option,Sciences
+295,76,Philo,CPC
+3123,760,LM1,Anglais Immersion
+3124,760,LM2,Néerlandais
+3125,760,Option,Sciences
+3122,760,Philo,Religion Catholique
+3127,761,LM1,Anglais Immersion
+3128,761,LM2,Allemand
+3129,761,Option,Sciences
+3126,761,Philo,CPC
+3130,762,EP,Fille
+3132,762,LM1,Anglais
+3133,762,LM2,Espagnol
+3134,762,Option,Math
+3135,762,Option,Sciences
+3131,762,Philo,MORALE
+3136,763,EP,Fille
+3138,763,LM1,Anglais
+3139,763,LM2,Espagnol
+3140,763,Option,Sciences
+3137,763,Philo,CPC
+3141,764,EP,Fille
+3143,764,LM1,Néerlandais
+3142,764,Philo,Religion Catholique
+3144,765,EP,Fille
+3146,765,LM1,Anglais
+3147,765,LM2,Espagnol
+3148,765,Option,Sciences
+3145,765,Philo,Religion Islamique
+3149,766,EP,Fille
+3151,766,LM1,Anglais
+3152,766,LM2,Italien
+3153,766,Option,Sciences Sociales
+3150,766,Philo,CPC
+3154,767,EP,Fille
+3156,767,LM1,Anglais
+3155,767,Philo,Religion Islamique
+3158,768,LM1,Anglais
+3157,768,Philo,Religion Islamique
+3160,769,LM1,Anglais
+3159,769,Philo,Religion Islamique
+300,77,LM1,Anglais
+301,77,LM2,Néerlandais
+302,77,Option,Sciences
+299,77,Philo,CPC
+3161,770,EP,Fille
+3163,770,LM1,Anglais
+3164,770,LM2,Néerlandais
+3165,770,Option,Sciences Économiques
+3162,770,Philo,Religion Islamique
+3167,771,LM1,Anglais Immersion
+3168,771,LM2,Espagnol
+3169,771,Option,Sciences
+3166,771,Philo,Religion Islamique
+3170,772,EP,Fille
+3172,772,LM1,Anglais
+3173,772,LM2,Espagnol
+3174,772,Option,Communication
+3171,772,Philo,CPC
+3175,773,EP,Fille
+3177,773,LM1,Anglais
+3176,773,Philo,CPC
+3178,774,EP,Fille
+3180,774,LM1,Anglais
+3181,774,LM2,Espagnol
+3182,774,Option,Communication
+3179,774,Philo,CPC
+3184,775,LM1,Anglais
+3185,775,LM2,Espagnol
+3186,775,Option,Sciences Sociales
+3183,775,Philo,CPC
+3188,776,LM1,Anglais
+3189,776,LM2,Espagnol
+3190,776,Option,Sciences Sociales
+3187,776,Philo,CPC
+3191,777,EP,Fille
+3193,777,LM1,Anglais
+3194,777,LM2,Espagnol
+3195,777,Option,Communication
+3192,777,Philo,CPC
+3196,778,EP,Fille
+3198,778,LM1,Allemand Immersion
+3197,778,Philo,CPC
+3199,779,EP,Fille
+3201,779,LM1,Anglais
+3200,779,Philo,Religion Catholique
+303,78,EP,Fille
+305,78,LM1,Anglais
+306,78,LM2,Italien
+307,78,Option,Sciences Sociales
+304,78,Philo,CPC
+3203,780,LM1,Anglais
+3202,780,Philo,CPC
+3204,781,EP,Fille
+3206,781,LM1,Néerlandais Immersion
+3207,781,LM2,Anglais
+3208,781,Option,Histoire
+3205,781,Philo,CPC
+3209,782,EP,Fille
+3211,782,LM1,Anglais
+3210,782,Philo,CPC
+3212,783,EP,Fille
+3214,783,LM1,Anglais Immersion
+3215,783,LM2,Espagnol
+3216,783,Option,Sciences
+3213,783,Philo,CPC
+3217,784,EP,Fille
+3219,784,LM1,Anglais
+3220,784,LM2,Néerlandais
+3221,784,Option,Sciences Sociales
+3218,784,Philo,CPC
+3222,785,EP,Fille
+3224,785,LM1,Anglais
+3225,785,LM2,Espagnol
+3226,785,Option,Sciences
+3223,785,Philo,CPC
+3227,786,EP,Fille
+3229,786,LM1,Anglais
+3230,786,LM2,Espagnol
+3231,786,Option,Communication
+3228,786,Philo,CPC
+3232,787,EP,Fille
+3234,787,LM1,Anglais
+3235,787,LM2,Néerlandais
+3236,787,Option,Sciences
+3233,787,Philo,CPC
+3237,788,EP,Fille
+3239,788,LM1,Allemand Immersion
+3238,788,Philo,Religion Islamique
+3240,789,EP,Fille
+3242,789,LM1,Anglais
+3241,789,Philo,CPC
+308,79,EP,Fille
+310,79,LM1,Anglais
+311,79,LM2,Néerlandais
+312,79,Option,Sciences Sociales
+309,79,Philo,CPC
+3244,790,LM1,Anglais
+3243,790,Philo,CPC
+3245,791,EP,Fille
+3247,791,LM1,Anglais Immersion
+3246,791,Philo,CPC
+3248,792,EP,Fille
+3250,792,LM1,Anglais
+3251,792,LM2,Néerlandais
+3252,792,Option,Sciences Sociales
+3249,792,Philo,CPC
+3253,793,EP,Fille
+3255,793,LM1,Anglais
+3256,793,LM2,Espagnol
+3257,793,Option,Sciences
+3254,793,Philo,CPC
+3258,794,EP,Fille
+3260,794,LM1,Anglais
+3259,794,Philo,CPC
+3262,795,LM1,Anglais
+3263,795,LM2,Néerlandais
+3264,795,Option,Sciences Économiques
+3261,795,Philo,CPC
+3265,796,EP,Fille
+3267,796,LM1,Anglais
+3266,796,Philo,CPC
+3269,797,LM1,Anglais
+3270,797,LM2,Espagnol
+3271,797,Option,Sciences Sociales
+3268,797,Philo,CPC
+3272,798,EP,Fille
+3274,798,LM1,Anglais
+3275,798,LM2,Espagnol
+3276,798,Option,Math
+3277,798,Option,Sciences
+3273,798,Philo,CPC
+3278,799,EP,Fille
+3280,799,LM1,Néerlandais Immersion
+3279,799,Philo,CPC
+28,8,EP,Fille
+30,8,LM1,Anglais
+31,8,LM2,Espagnol
+32,8,Option,Sciences Économiques
+29,8,Philo,Religion Catholique
+313,80,EP,Fille
+315,80,LM1,Anglais
+316,80,LM2,Néerlandais
+317,80,Option,Sciences Économiques
+314,80,Philo,CPC
+3282,800,LM1,Anglais
+3283,800,LM2,Néerlandais
+3284,800,Option,Sciences
+3281,800,Philo,CPC
+3286,801,LM1,Anglais
+3287,801,LM2,Espagnol
+3288,801,Option,Sciences Économiques
+3285,801,Philo,Religion Catholique
+3290,802,LM1,Anglais Immersion
+3291,802,LM2,Néerlandais
+3292,802,Option,Sciences Économiques
+3289,802,Philo,Religion Islamique
+3293,803,EP,Fille
+3295,803,LM1,Anglais
+3296,803,LM2,Espagnol
+3297,803,Option,Sciences
+3294,803,Philo,Religion Islamique
+3298,804,EP,Fille
+3300,804,LM1,Anglais Immersion
+3301,804,LM2,Espagnol
+3302,804,Option,Sciences Économiques
+3299,804,Philo,Religion Catholique
+3303,805,EP,Fille
+3305,805,LM1,Anglais
+3306,805,LM2,Espagnol
+3307,805,Option,Histoire
+3304,805,Philo,CPC
+3308,806,EP,Fille
+3310,806,LM1,Anglais
+3309,806,Philo,Religion Islamique
+3312,807,LM1,Anglais
+3313,807,LM2,Espagnol
+3314,807,Option,Sciences
+3311,807,Philo,CPC
+3315,808,EP,Fille
+3317,808,LM1,Anglais
+3318,808,LM2,Espagnol
+3319,808,Option,Sciences
+3316,808,Philo,CPC
+3320,809,EP,Fille
+3322,809,LM1,Anglais
+3321,809,Philo,MORALE
+319,81,LM1,Anglais
+318,81,Philo,CPC
+3323,810,EP,Fille
+3325,810,LM1,Anglais
+3326,810,LM2,Espagnol
+3327,810,Option,Sciences Sociales
+3324,810,Philo,CPC
+3328,811,EP,Fille
+3330,811,LM1,Anglais
+3331,811,LM2,Espagnol
+3332,811,Option,Sciences
+3329,811,Philo,CPC
+3334,812,LM1,Néerlandais
+3333,812,Philo,CPC
+3336,813,LM1,Néerlandais
+3335,813,Philo,CPC
+3338,814,LM1,Néerlandais
+3337,814,Philo,CPC
+3339,815,EP,Fille
+3341,815,LM1,Anglais
+3342,815,LM2,Espagnol
+3343,815,Option,Sciences
+3340,815,Philo,Religion Islamique
+3344,816,EP,Fille
+3346,816,LM1,Anglais
+3347,816,LM2,Espagnol
+3348,816,Option,Sciences Économiques
+3345,816,Philo,CPC
+3349,817,EP,Fille
+3351,817,LM1,Anglais
+3350,817,Philo,Religion Islamique
+3353,818,LM1,Anglais
+3354,818,LM2,Néerlandais
+3355,818,Option,Communication
+3352,818,Philo,Religion Islamique
+3356,819,EP,Fille
+3358,819,LM1,Anglais Immersion
+3359,819,LM2,Italien
+3360,819,Option,Sciences
+3357,819,Philo,Religion Catholique
+320,82,EP,Fille
+322,82,LM1,Anglais
+323,82,LM2,Allemand
+324,82,Option,Sciences
+321,82,Philo,CPC
+3361,820,EP,Fille
+3363,820,LM1,Anglais Immersion
+3362,820,Philo,Religion Catholique
+3364,821,EP,Fille
+3366,821,LM1,Anglais Immersion
+3367,821,LM2,Néerlandais
+3368,821,Option,Math
+3369,821,Option,Sciences
+3365,821,Philo,CPC
+3371,822,LM1,Anglais
+3372,822,LM2,Néerlandais
+3373,822,Option,Sciences
+3370,822,Philo,CPC
+3374,823,EP,Fille
+3376,823,LM1,Néerlandais
+3377,823,LM2,Anglais
+3378,823,Option,Sciences
+3375,823,Philo,CPC
+3380,824,LM1,Anglais
+3381,824,LM2,Espagnol
+3382,824,Option,Communication
+3379,824,Philo,CPC
+3384,825,LM1,Anglais Immersion
+3385,825,LM2,Espagnol
+3386,825,Option,Sciences
+3383,825,Philo,CPC
+3387,826,EP,Fille
+3389,826,LM1,Anglais
+3390,826,LM2,Néerlandais
+3391,826,Option,Sciences Sociales
+3388,826,Philo,CPC
+3392,827,EP,Fille
+3394,827,LM1,Anglais
+3395,827,LM2,Espagnol
+3396,827,Option,Sciences Économiques
+3393,827,Philo,CPC
+3397,828,EP,Fille
+3399,828,LM1,Allemand Immersion
+3400,828,LM2,Espagnol
+3401,828,Option,Sciences
+3398,828,Philo,CPC
+3402,829,EP,Fille
+3404,829,LM1,Allemand Immersion
+3405,829,LM2,Anglais
+3406,829,Option,Sciences Économiques
+3403,829,Philo,CPC
+325,83,EP,Fille
+327,83,LM1,Néerlandais Immersion
+328,83,LM2,Anglais
+329,83,Option,Sciences Économiques
+326,83,Philo,Religion Islamique
+3408,830,LM1,Allemand Immersion
+3407,830,Philo,MORALE
+3410,831,LM1,Néerlandais
+3411,831,LM2,Anglais
+3412,831,LM3,Espagnol
+3413,831,Option,Langues
+3409,831,Philo,CPC
+3415,832,LM1,Anglais
+3416,832,LM2,Néerlandais
+3417,832,Option,Sciences Sociales
+3414,832,Philo,Religion Islamique
+3419,833,LM1,Anglais
+3420,833,LM2,Espagnol
+3421,833,Option,Sciences Économiques
+3418,833,Philo,Religion Islamique
+3423,834,LM1,Anglais Immersion
+3424,834,LM2,Espagnol
+3425,834,Option,Communication
+3422,834,Philo,CPC
+3426,835,EP,Fille
+3428,835,LM1,Anglais
+3429,835,LM2,Espagnol
+3430,835,Option,Communication
+3427,835,Philo,CPC
+3431,836,EP,Fille
+3433,836,LM1,Anglais
+3432,836,Philo,Religion Islamique
+3434,837,EP,Fille
+3436,837,LM1,Anglais
+3437,837,LM2,Espagnol
+3438,837,Option,Sciences Sociales
+3435,837,Philo,CPC
+3439,838,EP,Fille
+3441,838,LM1,Anglais
+3442,838,LM2,Néerlandais
+3443,838,Option,Sciences Économiques
+3440,838,Philo,Religion Islamique
+3445,839,LM1,Anglais Immersion
+3446,839,LM2,Espagnol
+3447,839,Option,Communication
+3444,839,Philo,CPC
+331,84,LM1,Néerlandais Immersion
+332,84,LM2,Italien
+333,84,Option,Sciences
+330,84,Philo,Religion Islamique
+3448,840,EP,Fille
+3450,840,LM1,Anglais Immersion
+3451,840,LM2,Espagnol
+3452,840,Option,Sciences Économiques
+3449,840,Philo,CPC
+3453,841,EP,Fille
+3455,841,LM1,Anglais Immersion
+3456,841,LM2,Néerlandais
+3457,841,Option,Sciences
+3454,841,Philo,CPC
+3458,842,EP,Fille
+3460,842,LM1,Anglais Immersion
+3461,842,Option,Latin
+3462,842,Option,Histoire
+3459,842,Philo,MORALE
+3463,843,EP,Fille
+3465,843,LM1,Anglais
+3464,843,Philo,MORALE
+3466,844,EP,Fille
+3468,844,LM1,Anglais
+3467,844,Philo,Religion Catholique
+3470,845,LM1,Anglais
+3471,845,LM2,Espagnol
+3472,845,Option,Communication
+3469,845,Philo,CPC
+3474,846,LM1,Anglais
+3475,846,LM2,Néerlandais
+3476,846,Option,Sciences Sociales
+3473,846,Philo,CPC
+3477,847,EP,Fille
+3479,847,LM1,Anglais
+3478,847,Philo,CPC
+3481,848,LM1,Anglais
+3482,848,LM2,Espagnol
+3483,848,Option,Sciences Économiques
+3480,848,Philo,CPC
+3485,849,LM1,Anglais
+3486,849,LM2,Néerlandais
+3487,849,Option,Latin
+3488,849,Option,Sciences
+3484,849,Philo,CPC
+335,85,LM1,Anglais
+336,85,LM2,Espagnol
+337,85,Option,Histoire
+334,85,Philo,CPC
+3489,850,EP,Fille
+3491,850,LM1,Anglais
+3492,850,LM2,Espagnol
+3493,850,Option,Sciences Économiques
+3490,850,Philo,CPC
+3494,851,EP,Fille
+3496,851,LM1,Anglais Immersion
+3497,851,LM2,Espagnol
+3498,851,Option,Sciences Économiques
+3495,851,Philo,Religion Catholique
+3500,852,LM1,Anglais
+3501,852,LM2,Espagnol
+3502,852,Option,Sciences
+3499,852,Philo,CPC
+3504,853,LM1,Anglais
+3505,853,LM2,Allemand
+3506,853,Option,Histoire
+3503,853,Philo,CPC
+3508,854,LM1,Allemand Immersion
+3509,854,LM2,Anglais
+3510,854,Option,Sciences
+3507,854,Philo,CPC
+3511,855,EP,Fille
+3513,855,LM1,Anglais
+3514,855,LM2,Néerlandais
+3515,855,Option,Sciences
+3512,855,Philo,CPC
+3517,856,LM1,Anglais
+3516,856,Philo,CPC
+3518,857,EP,Fille
+3520,857,LM1,Néerlandais Immersion
+3521,857,LM2,Espagnol
+3522,857,Option,Sciences Sociales
+3519,857,Philo,CPC
+3524,858,LM1,Néerlandais Immersion
+3525,858,LM2,Anglais
+3526,858,Option,Sciences
+3523,858,Philo,CPC
+3527,859,EP,Fille
+3529,859,LM1,Anglais
+3530,859,LM2,Espagnol
+3531,859,Option,Communication
+3528,859,Philo,CPC
+339,86,LM1,Anglais
+340,86,LM2,Néerlandais
+338,86,Philo,CPC
+3532,860,EP,Fille
+3534,860,LM1,Anglais Immersion
+3535,860,LM2,Néerlandais
+3536,860,Option,Math
+3537,860,Option,Sciences
+3533,860,Philo,Religion Catholique
+3539,861,LM1,Anglais Immersion
+3540,861,LM2,Néerlandais
+3541,861,Option,Histoire
+3538,861,Philo,Religion Catholique
+3543,862,LM1,Anglais
+3544,862,LM2,Espagnol
+3545,862,Option,Sciences
+3542,862,Philo,CPC
+3547,863,LM1,Anglais
+3548,863,LM2,Néerlandais
+3549,863,Option,Sciences
+3546,863,Philo,CPC
+3550,864,EP,Fille
+3552,864,LM1,Anglais
+3553,864,LM2,Espagnol
+3554,864,Option,Sciences Sociales
+3551,864,Philo,CPC
+3555,865,EP,Fille
+3557,865,LM1,Néerlandais
+3556,865,Philo,CPC
+3558,866,EP,Fille
+3560,866,LM1,Anglais
+3561,866,LM2,Espagnol
+3562,866,Option,Histoire
+3559,866,Philo,CPC
+3563,867,EP,Fille
+3565,867,LM1,Anglais
+3566,867,LM2,Espagnol
+3567,867,Option,Sciences Sociales
+3564,867,Philo,Religion Catholique
+3568,868,EP,Fille
+3570,868,LM1,Anglais
+3569,868,Philo,Religion Catholique
+3572,869,LM1,Anglais
+3573,869,LM2,Espagnol
+3574,869,Option,Sciences
+3571,869,Philo,CPC
+342,87,LM1,Anglais
+343,87,LM2,Néerlandais
+344,87,Option,Sciences Économiques
+341,87,Philo,CPC
+3576,870,LM1,Anglais
+3577,870,LM2,Italien
+3578,870,Option,Sciences Économiques
+3575,870,Philo,CPC
+3579,871,EP,Fille
+3581,871,LM1,Anglais
+3582,871,LM2,Espagnol
+3583,871,Option,Histoire
+3580,871,Philo,CPC
+3584,872,EP,Fille
+3586,872,LM1,Anglais
+3587,872,LM2,Espagnol
+3588,872,Option,Sciences Sociales
+3585,872,Philo,CPC
+3589,873,EP,Fille
+3591,873,LM1,Anglais Immersion
+3590,873,Philo,MORALE
+3592,874,EP,Fille
+3594,874,LM1,Anglais
+3593,874,Philo,Religion Catholique
+3596,875,LM1,Anglais
+3597,875,LM2,Italien
+3598,875,Option,Sciences Économiques
+3595,875,Philo,CPC
+3600,876,LM1,Néerlandais
+3601,876,LM2,Anglais
+3602,876,Option,Histoire
+3599,876,Philo,MORALE
+3604,877,LM1,Anglais
+3605,877,LM2,Néerlandais
+3606,877,Option,Sciences Sociales
+3603,877,Philo,Religion Catholique
+3608,878,LM1,Anglais
+3609,878,LM2,Néerlandais
+3610,878,LM3,Espagnol
+3611,878,Option,Langues
+3607,878,Philo,CPC
+3613,879,LM1,Anglais
+3614,879,LM2,Italien
+3615,879,Option,Sciences Sociales
+3612,879,Philo,CPC
+345,88,EP,Fille
+347,88,LM1,Anglais
+346,88,Philo,Religion Catholique
+3617,880,LM1,Anglais
+3618,880,LM2,Espagnol
+3619,880,Option,Sciences
+3616,880,Philo,CPC
+3620,881,EP,Fille
+3622,881,LM1,Anglais
+3621,881,Philo,MORALE
+3623,882,EP,Fille
+3625,882,LM1,Anglais
+3626,882,LM2,Espagnol
+3627,882,Option,Sciences Économiques
+3624,882,Philo,MORALE
+3628,883,EP,Fille
+3630,883,LM1,Anglais
+3631,883,LM2,Allemand
+3632,883,Option,Sciences Économiques
+3633,883,Option,Math
+3629,883,Philo,CPC
+3634,884,EP,Fille
+3636,884,LM1,Anglais Immersion
+3637,884,LM2,Allemand
+3638,884,Option,Sciences Économiques
+3635,884,Philo,CPC
+3639,885,EP,Fille
+3641,885,LM1,Anglais
+3642,885,LM2,Espagnol
+3640,885,Philo,CPC
+3643,886,EP,Fille
+3645,886,LM1,Anglais
+3644,886,Philo,MORALE
+3646,887,EP,Fille
+3648,887,LM1,Anglais
+3649,887,LM2,Italien
+3650,887,Option,Sciences
+3647,887,Philo,Religion Catholique
+3651,888,EP,Fille
+3653,888,LM1,Anglais
+3654,888,LM2,Néerlandais
+3655,888,Option,Sciences
+3652,888,Philo,CPC
+3656,889,EP,Fille
+3658,889,LM1,Anglais
+3657,889,Philo,Religion Protestante
+349,89,LM1,Anglais
+350,89,LM2,Espagnol
+351,89,Option,Sciences Économiques
+348,89,Philo,CPC
+3660,890,LM1,Anglais
+3661,890,LM2,Espagnol
+3662,890,Option,Histoire
+3659,890,Philo,CPC
+3663,891,EP,Fille
+3665,891,LM1,Anglais
+3666,891,LM2,Espagnol
+3667,891,Option,Sciences
+3664,891,Philo,CPC
+3668,892,EP,Fille
+3670,892,LM1,Anglais
+3671,892,LM2,Espagnol
+3672,892,Option,Math
+3673,892,Option,Sciences
+3669,892,Philo,CPC
+3674,893,EP,Fille
+3676,893,LM1,Anglais
+3677,893,LM2,Espagnol
+3678,893,Option,Histoire
+3675,893,Philo,CPC
+3679,894,EP,Fille
+3681,894,LM1,Anglais
+3682,894,LM2,Espagnol
+3683,894,LM3,Allemand
+3684,894,Option,Langues
+3685,894,Option,Math
+3680,894,Philo,CPC
+3686,895,EP,Fille
+3688,895,LM1,Anglais
+3689,895,LM2,Espagnol
+3690,895,Option,Histoire
+3687,895,Philo,CPC
+3692,896,LM1,Anglais
+3693,896,LM2,Espagnol
+3694,896,Option,Sciences
+3691,896,Philo,CPC
+3696,897,LM1,Anglais
+3697,897,LM2,Néerlandais
+3698,897,Option,Sciences
+3695,897,Philo,CPC
+3700,898,LM1,Anglais Immersion
+3699,898,Philo,Religion Islamique
+3702,899,LM1,Anglais Immersion
+3703,899,LM2,Espagnol
+3704,899,Option,Sciences Économiques
+3701,899,Philo,Religion Islamique
+34,9,LM1,Anglais
+35,9,LM2,Espagnol
+36,9,Option,Sciences Économiques
+33,9,Philo,CPC
+352,90,EP,Fille
+354,90,LM1,Anglais
+355,90,LM2,Espagnol
+356,90,Option,Sciences Sociales
+353,90,Philo,CPC
+3706,900,LM1,Anglais
+3707,900,LM2,Espagnol
+3705,900,Philo,CPC
+3709,901,LM1,Anglais
+3710,901,LM2,Néerlandais
+3711,901,Option,Math
+3712,901,Option,Sciences
+3708,901,Philo,CPC
+3714,902,LM1,Anglais
+3715,902,LM2,Espagnol
+3716,902,Option,Sciences Économiques
+3713,902,Philo,Religion Islamique
+3717,903,EP,Fille
+3719,903,LM1,Anglais
+3720,903,LM2,Espagnol
+3721,903,Option,Sciences Économiques
+3718,903,Philo,Religion Protestante
+3722,904,EP,Fille
+3724,904,LM1,Anglais
+3725,904,LM2,Espagnol
+3726,904,Option,Sciences
+3723,904,Philo,Religion Islamique
+3728,905,LM1,Anglais
+3729,905,LM2,Espagnol
+3730,905,Option,Sciences Économiques
+3727,905,Philo,Religion Islamique
+3732,906,LM1,Anglais
+3733,906,LM2,Espagnol
+3734,906,Option,Communication
+3731,906,Philo,MORALE
+3736,907,LM1,Anglais
+3735,907,Philo,CPC
+3737,908,EP,Fille
+3739,908,LM1,Anglais
+3740,908,LM2,Espagnol
+3741,908,Option,Sciences Économiques
+3738,908,Philo,CPC
+3742,909,EP,Fille
+3744,909,LM1,Anglais Immersion
+3745,909,LM2,Espagnol
+3746,909,Option,Sciences
+3743,909,Philo,Religion Catholique
+358,91,LM1,Anglais Immersion
+359,91,LM2,Espagnol
+360,91,Option,Math
+361,91,Option,Sciences
+357,91,Philo,CPC
+3747,910,EP,Fille
+3749,910,LM1,Anglais
+3748,910,Philo,CPC
+3751,911,LM1,Anglais Immersion
+3750,911,Philo,Religion Islamique
+3752,912,EP,Fille
+3754,912,LM1,Anglais
+3753,912,Philo,CPC
+3755,913,EP,Fille
+3757,913,LM1,Anglais
+3758,913,LM2,Espagnol
+3759,913,Option,Sciences Sociales
+3756,913,Philo,CPC
+3761,914,LM1,Néerlandais Immersion
+3762,914,LM2,Anglais
+3763,914,LM3,Espagnol
+3764,914,Option,Langues
+3760,914,Philo,MORALE
+3766,915,LM1,Néerlandais
+3767,915,LM2,Anglais
+3768,915,Option,Sciences
+3765,915,Philo,CPC
+3769,916,EP,Fille
+3771,916,LM1,Néerlandais Immersion
+3772,916,LM2,Anglais
+3773,916,Option,Communication
+3770,916,Philo,CPC
+363,92,LM1,Anglais
+364,92,LM2,Italien
+365,92,Option,Communication
+362,92,Philo,CPC
+366,93,EP,Fille
+368,93,LM1,Anglais
+367,93,Philo,CPC
+369,94,EP,Fille
+371,94,LM1,Anglais
+370,94,Philo,MORALE
+372,95,EP,Fille
+374,95,LM1,Néerlandais
+375,95,LM2,Espagnol
+376,95,Option,Math
+377,95,Option,Sciences
+373,95,Philo,CPC
+378,96,EP,Fille
+380,96,LM1,Néerlandais
+381,96,LM2,Espagnol
+382,96,Option,Communication
+379,96,Philo,CPC
+383,97,EP,Fille
+385,97,LM1,Anglais Immersion
+386,97,LM2,Néerlandais
+387,97,Option,Sciences Sociales
+384,97,Philo,Religion Catholique
+388,98,EP,Fille
+390,98,LM1,Néerlandais
+391,98,LM2,Anglais
+392,98,Option,Sciences Économiques
+389,98,Philo,CPC
+393,99,EP,Fille
+395,99,LM1,Anglais
+396,99,LM2,Espagnol
+397,99,Option,Sciences Sociales
+394,99,Philo,CPC

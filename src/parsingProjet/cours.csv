@@ -1,0 +1,636 @@
+id,groupe_principal,matiere_source,matiere_normalisee,prof_nom_json,prof_prenom_json,raw_pattern,nombre_periodes_semaine
+1,3PAX,CPC1,CPC1,"[""MANAP""]","[""Cihan""]",3PAX,1
+2,5PAU,CPC1,CPC1,"[""BELLOI""]","[""Théo""]",5PAU,1
+3,[3+4 - LM1 - NI],GÉO NI,Géo NI,"[""MORAUX""]","[""Laurence""]",[3+4 - LM1 - NI]<3PAV> <LM1> NI+ [3+4 - LM1 - NI]<3PAW> <LM1> NI+ [3+4 - LM1 - NI]<4PAV> <LM1> NI+ [3+4 - LM1 - NI]<4PAW> <LM1> NI,2
+4,[3+4 - LM1 - DI],GÉO DI,Géo DI,"[""RUESS""]","[""Céline""]",[3+4 - LM1 - DI]<3PAY> <LM1> DI+ [3+4 - LM1 - DI]<3PAV> <LM1> DI+ [3+4 - LM1 - DI]<4PAV> <LM1> DI,2
+5,1PAD,FRANÇAIS,Français,"[""WILLEMS""]","[""Louise""]",1PAD,6
+6,1PAF,FRANÇAIS,Français,"[""POPOVICS""]","[""Vanessa""]",1PAF,6
+7,3PAT,FRANÇAIS,Français,"[""BAIZAN""]","[""Noémie""]",3PAT,5
+8,2PAA+2PAB+2PAC+2PAD+2PAE+2PAF+2PAG,REM2,Remédiation 2eme,"[""BRACONNIER"", ""DEGEY"", ""STAFFE"", ""ZOES"", ""ZOLLER""]","[""Simon"", ""Anne-Marie"", ""Joséphine"", ""Dyonissis"", ""Céline""]",2PAA+ 2PAB+ 2PAC+ 2PAD+ 2PAE+ 2PAF+ 2PAG,1
+9,5PAV,FRANÇAIS,Français,"[""JOBKENNE"", ""DERCLAYE""]","[""Sarah"", ""Lindsey""]",5PAV,5
+10,6PAV,FRANÇAIS,Français,"[""HUCHANT""]","[""Louise""]",6PAV,5
+11,1PAC,MATH,Math,"[""KREIT""]","[""Amélie""]",1PAC,4
+12,1PAB,MATH,Math,"[""BAUWENS""]","[""Sarah""]",1PAB,4
+13,1PAA,LATIN,Latin,"[""VANHENTENRYK""]","[""Cécile""]",1PAA,3
+14,1PAE,LATIN,Latin,"[""LACASSE""]","[""Anne""]",1PAE,3
+15,[6 - M4h4],MATH4,Math,"[""CHAPEAU""]","[""Vincent""]",[6 - M4h4]<6PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - M4h4]<6PAW> <Option+LM1+LM2(+LM3)> MB4-NI-A+ [6 - M4h4]<6PAW> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - M4h4]<6PAW> <Option+LM1+LM2(+LM3)> MH4-DI-A+ [6 - M4h4]<6PAW> <Option+LM1+LM2(+LM3)> MH4-NI-A+ [6 - M4h4]<6PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - M4h4]<6PAW> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [6 - M4h4]<6PAW> <Option+LM1+LM2(+LM3)> ML4-DI-A-E+ [6 - M4h4]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [6 - M4h4]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-D+ [6 - M4h4]<6PAW> <Option+LM1+LM2(+LM3)> EC4-NI-A,4
+16,4PAT,MATH,Math,"[""BASTAGNE""]","[""Jacques""]",4PAT,5
+17,[6 - LM2 - E1],ESPAGNOL LM2,Espagnol LM2,"[""DZIRI""]","[""Soraya""]",[6 - LM2 - E1]<6PAX> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - LM2 - E1]<6PAX> <Option+LM1+LM2(+LM3)> ME4-A-E,4
+18,[6 - ScOp1],BIO opt.,Bio Option,"[""ZENTHNER""]","[""Fabienne""]",[6 - ScOp1]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [6 - ScOp1]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-I+ [6 - ScOp1]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [6 - ScOp1]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [6 - ScOp1]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A,2
+19,[4 - ScOp1],CHIMIE opt.,Chimie Option,"[""YAHIA""]","[""Lina""]",[4 - ScOp1]<4PAS> <Option> MS,2
+20,[4 - EPF2],GYM,Gym,"[""GROSJEAN""]","[""Maxime""]",[4 - EPF2]<4PAU> <EP> F+ [4 - EPF2]<4PAZ> <EP> F,2
+21,[4 - EPG2],GYM,Gym,"[""DULLIER""]","[""Cyrielle""]",[4 - EPG2]<4PAU> <EP> G+ [4 - EPG2]<4PAZ> <EP> G,2
+22,[3 - LM1 - AI2],HIST AI,Histoire AI,"[""CARLYLE""]","[""Thomas""]",[3 - LM1 - AI2]<3PAV> <LM1> AI+ [3 - LM1 - AI2]<3PAW> <LM1> AI+ [3 - LM1 - AI2]<3PAY> <LM1> AI,2
+23,[3 - HG5],GÉO,Géo,"[""PAQUAY""]","[""Maxime""]",[3 - HG5]<3PAV> <LM1> A+ [3 - HG5]<3PAW> <LM1> A,2
+24,[5 - LM2 - A1],ANGLAIS LM2,Anglais LM2,"[""KEVERS""]","[""Laetiita""]",[5 - LM2 - A1]<5PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A+ [5 - LM2 - A1]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-A+ [5 - LM2 - A1]<5PAT> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [5 - LM2 - A1]<5PAT> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [5 - LM2 - A1]<5PAT> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [5 - LM2 - A1]<5PAT> <Option+LM1+LM2(+LM3)> EC4-DI-A+ [5 - LM2 - A1]<5PAT> <Option+LM1+LM2(+LM3)> SO4-NI-A+ [5 - LM2 - A1]<5PAW> <Option+LM1+LM2(+LM3)> EC4-N-A+ [5 - LM2 - A1]<5PAT> <Option+LM1+LM2(+LM3)> MB4-NI-A+ [5 - LM2 - A1]<5PAW> <Option+LM1+LM2(+LM3)> ME4-N-A,4
+25,[5 - LM2 - A2],ANGLAIS LM2,Anglais LM2,"[""VANHERLE""]","[""Camille""]",[5 - LM2 - A2]<5PAX> <Option+LM1+LM2(+LM3)> MA6-N-A+ [5 - LM2 - A2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-N-A+ [5 - LM2 - A2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-N-A+ [5 - LM2 - A2]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-A+ [5 - LM2 - A2]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-A+ [5 - LM2 - A2]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [5 - LM2 - A2]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-N-A-E+ [5 - LM2 - A2]<5PAZ> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [5 - LM2 - A2]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A,4
+26,[5 - LM2 - N2],NÉERLANDAIS LM2,Néerlandais LM2,"[""BROUNS""]","[""Marie""]",[5 - LM2 - N2]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - LM2 - N2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-N+ [5 - LM2 - N2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-N+ [5 - LM2 - N2]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - LM2 - N2]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [5 - LM2 - N2]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - LM2 - N2]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [5 - LM2 - N2]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - LM2 - N2]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5 - LM2 - N2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-AI-N+ [5 - LM2 - N2]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-N,4
+27,[5 - LM2 - E2],ESPAGNOL LM2,Espagnol LM2,"[""RECKMANS""]","[""Sandy""]",[5 - LM2 - E2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - LM2 - E2]<5PAT> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - LM2 - E2]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - LM2 - E2]<5PAT> <Option+LM1+LM2(+LM3)> EC4-A-E+ [5 - LM2 - E2]<5PAT> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - LM2 - E2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-E,4
+28,[5 - LM2 - E3],ESPAGNOL LM2,Espagnol LM2,"[""JUDONG""]","[""Sylvie""]",[5 - LM2 - E3]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - LM2 - E3]<5PAW> <Option+LM1+LM2(+LM3)> ME4-AI-E+ [5 - LM2 - E3]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - LM2 - E3]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - LM2 - E3]<5PAX> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [5 - LM2 - E3]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-E,4
+29,[5 - LM2 - E4],ESPAGNOL LM2,Espagnol LM2,"[""HERVELLE""]","[""Wendy""]",[5 - LM2 - E4]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - LM2 - E4]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-E+ [5 - LM2 - E4]<5PAY> <Option+LM1+LM2(+LM3)> SO4-AI-E+ [5 - LM2 - E4]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - LM2 - E4]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-E+ [5 - LM2 - E4]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-E+ [5 - LM2 - E4]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - LM2 - E4]<5PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [5 - LM2 - E4]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - LM2 - E4]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-E+ [5 - LM2 - E4]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-E,4
+30,2PAE,CPC1,CPC1,"[""MANAP""]","[""Cihan""]",2PAE,1
+31,4PAY,CPC1,CPC1,"[""BELLOI""]","[""Théo""]",4PAY,1
+32,1PAA,LECTURE,Lecture,"[""BROOS""]","[""Carine""]",1PAA,1
+33,2PAA,FRANÇAIS,Français,"[""DJELIL""]","[""Samira""]",2PAA,5
+34,2PAF,FRANÇAIS,Français,"[""POPOVICS""]","[""Vanessa""]",2PAF,5
+35,3PAV,FRANÇAIS,Français,"[""DEGEY""]","[""Anne-Marie""]",3PAV,5
+36,4PAS,FRANÇAIS,Français,"[""VAN BRABANT""]","[""Laura""]",4PAS,5
+37,4PAV,FRANÇAIS,Français,"[""FONTAINE""]","[""Simon""]",4PAV,5
+38,4PAX,FRANÇAIS,Français,"[""PAGNIER""]","[""Jason""]",4PAX,5
+39,6PAX,FRANÇAIS,Français,"[""JOBKENNE"", ""DERCLAYE""]","[""Sarah"", ""Lindsey""]",6PAX,5
+40,1PAE,MATH,Math,"[""KREIT""]","[""Amélie""]",1PAE,4
+41,2PAB,MATH,Math,"[""BAUWENS""]","[""Sarah""]",2PAB,5
+42,2PAG,MATH,Math,"[""STAFFE""]","[""Joséphine""]",2PAG,5
+43,2PAC,MUSIQUE,Musique,"[""DEPUIS""]","[""Pierre""]",2PAC,1
+44,[3 - EC2],SC. ECO.,Sciences éco,"[""MARECHAL""]","[""Anthony""]",[3 - EC2]<3PAX> <Option> EC+ [3 - EC2]<3PAY> <Option> EC,4
+45,1PAF,LATIN,Latin,"[""VANHENTENRYK""]","[""Cécile""]",1PAF,1
+46,1PAC,LATIN,Latin,"[""LACASSE""]","[""Anne""]",1PAC,3
+47,3PAZ,ANGLAIS LM1,Anglais LM1,"[""ZOES""]","[""Dyonissis""]",3PAZ,4
+48,4PAT,ESPAGNOL LM2,Espagnol LM2,"[""HERVELLE""]","[""Wendy""]",4PAT,4
+49,1PAB,GÉO,Géo,"[""PAQUAY""]","[""Maxime""]",1PAB,2
+50,[3 - EPG23],GYM,Gym,"[""ROLIN"", ""MOUPONDO""]","[""Gérald"", ""Jean Muller""]",[3 - EPG23]<3PAS> <EP> G+ [3 - EPG23]<3PAT> <EP> G+ [3 - EPG23]<3PAU> <EP> G+ [3 - EPG23]<3PAW> <EP> G,2
+51,[3 - EPF3],GYM,Gym,"[""SITKO""]","[""Cynthia""]",[3 - EPF3]<3PAU> <EP> F+ [3 - EPF3]<3PAW> <EP> F,2
+52,[3 - SC4],BIO,Bio,"[""FINCKEN""]","[""Caroline""]",[3 - SC4]<3PAX> <Option> SO+ [3 - SC4]<3PAY> <Option> SO,1
+53,[5 - Commu2],COMMU,Communication,"[""CHAPEAU""]","[""Manu""]",[5 - Commu2]<5PAT> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - Commu2]<5PAT> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [5 - Commu2]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - Commu2]<5PAW> <Option+LM1+LM2(+LM3)> ME4-AI-E+ [5 - Commu2]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-A+ [5 - Commu2]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-E+ [5 - Commu2]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - Commu2]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - Commu2]<5PAW> <Option+LM1+LM2(+LM3)> ME4-N-A+ [5 - Commu2]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-A-E,4
+54,[5 - EC],SC. ECO.,Sciences éco,"[""BERTHOLET""]","[""Stephan""]",[5 - EC]<5PAT> <Option+LM1+LM2(+LM3)> EC4-A-E+ [5 - EC]<5PAT> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [5 - EC]<5PAT> <Option+LM1+LM2(+LM3)> EC4-DI-A+ [5 - EC]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-I+ [5 - EC]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-D+ [5 - EC]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-D+ [5 - EC]<5PAW> <Option+LM1+LM2(+LM3)> EC4-A-N+ [5 - EC]<5PAZ> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [5 - EC]<5PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [5 - EC]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-I+ [5 - EC]<5PAW> <Option+LM1+LM2(+LM3)> EC4-N-A,4
+55,[6 - M+],PESM,PESM,"[""GARTI""]","[""Mohamed""]",[6 - M+]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [6 - M+]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [6 - M+]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A,2
+56,[5+6 - LM3 - D],ALLEMAND LM3,Allemand LM3,"[""HOLLENFELTZ""]","[""Olivier""]",[5+6 - LM3 - D]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5+6 - LM3 - D]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5+6 - LM3 - D]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5+6 - LM3 - D]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-D+ [5+6 - LM3 - D]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-D+ [5+6 - LM3 - D]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-D+ [5+6 - LM3 - D]<5PAT> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5+6 - LM3 - D]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-D+ [5+6 - LM3 - D]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-D,4
+57,[5+6 - LM3 - E],ESPAGNOL LM3,Espagnol LM3,"[""JUDONG""]","[""Sylvie""]",[5+6 - LM3 - E]<5PAT> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [5+6 - LM3 - E]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [5+6 - LM3 - E]<5PAU> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [5+6 - LM3 - E]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5+6 - LM3 - E]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [5+6 - LM3 - E]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-N-A-E+ [5+6 - LM3 - E]<6PAU> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5+6 - LM3 - E]<6PAV> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [5+6 - LM3 - E]<6PAW> <Option+LM1+LM2(+LM3)> ML4-DI-A-E+ [5+6 - LM3 - E]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [5+6 - LM3 - E]<6PAY> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [5+6 - LM3 - E]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [5+6 - LM3 - E]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-E+ [5+6 - LM3 - E]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5+6 - LM3 - E]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-D-E+ [5+6 - LM3 - E]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-N,4
+58,[5 - Hop],HIST opt.,Histoire Option,"[""MEDART""]","[""Fanny""]",[5 - Hop]<5PAU> <Option+LM1+LM2(+LM3)> MH4-A-D+ [5 - Hop]<5PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - Hop]<5PAW> <Option+LM1+LM2(+LM3)> LH4-A-/+ [5 - Hop]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-N+ [5 - Hop]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - Hop]<5PAY> <Option+LM1+LM2(+LM3)> MH4-N-A+ [5 - Hop]<5PAY> <Option+LM1+LM2(+LM3)> MH4-AI-N,4
+59,[6 - Labo],LABO Bio,Labo Bio,"[""ZENTHNER""]","[""Fabienne""]",[6 - Labo]<6PAU> <Option+LM1+LM2(+LM3)> MB4-A-N+ [6 - Labo]<6PAV> <Option+LM1+LM2(+LM3)> MB4-N-A+ [6 - Labo]<6PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - Labo]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - Labo]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-D,2
+60,[5 - ScOp2],CHIMIE opt.,Chimie Option,"[""YAHIA""]","[""Lina""]",[5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A+ [5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-A+ [5 - ScOp2]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - ScOp2]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-E+ [5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-NI-A+ [5 - ScOp2]<5PAW> <Option+LM1+LM2(+LM3)> MB4-AI-N,2
+61,[5 - M6h1],MATH6,Math Option,"[""VAN DEN BERGHE""]","[""Sylviane""]",[5 - M6h1]<5PAX> <Option+LM1+LM2(+LM3)> LA6-N-/+ [5 - M6h1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - M6h1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - M6h1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [5 - M6h1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-N-A,6
+62,[2 - N],NÉERLANDAIS LM1,Néerlandais LM1,"[""BRACONNIER""]","[""Simon""]",[2 - N]<2PAD> <LM1> N+ <2PAD> <LM1> NI,4
+63,[5 - ScOp3],BIO opt.,Bio Option,"[""JEANGILLE""]","[""Lionel""]",[5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-I+ [5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-D+ [5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-I+ [5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-D+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-A+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-E,2
+64,1PAF,CPC1,CPC1,"[""MANAP""]","[""Cihan""]",1PAF,1
+65,4PAW,CPC1,CPC1,"[""LUCA""]","[""Pablo""]",4PAW,1
+66,1PAC,LECTURE,Lecture,"[""BROOS""]","[""Carine""]",1PAC,1
+67,1PAA,FRANÇAIS,Français,"[""WILLEMS""]","[""Louise""]",1PAA,4
+68,1PAB,FRANÇAIS,Français,"[""DJELIL""]","[""Samira""]",1PAB,6
+69,3PAZ,FRANÇAIS,Français,"[""DEGEY""]","[""Anne-Marie""]",3PAZ,5
+70,3PAV,MATH,Math,"[""VAN DE VLOET""]","[""Jennifer""]",3PAV,5
+71,2PAD,MUSIQUE,Musique,"[""DEPUIS""]","[""Pierre""]",2PAD,1
+72,2PAA,LATIN,Latin,"[""VANHENTENRYK""]","[""Cécile""]",2PAA,1
+73,1PAD,LATIN,Latin,"[""LACASSE""]","[""Anne""]",1PAD,3
+74,4PAU,MATH,Math,"[""BASTAGNE""]","[""Jacques""]",4PAU,5
+75,4PAS,ANGLAIS LM1,Anglais LM1,"[""NOLF""]","[""Caroline""]",4PAS,4
+76,2PAE,GÉO,Géo,"[""PAQUAY""]","[""Maxime""]",2PAE,2
+77,2PAC,EducTECH,Educ Tech,"[""FINCKEN""]","[""Caroline""]",2PAC,1
+78,[4 - Sc2],PHYSIQUE,Physique,"[""BAKHTI""]","[""Youssef""]",[4 - Sc2]<4PAY> <Option> EC+ [4 - Sc2]<4PAZ> <Option> SO,1
+79,[3 - SC4],PHYSIQUE,Physique,"[""ZOLLER""]","[""Céline""]",[3 - SC4]<3PAX> <Option> SO+ [3 - SC4]<3PAY> <Option> SO,1
+80,2PAG,CPC1,CPC1,"[""MANAP""]","[""Cihan""]",2PAG,1
+81,4PAS,CPC1,CPC1,"[""LUCA""]","[""Pablo""]",4PAS,1
+82,4PAX,CPC1,CPC1,"[""BELLOI""]","[""Théo""]",4PAX,1
+83,3PAY,FRANÇAIS,Français,"[""BROOS""]","[""Carine""]",3PAY,5
+84,2PAE,FRANÇAIS,Français,"[""DJELIL""]","[""Samira""]",2PAE,5
+85,2PAD,FRANÇAIS,Français,"[""WILLEMS""]","[""Louise""]",2PAD,4
+86,1PAE,FRANÇAIS,Français,"[""POPOVICS""]","[""Vanessa""]",1PAE,4
+87,3PAW,FRANÇAIS,Français,"[""NAVARRO""]","[""Angela""]",3PAW,5
+88,2PAC,FRANÇAIS,Français,"[""BAIZAN""]","[""Noémie""]",2PAC,5
+89,5PAT,FRANÇAIS,Français,"[""VAN BRABANT""]","[""Laura""]",5PAT,5
+90,4PAY,FRANÇAIS,Français,"[""PAGNIER""]","[""Jason""]",4PAY,5
+91,1PAF,MATH,Math,"[""VAN DE VLOET""]","[""Jennifer""]",1PAF,2
+92,2PAA,MATH,Math,"[""BAUWENS""]","[""Sarah""]",2PAA,5
+93,2PAF,MATH,Math,"[""STAFFE""]","[""Joséphine""]",2PAF,5
+94,2PAB,MUSIQUE,Musique,"[""DEPUIS""]","[""Pierre""]",2PAB,1
+95,1PAB,LATIN,Latin,"[""VANHENTENRYK""]","[""Cécile""]",1PAB,3
+96,[6 - M4h5],MATH4,Math,"[""VAN DEN BERGHE""]","[""Sylviane""]",[6 - M4h5]<6PAX> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - M4h5]<6PAX> <Option+LM1+LM2(+LM3)> ME4-A-E,4
+97,4PAT,ANGLAIS LM1,Anglais LM1,"[""RUESS""]","[""Céline""]",4PAT,4
+98,3PAU,ESPAGNOL LM2,Espagnol LM2,"[""DZIRI""]","[""Soraya""]",3PAU,4
+99,[1 - HGS1],GÉO,Géo,"[""PAQUAY""]","[""Maxime""]",[1 - HGS1]<1PAA> <LM1> A+ <1PAA> Carow Anna+ <1PAA> Delvaux Lea+ <1PAA> Dreze Elisa+ <1PAA> Si L'hocine Darine+ <1PAA> Thyssens Maxime,2
+100,[4 - Sc4],BIO,Bio,"[""ZENTHNER""]","[""Fabienne""]",[4 - Sc4]<4PAW> <Option> EC+ [4 - Sc4]<4PAW> <Option> SO+ [4 - Sc4]<4PAW> <Option> M+ [4 - Sc4]<4PAZ> <Option> M,1
+101,[4 - ScOp3],PHY opt.,Physique Option,"[""BAKHTI""]","[""Youssef""]",[4 - ScOp3]<4PAU> <Option> MS+ [4 - ScOp3]<4PAV> <Option> MS+ [4 - ScOp3]<4PAV> <Option> LS+ [4 - ScOp3]<4PAW> <Option> MS,2
+102,[3 - EPG4],GYM,Gym,"[""ROLIN"", ""MOUPONDO""]","[""Gérald"", ""Jean Muller""]",[3 - EPG4]<3PAV> <EP> G+ [3 - EPG4]<3PAZ> <EP> G,2
+103,[3 - EPF4],GYM,Gym,"[""SITKO""]","[""Cynthia""]",[3 - EPF4]<3PAV> <EP> F+ [3 - EPF4]<3PAZ> <EP> F,2
+104,[3 - LM1 - AI1],Imm. Anglais,Immersion Anglais,"[""CARLYLE""]","[""Thomas""]",[3 - LM1 - AI1]<3PAT> <LM1+LM2> AI-N+ [3 - LM1 - AI1]<3PAX> <LM1 + LM2> AI-E,4
+105,[3 - LM1 - A3],ANGLAIS LM1,Anglais LM1,"[""ZOES""]","[""Dyonissis""]",[3 - LM1 - A3]<3PAS> <LM1> A+ [3 - LM1 - A3]<3PAT> <LM1+LM2> A-F-N+ [3 - LM1 - A3]<3PAT> <LM1+LM2> A-G-N+ [3 - LM1 - A3]<3PAT> <LM1+LM2> A-F-E,4
+106,[3 - LM1 - N],NÉERLANDAIS LM1,Néerlandais LM1,"[""BRACONNIER""]","[""Simon""]",[3 - LM1 - N]<3PAS> <LM1> N+ [3 - LM1 - N]<3PAX> <LM1 + LM2> N-E,4
+107,[5 - LM1 - AI],Imm. Anglais,Immersion Anglais,"[""SACRE""]","[""Catherine""]",[5 - LM1 - AI]<5PAU> <Option+LM1+LM2(+LM3)> ME4-AI-D+ [5 - LM1 - AI]<5PAW> <Option+LM1+LM2(+LM3)> ME4-AI-E+ [5 - LM1 - AI]<5PAX> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [5 - LM1 - AI]<5PAY> <Option+LM1+LM2(+LM3)> SO4-AI-E+ [5 - LM1 - AI]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [5 - LM1 - AI]<5PAZ> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [5 - LM1 - AI]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [5 - LM1 - AI]<5PAY> <Option+LM1+LM2(+LM3)> MH4-AI-N+ [5 - LM1 - AI]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-E+ [5 - LM1 - AI]<5PAW> <Option+LM1+LM2(+LM3)> MB4-AI-N,4
+108,[5 - LM1 - A4],ANGLAIS LM1,Anglais LM1,"[""NOLF""]","[""Caroline""]",[5 - LM1 - A4]<5PAW> <Option+LM1+LM2(+LM3)> LH4-A-/+ [5 - LM1 - A4]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - LM1 - A4]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - LM1 - A4]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - LM1 - A4]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - LM1 - A4]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - LM1 - A4]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - LM1 - A4]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - LM1 - A4]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-A-N-E,4
+109,[5 - LM1 - A2],ANGLAIS LM1,Anglais LM1,"[""HOLLENFELTZ""]","[""Olivier""]",[5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-I+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-D+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-I+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-D+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> MH4-A-D+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-I+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-D+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-I+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-D+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-D+ [5 - LM1 - A2]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - LM1 - A2]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - LM1 - A2]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - LM1 - A2]<5PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-I+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-D+ [5 - LM1 - A2]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-D-E,4
+110,[5 - LM1 - A5],ANGLAIS LM1,Anglais LM1,"[""KEVERS""]","[""Laetiita""]",[5 - LM1 - A5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5 - LM1 - A5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - LM1 - A5]<5PAW> <Option+LM1+LM2(+LM3)> EC4-A-N+ [5 - LM1 - A5]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-N+ [5 - LM1 - A5]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - LM1 - A5]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-N+ [5 - LM1 - A5]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-E+ [5 - LM1 - A5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-D,4
+111,[5 - LM1 - A3],ANGLAIS LM1,Anglais LM1,"[""VANHERLE""]","[""Camille""]",[5 - LM1 - A3]<5PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - LM1 - A3]<5PAV> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - LM1 - A3]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - LM1 - A3]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-N,4
+112,[5 - LM1 - N],NÉERLANDAIS LM1,Néerlandais LM1,"[""MORAUX""]","[""Laurence""]",[5 - LM1 - N]<5PAX> <Option+LM1+LM2(+LM3)> LA6-N-/+ [5 - LM1 - N]<5PAX> <Option+LM1+LM2(+LM3)> MA6-N-A+ [5 - LM1 - N]<5PAY> <Option+LM1+LM2(+LM3)> MH4-N-A+ [5 - LM1 - N]<5PAY> <Option+LM1+LM2(+LM3)> SO4-N-A+ [5 - LM1 - N]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-E+ [5 - LM1 - N]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-A+ [5 - LM1 - N]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-A+ [5 - LM1 - N]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-E+ [5 - LM1 - N]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [5 - LM1 - N]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-N-A-E+ [5 - LM1 - N]<5PAW> <Option+LM1+LM2(+LM3)> EC4-N-A+ [5 - LM1 - N]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A+ [5 - LM1 - N]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-E+ [5 - LM1 - N]<5PAW> <Option+LM1+LM2(+LM3)> ME4-N-A,4
+113,[6 - Commu1],COMMU,Communication,"[""CHAPEAU""]","[""Manu""]",[6 - Commu1]<6PAU> <Option+LM1+LM2(+LM3)> ME4-A-N+ [6 - Commu1]<6PAV> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - Commu1]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-A+ [6 - Commu1]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-E+ [6 - Commu1]<6PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - Commu1]<6PAW> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [6 - Commu1]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-I+ [6 - Commu1]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - Commu1]<6PAY> <Option+LM1+LM2(+LM3)> ME4-AI-E,4
+114,[6 - EC],SC. ECO.,Sciences éco,"[""BERTHOLET""]","[""Stephan""]",[6 - EC]<6PAU> <Option+LM1+LM2(+LM3)> EC4-A-N+ [6 - EC]<6PAV> <Option+LM1+LM2(+LM3)> EC4-AI-N+ [6 - EC]<6PAW> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [6 - EC]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-E+ [6 - EC]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-D+ [6 - EC]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-D+ [6 - EC]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [6 - EC]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-N-A+ [6 - EC]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [6 - EC]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-N+ [6 - EC]<6PAU> <Option+LM1+LM2(+LM3)> EC4-AI-N+ [6 - EC]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-A-I,4
+115,[6 - Hop2],HIST opt.,Histoire Option,"[""BRUGMANS""]","[""Nathanael""]",[6 - Hop2]<6PAU> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - Hop2]<6PAV> <Option+LM1+LM2(+LM3)> LH4-AI-/+ [6 - Hop2]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - Hop2]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - Hop2]<6PAV> <Option+LM1+LM2(+LM3)> MH4-N-A+ [6 - Hop2]<6PAW> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - Hop2]<6PAW> <Option+LM1+LM2(+LM3)> MH4-DI-A+ [6 - Hop2]<6PAW> <Option+LM1+LM2(+LM3)> MH4-NI-A,4
+116,[6 - ScOp1],CHIMIE opt.,Chimie Option,"[""YAHIA""]","[""Lina""]",[6 - ScOp1]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [6 - ScOp1]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-I+ [6 - ScOp1]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [6 - ScOp1]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [6 - ScOp1]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A,2
+117,[6 - ScOp2],PHY opt.,Physique Option,"[""MAQUET""]","[""Laurent""]",[6 - ScOp2]<6PAU> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [6 - ScOp2]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [6 - ScOp2]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-E+ [6 - ScOp2]<6PAV> <Option+LM1+LM2(+LM3)> MB4-N-A+ [6 - ScOp2]<6PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - ScOp2]<6PAW> <Option+LM1+LM2(+LM3)> MB4-NI-A,3
+118,[6PAV-SO],CPC1,CPC1,"[""BELLOI""]","[""Théo""]",[6PAV-SO]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-E+ [6PAV-SO]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-N+ [6PAV-SO]<6PAV> <Option+LM1+LM2(+LM3)> SO4-N-A+ 6PAX,1
+119,2PAG,FRANÇAIS,Français,"[""DEGEY""]","[""Anne-Marie""]",2PAG,5
+120,1PAD,MATH,Math,"[""KREIT""]","[""Amélie""]",1PAD,4
+121,2PAB,LATIN,Latin,"[""LACASSE""]","[""Anne""]",2PAB,3
+122,4PAZ,MATH,Math,"[""GARTI""]","[""Mohamed""]",4PAZ,5
+123,4PAS,ESPAGNOL LM2,Espagnol LM2,"[""JUDONG""]","[""Sylvie""]",4PAS,4
+124,3PAU,GÉO,Géo,"[""PAQUAY""]","[""Maxime""]",3PAU,2
+125,2PAF,EducTECH,Educ Tech,"[""FINCKEN""]","[""Caroline""]",2PAF,1
+126,[4 - ScOp3],CHIMIE opt.,Chimie Option,"[""YAHIA""]","[""Lina""]",[4 - ScOp3]<4PAU> <Option> MS+ [4 - ScOp3]<4PAV> <Option> MS+ [4 - ScOp3]<4PAV> <Option> LS+ [4 - ScOp3]<4PAW> <Option> MS,2
+127,4PAV,CPC1,CPC1,"[""LUCA""]","[""Pablo""]",4PAV,1
+128,2PAB,LECTURE,Lecture,"[""BAIZAN""]","[""Noémie""]",2PAB,1
+129,6PAU,FRANÇAIS,Français,"[""VAN BRABANT""]","[""Laura""]",6PAU,5
+130,5PAU,FRANÇAIS,Français,"[""WERA""]","[""Tanguy""]",5PAU,5
+131,4PAZ,FRANÇAIS,Français,"[""ZAMBUTO""]","[""Stéphanie""]",4PAZ,5
+132,6PAY,FRANÇAIS,Français,"[""MAESEN""]","[""Valentin""]",6PAY,5
+133,4PAU,FRANÇAIS,Français,"[""PAGNIER""]","[""Jason""]",4PAU,4
+134,3PAX,MATH,Math,"[""GHIRO""]","[""Gianni""]",3PAX,5
+135,3PAY,MATH,Math,"[""VAN DE VLOET""]","[""Jennifer""]",3PAY,5
+136,2PAD,MATH,Math,"[""KREIT""]","[""Amélie""]",2PAD,5
+137,1PAA,MATH,Math,"[""STAFFE""]","[""Joséphine""]",1PAA,1
+138,2PAC,MATH,Math,"[""BAUWENS""]","[""Sarah""]",2PAC,5
+139,2PAA,MUSIQUE,Musique,"[""DEPUIS""]","[""Pierre""]",2PAA,1
+140,[3 - EC1],SC. ECO.,Sciences éco,"[""MARECHAL""]","[""Anthony""]",[3 - EC1]<3PAT> <Option> EC+ [3 - EC1]<3PAU> <Option> EC+ [3 - EC1]<3PAW> <Option> EC,4
+141,4PAW,MATH,Math,"[""GARTI""]","[""Mohamed""]",4PAW,5
+142,4PAY,MATH,Math,"[""BEBRONNE""]","[""Romain""]",4PAY,4
+143,4PAT,GÉO,Géo,"[""MEERT""]","[""David""]",4PAT,2
+144,[6 - H1],HIST,Histoire,"[""THOMAS""]","[""Adrian""]",[6 - H1]<6PAX> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - H1]<6PAX> <Option+LM1+LM2(+LM3)> ME4-A-E,2
+145,2PAF,HIST,Histoire,"[""BOURGEOIS""]","[""Maxime""]",2PAF,2
+146,2PAE,EducTECH,Educ Tech,"[""FINCKEN""]","[""Caroline""]",2PAE,1
+147,[4 - ScOp2],CHIMIE opt.,Chimie Option,"[""YAHIA""]","[""Lina""]",[4 - ScOp2]<4PAX> <Option> MS,2
+148,[4 - ScOp1],PHY opt.,Physique Option,"[""MAQUET""]","[""Laurent""]",[4 - ScOp1]<4PAS> <Option> MS,2
+149,[1 - EPG2.],GYM,Gym,"[""ROLIN"", ""MOUPONDO""]","[""Gérald"", ""Jean Muller""]",[1 - EPG2.]<1PAC> <EP> G+ [1 - EPG2.]<1PAD> <EP> G+ [1 - EPG2.]<1PAE> <EP> G+ [1 - EPG2.]<1PAF> <EP> G,3
+150,[1 - EPF3],GYM,Gym,"[""BOUHRISS""]","[""Samir""]",[1 - EPF3]<1PAC> <EP> F+ [1 - EPF3]<1PAF> <EP> F,3
+151,[1 - EPF2],GYM,Gym,"[""SITKO""]","[""Cynthia""]",[1 - EPF2]<1PAD> <EP> F+ [1 - EPF2]<1PAE> <EP> F,3
+152,[3 - SO1],SC. SOC.,Sciences sociales,"[""RONCHAINE""]","[""Marc""]",[3 - SO1]<3PAT> <Option> SO+ [3 - SO1]<3PAU> <Option> SO+ [3 - SO1]<3PAW> <Option> SO+ [3 - SO1]<3PAS> <Option> SO,4
+153,[3 - L+LS],LATIN,Latin,"[""VANHENTENRYK""]","[""Cécile""]",[3 - L+LS]<3PAT> <Option> L+ [3 - L+LS]<3PAS> <Option> LS,4
+154,[3 - ScOp1],PHY opt.,Physique Option,"[""ZOLLER""]","[""Céline""]",[3 - ScOp1]<3PAW> <Option> MS+ [3 - ScOp1]<3PAZ> <Option> MS,2
+155,[6 - SO],SC. SOC.,Sciences sociales,"[""BERTHOLET""]","[""Stephan""]",[6 - SO]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-E+ [6 - SO]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-N+ [6 - SO]<6PAV> <Option+LM1+LM2(+LM3)> SO4-N-A,4
+156,[5+6 - L],LATIN,Latin,"[""LACASSE""]","[""Anne""]",[5+6 - L]<5PAW> <Option+LM1+LM2(+LM3)> LH4-A-/+ [5+6 - L]<5PAX> <Option+LM1+LM2(+LM3)> LA6-N-/+ [5+6 - L]<6PAV> <Option+LM1+LM2(+LM3)> LH4-AI-/+ <6PAV> Trouwers Charlotte+ <5PAX> Charue Younes,2
+157,[5 - LM2 - N1],NÉERLANDAIS LM2,Néerlandais LM2,"[""MORAUX""]","[""Laurence""]",[5 - LM2 - N1]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - LM2 - N1]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - LM2 - N1]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5 - LM2 - N1]<5PAW> <Option+LM1+LM2(+LM3)> EC4-A-N+ [5 - LM2 - N1]<5PAW> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [5 - LM2 - N1]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-D,4
+158,[6 - M6h2],MATH6,Math Option,"[""VAN DEN BERGHE""]","[""Sylviane""]",[6 - M6h2]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [6 - M6h2]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [6 - M6h2]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A+ [6 - M6h2]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-E+ [6 - M6h2]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-D+ [6 - M6h2]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [6 - M6h2]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-N,6
+159,[6 - CPC1],CPC2,CPC2,"[""BELLOI""]","[""Théo""]",[6 - CPC1]<6PAX> <Philo> CPC,1
+160,2PAC,LECTURE,Lecture,"[""BAIZAN""]","[""Noémie""]",2PAC,1
+161,4PAT,FRANÇAIS,Français,"[""WERA""]","[""Tanguy""]",4PAT,5
+162,5PAW,FRANÇAIS,Français,"[""MAESEN""]","[""Valentin""]",5PAW,5
+163,5PAY,FRANÇAIS,Français,"[""PAGNIER""]","[""Jason""]",5PAY,5
+164,4PAW,FRANÇAIS,Français,"[""HUCHANT""]","[""Louise""]",4PAW,5
+165,5PAZ,FRANÇAIS,Français,"[""CHAPEAU""]","[""Manu""]",5PAZ,4
+166,2PAG,MUSIQUE,Musique,"[""DEPUIS""]","[""Pierre""]",2PAG,1
+167,2PAA,LATIN,Latin,"[""X_1_Latin_DI""]",[],2PAA,1
+168,[5 - M4h4],MATH4,Math,"[""CHAPEAU""]","[""Vincent""]",[5 - M4h4]<5PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - M4h4]<5PAV> <Option+LM1+LM2(+LM3)> ME4-A-E,4
+169,4PAV,MATH,Math,"[""GARTI""]","[""Mohamed""]",4PAV,3
+170,4PAU,ANGLAIS LM1,Anglais LM1,"[""VANHERLE""]","[""Camille""]",4PAU,4
+171,6PAU,GÉO,Géo,"[""MEERT""]","[""David""]",6PAU,2
+172,5PAX,GÉO,Géo,"[""NOTTET""]","[""Tristant""]",5PAX,2
+173,4PAS,HIST,Histoire,"[""MEDART""]","[""Fanny""]",4PAS,2
+174,2PAE,HIST,Histoire,"[""BOURGEOIS""]","[""Maxime""]",2PAE,2
+175,2PAF,GÉO,Géo,"[""PAQUAY""]","[""Maxime""]",2PAF,2
+176,[4 - ScOp2],PHY opt.,Physique Option,"[""MAQUET""]","[""Laurent""]",[4 - ScOp2]<4PAX> <Option> MS,2
+177,[3 - SC2],BIO,Bio,"[""FINCKEN""]","[""Caroline""]",[3 - SC2]<3PAT> <Option> SO+ [3 - SC2]<3PAU> <Option> SO+ [3 - SC2]<3PAW> <Option> SO+ [3 - SC2]<3PAS> <Option> SO,1
+178,[6 - LM2 - A],ANGLAIS LM2,Anglais LM2,"[""NOLF""]","[""Caroline""]",[6 - LM2 - A]<6PAV> <Option+LM1+LM2(+LM3)> MB4-N-A+ [6 - LM2 - A]<6PAV> <Option+LM1+LM2(+LM3)> MH4-N-A+ [6 - LM2 - A]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-A+ [6 - LM2 - A]<6PAV> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [6 - LM2 - A]<6PAV> <Option+LM1+LM2(+LM3)> SO4-N-A+ [6 - LM2 - A]<6PAW> <Option+LM1+LM2(+LM3)> MB4-NI-A+ [6 - LM2 - A]<6PAW> <Option+LM1+LM2(+LM3)> MH4-DI-A+ [6 - LM2 - A]<6PAW> <Option+LM1+LM2(+LM3)> MH4-NI-A+ [6 - LM2 - A]<6PAW> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [6 - LM2 - A]<6PAW> <Option+LM1+LM2(+LM3)> ML4-DI-A-E+ [6 - LM2 - A]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [6 - LM2 - A]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-D+ [6 - LM2 - A]<6PAW> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [6 - LM2 - A]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A+ [6 - LM2 - A]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-N-A,4
+179,[6 - LM2 - N2],NÉERLANDAIS LM2,Néerlandais LM2,"[""BROUNS""]","[""Marie""]",[6 - LM2 - N2]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [6 - LM2 - N2]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - LM2 - N2]<6PAV> <Option+LM1+LM2(+LM3)> EC4-AI-N+ [6 - LM2 - N2]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-N+ [6 - LM2 - N2]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [6 - LM2 - N2]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-E+ [6 - LM2 - N2]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-D+ [6 - LM2 - N2]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-N,4
+180,[5+6 - LM2 - D],ALLEMAND LM2,Allemand LM2,"[""HOLLENFELTZ""]","[""Olivier""]",[5+6 - LM2 - D]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-D+ [5+6 - LM2 - D]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-D+ [5+6 - LM2 - D]<5PAU> <Option+LM1+LM2(+LM3)> MH4-A-D+ [5+6 - LM2 - D]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-D+ [5+6 - LM2 - D]<5PAU> <Option+LM1+LM2(+LM3)> ME4-AI-D+ [5+6 - LM2 - D]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-D+ [5+6 - LM2 - D]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-D+ [5+6 - LM2 - D]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-D+ [5+6 - LM2 - D]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-D+ [5+6 - LM2 - D]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-D+ [5+6 - LM2 - D]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-D-E,4
+181,[5+6 - LM2 - I],ITALIEN LM2,Italien LM2,"[""ZAMBUTO""]","[""Stéphanie""]",[5+6 - LM2 - I]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-I+ [5+6 - LM2 - I]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-I+ [5+6 - LM2 - I]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-I+ [5+6 - LM2 - I]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [5+6 - LM2 - I]<5PAU> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [5+6 - LM2 - I]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-I+ [5+6 - LM2 - I]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-I+ [5+6 - LM2 - I]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-I+ [5+6 - LM2 - I]<6PAY> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [5+6 - LM2 - I]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [5+6 - LM2 - I]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-D+ [5+6 - LM2 - I]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-I+ [5+6 - LM2 - I]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-A-I+ [5+6 - LM2 - I]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-D,4
+182,[6 - LM2 - E2],ESPAGNOL LM2,Espagnol LM2,"[""JUDONG""]","[""Sylvie""]",[6 - LM2 - E2]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [6 - LM2 - E2]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - LM2 - E2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - LM2 - E2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-E+ [6 - LM2 - E2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [6 - LM2 - E2]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [6 - LM2 - E2]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [6 - LM2 - E2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-AI-E,4
+183,[6 - LM2 - E3],ESPAGNOL LM2,Espagnol LM2,"[""HERVELLE""]","[""Wendy""]",[6 - LM2 - E3]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-E+ [6 - LM2 - E3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - LM2 - E3]<6PAV> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - LM2 - E3]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-E+ [6 - LM2 - E3]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-E+ [6 - LM2 - E3]<6PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - LM2 - E3]<6PAW> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - LM2 - E3]<6PAW> <Option+LM1+LM2(+LM3)> ME4-A-E,4
+184,[5 - EPF4],GYM,Gym,"[""MEUNIER""]","[""Benjamin""]",[5 - EPF4]<5PAT> <EP> F,2
+185,[5 - EPG4],GYM,Gym,"[""GROSJEAN""]","[""Maxime""]",[5 - EPG4]<5PAT> <EP> G,2
+186,4PAU,CPC1,CPC1,"[""BELLOI""]","[""Théo""]",4PAU,1
+187,2PAA+2PAB+2PAC+2PAD+2PAE+2PAF+2PAG,REM2,Remédiation 2eme,"[""DEGEY"", ""STAFFE"", ""ZOES"", ""ZOLLER""]","[""Anne-Marie"", ""Joséphine"", ""Dyonissis"", ""Céline""]",2PAA+ 2PAB+ 2PAC+ 2PAD+ 2PAE+ 2PAF+ 2PAG,1
+188,3PAW,MATH,Math,"[""GHIRO""]","[""Gianni""]",3PAW,5
+189,4PAV,MATH,Math,"[""DECHESNE""]","[""Bertrand""]",4PAV,2
+190,[6 - LM1 - A1],ANGLAIS LM1,Anglais LM1,"[""KEVERS""]","[""Laetiita""]",[6 - LM1 - A1]<6PAX> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - LM1 - A1]<6PAX> <Option+LM1+LM2(+LM3)> ME4-A-E,4
+191,[5 - H2],HIST,Histoire,"[""MEDART""]","[""Fanny""]",[5 - H2]<5PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - H2]<5PAV> <Option+LM1+LM2(+LM3)> ME4-A-E,2
+192,3PAS,GÉO,Géo,"[""PAQUAY""]","[""Maxime""]",3PAS,2
+193,[1 - EPG1],GYM,Gym,"[""ROLIN"", ""MOUPONDO""]","[""Gérald"", ""Jean Muller""]",[1 - EPG1]<1PAA> <EP> G+ [1 - EPG1]<1PAB> <EP> G,3
+194,[3 - SO2],SC. SOC.,Sciences sociales,"[""RONCHAINE""]","[""Marc""]",[3 - SO2]<3PAX> <Option> SO+ [3 - SO2]<3PAY> <Option> SO,4
+195,[3 - LM1 - AI1],HIST AI,Histoire AI,"[""CARLYLE""]","[""Thomas""]",[3 - LM1 - AI1]<3PAT> <LM1+LM2> AI-N+ [3 - LM1 - AI1]<3PAX> <LM1 + LM2> AI-E,1
+196,6PAW,FRANÇAIS,Français,"[""WERA""]","[""Tanguy""]",6PAW,5
+197,6PAZ,FRANÇAIS,Français,"[""ZAMBUTO""]","[""Stéphanie""]",6PAZ,5
+198,4PAS,MATH,Math,"[""DECHESNE""]","[""Bertrand""]",4PAS,5
+199,[6 - LM2 - N1],NÉERLANDAIS LM2,Néerlandais LM2,"[""BROUNS""]","[""Marie""]",[6 - LM2 - N1]<6PAU> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [6 - LM2 - N1]<6PAU> <Option+LM1+LM2(+LM3)> MB4-A-N+ [6 - LM2 - N1]<6PAU> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - LM2 - N1]<6PAU> <Option+LM1+LM2(+LM3)> ME4-A-N+ [6 - LM2 - N1]<6PAU> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [6 - LM2 - N1]<6PAU> <Option+LM1+LM2(+LM3)> EC4-A-N+ [6 - LM2 - N1]<6PAU> <Option+LM1+LM2(+LM3)> EC4-AI-N,4
+200,[3 - HG3],HIST,Histoire,"[""RONCHAINE""]","[""Marc""]",[3 - HG3]<3PAT> <LM1+LM2> A-F-N+ [3 - HG3]<3PAX> <LM1 + LM2> A-E+ [3 - HG3]<3PAX> <LM1 + LM2> N-E,2
+201,[4 - HG4],GÉO,Géo,"[""MEERT""]","[""David""]",[4 - HG4]<4PAZ> <LM1> A+ [4 - HG4]<4PAX> <LM1> N,2
+202,[4 - HG6],GÉO,Géo,"[""NOTTET""]","[""Tristant""]",[4 - HG6]<4PAW> <LM1> A+ [4 - HG6]<4PAX> <LM1> A+ [4 - HG6]<4PAV> <LM1> N+ [4 - HG6]<4PAY> <LM1> N+ [4 - HG6]<4PAZ> <LM1> N+ [4 - HG6]<4PAW> <LM1> A-Maxime Kerckhofs,2
+203,[4 - HG5],HIST,Histoire,"[""THOMAS""]","[""Adrian""]",[4 - HG5]<4PAV> <LM1> A+ [4 - HG5]<4PAY> <LM1> A+ [4 - HG5]<4PAW> <LM1> N,2
+204,[5 - ScOp2],Acph,Physique Option,"[""MAQUET""]","[""Laurent""]",[5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A+ [5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-A+ [5 - ScOp2]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - ScOp2]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-E+ [5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-NI-A+ [5 - ScOp2]<5PAW> <Option+LM1+LM2(+LM3)> MB4-AI-N,3
+205,1PAF,MATH,Math,"[""GHIRO""]","[""Gianni""]",1PAF,2
+206,3PAU,MATH,Math,"[""VAN DE VLOET""]","[""Jennifer""]",3PAU,5
+207,2PAE,LATIN,Latin,"[""VANHENTENRYK""]","[""Cécile""]",2PAE,3
+208,1PAB,ANGLAIS LM1,Anglais LM1,"[""DI GERONIMO""]","[""Giuseppina""]",1PAB,4
+209,4PAU,NÉERLANDAIS LM2,Néerlandais LM2,"[""BROUNS""]","[""Marie""]",4PAU,4
+210,4PAT,HIST,Histoire,"[""BRUGMANS""]","[""Nathanael""]",4PAT,2
+211,3PAS,HIST,Histoire,"[""FRANCOIS""]","[""Ariane""]",3PAS,2
+212,[1 - HGS1],SCIENCES,Sciences,"[""ZOLLER""]","[""Céline""]",[1 - HGS1]<1PAA> <LM1> A,3
+213,1PAE,EducTECH,Educ Tech,"[""ZANOL""]","[""Marie-Sophie""]",1PAE,1
+214,2PAF,SCIENCES,Sciences,"[""YILDIRIM""]","[""Héline""]",2PAF,3
+215,[5 - ScOp1],CHIMIE opt.,Chimie Option,"[""YAHIA""]","[""Lina""]",[5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> LA6-N-/+ [5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-N-A,2
+216,[2 - EPG2],GYM,Gym,"[""ROLIN"", ""MOUPONDO""]","[""Gérald"", ""Jean Muller""]",[2 - EPG2]<2PAB> <EP> G+ [2 - EPG2]<2PAC> <EP> G+ [2 - EPG2]<2PAG> <EP> G,3
+217,[2 - EPF2],GYM,Gym,"[""SITKO""]","[""Cynthia""]",[2 - EPF2]<2PAB> <EP> F+ [2 - EPF2]<2PAC> <EP> F+ [2 - EPF2]<2PAG> <EP> F,3
+218,[3+4 - LM1 - NI],Imm. Néerlandais,Immersion Néerlandais,"[""DONJEAN""]","[""Frederic""]",[3+4 - LM1 - NI]<3PAV> <LM1> NI+ [3+4 - LM1 - NI]<3PAW> <LM1> NI+ [3+4 - LM1 - NI]<4PAV> <LM1> NI+ [3+4 - LM1 - NI]<4PAW> <LM1> NI,4
+219,[3 - LM1 - AI2],Imm. Anglais,Immersion Anglais,"[""RUESS""]","[""Céline""]",[3 - LM1 - AI2]<3PAV> <LM1> AI+ [3 - LM1 - AI2]<3PAW> <LM1> AI+ [3 - LM1 - AI2]<3PAY> <LM1> AI,4
+220,[4 - LM1 - AI],Imm. Anglais,Immersion Anglais,"[""SACRE""]","[""Catherine""]",[4 - LM1 - AI]<4PAV> <LM1> AI+ [4 - LM1 - AI]<4PAW> <LM1> AI+ [4 - LM1 - AI]<4PAX> <LM1> AI+ [4 - LM1 - AI]<4PAY> <LM1> AI+ [4 - LM1 - AI]<4PAZ> <LM1> AI,4
+221,[3+4 - LM1 - DI],Imm. Allemand,Immersion Allemand,"[""SKRIJELJ""]","[""Amir""]",[3+4 - LM1 - DI]<3PAY> <LM1> DI+ [3+4 - LM1 - DI]<3PAV> <LM1> DI+ [3+4 - LM1 - DI]<4PAV> <LM1> DI,4
+222,[3 - LM1 - A5],ANGLAIS LM1,Anglais LM1,"[""THONNARD""]","[""Dominique""]",[3 - LM1 - A5]<3PAV> <LM1> A+ [3 - LM1 - A5]<3PAW> <LM1> A,4
+223,[3 - LM1 - A6],ANGLAIS LM1,Anglais LM1,"[""ZOES""]","[""Dyonissis""]",[3 - LM1 - A6]<3PAY> <LM1> A,4
+224,[4 - LM1 - A5],ANGLAIS LM1,Anglais LM1,"[""NOLF""]","[""Caroline""]",[4 - LM1 - A5]<4PAW> <LM1> A+ [4 - LM1 - A5]<4PAX> <LM1> A+ [4 - LM1 - A5]<4PAY> <LM1> A,4
+225,[4 - LM1 - A4],ANGLAIS LM1,Anglais LM1,"[""VANHERLE""]","[""Camille""]",[4 - LM1 - A4]<4PAV> <LM1> A+ [4 - LM1 - A4]<4PAZ> <LM1> A+ [4 - LM1 - A4]<4PAW> <LM1> A-Maxime Kerckhofs,4
+226,[4 - LM1 - N],NÉERLANDAIS LM1,Néerlandais LM1,"[""MORAUX""]","[""Laurence""]",[4 - LM1 - N]<4PAV> <LM1> N+ [4 - LM1 - N]<4PAW> <LM1> N+ [4 - LM1 - N]<4PAX> <LM1> N+ [4 - LM1 - N]<4PAY> <LM1> N+ [4 - LM1 - N]<4PAZ> <LM1> N,4
+227,[6 - M4h2],MATH4,Math,"[""DECHESNE""]","[""Bertrand""]",[6 - M4h2]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - M4h2]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-D+ [6 - M4h2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-I+ [6 - M4h2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - M4h2]<6PAY> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [6 - M4h2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-E+ [6 - M4h2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-D+ [6 - M4h2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-D+ [6 - M4h2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [6 - M4h2]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-N-A+ [6 - M4h2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-AI-E+ [6 - M4h2]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-A-I,4
+228,[6 - M4h1],MATH4,Math,"[""CHAPEAU""]","[""Vincent""]",[6 - M4h1]<6PAU> <Option+LM1+LM2(+LM3)> MB4-A-N+ [6 - M4h1]<6PAU> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - M4h1]<6PAU> <Option+LM1+LM2(+LM3)> ME4-A-N+ [6 - M4h1]<6PAU> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [6 - M4h1]<6PAU> <Option+LM1+LM2(+LM3)> EC4-A-N+ [6 - M4h1]<6PAU> <Option+LM1+LM2(+LM3)> EC4-AI-N,4
+229,[6 - M6h1],MATH6,Math Option,"[""HAFNAOUI""]","[""Imane""]",[6 - M6h1]<6PAU> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [6 - M6h1]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [6 - M6h1]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-I+ [6 - M6h1]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [6 - M6h1]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-D,6
+230,[5 - Sc4],BIO,Bio,"[""ZENTHNER""]","[""Fabienne""]",[5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> MH4-A-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-I+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ME4-AI-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-I+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-D+ [5 - Sc4]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-A+ [5 - Sc4]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-E+ [5 - Sc4]<5PAZ> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [5 - Sc4]<5PAT> <Option+LM1+LM2(+LM3)> SO4-NI-A+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-I+ [5 - Sc4]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-D-E,1
+231,[5 - EPF3],GYM,Gym,"[""MEUNIER""]","[""Benjamin""]",[5 - EPF3]<5PAV> <EP> F+ [5 - EPF3]<5PAY> <EP> F,2
+232,[5 - EPG3],GYM,Gym,"[""DULLIER""]","[""Cyrielle""]",[5 - EPG3]<5PAV> <EP> G+ [5 - EPG3]<5PAY> <EP> G,2
+233,6PAV,GÉO,Géo,"[""NOTTET""]","[""Tristant""]",6PAV,2
+234,[3 - LM2 - N1],NÉERLANDAIS LM2,Néerlandais LM2,"[""BRACONNIER""]","[""Simon""]",[3 - LM2 - N1]<3PAT> <LM1+LM2> A-F-N+ [3 - LM2 - N1]<3PAT> <LM1+LM2> AI-N+ [3 - LM2 - N1]<3PAT> <LM1+LM2> A-G-N,4
+235,[3 - LM2 - E2],ESPAGNOL LM2,Espagnol LM2,"[""DZIRI""]","[""Soraya""]",[3 - LM2 - E2]<3PAX> <LM1 + LM2> A-E+ [3 - LM2 - E2]<3PAX> <LM1 + LM2> AI-E+ [3 - LM2 - E2]<3PAX> <LM1 + LM2> N-E+ [3 - LM2 - E2]<3PAT> <LM1+LM2> A-G-E+ [3 - LM2 - E2]<3PAT> <LM1+LM2> AI-E+ [3 - LM2 - E2]<3PAT> <LM1+LM2> A-F-E,4
+236,[5 - ScOp3],Acph,Physique Option,"[""BAKHTI""]","[""Youssef""]",[5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-I+ [5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-D+ [5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-I+ [5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-D+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-A+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-E,1
+237,2PAA,LECTURE,Lecture,"[""POPOVICS""]","[""Vanessa""]",2PAA,1
+238,3PAT,MATH,Math,"[""GHIRO""]","[""Gianni""]",3PAT,5
+239,3PAZ,MATH,Math,"[""VAN DE VLOET""]","[""Jennifer""]",3PAZ,5
+240,1PAA,MATH,Math,"[""BAUWENS""]","[""Sarah""]",1PAA,3
+241,2PAD,LATIN,Latin,"[""VANHENTENRYK""]","[""Cécile""]",2PAD,2
+242,1PAF,LATIN,Latin,"[""LACASSE""]","[""Anne""]",1PAF,2
+243,[6 - M4h3],MATH4,Math,"[""HAFNAOUI""]","[""Imane""]",[6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-E+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> MB4-N-A+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> LH4-AI-/+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-N-A+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-A+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-E+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> EC4-AI-N+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-E+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-N+ [6 - M4h3]<6PAV> <Option+LM1+LM2(+LM3)> SO4-N-A,4
+244,6PAY,GÉO,Géo,"[""MEERT""]","[""David""]",6PAY,2
+245,[6 - H5],HIST,Histoire,"[""MEDART""]","[""Fanny""]",[6 - H5]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [6 - H5]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [6 - H5]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A+ [6 - H5]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-E+ [6 - H5]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-D+ [6 - H5]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-N-A+ [6 - H5]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [6 - H5]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-N+ [6 - H5]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-A-I,2
+246,1PAC,EducTECH,Educ Tech,"[""ZANOL""]","[""Marie-Sophie""]",1PAC,1
+247,2PAE,SCIENCES,Sciences,"[""YILDIRIM""]","[""Héline""]",2PAE,3
+248,[5 - Sc3],BIO,Bio,"[""ZENTHNER""]","[""Fabienne""]",[5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> EC4-A-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> EC4-DI-A+ [5 - Sc3]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [5 - Sc3]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - Sc3]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-N-A-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - Sc3]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-N,1
+249,[5 - Sc4],CHIMIE,Chimie,"[""JEANGILLE""]","[""Lionel""]",[5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> MH4-A-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-I+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ME4-AI-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-I+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-D+ [5 - Sc4]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-A+ [5 - Sc4]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-E+ [5 - Sc4]<5PAZ> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [5 - Sc4]<5PAT> <Option+LM1+LM2(+LM3)> SO4-NI-A+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-I+ [5 - Sc4]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-D-E,1
+250,[5 - Sc5],PHYSIQUE,Physique,"[""BAKHTI""]","[""Youssef""]",[5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> LH4-A-/+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-AI-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> EC4-A-N+ [5 - Sc5]<5PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> EC4-N-A+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-N-A+ [5 - Sc5]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-D,1
+251,[5 - ScOp3],CHIMIE opt.,Chimie Option,"[""YAHIA""]","[""Lina""]",[5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-I+ [5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-D+ [5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-I+ [5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-D+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-A+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-E,2
+252,6PAW,GÉO,Géo,"[""NOTTET""]","[""Tristant""]",6PAW,2
+253,1PAC+1PAA+1PAA,FRANÇAIS,Français,"[""MARTINO""]","[""Alessandra""]",1PAC+ <1PAA> Carow Anna+ <1PAA> Si L'hocine Darine,2
+254,2PAD+2PAG+2PAG+2PAG,FRANÇAIS,Français,"[""WILLEMS""]","[""Louise""]",2PAD+ <2PAG> Fank Emerick+ <2PAG> Lux Maya+ <2PAG> Schleihs Liah,1
+255,1PAE+1PAA+1PAA+1PAA,FRANÇAIS,Français,"[""POPOVICS""]","[""Vanessa""]",1PAE+ <1PAA> Delvaux Lea+ <1PAA> Dreze Elisa+ <1PAA> Thyssens Maxime,2
+256,3PAU,ANGLAIS LM1,Anglais LM1,"[""THONNARD""]","[""Dominique""]",3PAU,4
+257,[5 - LM2 - E1],ESPAGNOL LM2,Espagnol LM2,"[""DZIRI""]","[""Soraya""]",[5 - LM2 - E1]<5PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - LM2 - E1]<5PAV> <Option+LM1+LM2(+LM3)> ME4-A-E,2
+258,4PAU,GÉO,Géo,"[""NOTTET""]","[""Tristant""]",4PAU,2
+259,1PAF,EducTECH,Educ Tech,"[""ZANOL""]","[""Marie-Sophie""]",1PAF,1
+260,[4 - ScOp2],BIO opt.,Bio Option,"[""ZENTHNER""]","[""Fabienne""]",[4 - ScOp2]<4PAX> <Option> MS,1
+261,[2 - EPG3],GYM,Gym,"[""ROLIN"", ""MOUPONDO""]","[""Gérald"", ""Jean Muller""]",[2 - EPG3]<2PAE> <EP> G+ [2 - EPG3]<2PAF> <EP> G,3
+262,[2 - EPF3],GYM,Gym,"[""SITKO""]","[""Cynthia""]",[2 - EPF3]<2PAE> <EP> F+ [2 - EPF3]<2PAF> <EP> F,3
+263,[3 - SC4],CHIMIE,Chimie,"[""ZOLLER""]","[""Céline""]",[3 - SC4]<3PAX> <Option> SO+ [3 - SC4]<3PAY> <Option> SO,1
+264,[5 - LM1 - AI],HIST AI,Histoire AI,"[""SACRE""]","[""Catherine""]",[5 - LM1 - AI]<5PAU> <Option+LM1+LM2(+LM3)> ME4-AI-D+ [5 - LM1 - AI]<5PAW> <Option+LM1+LM2(+LM3)> ME4-AI-E+ [5 - LM1 - AI]<5PAX> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [5 - LM1 - AI]<5PAY> <Option+LM1+LM2(+LM3)> SO4-AI-E+ [5 - LM1 - AI]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [5 - LM1 - AI]<5PAZ> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [5 - LM1 - AI]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [5 - LM1 - AI]<5PAY> <Option+LM1+LM2(+LM3)> MH4-AI-N+ [5 - LM1 - AI]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-E+ [5 - LM1 - AI]<5PAW> <Option+LM1+LM2(+LM3)> MB4-AI-N,2
+265,[5 - H4],HIST,Histoire,"[""BRUGMANS""]","[""Nathanael""]",[5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-I+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-D+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-I+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-D+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> MH4-A-D+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-I+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-D+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-I+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-D+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-D+ [5 - H4]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5 - H4]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-I+ [5 - H4]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-D+ [5 - H4]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-D-E+ [5 - H4]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-D,2
+266,[5 - H5],HIST,Histoire,"[""MEDART""]","[""Fanny""]",[5 - H5]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - H5]<5PAW> <Option+LM1+LM2(+LM3)> EC4-A-N+ [5 - H5]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-N+ [5 - H5]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - H5]<5PAY> <Option+LM1+LM2(+LM3)> MH4-N-A+ [5 - H5]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-N+ [5 - H5]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-E+ [5 - H5]<5PAY> <Option+LM1+LM2(+LM3)> SO4-N-A,2
+267,[5 - H6],HIST,Histoire,"[""THOMAS""]","[""Adrian""]",[5 - H6]<5PAW> <Option+LM1+LM2(+LM3)> LH4-A-/+ [5 - H6]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-E+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-A+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-A+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-E+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-N-A-E+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-E+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - H6]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5 - H6]<5PAW> <Option+LM1+LM2(+LM3)> ME4-N-A,2
+268,[6 - Sc2],CHIMIE,Chimie,"[""JEANGILLE""]","[""Lionel""]",[6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-D+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-I+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-D+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-D+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-D+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-E+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-D+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-N-A+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-N+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-AI-E+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-A-I,1
+269,[2 - AI],Imm. Anglais,Immersion Anglais,"[""CARLYLE""]","[""Thomas""]",[2 - AI]<2PAA> <LM1> AI+ [2 - AI]<2PAB> <LM1> AI+ [2 - AI]<2PAC> <LM1> AI,4
+270,[2 - A1],ANGLAIS LM1,Anglais LM1,"[""DI GERONIMO""]","[""Giuseppina""]",[2 - A1]<2PAA> <LM1> A+ [2 - A1]<2PAB> <LM1> A,4
+271,[1 - HGS1],HIST,Histoire,"[""FRANCOIS""]","[""Ariane""]",[1 - HGS1]<1PAA> <LM1> A,2
+272,[2 - HGS2],SCIENCES,Sciences,"[""YILDIRIM""]","[""Héline""]",[2 - HGS2]<2PAC> <LM1> A+ [2 - HGS2]<2PAG> <LM1> A,3
+273,2PAB,FRANÇAIS,Français,"[""MARTINO""]","[""Alessandra""]",2PAB,5
+274,5PAX,FRANÇAIS,Français,"[""FONTAINE""]","[""Simon""]",5PAX,4
+275,2PAE,MATH,Math,"[""KREIT""]","[""Amélie""]",2PAE,5
+276,2PAF,LATIN,Latin,"[""LACASSE""]","[""Anne""]",2PAF,3
+277,4PAX,MATH,Math,"[""DECHESNE""]","[""Bertrand""]",4PAX,5
+278,5PAW,GÉO,Géo,"[""MEERT""]","[""David""]",5PAW,2
+279,[2 - HGS5],GÉO,Géo,"[""PAQUAY""]","[""Maxime""]",[2 - HGS5]<2PAD> <LM1> N+ <2PAD> <LM1> NI,2
+280,2PAA,EducTECH,Educ Tech,"[""ZANOL""]","[""Marie-Sophie""]",2PAA,1
+281,2PAG,EducTECH,Educ Tech,"[""FINCKEN""]","[""Caroline""]",2PAG,1
+282,[4 - ScOp1],BIO opt.,Bio Option,"[""ZENTHNER""]","[""Fabienne""]",[4 - ScOp1]<4PAS> <Option> MS,1
+283,[4 - Sc3],CHIMIE,Chimie,"[""YAHIA""]","[""Lina""]",[4 - Sc3]<4PAU> <Option> EC+ [4 - Sc3]<4PAV> <Option> EC+ [4 - Sc3]<4PAU> <Option> SO+ [4 - Sc3]<4PAV> <Option> SO+ [4 - Sc3]<4PAU> <Option> M+ [4 - Sc3]<4PAV> <Option> L+ [4 - Sc3]<4PAY> <Option> M,1
+284,[5 - Sc1],PHYSIQUE,Physique,"[""MAQUET""]","[""Laurent""]",[5 - Sc1]<5PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - Sc1]<5PAV> <Option+LM1+LM2(+LM3)> ME4-A-E,1
+285,[3 - EPG1],GYM,Gym,"[""ROLIN"", ""MOUPONDO""]","[""Gérald"", ""Jean Muller""]",[3 - EPG1]<3PAX> <EP> G+ [3 - EPG1]<3PAY> <EP> G,2
+286,[3 - EPF1],GYM,Gym,"[""SITKO""]","[""Cynthia""]",[3 - EPF1]<3PAX> <EP> F+ [3 - EPF1]<3PAY> <EP> F,2
+287,[1 - AI],Imm. Anglais,Immersion Anglais,"[""CARLYLE""]","[""Thomas""]",[1 - AI]<1PAC> <LM1> AI+ [1 - AI]<1PAD> <LM1> AI+ [1 - AI]<1PAE> <LM1> AI+ [1 - AI]<1PAF> <LM1> AI,4
+288,[1 - A4],ANGLAIS LM1,Anglais LM1,"[""THONNARD""]","[""Dominique""]",[1 - A4]<1PAD> <LM1> A+ [1 - A4]<1PAE> <LM1> A,4
+289,[1 - A3],ANGLAIS LM1,Anglais LM1,"[""DI GERONIMO""]","[""Giuseppina""]",[1 - A3]<1PAC> <LM1> A+ [1 - A3]<1PAF> <LM1> A,4
+290,[1 - N],NÉERLANDAIS LM1,Néerlandais LM1,"[""BRACONNIER""]","[""Simon""]",[1 - N]<1PAD> <LM1> N+ <1PAC> <LM1> NI,4
+291,[3 - SC2],PHYSIQUE,Physique,"[""ZOLLER""]","[""Céline""]",[3 - SC2]<3PAT> <Option> SO+ [3 - SC2]<3PAU> <Option> SO+ [3 - SC2]<3PAW> <Option> SO+ [3 - SC2]<3PAS> <Option> SO,1
+292,[3 - ScOp1],BIO opt.,Bio Option,"[""YILDIRIM""]","[""Héline""]",[3 - ScOp1]<3PAW> <Option> MS+ [3 - ScOp1]<3PAZ> <Option> MS,2
+293,[4 - SO1],SC. SOC.,Sciences sociales,"[""TILLIEUX""]","[""Joséphine""]",[4 - SO1]<4PAT> <Option> SO+ [4 - SO1]<4PAZ> <Option> SO,2
+294,[4 - EC1],SC. ECO.,Sciences éco,"[""BERTHOLET""]","[""Stephan""]",[4 - EC1]<4PAT> <Option> EC+ [4 - EC1]<4PAY> <Option> EC,4
+295,[5+6 - LM1 - NI],HIST NI,Histoire NI,"[""MORAUX""]","[""Laurence""]",[5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> MB4-NI-A+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> MH4-NI-A+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-D+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> SO4-NI-A+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> MB4-NI-A,2
+296,[6 - LM1 - AI],HIST AI,Histoire AI,"[""SACRE""]","[""Catherine""]",[6 - LM1 - AI]<6PAU> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [6 - LM1 - AI]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [6 - LM1 - AI]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-E+ [6 - LM1 - AI]<6PAV> <Option+LM1+LM2(+LM3)> LH4-AI-/+ [6 - LM1 - AI]<6PAV> <Option+LM1+LM2(+LM3)> EC4-AI-N+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-I+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-D+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [6 - LM1 - AI]<6PAU> <Option+LM1+LM2(+LM3)> EC4-AI-N+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> ME4-AI-E,2
+297,[5+6 - LM1 - DI],HIST DI,Histoire DI,"[""RUESS""]","[""Céline""]",[5+6 - LM1 - DI]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-A+ [5+6 - LM1 - DI]<5PAT> <Option+LM1+LM2(+LM3)> EC4-DI-A+ [5+6 - LM1 - DI]<6PAW> <Option+LM1+LM2(+LM3)> MH4-DI-A+ [5+6 - LM1 - DI]<6PAW> <Option+LM1+LM2(+LM3)> ML4-DI-A-E,2
+298,[5 - H1],HIST,Histoire,"[""BRUGMANS""]","[""Nathanael""]",[5 - H1]<5PAT> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - H1]<5PAT> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - H1]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - H1]<5PAT> <Option+LM1+LM2(+LM3)> EC4-A-E+ [5 - H1]<5PAT> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - H1]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-E+ [5 - H1]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-N,2
+299,[6 - H2],HIST,Histoire,"[""THOMAS""]","[""Adrian""]",[6 - H2]<6PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - H2]<6PAW> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - H2]<6PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - H2]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - H2]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-D+ [6 - H2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-I+ [6 - H2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - H2]<6PAY> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [6 - H2]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [6 - H2]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-D+ [6 - H2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-E+ [6 - H2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-D,2
+300,[6 - H4],HIST,Histoire,"[""MEDART""]","[""Fanny""]",[6 - H4]<6PAV> <Option+LM1+LM2(+LM3)> MB4-N-A+ [6 - H4]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - H4]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - H4]<6PAV> <Option+LM1+LM2(+LM3)> MH4-N-A+ [6 - H4]<6PAV> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - H4]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-A+ [6 - H4]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-E+ [6 - H4]<6PAV> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [6 - H4]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-E+ [6 - H4]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-N+ [6 - H4]<6PAV> <Option+LM1+LM2(+LM3)> SO4-N-A,2
+301,[5 - EPF1],GYM,Gym,"[""MEUNIER""]","[""Benjamin""]",[5 - EPF1]<5PAU> <EP> F+ [5 - EPF1]<5PAZ> <EP> F,2
+302,[5 - EPG1],GYM,Gym,"[""DULLIER""]","[""Cyrielle""]",[5 - EPG1]<5PAU> <EP> G+ [5 - EPG1]<5PAZ> <EP> G,2
+303,2PAE,ANGLAIS LM1,Anglais LM1,"[""THONNARD""]","[""Dominique""]",2PAE,2
+304,4PAS,GÉO,Géo,"[""NOTTET""]","[""Tristant""]",4PAS,2
+305,[3 - ScOp3],BIO opt.,Bio Option,"[""ZANOL""]","[""Marie-Sophie""]",[3 - ScOp3]<3PAV> <Option> MS,2
+306,2PAD,EducTECH,Educ Tech,"[""FINCKEN""]","[""Caroline""]",2PAD,1
+307,[4 - ScOp3],BIO opt.,Bio Option,"[""ZENTHNER""]","[""Fabienne""]",[4 - ScOp3]<4PAU> <Option> MS+ [4 - ScOp3]<4PAV> <Option> MS+ [4 - ScOp3]<4PAV> <Option> LS+ [4 - ScOp3]<4PAW> <Option> MS,1
+308,[4 - Sc4],CHIMIE,Chimie,"[""YAHIA""]","[""Lina""]",[4 - Sc4]<4PAW> <Option> EC+ [4 - Sc4]<4PAW> <Option> SO+ [4 - Sc4]<4PAW> <Option> M+ [4 - Sc4]<4PAZ> <Option> M,1
+309,[3 - SC2],CHIMIE,Chimie,"[""ZOLLER""]","[""Céline""]",[3 - SC2]<3PAT> <Option> SO+ [3 - SC2]<3PAU> <Option> SO+ [3 - SC2]<3PAW> <Option> SO+ [3 - SC2]<3PAS> <Option> SO,1
+310,[4 - Sc3],PHYSIQUE,Physique,"[""MAQUET""]","[""Laurent""]",[4 - Sc3]<4PAU> <Option> EC+ [4 - Sc3]<4PAV> <Option> EC+ [4 - Sc3]<4PAU> <Option> SO+ [4 - Sc3]<4PAV> <Option> SO+ [4 - Sc3]<4PAU> <Option> M+ [4 - Sc3]<4PAV> <Option> L+ [4 - Sc3]<4PAY> <Option> M,1
+311,[1 - A1],ANGLAIS LM1,Anglais LM1,"[""DI GERONIMO""]","[""Giuseppina""]",[1 - A1]<1PAA> <LM1> A,4
+312,[2 - HGS1],GÉO,Géo,"[""FRANCOIS""]","[""Ariane""]",[2 - HGS1]<2PAA> <LM1> A+ [2 - HGS1]<2PAB> <LM1> A,2
+313,[2 - HGS2],GÉO,Géo,"[""PAQUAY""]","[""Maxime""]",[2 - HGS2]<2PAC> <LM1> A+ [2 - HGS2]<2PAG> <LM1> A+ <2PAG> Fank Emerick+ <2PAG> Lux Maya+ <2PAG> Schleihs Liah,2
+314,3PAZ,CPC1,CPC1,"[""KERRELS""]","[""Arnaud""]",3PAZ,1
+315,4PAT,CPC1,CPC1,"[""LUCA""]","[""Pablo""]",4PAT,1
+316,[3 - LM1 - AI1],ALP Anglais,ALP Anglais,"[""RUESS""]","[""Céline""]",[3 - LM1 - AI1]<3PAT> <LM1+LM2> AI-N+ [3 - LM1 - AI1]<3PAX> <LM1 + LM2> AI-E,1
+317,[4 - LM1 - AI],GÉO AI,Géo AI,"[""BORLEE""]","[""Philippe""]",[4 - LM1 - AI]<4PAV> <LM1> AI+ [4 - LM1 - AI]<4PAW> <LM1> AI+ [4 - LM1 - AI]<4PAX> <LM1> AI+ [4 - LM1 - AI]<4PAY> <LM1> AI+ [4 - LM1 - AI]<4PAZ> <LM1> AI,2
+318,3PAU,FRANÇAIS,Français,"[""BAIZAN""]","[""Noémie""]",3PAU,5
+319,[5 - Commu1],COMMU,Communication,"[""CHAPEAU""]","[""Manu""]",[5 - Commu1]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-I+ [5 - Commu1]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-D+ [5 - Commu1]<5PAU> <Option+LM1+LM2(+LM3)> ME4-AI-D+ [5 - Commu1]<5PAV> <Option+LM1+LM2(+LM3)> ME4-A-E,4
+320,3PAS,MATH,Math,"[""GHIRO""]","[""Gianni""]",3PAS,5
+321,[5 - M4h5],MATH4,Math,"[""CHAPEAU""]","[""Vincent""]",[5 - M4h5]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - M4h5]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - M4h5]<5PAW> <Option+LM1+LM2(+LM3)> LH4-A-/+ [5 - M4h5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - M4h5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-AI-E+ [5 - M4h5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5 - M4h5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - M4h5]<5PAW> <Option+LM1+LM2(+LM3)> EC4-A-N+ [5 - M4h5]<5PAW> <Option+LM1+LM2(+LM3)> EC4-N-A+ [5 - M4h5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - M4h5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-N-A+ [5 - M4h5]<5PAW> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [5 - M4h5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-D,4
+322,[3 - LM1 - A4],ANGLAIS LM1,Anglais LM1,"[""THONNARD""]","[""Dominique""]",[3 - LM1 - A4]<3PAX> <LM1 + LM2> A-E+ [3 - LM1 - A4]<3PAT> <LM1+LM2> A-G-E,4
+323,[4 - HG5],GÉO,Géo,"[""MEERT""]","[""David""]",[4 - HG5]<4PAV> <LM1> A+ [4 - HG5]<4PAY> <LM1> A+ [4 - HG5]<4PAW> <LM1> N,2
+324,[4 - HG4],HIST,Histoire,"[""MEDART""]","[""Fanny""]",[4 - HG4]<4PAZ> <LM1> A+ [4 - HG4]<4PAX> <LM1> N,2
+325,[4 - HG6],HIST,Histoire,"[""THOMAS""]","[""Adrian""]",[4 - HG6]<4PAW> <LM1> A+ [4 - HG6]<4PAX> <LM1> A+ [4 - HG6]<4PAV> <LM1> N+ [4 - HG6]<4PAY> <LM1> N+ [4 - HG6]<4PAZ> <LM1> N+ [4 - HG6]<4PAW> <LM1> A-Maxime Kerckhofs,2
+326,[3+4 - LM1 - NI],ALP Néerlandais,ALP Néerlandais,"[""DONJEAN""]","[""Frederic""]",[3+4 - LM1 - NI]<3PAV> <LM1> NI+ [3+4 - LM1 - NI]<3PAW> <LM1> NI+ [3+4 - LM1 - NI]<4PAV> <LM1> NI+ [3+4 - LM1 - NI]<4PAW> <LM1> NI,1
+327,[3+4 - LM1 - DI],ALP Allemand,ALP Allemand,"[""SKRIJELJ""]","[""Amir""]",[3+4 - LM1 - DI]<3PAY> <LM1> DI+ [3+4 - LM1 - DI]<3PAV> <LM1> DI+ [3+4 - LM1 - DI]<4PAV> <LM1> DI,1
+328,[3 - HG5],HIST,Histoire,"[""BOURGEOIS""]","[""Maxime""]",[3 - HG5]<3PAV> <LM1> A+ [3 - HG5]<3PAW> <LM1> A,2
+329,[3 - HG6],GÉO,Géo,"[""FRANCOIS""]","[""Ariane""]",[3 - HG6]<3PAY> <LM1> A,2
+330,[5 - SO],SC. SOC.,Sciences sociales,"[""BERTHOLET""]","[""Stephan""]",[5 - SO]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-N+ [5 - SO]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-E+ [5 - SO]<5PAY> <Option+LM1+LM2(+LM3)> SO4-AI-E+ [5 - SO]<5PAY> <Option+LM1+LM2(+LM3)> SO4-N-A+ [5 - SO]<5PAT> <Option+LM1+LM2(+LM3)> SO4-NI-A,4
+331,[5 - M6h2],MATH6,Math Option,"[""HAFNAOUI""]","[""Imane""]",[5 - M6h2]<5PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A+ [5 - M6h2]<5PAT> <Option+LM1+LM2(+LM3)> EC4-DI-A+ [5 - M6h2]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-I+ [5 - M6h2]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-D+ [5 - M6h2]<5PAU> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [5 - M6h2]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-D+ [5 - M6h2]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - M6h2]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - M6h2]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [5 - M6h2]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-E+ [5 - M6h2]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - M6h2]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-N-A-E+ [5 - M6h2]<5PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [5 - M6h2]<5PAT> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - M6h2]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-I+ [5 - M6h2]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A,6
+332,[6 - Sc3],BIO,Bio,"[""PHILIPPART""]","[""Adèle""]",[6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> MB4-A-N+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> ME4-A-N+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> EC4-A-N+ [6 - Sc3]<6PAV> <Option+LM1+LM2(+LM3)> LH4-AI-/+ [6 - Sc3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - Sc3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - Sc3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-N-A+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> EC4-AI-N,1
+333,[6 - Sc4],PHYSIQUE,Physique,"[""BAKHTI""]","[""Youssef""]",[6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-A+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-E+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> EC4-AI-N+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-E+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-N+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> SO4-N-A+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> MH4-DI-A+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> MH4-NI-A+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ML4-DI-A-E+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-D+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> EC4-NI-A,1
+334,[6 - EPF3],GYM,Gym,"[""MEUNIER""]","[""Benjamin""]",[6 - EPF3]<6PAX> <EP> F+ [6 - EPF3]<6PAZ> <EP> F,2
+335,[6 - EPG3],GYM,Gym,"[""DULLIER""]","[""Cyrielle""]",[6 - EPG3]<6PAX> <EP> G+ [6 - EPG3]<6PAZ> <EP> G,2
+336,2PAB,CPC1,CPC1,"[""KERRELS""]","[""Arnaud""]",2PAB,1
+337,4PAT,CPC2,CPC2,"[""LUCA""]","[""Pablo""]",4PAT,1
+338,[4 - CPC2],CPC2,CPC2,"[""BELLOI""]","[""Théo""]",[4 - CPC2]<4PAS> <Philo> CPC,1
+339,1PAC,DESSIN,Dessin,"[""FAGNOUL""]","[""Dimitri""]",1PAC,1
+340,2PAF,ANGLAIS LM1,Anglais LM1,"[""DI GERONIMO""]","[""Giuseppina""]",2PAF,4
+341,1PAA,EducTECH,Educ Tech,"[""ZANOL""]","[""Marie-Sophie""]",1PAA,1
+342,1PAB,SCIENCES,Sciences,"[""YILDIRIM""]","[""Héline""]",1PAB,3
+343,[5 - ScOp1],Acph,Physique Option,"[""BAKHTI""]","[""Youssef""]",[5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> LA6-N-/+ [5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-N-A,3
+344,[3+4 - LM1 - NI],HIST NI,Histoire NI,"[""MORAUX""]","[""Laurence""]",[3+4 - LM1 - NI]<3PAV> <LM1> NI+ [3+4 - LM1 - NI]<3PAW> <LM1> NI+ [3+4 - LM1 - NI]<4PAV> <LM1> NI+ [3+4 - LM1 - NI]<4PAW> <LM1> NI,2
+345,[3+4 - LM1 - DI],HIST DI,Histoire DI,"[""RUESS""]","[""Céline""]",[3+4 - LM1 - DI]<3PAY> <LM1> DI+ [3+4 - LM1 - DI]<3PAV> <LM1> DI+ [3+4 - LM1 - DI]<4PAV> <LM1> DI,2
+346,[6 - ScOp2],BIO opt.,Bio Option,"[""ZENTHNER""]","[""Fabienne""]",[6 - ScOp2]<6PAU> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [6 - ScOp2]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [6 - ScOp2]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-E+ [6 - ScOp2]<6PAV> <Option+LM1+LM2(+LM3)> MB4-N-A+ [6 - ScOp2]<6PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - ScOp2]<6PAW> <Option+LM1+LM2(+LM3)> MB4-NI-A,2
+347,[6 - Sc4],BIO,Bio,"[""PHILIPPART""]","[""Adèle""]",[6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-A+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-E+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> EC4-AI-N+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-E+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-N+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> SO4-N-A+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> MH4-DI-A+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> MH4-NI-A+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ML4-DI-A-E+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-D+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> EC4-NI-A,1
+348,[6 - Sc3],CHIMIE,Chimie,"[""YAHIA""]","[""Lina""]",[6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> MB4-A-N+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> ME4-A-N+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> EC4-A-N+ [6 - Sc3]<6PAV> <Option+LM1+LM2(+LM3)> LH4-AI-/+ [6 - Sc3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - Sc3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - Sc3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-N-A+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> EC4-AI-N,1
+349,3PAU,CPC2,CPC2,"[""KERRELS""]","[""Arnaud""]",3PAU,1
+350,4PAZ,CPC1,CPC1,"[""BELLOI""]","[""Théo""]",4PAZ,1
+351,3PAX,FRANÇAIS,Français,"[""DEGEY""]","[""Anne-Marie""]",3PAX,5
+352,1PAE,DESSIN,Dessin,"[""FAGNOUL""]","[""Dimitri""]",1PAE,1
+353,[3 - EPF2],GYM,Gym,"[""SITKO""]","[""Cynthia""]",[3 - EPF2]<3PAS> <EP> F+ [3 - EPF2]<3PAT> <EP> F,2
+354,2PAA,LATIN,Latin,"[""LACASSE""]","[""Anne""]",2PAA,1
+355,5PAU,GÉO,Géo,"[""MEERT""]","[""David""]",5PAU,2
+356,5PAY,GÉO,Géo,"[""NOTTET""]","[""Tristant""]",5PAY,2
+357,[6 - H3],HIST,Histoire,"[""BRUGMANS""]","[""Nathanael""]",[6 - H3]<6PAU> <Option+LM1+LM2(+LM3)> MB4-A-N+ [6 - H3]<6PAU> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - H3]<6PAU> <Option+LM1+LM2(+LM3)> ME4-A-N+ [6 - H3]<6PAU> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [6 - H3]<6PAU> <Option+LM1+LM2(+LM3)> EC4-A-N,2
+358,3PAZ,HIST,Histoire,"[""BOURGEOIS""]","[""Maxime""]",3PAZ,2
+359,1PAB,HIST,Histoire,"[""FRANCOIS""]","[""Ariane""]",1PAB,2
+360,2PAB,EducTECH,Educ Tech,"[""ZANOL""]","[""Marie-Sophie""]",2PAB,1
+361,[6 - Sc1],PHYSIQUE,Physique,"[""MAQUET""]","[""Laurent""]",[6 - Sc1]<6PAX> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - Sc1]<6PAX> <Option+LM1+LM2(+LM3)> ME4-A-E,1
+362,[3 - LM1 - AI2],GÉO AI,Géo AI,"[""BORLEE""]","[""Philippe""]",[3 - LM1 - AI2]<3PAV> <LM1> AI+ [3 - LM1 - AI2]<3PAW> <LM1> AI+ [3 - LM1 - AI2]<3PAY> <LM1> AI,2
+363,[4 - EC2],SC. ECO.,Sciences éco,"[""TSHIMANGA""]","[""Jean-Bell""]",[4 - EC2]<4PAU> <Option> EC+ [4 - EC2]<4PAV> <Option> EC+ [4 - EC2]<4PAW> <Option> EC,4
+364,[4 - SO2],SC. SOC.,Sciences sociales,"[""TILLIEUX""]","[""Joséphine""]",[4 - SO2]<4PAU> <Option> SO+ [4 - SO2]<4PAV> <Option> SO+ [4 - SO2]<4PAW> <Option> SO,2
+365,[4 - L+LS],LATIN,Latin,"[""VANHENTENRYK""]","[""Cécile""]",[4 - L+LS]<4PAV> <Option> L+ [4 - L+LS]<4PAV> <Option> LS,4
+366,[5+6 - LM1 - NI],ALP Néerlandais,ALP Néerlandais,"[""DONJEAN""]","[""Frederic""]",[5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> MB4-NI-A+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> MH4-NI-A+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-D+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> SO4-NI-A+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> MB4-NI-A,2
+367,[6 - LM1 - AI],ALP Anglais,ALP Anglais,"[""SACRE""]","[""Catherine""]",[6 - LM1 - AI]<6PAU> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [6 - LM1 - AI]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [6 - LM1 - AI]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-E+ [6 - LM1 - AI]<6PAV> <Option+LM1+LM2(+LM3)> LH4-AI-/+ [6 - LM1 - AI]<6PAV> <Option+LM1+LM2(+LM3)> EC4-AI-N+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-I+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-D+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [6 - LM1 - AI]<6PAU> <Option+LM1+LM2(+LM3)> EC4-AI-N+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> ME4-AI-E,2
+368,[5+6 - LM1 - DI],ALP Allemand,ALP Allemand,"[""SKRIJELJ""]","[""Amir""]",[5+6 - LM1 - DI]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-A+ [5+6 - LM1 - DI]<5PAT> <Option+LM1+LM2(+LM3)> EC4-DI-A+ [5+6 - LM1 - DI]<6PAW> <Option+LM1+LM2(+LM3)> MH4-DI-A+ [5+6 - LM1 - DI]<6PAW> <Option+LM1+LM2(+LM3)> ML4-DI-A-E,2
+369,3PAY,CPC2,CPC2,"[""KERRELS""]","[""Arnaud""]",<3PAY> <Philo> CPC,1
+370,5PAX,CPC1,CPC1,"[""BELLOI""]","[""Théo""]",5PAX,1
+371,[4 - Sc1],BIO,Bio,"[""ZENTHNER""]","[""Fabienne""]",[4 - Sc1]<4PAT> <Option> EC+ [4 - Sc1]<4PAT> <Option> SO+ [4 - Sc1]<4PAT> <Option> M,1
+372,3PAY,CPC1,CPC1,"[""MANAP""]","[""Cihan""]",3PAY,1
+373,3PAS,FRANÇAIS,Français,"[""BAIZAN""]","[""Noémie""]",3PAS,5
+374,5PAW+5PAX,LATIN,Latin,"[""LACASSE""]","[""Anne""]",<5PAW> <Option+LM1+LM2(+LM3)> LH4-A-/+ <5PAX> Charue Younes,1
+375,3PAZ,ESPAGNOL LM2,Espagnol LM2,"[""DZIRI""]","[""Soraya""]",3PAZ,4
+376,4PAU,HIST,Histoire,"[""MEDART""]","[""Fanny""]",4PAU,2
+377,[3 - ScOp3],PHY opt.,Physique Option,"[""ZOLLER""]","[""Céline""]",[3 - ScOp3]<3PAV> <Option> MS,2
+378,[1 - EPF1],GYM,Gym,"[""SITKO""]","[""Cynthia""]",[1 - EPF1]<1PAA> <EP> F+ [1 - EPF1]<1PAB> <EP> F,2
+379,[4 - EPF3],GYM,Gym,"[""MEUNIER""]","[""Benjamin""]",[4 - EPF3]<4PAT> <EP> F+ [4 - EPF3]<4PAW> <EP> F,2
+380,[4 - EPG3],GYM,Gym,"[""DULLIER""]","[""Cyrielle""]",[4 - EPG3]<4PAT> <EP> G+ [4 - EPG3]<4PAW> <EP> G,2
+381,[3 - LM1 - AI1],HIST AI,Histoire AI,"[""RUESS""]","[""Céline""]",[3 - LM1 - AI1]<3PAT> <LM1+LM2> AI-N+ [3 - LM1 - AI1]<3PAX> <LM1 + LM2> AI-E,1
+382,[1 - AI],HIST AI,Histoire AI,"[""CARLYLE""]","[""Thomas""]",[1 - AI]<1PAC> <LM1> AI+ [1 - AI]<1PAD> <LM1> AI+ [1 - AI]<1PAE> <LM1> AI+ [1 - AI]<1PAF> <LM1> AI,2
+383,[2 - AI],GÉO AI,Géo AI,"[""BORLEE""]","[""Philippe""]",[2 - AI]<2PAA> <LM1> AI+ [2 - AI]<2PAB> <LM1> AI+ [2 - AI]<2PAC> <LM1> AI,2
+384,[1 - HGS4],HIST,Histoire,"[""FRANCOIS""]","[""Ariane""]",[1 - HGS4]<1PAE> <LM1> A+ [1 - HGS4]<1PAF> <LM1> A+ <1PAC> <LM1> NI,2
+385,[1 - HGS3],GÉO,Géo,"[""PAQUAY""]","[""Maxime""]",[1 - HGS3]<1PAC> <LM1> A+ [1 - HGS3]<1PAD> <LM1> A+ [1 - HGS3]<1PAD> <LM1> N,2
+386,[2 - HGS1],SCIENCES,Sciences,"[""ZANOL""]","[""Marie-Sophie""]",[2 - HGS1]<2PAA> <LM1> A+ [2 - HGS1]<2PAB> <LM1> A,3
+387,3PAT,CPC1,CPC1,"[""MANAP""]","[""Cihan""]",3PAT,1
+388,2PAF,MUSIQUE,Musique,"[""DEPUIS""]","[""Pierre""]",2PAF,1
+389,[2 - HGS5],SCIENCES,Sciences,"[""YILDIRIM""]","[""Héline""]",[2 - HGS5]<2PAD> <LM1> N,3
+390,[3 - SC3],PHYSIQUE,Physique,"[""ZOLLER""]","[""Céline""]",[3 - SC3]<3PAX> <Option> EC+ [3 - SC3]<3PAY> <Option> EC,1
+391,[5 - LM1 - AI],ALP Anglais,ALP Anglais,"[""SACRE""]","[""Catherine""]",[5 - LM1 - AI]<5PAU> <Option+LM1+LM2(+LM3)> ME4-AI-D+ [5 - LM1 - AI]<5PAW> <Option+LM1+LM2(+LM3)> ME4-AI-E+ [5 - LM1 - AI]<5PAX> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [5 - LM1 - AI]<5PAY> <Option+LM1+LM2(+LM3)> SO4-AI-E+ [5 - LM1 - AI]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [5 - LM1 - AI]<5PAZ> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [5 - LM1 - AI]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [5 - LM1 - AI]<5PAY> <Option+LM1+LM2(+LM3)> MH4-AI-N+ [5 - LM1 - AI]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-E+ [5 - LM1 - AI]<5PAW> <Option+LM1+LM2(+LM3)> MB4-AI-N,2
+392,[5 - H3],HIST,Histoire,"[""MEDART""]","[""Fanny""]",[5 - H3]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - H3]<5PAX> <Option+LM1+LM2(+LM3)> LA6-N-/+ [5 - H3]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - H3]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - H3]<5PAX> <Option+LM1+LM2(+LM3)> MA6-N-A+ [5 - H3]<5PAW> <Option+LM1+LM2(+LM3)> EC4-N-A,2
+393,1PAC,CPC1,CPC1,"[""MANAP""]","[""Cihan""]",1PAC,1
+394,1PAD,LECTURE,Lecture,"[""BROOS""]","[""Carine""]",1PAD,1
+395,5PAZ,FRANÇAIS,Français,"[""FONTAINE""]","[""Simon""]",5PAZ,1
+396,2PAE,MUSIQUE,Musique,"[""DEPUIS""]","[""Pierre""]",2PAE,1
+397,2PAG,LATIN,Latin,"[""X_1_Latin_DI""]",[],2PAG,2
+398,[5 - M4h6],MATH4,Math,"[""HAFNAOUI""]","[""Imane""]",[5 - M4h6]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-N+ [5 - M4h6]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - M4h6]<5PAY> <Option+LM1+LM2(+LM3)> MH4-N-A+ [5 - M4h6]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-N+ [5 - M4h6]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-E+ [5 - M4h6]<5PAY> <Option+LM1+LM2(+LM3)> SO4-AI-E+ [5 - M4h6]<5PAY> <Option+LM1+LM2(+LM3)> SO4-N-A+ [5 - M4h6]<5PAY> <Option+LM1+LM2(+LM3)> MH4-AI-N,4
+399,[3 - SC3],BIO,Bio,"[""YILDIRIM""]","[""Héline""]",[3 - SC3]<3PAX> <Option> EC+ [3 - SC3]<3PAY> <Option> EC,1
+400,[2 - EPG1],GYM,Gym,"[""ROLIN"", ""MOUPONDO""]","[""Gérald"", ""Jean Muller""]",[2 - EPG1]<2PAA> <EP> G+ [2 - EPG1]<2PAD> <EP> G,3
+401,[2 - EPF1],GYM,Gym,"[""SITKO""]","[""Cynthia""]",[2 - EPF1]<2PAA> <EP> F+ [2 - EPF1]<2PAD> <EP> F+ <2PAG> Lux Maya+ <2PAG> Schleihs Liah,3
+402,[3 - SC1],CHIMIE,Chimie,"[""ZOLLER""]","[""Céline""]",[3 - SC1]<3PAT> <Option> EC+ [3 - SC1]<3PAU> <Option> EC+ [3 - SC1]<3PAW> <Option> EC+ [3 - SC1]<3PAT> <Option> L,1
+403,[3 - ScOp2],BIO opt.,Bio Option,"[""ZANOL""]","[""Marie-Sophie""]",[3 - ScOp2]<3PAS> <Option> LS+ [3 - ScOp2]<3PAS> <Option> MS,2
+404,[5+6 - LM1 - NI],Imm. Néerlandais,Immersion Néerlandais,"[""DONJEAN""]","[""Frederic""]",[5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> MB4-NI-A+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> MH4-NI-A+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-D+ [5+6 - LM1 - NI]<6PAW> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> SO4-NI-A+ [5+6 - LM1 - NI]<5PAT> <Option+LM1+LM2(+LM3)> MB4-NI-A,4
+405,[6 - LM1 - AI],Imm. Anglais,Immersion Anglais,"[""SACRE""]","[""Catherine""]",[6 - LM1 - AI]<6PAU> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [6 - LM1 - AI]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [6 - LM1 - AI]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-E+ [6 - LM1 - AI]<6PAV> <Option+LM1+LM2(+LM3)> LH4-AI-/+ [6 - LM1 - AI]<6PAV> <Option+LM1+LM2(+LM3)> EC4-AI-N+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-I+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-D+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [6 - LM1 - AI]<6PAU> <Option+LM1+LM2(+LM3)> EC4-AI-N+ [6 - LM1 - AI]<6PAY> <Option+LM1+LM2(+LM3)> ME4-AI-E,4
+406,[5+6 - LM1 - DI],Imm. Allemand,Immersion Allemand,"[""SKRIJELJ""]","[""Amir""]",[5+6 - LM1 - DI]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-A+ [5+6 - LM1 - DI]<5PAT> <Option+LM1+LM2(+LM3)> EC4-DI-A+ [5+6 - LM1 - DI]<6PAW> <Option+LM1+LM2(+LM3)> MH4-DI-A+ [5+6 - LM1 - DI]<6PAW> <Option+LM1+LM2(+LM3)> ML4-DI-A-E+ <5PAT> Thyssens Anaïs,4
+407,[6 - LM1 - A4],ANGLAIS LM1,Anglais LM1,"[""NOLF""]","[""Caroline""]",[6 - LM1 - A4]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [6 - LM1 - A4]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [6 - LM1 - A4]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-E+ [6 - LM1 - A4]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-D+ [6 - LM1 - A4]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [6 - LM1 - A4]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-N+ [6 - LM1 - A4]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-A-I,4
+408,[5 - LM1 - A1],ANGLAIS LM1,Anglais LM1,"[""HERVELLE""]","[""Wendy""]",[5 - LM1 - A1]<5PAT> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - LM1 - A1]<5PAT> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - LM1 - A1]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - LM1 - A1]<5PAT> <Option+LM1+LM2(+LM3)> EC4-A-E+ [5 - LM1 - A1]<5PAT> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - LM1 - A1]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-N,4
+409,[6 - LM1 - A3],ANGLAIS LM1,Anglais LM1,"[""KEVERS""]","[""Laetiita""]",[6 - LM1 - A3]<6PAU> <Option+LM1+LM2(+LM3)> MB4-A-N+ [6 - LM1 - A3]<6PAU> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - LM1 - A3]<6PAU> <Option+LM1+LM2(+LM3)> ME4-A-N+ [6 - LM1 - A3]<6PAU> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [6 - LM1 - A3]<6PAU> <Option+LM1+LM2(+LM3)> EC4-A-N+ [6 - LM1 - A3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - LM1 - A3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - LM1 - A3]<6PAV> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - LM1 - A3]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-E+ [6 - LM1 - A3]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-N,4
+410,[6 - LM1 - A2],ANGLAIS LM1,Anglais LM1,"[""VANHERLE""]","[""Camille""]",[6 - LM1 - A2]<6PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - LM1 - A2]<6PAW> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - LM1 - A2]<6PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - LM1 - A2]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - LM1 - A2]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-D+ [6 - LM1 - A2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-I+ [6 - LM1 - A2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - LM1 - A2]<6PAY> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [6 - LM1 - A2]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [6 - LM1 - A2]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-D+ [6 - LM1 - A2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-E+ [6 - LM1 - A2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-D,4
+411,[6 - LM1 - N],NÉERLANDAIS LM1,Néerlandais LM1,"[""MORAUX""]","[""Laurence""]",[6 - LM1 - N]<6PAV> <Option+LM1+LM2(+LM3)> MB4-N-A+ [6 - LM1 - N]<6PAV> <Option+LM1+LM2(+LM3)> MH4-N-A+ [6 - LM1 - N]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-A+ [6 - LM1 - N]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-E+ [6 - LM1 - N]<6PAV> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [6 - LM1 - N]<6PAV> <Option+LM1+LM2(+LM3)> SO4-N-A+ [6 - LM1 - N]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A+ [6 - LM1 - N]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-N-A,4
+412,[6 - Commu2],COMMU,Communication,"[""CHAPEAU""]","[""Manu""]",[6 - Commu2]<6PAX> <Option+LM1+LM2(+LM3)> ME4-A-E,4
+413,[6 - Hop1],HIST opt.,Histoire Option,"[""BRUGMANS""]","[""Nathanael""]",[6 - Hop1]<6PAX> <Option+LM1+LM2(+LM3)> MH4-A-E,4
+414,[5 - EPF2],GYM,Gym,"[""MEUNIER""]","[""Benjamin""]",[5 - EPF2]<5PAW> <EP> F+ [5 - EPF2]<5PAX> <EP> F,2
+415,[5 - EPG2],GYM,Gym,"[""DULLIER""]","[""Cyrielle""]",[5 - EPG2]<5PAW> <EP> G+ [5 - EPG2]<5PAX> <EP> G,2
+416,3PAZ,CONSEIL,Conseil de la classe,"[""ROLIN"", ""MOUPONDO""]","[""Gérald"", ""Jean Muller""]",3PAZ,1
+417,1PAA,CONSEIL,Conseil de la classe,"[""DI GERONIMO""]","[""Giuseppina""]",1PAA,1
+418,1PAB,CONSEIL,Conseil de la classe,"[""BAUWENS""]","[""Sarah""]",1PAB,1
+419,1PAC,CONSEIL,Conseil de la classe,"[""BRACONNIER""]","[""Simon""]",1PAC,1
+420,1PAD,CONSEIL,Conseil de la classe,"[""SITKO""]","[""Cynthia""]",1PAD,1
+421,1PAE,CONSEIL,Conseil de la classe,"[""PAQUAY""]","[""Maxime""]",1PAE,1
+422,1PAF,CONSEIL,Conseil de la classe,"[""POPOVICS""]","[""Vanessa""]",1PAF,1
+423,2PAA,CONSEIL,Conseil de la classe,"[""FRANCOIS""]","[""Ariane""]",2PAA,1
+424,2PAB,CONSEIL,Conseil de la classe,"[""LACASSE""]","[""Anne""]",2PAB,1
+425,2PAC,CONSEIL,Conseil de la classe,"[""BAIZAN""]","[""Noémie""]",2PAC,1
+426,2PAD,CONSEIL,Conseil de la classe,"[""MANAP""]","[""Cihan""]",2PAD,1
+427,2PAE,CONSEIL,Conseil de la classe,"[""YILDIRIM""]","[""Héline""]",2PAE,1
+428,2PAF,CONSEIL,Conseil de la classe,"[""STAFFE""]","[""Joséphine""]",2PAF,1
+429,2PAG,CONSEIL,Conseil de la classe,"[""ZOES""]","[""Dyonissis""]",2PAG,1
+430,5PAV,GÉO,Géo,"[""MEERT""]","[""David""]",5PAV,2
+431,5PAZ,GÉO,Géo,"[""NOTTET""]","[""Tristant""]",5PAZ,2
+432,[3 - SC1],PHYSIQUE,Physique,"[""ZOLLER""]","[""Céline""]",[3 - SC1]<3PAT> <Option> EC+ [3 - SC1]<3PAU> <Option> EC+ [3 - SC1]<3PAW> <Option> EC+ [3 - SC1]<3PAT> <Option> L,1
+433,[4 - Sc4],PHYSIQUE,Physique,"[""BAKHTI""]","[""Youssef""]",[4 - Sc4]<4PAW> <Option> EC+ [4 - Sc4]<4PAW> <Option> SO+ [4 - Sc4]<4PAW> <Option> M+ [4 - Sc4]<4PAZ> <Option> M,1
+434,3PAS,CONSEIL,Conseil de la classe,"[""ZOLLER""]","[""Céline""]",3PAS,1
+435,3PAT,CONSEIL,Conseil de la classe,"[""RONCHAINE""]","[""Marc""]",3PAT,1
+436,3PAU,CONSEIL,Conseil de la classe,"[""DZIRI""]","[""Soraya""]",3PAU,1
+437,3PAV,CONSEIL,Conseil de la classe,"[""VAN DE VLOET""]","[""Jennifer""]",3PAV,1
+438,3PAW,CONSEIL,Conseil de la classe,"[""RUESS""]","[""Céline""]",3PAW,1
+439,3PAX,CONSEIL,Conseil de la classe,"[""DEGEY""]","[""Anne-Marie""]",3PAX,1
+440,3PAY,CONSEIL,Conseil de la classe,"[""BROOS""]","[""Carine""]",3PAY,1
+441,4PAS,CONSEIL,Conseil de la classe,"[""JUDONG""]","[""Sylvie""]",4PAS,1
+442,4PAT,CONSEIL,Conseil de la classe,"[""MEERT""]","[""David""]",4PAT,1
+443,4PAU,CONSEIL,Conseil de la classe,"[""MEDART""]","[""Fanny""]",4PAU,1
+444,4PAV,CONSEIL,Conseil de la classe,"[""BAKHTI""]","[""Youssef""]",4PAV,1
+445,4PAW,CONSEIL,Conseil de la classe,"[""SACRE""]","[""Catherine""]",4PAW,1
+446,4PAX,CONSEIL,Conseil de la classe,"[""PAGNIER""]","[""Jason""]",4PAX,1
+447,4PAY,CONSEIL,Conseil de la classe,"[""DULLIER""]","[""Cyrielle""]",4PAY,1
+448,4PAZ,CONSEIL,Conseil de la classe,"[""ZAMBUTO""]","[""Stéphanie""]",4PAZ,1
+449,5PAU,CONSEIL,Conseil de la classe,"[""WERA""]","[""Tanguy""]",5PAU,1
+450,5PAV,CONSEIL,Conseil de la classe,"[""MAQUET""]","[""Laurent""]",5PAV,1
+451,5PAW,CONSEIL,Conseil de la classe,"[""NOLF""]","[""Caroline""]",5PAW,1
+452,5PAX,CONSEIL,Conseil de la classe,"[""DECHESNE""]","[""Bertrand""]",5PAX,1
+453,5PAY,CONSEIL,Conseil de la classe,"[""BROUNS""]","[""Marie""]",5PAY,1
+454,5PAZ,CONSEIL,Conseil de la classe,"[""JEANGILLE""]","[""Lionel""]",5PAZ,1
+455,6PAU,CONSEIL,Conseil de la classe,"[""VAN BRABANT""]","[""Laura""]",6PAU,1
+456,6PAV,CONSEIL,Conseil de la classe,"[""CHAPEAU""]","[""Manu""]",6PAV,1
+457,6PAW,CONSEIL,Conseil de la classe,"[""VANHERLE""]","[""Camille""]",6PAW,1
+458,6PAX,CONSEIL,Conseil de la classe,"[""BRUGMANS""]","[""Nathanael""]",6PAX,1
+459,6PAY,CONSEIL,Conseil de la classe,"[""HAFNAOUI""]","[""Imane""]",6PAY,1
+460,6PAZ,CONSEIL,Conseil de la classe,"[""NOTTET""]","[""Tristant""]",6PAZ,1
+461,5PAT,CONSEIL,Conseil de la classe,"[""YAHIA""]","[""Lina""]",5PAT,1
+462,[2 - CPC2],CPC2,CPC2,"[""KERRELS""]","[""Arnaud""]",[2 - CPC2]<2PAE> <Philo> CPC,1
+463,[1+2 - DI],HIST DI,Histoire DI,"[""RUESS""]","[""Céline""]",[1+2 - DI]<1PAA> <LM1> DI+ [1+2 - DI]<2PAG> <LM1> DI,2
+464,[3 - ScOp1],CHIMIE opt.,Chimie Option,"[""ZOLLER""]","[""Céline""]",[3 - ScOp1]<3PAW> <Option> MS+ [3 - ScOp1]<3PAZ> <Option> MS,1
+465,[3 - SC1],BIO,Bio,"[""YILDIRIM""]","[""Héline""]",[3 - SC1]<3PAT> <Option> EC+ [3 - SC1]<3PAU> <Option> EC+ [3 - SC1]<3PAW> <Option> EC+ [3 - SC1]<3PAT> <Option> L,1
+466,[4 - Sc1],CHIMIE,Chimie,"[""JEANGILLE""]","[""Lionel""]",[4 - Sc1]<4PAT> <Option> EC+ [4 - Sc1]<4PAT> <Option> SO+ [4 - Sc1]<4PAT> <Option> M,1
+467,[4 - M2],MORALE,Morale,"[""TILLIEUX""]","[""Joséphine""]",[4 - M2]<4PAU> <Philo> M+ [4 - M2]<4PAW> <Philo> M+ [4 - M2]<4PAZ> <Philo> M+ [4 - M2]<4PAY> <Philo> M,1
+468,[4 - RC],Rel. Cath.,Religion Catholique,"[""LARBANOIS""]","[""Jean-Marc""]",[4 - RC]<4PAS> <Philo> RC+ [4 - RC]<4PAU> <Philo> RC+ [4 - RC]<4PAV> <Philo> RC+ [4 - RC]<4PAW> <Philo> RC+ [4 - RC]<4PAX> <Philo> RC+ [4 - RC]<4PAY> <Philo> RC+ [4 - RC]<4PAZ> <Philo> RC,1
+469,[4 - RI],Rel. Islam.,Religion Islamique,"[""LEGSSYER""]","[""Rachida""]",[4 - RI]<4PAS> <Philo> RI+ [4 - RI]<4PAU> <Philo> RI+ [4 - RI]<4PAV> <Philo> RI+ [4 - RI]<4PAW> <Philo> RI+ [4 - RI]<4PAX> <Philo> RI+ [4 - RI]<4PAY> <Philo> RI+ [4 - RI]<4PAZ> <Philo> RI,1
+470,[4 - M1],MORALE,Morale,"[""THOMAS""]","[""Adrian""]",[4 - M1]<4PAS> <Philo> M+ [4 - M1]<4PAV> <Philo> M+ [4 - M1]<4PAX> <Philo> M,1
+471,[4 - CPC5],CPC2,CPC2,"[""CHOLEWKA""]","[""Tom""]",[4 - CPC5]<4PAY> <Philo> CPC+ [4 - CPC5]<4PAZ> <Philo> CPC,1
+472,[4 - CPC3],CPC2,CPC2,"[""LUCA""]","[""Pablo""]",[4 - CPC3]<4PAU> <Philo> CPC+ [4 - CPC3]<4PAX> <Philo> CPC,1
+473,[4 - CPC4],CPC2,CPC2,"[""BELLOI""]","[""Théo""]",[4 - CPC4]<4PAV> <Philo> CPC+ [4 - CPC4]<4PAW> <Philo> CPC,1
+474,5PAW+5PAX+5PAX,LATIN,Latin,"[""LACASSE""]","[""Anne""]",<5PAW> <Option+LM1+LM2(+LM3)> LH4-A-/+ <5PAX> <Option+LM1+LM2(+LM3)> LA6-N-/+ <5PAX> Charue Younes,1
+475,[2 - A2],ANGLAIS LM1,Anglais LM1,"[""ZOES""]","[""Dyonissis""]",[2 - A2]<2PAC> <LM1> A+ [2 - A2]<2PAG> <LM1> A,4
+476,[2 - CPC4],CPC2,CPC2,"[""MANAP""]","[""Cihan""]",[2 - CPC4]<2PAB> <Philo> CPC+ [2 - CPC4]<2PAF> <Philo> CPC,1
+477,2PAD,CPC1,CPC1,"[""MANAP""]","[""Cihan""]",2PAD,1
+478,2PAF,CPC1,CPC1,"[""KERRELS""]","[""Arnaud""]",2PAF,1
+479,6PAW,CPC1,CPC1,"[""LUCA""]","[""Pablo""]",6PAW,1
+480,[2 - AI],SCI AI,Sciences Anglais Immersion,"[""SWINYARD""]","[""Alicia""]",[2 - AI]<2PAA> <LM1> AI+ [2 - AI]<2PAB> <LM1> AI+ [2 - AI]<2PAC> <LM1> AI,3
+481,1PAC,FRANÇAIS,Français,"[""MARTINO""]","[""Alessandra""]",1PAC,4
+482,6PAZ,GÉO,Géo,"[""NOTTET""]","[""Tristant""]",6PAZ,2
+483,[6 - Sc1],BIO,Bio,"[""JEANGILLE""]","[""Lionel""]",[6 - Sc1]<6PAX> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - Sc1]<6PAX> <Option+LM1+LM2(+LM3)> ME4-A-E,1
+484,[5 - CPC3],CPC2,CPC2,"[""CHOLEWKA""]","[""Tom""]",[5 - CPC3]<5PAW> <Philo> CPC,1
+485,[5 - CPC6],CPC2,CPC2,"[""BELLOI""]","[""Théo""]",[5 - CPC6]<5PAY> <Philo> CPC,1
+486,[3 - LM2 - A],ANGLAIS LM2,Anglais LM2,"[""ZOES""]","[""Dyonissis""]",[3 - LM2 - A]<3PAS> <LM2> A+ [3 - LM2 - A]<3PAV> <LM2> A+ [3 - LM2 - A]<3PAW> <LM2> A+ [3 - LM2 - A]<3PAY> <LM2> A,4
+487,[4 - LM2 - A],ANGLAIS LM2,Anglais LM2,"[""KEVERS""]","[""Laetiita""]",[4 - LM2 - A]<4PAV> <LM2> A+ [4 - LM2 - A]<4PAW> <LM2> A+ [4 - LM2 - A]<4PAX> <LM2> A+ [4 - LM2 - A]<4PAY> <LM2> A+ [4 - LM2 - A]<4PAZ> <LM2> A,4
+488,[3 - LM2 - N2],NÉERLANDAIS LM2,Néerlandais LM2,"[""BRACONNIER""]","[""Simon""]",[3 - LM2 - N2]<3PAS> <LM2> N+ [3 - LM2 - N2]<3PAV> <LM2> N+ [3 - LM2 - N2]<3PAW> <LM2> N+ [3 - LM2 - N2]<3PAY> <LM2> N,4
+489,[4 - LM2 - N2],NÉERLANDAIS LM2,Néerlandais LM2,"[""BROUNS""]","[""Marie""]",[4 - LM2 - N2]<4PAV> <LM2> N+ [4 - LM2 - N2]<4PAW> <LM2> N+ [4 - LM2 - N2]<4PAX> <LM2> N+ [4 - LM2 - N2]<4PAY> <LM2> N+ [4 - LM2 - N2]<4PAZ> <LM2> N,4
+490,[3+4 - LM2 - D],ALLEMAND LM2,Allemand LM2,"[""HOLLENFELTZ""]","[""Olivier""]",[3+4 - LM2 - D]<3PAS> <LM2> D+ [3+4 - LM2 - D]<3PAW> <LM2> D+ [3+4 - LM2 - D]<3PAY> <LM2> D+ [3+4 - LM2 - D]<4PAW> <LM2> D,2
+491,[3 - LM2 - I],ITALIEN LM2,Italien LM2,"[""LAINO""]","[""Daniele""]",[3 - LM2 - I]<3PAS> <LM2> I+ [3 - LM2 - I]<3PAV> <LM2> I+ [3 - LM2 - I]<3PAW> <LM2> I+ [3 - LM2 - I]<3PAY> <LM2> I,4
+492,[4 - LM2 - I],ITALIEN LM2,Italien LM2,"[""ZAMBUTO""]","[""Stéphanie""]",[4 - LM2 - I]<4PAV> <LM2> I+ [4 - LM2 - I]<4PAW> <LM2> I+ [4 - LM2 - I]<4PAX> <LM2> I+ [4 - LM2 - I]<4PAY> <LM2> I+ [4 - LM2 - I]<4PAZ> <LM2> I,4
+493,[3 - LM2 - E4],ESPAGNOL LM2,Espagnol LM2,"[""DZIRI""]","[""Soraya""]",[3 - LM2 - E4]<3PAS> <LM2> E+ [3 - LM2 - E4]<3PAV> <LM2> E+ [3 - LM2 - E4]<3PAW> <LM2> E+ [3 - LM2 - E4]<3PAY> <LM2> E,4
+494,[4 - LM2 - E4],ESPAGNOL LM2,Espagnol LM2,"[""RECKMANS""]","[""Sandy""]",[4 - LM2 - E4]<4PAW> <LM2> E+ [4 - LM2 - E4]<4PAX> <LM2> E+ [4 - LM2 - E4]<4PAY> <LM2> E,4
+495,[4 - LM2 - E3],ESPAGNOL LM2,Espagnol LM2,"[""JUDONG""]","[""Sylvie""]",[4 - LM2 - E3]<4PAV> <LM2> E+ [4 - LM2 - E3]<4PAZ> <LM2> E,4
+496,[5 - M4h3],MATH4,Math,"[""VAN DEN BERGHE""]","[""Sylviane""]",[5 - M4h3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-A+ [5 - M4h3]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-A+ [5 - M4h3]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-E+ [5 - M4h3]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [5 - M4h3]<5PAZ> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [5 - M4h3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - M4h3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - M4h3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-E+ [5 - M4h3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [5 - M4h3]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - M4h3]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5 - M4h3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-E,4
+497,[5 - M4h2],MATH4,Math,"[""DECHESNE""]","[""Bertrand""]",[5 - M4h2]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-I+ [5 - M4h2]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-D+ [5 - M4h2]<5PAU> <Option+LM1+LM2(+LM3)> MH4-A-D+ [5 - M4h2]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-I+ [5 - M4h2]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-D+ [5 - M4h2]<5PAU> <Option+LM1+LM2(+LM3)> ME4-AI-D+ [5 - M4h2]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [5 - M4h2]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-I+ [5 - M4h2]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-D+ [5 - M4h2]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-D+ [5 - M4h2]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-D-E,4
+498,[5 - M4h1],MATH4,Math,"[""CHAPEAU""]","[""Vincent""]",[5 - M4h1]<5PAT> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - M4h1]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-A+ [5 - M4h1]<5PAT> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - M4h1]<5PAT> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [5 - M4h1]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - M4h1]<5PAT> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [5 - M4h1]<5PAT> <Option+LM1+LM2(+LM3)> EC4-A-E+ [5 - M4h1]<5PAT> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [5 - M4h1]<5PAT> <Option+LM1+LM2(+LM3)> SO4-NI-A+ [5 - M4h1]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-E+ [5 - M4h1]<5PAT> <Option+LM1+LM2(+LM3)> MB4-NI-A+ [5 - M4h1]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-N,4
+499,[6 - EPF2],GYM,Gym,"[""MEUNIER""]","[""Benjamin""]",[6 - EPF2]<6PAV> <EP> F+ [6 - EPF2]<6PAY> <EP> F,2
+500,[6 - EPG2],GYM,Gym,"[""DULLIER""]","[""Cyrielle""]",[6 - EPG2]<6PAV> <EP> G+ [6 - EPG2]<6PAY> <EP> G,2
+501,1PAB,CPC1,CPC1,"[""KERRELS""]","[""Arnaud""]",1PAB,1
+502,[5 - CPC1],CPC2,CPC2,"[""LUCA""]","[""Pablo""]",[5 - CPC1]<5PAV> <Philo> CPC,1
+503,5PAW,CPC1,CPC1,"[""BELLOI""]","[""Théo""]",5PAW,1
+504,[1 - AI],SCI AI,Sciences Anglais Immersion,"[""SWINYARD""]","[""Alicia""]",[1 - AI]<1PAC> <LM1> AI+ [1 - AI]<1PAD> <LM1> AI+ [1 - AI]<1PAE> <LM1> AI+ [1 - AI]<1PAF> <LM1> AI,3
+505,2PAC,LATIN,Latin,"[""VANHENTENRYK""]","[""Cécile""]",2PAC,1
+506,2PAE,ANGLAIS LM1,Anglais LM1,"[""DI GERONIMO""]","[""Giuseppina""]",2PAE,2
+507,[5 - ScOp1],BIO opt.,Bio Option,"[""JEANGILLE""]","[""Lionel""]",[5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> LA6-N-/+ [5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [5 - ScOp1]<5PAX> <Option+LM1+LM2(+LM3)> MA6-N-A,2
+508,[5 - Sc2],PHYSIQUE,Physique,"[""BAKHTI""]","[""Youssef""]",[5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-N+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-N-A+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-N+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-E+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-AI-E+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-N-A+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-AI-N,1
+509,[1+2 - NI],SCI NI,Sciences Néerlandais Immersion,"[""PILATE""]","[""Sarah""]",[1+2 - NI]<2PAD> <LM1> NI+ [1+2 - NI]<1PAC> <LM1> NI,3
+510,[1 - HGS3],HIST,Histoire,"[""FRANCOIS""]","[""Ariane""]",[1 - HGS3]<1PAC> <LM1> A+ [1 - HGS3]<1PAD> <LM1> A+ [1 - HGS3]<1PAD> <LM1> N,2
+511,[1 - HGS4],GÉO,Géo,"[""PAQUAY""]","[""Maxime""]",[1 - HGS4]<1PAE> <LM1> A+ [1 - HGS4]<1PAF> <LM1> A,2
+512,[3 - LM1 - AI2],ALP Anglais,ALP Anglais,"[""RUESS""]","[""Céline""]",[3 - LM1 - AI2]<3PAV> <LM1> AI+ [3 - LM1 - AI2]<3PAW> <LM1> AI+ [3 - LM1 - AI2]<3PAY> <LM1> AI,1
+513,1PAA,FRANÇAIS,Français,"[""DJELIL""]","[""Samira""]",1PAA,2
+514,[3 - HG6],HIST,Histoire,"[""BOURGEOIS""]","[""Maxime""]",[3 - HG6]<3PAY> <LM1> A,1
+515,[4 - Sc2],BIO,Bio,"[""ZENTHNER""]","[""Fabienne""]",[4 - Sc2]<4PAY> <Option> EC+ [4 - Sc2]<4PAZ> <Option> SO,1
+516,[6 - M],MORALE,Morale,"[""THOMAS""]","[""Adrian""]",[6 - M]<6PAU> <Philo> M+ [6 - M]<6PAV> <Philo> M+ [6 - M]<6PAW> <Philo> M+ [6 - M]<6PAY> <Philo> M+ [6 - M]<6PAZ> <Philo> M,1
+517,[6 - RC],Rel. Cath.,Religion Catholique,"[""LARBANOIS""]","[""Jean-Marc""]",[6 - RC]<6PAU> <Philo> RC+ [6 - RC]<6PAV> <Philo> RC+ [6 - RC]<6PAW> <Philo> RC,1
+518,[6 - RI],Rel. Islam.,Religion Islamique,"[""LEGSSYER""]","[""Rachida""]",[6 - RI]<6PAU> <Philo> RI+ [6 - RI]<6PAW> <Philo> RI+ [6 - RI]<6PAY> <Philo> RI,1
+519,[6 - CPC3],CPC2,CPC2,"[""CHOLEWKA""]","[""Tom""]",[6 - CPC3]<6PAV> <Philo> CPC+ [6 - CPC3]<6PAW> <Philo> CPC - MH4+ [6 - CPC3]<6PAW> <Philo> CPC - ME4+ [6 - CPC3]<6PAW> <Philo> CPC - ML4,1
+520,[6 - CPC4],CPC2,CPC2,"[""LUCA""]","[""Pablo""]",[6 - CPC4]<6PAZ> <Philo> CPC+ [6 - CPC4]<6PAY> <Philo> CPC - ME4+ [6 - CPC4]<6PAY> <Philo> CPC - ML4+ [6 - CPC4]<6PAY> <Philo> CPC - ML6+ [6 - CPC4]<6PAY> <Philo> CPC - EC4,1
+521,[6 - CPC2],CPC2,CPC2,"[""BELLOI""]","[""Théo""]",[6 - CPC2]<6PAU> <Philo> CPC+ [6 - CPC2]<6PAY> <Philo> CPC - MA6+ [6 - CPC2]<6PAW> <Philo> CPC - MB4+ [6 - CPC2]<6PAY> <Philo> CPC - MB4+ [6 - CPC2]<6PAY> <Philo> CPC - ME4bis,1
+522,[4 - SO2],SC. SOC.,Sciences sociales,"[""PORRU""]","[""Igor""]",[4 - SO2]<4PAU> <Option> SO+ [4 - SO2]<4PAV> <Option> SO+ [4 - SO2]<4PAW> <Option> SO,2
+523,[1 - AI],GÉO AI,Géo AI,"[""BORLEE""]","[""Philippe""]",[1 - AI]<1PAC> <LM1> AI+ [1 - AI]<1PAD> <LM1> AI+ [1 - AI]<1PAE> <LM1> AI+ [1 - AI]<1PAF> <LM1> AI,2
+524,[5 - LM2 - E1],ESPAGNOL LM2,Espagnol LM2,"[""RECKMANS""]","[""Sandy""]",[5 - LM2 - E1]<5PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - LM2 - E1]<5PAV> <Option+LM1+LM2(+LM3)> ME4-A-E,2
+525,3PAU,HIST,Histoire,"[""BOURGEOIS""]","[""Maxime""]",3PAU,2
+526,[5 - M],MORALE,Morale,"[""THOMAS""]","[""Adrian""]",[5 - M]<5PAU> <Philo> M+ [5 - M]<5PAW> <Philo> M+ [5 - M]<5PAY> <Philo> M+ [5 - M]<5PAZ> <Philo> M+ [5 - M]<5PAT> <Philo> M,1
+527,[5 - RC],Rel. Cath.,Religion Catholique,"[""LARBANOIS""]","[""Jean-Marc""]",[5 - RC]<5PAU> <Philo> RC+ [5 - RC]<5PAZ> <Philo> RC+ [5 - RC]<5PAT> <Philo> RC+ [5 - RC]<5PAY> <Philo> RC,1
+528,[5 - RP],Rel. Prot.,Religion Protestante,"[""X_5_RP_DI""]",[],[5 - RP]<5PAZ> <Philo> RP+ [5 - RP]<5PAT> <Philo> RP,1
+529,[5 - RI],Rel. Islam.,Religion Islamique,"[""X_3_RI_DS""]",[],[5 - RI]<5PAU> <Philo> RI+ [5 - RI]<5PAY> <Philo> RI+ [5 - RI]<5PAZ> <Philo> RI+ [5 - RI]<5PAT> <Philo> RI,1
+530,[5 - CPC5],CPC2,CPC2,"[""CHOLEWKA""]","[""Tom""]",[5 - CPC5]<5PAU> <Philo> CPC,1
+531,[5 - CPC4],CPC2,CPC2,"[""LUCA""]","[""Pablo""]",[5 - CPC4]<5PAT> <Philo> CPC,1
+532,[5 - CPC7],CPC2,CPC2,"[""BELLOI""]","[""Théo""]",[5 - CPC7]<5PAZ> <Philo> CPC,1
+533,[4 - Sc2],CHIMIE,Chimie,"[""YAHIA""]","[""Lina""]",[4 - Sc2]<4PAY> <Option> EC+ [4 - Sc2]<4PAZ> <Option> SO,1
+534,[4 - Sc1],PHYSIQUE,Physique,"[""BAKHTI""]","[""Youssef""]",[4 - Sc1]<4PAT> <Option> EC+ [4 - Sc1]<4PAT> <Option> SO+ [4 - Sc1]<4PAT> <Option> M,1
+535,[1 - HGS3],SCIENCES,Sciences,"[""ZANOL""]","[""Marie-Sophie""]",[1 - HGS3]<1PAC> <LM1> A+ [1 - HGS3]<1PAD> <LM1> A+ [1 - HGS3]<1PAD> <LM1> N,3
+536,[1 - HGS4],SCIENCES,Sciences,"[""YILDIRIM""]","[""Héline""]",[1 - HGS4]<1PAE> <LM1> A+ [1 - HGS4]<1PAF> <LM1> A,3
+537,[2+3 - RO],Rel. Ortho.,Religion Orthodoxe,"[""X_4_RO_DI""]",[],[2+3 - RO]<2PAE> <Philo> RO+ [2+3 - RO]<3PAS> <Philo> RO+ [2+3 - RO]<3PAX> <Philo> RO,1
+538,6PAU,CPC1,CPC1,"[""CHOLEWKA""]","[""Tom""]",6PAU,1
+539,5PAZ,CPC1,CPC1,"[""BELLOI""]","[""Théo""]",5PAZ,1
+540,[1+2 - DI],SCI DI,Sciences Allemand Immersion,"[""RUESS""]","[""Céline""]",[1+2 - DI]<1PAA> <LM1> DI+ [1+2 - DI]<2PAG> <LM1> DI,3
+541,[5 - Sc1],BIO,Bio,"[""ZENTHNER""]","[""Fabienne""]",[5 - Sc1]<5PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - Sc1]<5PAV> <Option+LM1+LM2(+LM3)> ME4-A-E,1
+542,[5 - Sc2],BIO,Bio,"[""PHILIPPART""]","[""Adèle""]",[5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-N+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-N-A+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-N+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-E+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-AI-E+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-N-A+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-AI-N,1
+543,[4 - EPF4],GYM,Gym,"[""MEUNIER""]","[""Benjamin""]",[4 - EPF4]<4PAX> <EP> F+ [4 - EPF4]<4PAY> <EP> F,2
+544,[4 - EPG4],GYM,Gym,"[""DULLIER""]","[""Cyrielle""]",[4 - EPG4]<4PAX> <EP> G+ [4 - EPG4]<4PAY> <EP> G,2
+545,[3 - M],MORALE,Morale,"[""TILLIEUX""]","[""Joséphine""]",[3 - M]<3PAS> <Philo> M+ [3 - M]<3PAT> <Philo> M+ [3 - M]<3PAV> <Philo> M+ [3 - M]<3PAW> <Philo> M+ [3 - M]<3PAZ> <Philo> M+ [3 - M]<3PAX> <Philo> M,1
+546,[3 - RC],Rel. Cath.,Religion Catholique,"[""LARBANOIS""]","[""Jean-Marc""]",[3 - RC]<3PAS> <Philo> RC+ [3 - RC]<3PAV> <Philo> RC+ [3 - RC]<3PAW> <Philo> RC+ [3 - RC]<3PAX> <Philo> RC+ [3 - RC]<3PAT> <Philo> RC,1
+547,[3 - RI],Rel. Islam.,Religion Islamique,"[""LEGSSYER""]","[""Rachida""]",[3 - RI]<3PAS> <Philo> RI+ [3 - RI]<3PAT> <Philo> RI+ [3 - RI]<3PAV> <Philo> RI+ [3 - RI]<3PAW> <Philo> RI+ [3 - RI]<3PAZ> <Philo> RI+ [3 - RI]<3PAX> <Philo> RI,1
+548,[3 - CPC1],CPC2,CPC2,"[""MANAP""]","[""Cihan""]",[3 - CPC1]<3PAS> <Philo> CPCa+ [3 - CPC1]<3PAW> <Philo> CPC+ [3 - CPC1]<3PAX> <Philo> CPC+ [3 - CPC1]<3PAZ> <Philo> CPC,1
+549,[3 - CPC2],CPC2,CPC2,"[""KERRELS""]","[""Arnaud""]",[3 - CPC2]<3PAT> <Philo> CPC+ [3 - CPC2]<3PAV> <Philo> CPC+ [3 - CPC2]<3PAS> <Philo> CPCb,1
+550,[2 - HGS5],HIST,Histoire,"[""FRANCOIS""]","[""Ariane""]",[2 - HGS5]<2PAD> <LM1> N+ <2PAD> <LM1> NI,2
+551,6PAZ,CPC1,CPC1,"[""CHOLEWKA""]","[""Tom""]",6PAZ,1
+552,2PAG,LECTURE,Lecture,"[""POPOVICS""]","[""Vanessa""]",2PAG,1
+553,5PAT,GÉO,Géo,"[""MEERT""]","[""David""]",5PAT,2
+554,3PAZ,GÉO,Géo,"[""FRANCOIS""]","[""Ariane""]",3PAZ,2
+555,[3 - ScOp3],CHIMIE opt.,Chimie Option,"[""ZOLLER""]","[""Céline""]",[3 - ScOp3]<3PAV> <Option> MS,1
+556,[6 - Sc4],CHIMIE,Chimie,"[""JEANGILLE""]","[""Lionel""]",[6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-A+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-E+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> EC4-AI-N+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-E+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> SO4-A-N+ [6 - Sc4]<6PAV> <Option+LM1+LM2(+LM3)> SO4-N-A+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> MH4-DI-A+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> MH4-NI-A+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ML4-DI-A-E+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> ML4-NI-A-D+ [6 - Sc4]<6PAW> <Option+LM1+LM2(+LM3)> EC4-NI-A,1
+557,[6 - Sc3],PHYSIQUE,Physique,"[""BAKHTI""]","[""Youssef""]",[6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> MB4-A-N+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> ME4-A-N+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> EC4-A-N+ [6 - Sc3]<6PAV> <Option+LM1+LM2(+LM3)> LH4-AI-/+ [6 - Sc3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6 - Sc3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - Sc3]<6PAV> <Option+LM1+LM2(+LM3)> MH4-N-A+ [6 - Sc3]<6PAU> <Option+LM1+LM2(+LM3)> EC4-AI-N,1
+558,[1 - M],MORALE,Morale,"[""TILLIEUX""]","[""Joséphine""]",[1 - M]<1PAA> <Philo> M+ [1 - M]<1PAC> <Philo> M+ [1 - M]<1PAD> <Philo> M+ [1 - M]<1PAE> <Philo> M+ [1 - M]<1PAF> <Philo> M,1
+559,[1 - RI],Rel. Islam.,Religion Islamique,"[""LEGSSYER""]","[""Rachida""]",[1 - RI]<1PAA> <Philo> RI+ [1 - RI]<1PAC> <Philo> RI+ [1 - RI]<1PAD> <Philo> RI+ [1 - RI]<1PAE> <Philo> RI+ [1 - RI]<1PAF> <Philo> RI,1
+560,[1 - RC],Rel. Cath.,Religion Catholique,"[""X_2_RC_DI""]",[],[1 - RC]<1PAA> <Philo> RC+ [1 - RC]<1PAC> <Philo> RC+ [1 - RC]<1PAE> <Philo> RC+ [1 - RC]<1PAF> <Philo> RC,1
+561,[1 - CPC2],CPC2,CPC2,"[""MANAP""]","[""Cihan""]",[1 - CPC2]<1PAA> <Philo> CPC+ [1 - CPC2]<1PAC> <Philo> CPC+ [1 - CPC2]<1PAD> <Philo> CPC+ [1 - CPC2]<1PAF> <Philo> CPC,1
+562,[1 - CPC1],CPC2,CPC2,"[""KERRELS""]","[""Arnaud""]",[1 - CPC1]<1PAE> <Philo> CPC+ [1 - CPC1]<1PAB> <Philo> CPC,1
+563,5PAY,CPC1,CPC1,"[""CHOLEWKA""]","[""Tom""]",5PAY,1
+564,[4 - LM1 - AI],HIST AI,Histoire AI,"[""CARLYLE""]","[""Thomas""]",[4 - LM1 - AI]<4PAV> <LM1> AI+ [4 - LM1 - AI]<4PAW> <LM1> AI+ [4 - LM1 - AI]<4PAX> <LM1> AI+ [4 - LM1 - AI]<4PAY> <LM1> AI+ [4 - LM1 - AI]<4PAZ> <LM1> AI,2
+565,[1 - EPF1],GYM,Gym,"[""ROLIN"", ""MOUPONDO""]","[""Gérald"", ""Jean Muller""]",[1 - EPF1]<1PAA> <EP> F+ [1 - EPF1]<1PAB> <EP> F,1
+566,[3 - ScOp2],PHY opt.,Physique Option,"[""ZOLLER""]","[""Céline""]",[3 - ScOp2]<3PAS> <Option> LS+ [3 - ScOp2]<3PAS> <Option> MS,2
+567,[6 - Sc1],CHIMIE,Chimie,"[""PHILIPPART""]","[""Adèle""]",[6 - Sc1]<6PAX> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6 - Sc1]<6PAX> <Option+LM1+LM2(+LM3)> ME4-A-E,1
+568,[5 - Sc1],CHIMIE,Chimie,"[""JEANGILLE""]","[""Lionel""]",[5 - Sc1]<5PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - Sc1]<5PAV> <Option+LM1+LM2(+LM3)> ME4-A-E,1
+569,[2 - M],MORALE,Morale,"[""TILLIEUX""]","[""Joséphine""]",[2 - M]<2PAA> <Philo> M+ [2 - M]<2PAB> <Philo> M+ [2 - M]<2PAD> <Philo> M+ [2 - M]<2PAE> <Philo> M+ [2 - M]<2PAF> <Philo> M+ [2 - M]<2PAG> <Philo> M,1
+570,[2 - RC],Rel. Cath.,Religion Catholique,"[""LARBANOIS""]","[""Jean-Marc""]",[2 - RC]<2PAA> <Philo> RC+ [2 - RC]<2PAC> <Philo> RC+ [2 - RC]<2PAD> <Philo> RC+ [2 - RC]<2PAE> <Philo> RC+ [2 - RC]<2PAF> <Philo> RC,1
+571,[2 - RI],Rel. Islam.,Religion Islamique,"[""LEGSSYER""]","[""Rachida""]",[2 - RI]<2PAA> <Philo> RI+ [2 - RI]<2PAC> <Philo> RI+ [2 - RI]<2PAF> <Philo> RI+ [2 - RI]<2PAE> <Philo> RI,1
+572,[1+2 - RP],Rel. Prot.,Religion Protestante,"[""X_5_RP_DI""]",[],[1+2 - RP]<2PAA> <Philo> RP+ [1+2 - RP]<2PAB> <Philo> RP+ [1+2 - RP]<2PAC> <Philo> RP+ [1+2 - RP]<2PAE> <Philo> RP+ [1+2 - RP]<2PAF> <Philo> RP+ [1+2 - RP]<2PAG> <Philo> RP+ [1+2 - RP]<1PAF> <Philo> RP,1
+573,[2 - CPC1],CPC2,CPC2,"[""MANAP""]","[""Cihan""]",[2 - CPC1]<2PAA> <Philo> CPC+ [2 - CPC1]<2PAG> <Philo> CPC,1
+574,[2 - CPC3],CPC2,CPC2,"[""KERRELS""]","[""Arnaud""]",[2 - CPC3]<2PAC> <Philo> CPC+ [2 - CPC3]<2PAD> <Philo> CPC,1
+575,3PAS,CPC1,CPC1,"[""KERRELS""]","[""Arnaud""]",3PAS,1
+576,6PAY,CPC1,CPC1,"[""CHOLEWKA""]","[""Tom""]",6PAY,1
+577,[3 - HG6],HIST,Histoire,"[""RONCHAINE""]","[""Marc""]",[3 - HG6]<3PAY> <LM1> A,1
+578,[5 - ScOp2],BIO opt.,Bio Option,"[""ZENTHNER""]","[""Fabienne""]",[5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A+ [5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-A+ [5 - ScOp2]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - ScOp2]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-E+ [5 - ScOp2]<5PAT> <Option+LM1+LM2(+LM3)> MB4-NI-A+ [5 - ScOp2]<5PAW> <Option+LM1+LM2(+LM3)> MB4-AI-N,2
+579,[5 - Sc5],BIO,Bio,"[""JEANGILLE""]","[""Lionel""]",[5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> LH4-A-/+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-AI-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> EC4-A-N+ [5 - Sc5]<5PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> EC4-N-A+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-N-A+ [5 - Sc5]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-D,1
+580,[5 - Sc3],CHIMIE,Chimie,"[""PHILIPPART""]","[""Adèle""]",[5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> EC4-A-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> EC4-DI-A+ [5 - Sc3]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [5 - Sc3]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - Sc3]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-N-A-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - Sc3]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-N,1
+581,[5 - Sc4],PHYSIQUE,Physique,"[""BAKHTI""]","[""Youssef""]",[5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> MH4-A-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-I+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ME4-A-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ME4-AI-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-I+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> EC4-A-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-D+ [5 - Sc4]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-A+ [5 - Sc4]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-N-E+ [5 - Sc4]<5PAZ> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [5 - Sc4]<5PAT> <Option+LM1+LM2(+LM3)> SO4-NI-A+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> EC6-A-I+ [5 - Sc4]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-I-D+ [5 - Sc4]<5PAU> <Option+LM1+LM2(+LM3)> ML4-A-D-E,1
+582,2PAA,CPC1,CPC1,"[""MANAP""]","[""Cihan""]",2PAA,1
+583,4PAU,FRANÇAIS,Français,"[""WERA""]","[""Tanguy""]",4PAU,1
+584,1PAB,DESSIN,Dessin,"[""FAGNOUL""]","[""Dimitri""]",1PAB,1
+585,[4 - SO1],SC. SOC.,Sciences sociales,"[""PAYON""]","[""Rashmi""]",[4 - SO1]<4PAT> <Option> SO+ [4 - SO1]<4PAZ> <Option> SO,2
+586,[4 - EPF1],GYM,Gym,"[""MEUNIER""]","[""Benjamin""]",[4 - EPF1]<4PAS> <EP> F+ [4 - EPF1]<4PAV> <EP> F,2
+587,[4 - EPG1],GYM,Gym,"[""DULLIER""]","[""Cyrielle""]",[4 - EPG1]<4PAS> <EP> G+ [4 - EPG1]<4PAV> <EP> G,2
+588,[3 - LM1 - AI1],GÉO AI,Géo AI,"[""BORLEE""]","[""Philippe""]",[3 - LM1 - AI1]<3PAT> <LM1+LM2> AI-N+ [3 - LM1 - AI1]<3PAX> <LM1 + LM2> AI-E,2
+589,[3 - HG3],GÉO,Géo,"[""FRANCOIS""]","[""Ariane""]",[3 - HG3]<3PAT> <LM1+LM2> A-F-N+ [3 - HG3]<3PAX> <LM1 + LM2> A-E+ [3 - HG3]<3PAX> <LM1 + LM2> N-E,2
+590,[5 - ScOp3],PHYSIQUE,Physique,"[""BAKHTI""]","[""Youssef""]",[5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-I+ [5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-D+ [5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-I+ [5 - ScOp3]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-D+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-A+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-E+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [5 - ScOp3]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-E,2
+591,3PAV,CPC1,CPC1,"[""MANAP""]","[""Cihan""]",3PAV,1
+592,4PAY,MATH,Math,"[""GARTI""]","[""Mohamed""]",4PAY,1
+593,6PAX,GÉO,Géo,"[""MEERT""]","[""David""]",6PAX,2
+594,1PAA,CPC1,CPC1,"[""MANAP""]","[""Cihan""]",1PAA,1
+595,3PAU,CPC1,CPC1,"[""KERRELS""]","[""Arnaud""]",3PAU,1
+596,1PAD,DESSIN,Dessin,"[""FAGNOUL""]","[""Dimitri""]",1PAD,1
+597,[3 - ScOp2],CHIMIE opt.,Chimie Option,"[""ZOLLER""]","[""Céline""]",[3 - ScOp2]<3PAS> <Option> LS+ [3 - ScOp2]<3PAS> <Option> MS,1
+598,[6 - Sc2],PHYSIQUE,Physique,"[""BAKHTI""]","[""Youssef""]",[6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-D+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-I+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-D+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-D+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-D+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-E+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-D+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-N-A+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-N+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-AI-E+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-A-I,1
+599,[6 - ScOp1],Acph,Physique Option,"[""MAQUET""]","[""Laurent""]",[6 - ScOp1]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-E+ [6 - ScOp1]<6PAY> <Option+LM1+LM2(+LM3)> MA6-AI-I+ [6 - ScOp1]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [6 - ScOp1]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [6 - ScOp1]<6PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A,3
+600,2PAC,CPC1,CPC1,"[""MANAP""]","[""Cihan""]",2PAC,1
+601,1PAE,LECTURE,Lecture,"[""POPOVICS""]","[""Vanessa""]",1PAE,1
+602,1PAF,DESSIN,Dessin,"[""FAGNOUL""]","[""Dimitri""]",1PAF,1
+603,[5 - M+],PESM,PESM,"[""BAKHTI""]","[""Youssef""]",[5 - M+]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-I+ [5 - M+]<5PAU> <Option+LM1+LM2(+LM3)> MA6-A-D+ [5 - M+]<5PAX> <Option+LM1+LM2(+LM3)> LA6-N-/+ [5 - M+]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - M+]<5PAX> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - M+]<5PAX> <Option+LM1+LM2(+LM3)> MA6-N-A+ [5 - M+]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-N+ [5 - M+]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-A-E+ [5 - M+]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-E+ [5 - M+]<5PAZ> <Option+LM1+LM2(+LM3)> MA6-N-A,2
+604,[5 - Labo1],LABO Bio,Labo Bio,"[""ZENTHNER""]","[""Fabienne""]",[5 - Labo1]<5PAT> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - Labo1]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-I+ [5 - Labo1]<5PAU> <Option+LM1+LM2(+LM3)> MB4-A-D+ [5 - Labo1]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-A+ [5 - Labo1]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - Labo1]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-A-N+ [5 - Labo1]<5PAZ> <Option+LM1+LM2(+LM3)> MB4-N-E+ [5 - Labo1]<5PAT> <Option+LM1+LM2(+LM3)> MB4-DI-E,2
+605,[6 - ScOp2],CHIMIE opt.,Chimie Option,"[""YAHIA""]","[""Lina""]",[6 - ScOp2]<6PAU> <Option+LM1+LM2(+LM3)> MA6-AI-N+ [6 - ScOp2]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [6 - ScOp2]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-E+ [6 - ScOp2]<6PAV> <Option+LM1+LM2(+LM3)> MB4-N-A+ [6 - ScOp2]<6PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - ScOp2]<6PAW> <Option+LM1+LM2(+LM3)> MB4-NI-A,2
+606,[5 - Labo2],LABO Bio,Labo Bio,"[""JEANGILLE""]","[""Lionel""]",[5 - Labo2]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-E+ [5 - Labo2]<5PAW> <Option+LM1+LM2(+LM3)> MB4-A-N,2
+607,1PAD,CPC1,CPC1,"[""KERRELS""]","[""Arnaud""]",1PAD,1
+608,[4 - LM1 - AI],ALP Anglais,ALP Anglais,"[""CARLYLE""]","[""Thomas""]",[4 - LM1 - AI]<4PAV> <LM1> AI+ [4 - LM1 - AI]<4PAW> <LM1> AI+ [4 - LM1 - AI]<4PAX> <LM1> AI+ [4 - LM1 - AI]<4PAY> <LM1> AI+ [4 - LM1 - AI]<4PAZ> <LM1> AI,1
+609,2PAE,LECTURE,Lecture,"[""WILLEMS""]","[""Louise""]",2PAE,1
+610,1PAA,DESSIN,Dessin,"[""FAGNOUL""]","[""Dimitri""]",1PAA,1
+611,3PAW,CPC1,CPC1,"[""KERRELS""]","[""Arnaud""]",3PAW,1
+612,1PAB,LECTURE,Lecture,"[""POPOVICS""]","[""Vanessa""]",1PAB,1
+613,5PAX,FRANÇAIS,Français,"[""PAGNIER""]","[""Jason""]",5PAX,1
+614,[4 - Sc3],BIO,Bio,"[""ZENTHNER""]","[""Fabienne""]",[4 - Sc3]<4PAU> <Option> EC+ [4 - Sc3]<4PAV> <Option> EC+ [4 - Sc3]<4PAU> <Option> SO+ [4 - Sc3]<4PAV> <Option> SO+ [4 - Sc3]<4PAU> <Option> M+ [4 - Sc3]<4PAV> <Option> L+ [4 - Sc3]<4PAY> <Option> M,1
+615,[5 - Sc2],CHIMIE,Chimie,"[""JEANGILLE""]","[""Lionel""]",[5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-N+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-A-E+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-N-A+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-N+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-A-E+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-AI-E+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> SO4-N-A+ [5 - Sc2]<5PAY> <Option+LM1+LM2(+LM3)> MH4-AI-N,1
+616,[3 - SC3],CHIMIE,Chimie,"[""ZOLLER""]","[""Céline""]",[3 - SC3]<3PAX> <Option> EC+ [3 - SC3]<3PAY> <Option> EC,1
+617,[6 - EPF1],GYM,Gym,"[""MEUNIER""]","[""Benjamin""]",[6 - EPF1]<6PAU> <EP> F+ [6 - EPF1]<6PAW> <EP> F,2
+618,[6 - EPG1],GYM,Gym,"[""DULLIER""]","[""Cyrielle""]",[6 - EPG1]<6PAU> <EP> G+ [6 - EPG1]<6PAW> <EP> G,2
+619,1PAE,CPC1,CPC1,"[""KERRELS""]","[""Arnaud""]",1PAE,1
+620,[5 - CPC2],CPC2,CPC2,"[""CHOLEWKA""]","[""Tom""]",[5 - CPC2]<5PAX> <Philo> CPC,1
+621,1PAF,LECTURE,Lecture,"[""POPOVICS""]","[""Vanessa""]",1PAF,1
+622,2PAF,LECTURE,Lecture,"[""WILLEMS""]","[""Louise""]",2PAF,1
+623,1PAB,EducTECH,Educ Tech,"[""ZANOL""]","[""Marie-Sophie""]",1PAB,1
+624,[2 - AI],HIST AI,Histoire AI,"[""CARLYLE""]","[""Thomas""]",[2 - AI]<2PAA> <LM1> AI+ [2 - AI]<2PAB> <LM1> AI+ [2 - AI]<2PAC> <LM1> AI,2
+625,[2 - HGS1],HIST,Histoire,"[""RONCHAINE""]","[""Marc""]",[2 - HGS1]<2PAA> <LM1> A+ [2 - HGS1]<2PAB> <LM1> A,2
+626,[2 - HGS2],HIST,Histoire,"[""FRANCOIS""]","[""Ariane""]",[2 - HGS2]<2PAC> <LM1> A+ [2 - HGS2]<2PAG> <LM1> A,2
+627,[1+2 - DI],ALLEMAND LM2,Allemand LM2,"[""HOLLENFELTZ""]","[""Olivier""]",[1+2 - DI]<1PAA> <LM1> DI+ [1+2 - DI]<2PAG> <LM1> DI+ [3+4 - LM2 - D]<3PAS> <LM2> D+ [3+4 - LM2 - D]<3PAW> <LM2> D+ [3+4 - LM2 - D]<3PAY> <LM2> D+ [3+4 - LM2 - D]<4PAW> <LM2> D,2
+628,[5 - Sc5],CHIMIE,Chimie,"[""JEANGILLE""]","[""Lionel""]",[5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> LH4-A-/+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-N+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-AI-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> EC4-A-N+ [5 - Sc5]<5PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> EC4-N-A+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ME4-N-A+ [5 - Sc5]<5PAZ> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - Sc5]<5PAW> <Option+LM1+LM2(+LM3)> ML4-A-N-D,1
+629,[5 - Sc3],PHYSIQUE,Physique,"[""BAKHTI""]","[""Youssef""]",[5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ME4-A-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ME4-NI-A+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-E-D+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ML4-NI-A-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> EC4-A-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> EC4-NI-A+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> EC4-DI-A+ [5 - Sc3]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [5 - Sc3]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - Sc3]<5PAZ> <Option+LM1+LM2(+LM3)> ML6-N-A-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ML6-A-E-D+ [5 - Sc3]<5PAZ> <Option+LM1+LM2(+LM3)> ML4-A-N-E+ [5 - Sc3]<5PAT> <Option+LM1+LM2(+LM3)> ML4-A-N,1
+630,[6PAV-tout sauf SO],CPC1,CPC1,"[""CHOLEWKA""]","[""Tom""]",[6PAV-tout sauf SO]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-N+ [6PAV-tout sauf SO]<6PAV> <Option+LM1+LM2(+LM3)> MB4-AI-E+ [6PAV-tout sauf SO]<6PAV> <Option+LM1+LM2(+LM3)> MB4-N-A+ [6PAV-tout sauf SO]<6PAV> <Option+LM1+LM2(+LM3)> LH4-AI-/+ [6PAV-tout sauf SO]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-N+ [6PAV-tout sauf SO]<6PAV> <Option+LM1+LM2(+LM3)> MH4-A-E+ [6PAV-tout sauf SO]<6PAV> <Option+LM1+LM2(+LM3)> MH4-N-A+ [6PAV-tout sauf SO]<6PAV> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6PAV-tout sauf SO]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-A+ [6PAV-tout sauf SO]<6PAV> <Option+LM1+LM2(+LM3)> ME4-N-E+ [6PAV-tout sauf SO]<6PAV> <Option+LM1+LM2(+LM3)> ML4-N-A-E+ [6PAV-tout sauf SO]<6PAV> <Option+LM1+LM2(+LM3)> EC4-AI-N,1
+631,5PAT,CPC1,CPC1,"[""BELLOI""]","[""Théo""]",5PAT,1
+632,2PAD,LECTURE,Lecture,"[""WILLEMS""]","[""Louise""]",2PAD,1
+633,1PAD,EducTECH,Educ Tech,"[""ZANOL""]","[""Marie-Sophie""]",1PAD,1
+634,5PAV,CPC1,CPC1,"[""BELLOI""]","[""Théo""]",5PAV,1
+635,[6 - Sc2],BIO,Bio,"[""PHILIPPART""]","[""Adèle""]",[6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> MB4-A-D+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-I+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-A-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ML4-A-I-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ML6-A-I-D+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-E+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-A-D+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-D+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> EC4-AI-E+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-E+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> ML6-A-N-D+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-N-A+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-E+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> EC6-A-N+ [6 - Sc2]<6PAY> <Option+LM1+LM2(+LM3)> ME4-AI-E+ [6 - Sc2]<6PAZ> <Option+LM1+LM2(+LM3)> EC4-A-I,1
