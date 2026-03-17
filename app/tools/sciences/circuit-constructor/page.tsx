@@ -95,7 +95,7 @@ const CircuitCanvas = dynamic(
 const CircuitConstructorPage = () => {
   const [components, setComponents] = useState<(Battery | Resistor | Ammeter | Voltmeter | Wattmeter | EnergyMeter)[]>([
     { id: 'default-battery', type: 'battery', x: 50, y: 150, voltage: 230 },
-    { id: 'default-resistor', type: 'resistor', x: 200, y: 150, resistance: 1000 },
+    { id: 'default-resistor', type: 'resistor', x: 200, y: 150, resistance: 100 },
   ]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [timeElapsed, setTimeElapsed] = useState(0);
@@ -571,7 +571,7 @@ const CircuitConstructorPage = () => {
                   <input
                     type="range"
                     min="0"
-                    max="100000"
+                    max="10000"
                     step="100"
                     value={(components.find(c => c.id === selectedComponentId) as any)?.resistance || 0}
                     onChange={(e) => updateProperty(selectedComponentId, 'resistance', parseInt(e.target.value))}

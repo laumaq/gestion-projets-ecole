@@ -214,10 +214,10 @@ export default function NouvelleExperiencePage() {
         .insert([{
           nom,
           description,
-          classe: cibles.classes[0] || '',
+          // SUPPRIMEZ cette ligne : classe: cibles.classes[0] || '',
           created_by: userId,
           config: { tableaux, graphiques },
-          cibles,
+          cibles,  // Maintenant c'est un JSONB avec classes et groupes
           statut: 'active'
         }])
         .select()
@@ -232,6 +232,7 @@ export default function NouvelleExperiencePage() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="max-w-4xl mx-auto">

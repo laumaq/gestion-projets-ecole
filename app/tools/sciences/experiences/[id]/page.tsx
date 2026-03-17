@@ -27,15 +27,22 @@ interface Experience {
   id: string;
   nom: string;
   description: string;
-  classe: string;
-  cibles: Cibles | null;
+  cibles: {  
+    classes: string[];
+    groupes: string[];
+  };
+  classe?: string;
   created_by: string;
   created_at: string;
   statut: string;
   config: {
     tableaux: {
       nom: string;
-      colonnes: { nom: string; unite: string; type: string }[];
+      colonnes: {
+        nom: string;
+        unite: string;
+        type: string;
+      }[];
     }[];
     graphiques: GraphiqueConfig[];
   };
@@ -58,25 +65,70 @@ interface Mesure {
  * Compatibilité assurée : si cibles est absent, on retombe sur l'ancienne
  * logique (classe = exp.classe).
  */
+// Fonction pour vérifier si un élève a accès à une expérience
 function eleveAAcces(
   exp: Experience,
   classeEleve: string,
   groupesEleve: string[]
 ): boolean {
-  const cibles: Cibles = exp.cibles ?? { classes: [exp.classe], groupes: [] };
+  // Si cibles n'existe pas (anciennes données), on considère que c'est la classe du premier tableau
+  // mais en réalité, les anciennes données avaient un champ classe direct
+  const cibles = exp.cibles ?? { 
+    classes: exp.classe ? [exp.classe] : [], 
+    groupes: [] 
+  };
+  
   return (
     cibles.classes.includes(classeEleve) ||
     groupesEleve.some(g => cibles.groupes.includes(g))
   );
 }
 
-/** Résumé lisible des cibles pour l'en-tête */
+// Fonction pour obtenir un résumé des cibles
 function resumeCibles(exp: Experience): string {
   const cibles = exp.cibles;
-  if (!cibles) return exp.classe || '—';
-  const parts = [...cibles.classes, ...cibles.groupes];
-  if (parts.length === 0) return exp.classe || '—';
-  return parts.join(', ');
+  
+  // Si cibles existe et a des éléments
+  if (cibles) {
+    const parts = [...cibles.classes, ...cibles.groupes];
+    if (parts.length > 0) {
+      // Limiter l'affichage à 3 éléments pour ne pas surcharger
+      if (parts.length <= 3) {
+        return parts.join(', ');
+      } else {
+        return `${parts.slice(0, 3).join(', ')}... (+${parts.length - 3})`;
+      }
+    }
+  }
+  
+  // Fallback : utiliser l'ancien champ classe si présent
+  if (exp.classe) {
+    return exp.classe;
+  }
+  
+  return 'Tous';
+}
+
+
+// Et si vous voulez une version plus détaillée pour l'affichage dans l'en-tête :
+function afficherCiblesDetail(exp: Experience): string {
+  const cibles = exp.cibles;
+  if (!cibles) return 'Tous';
+  
+  const classes = cibles.classes;
+  const groupes = cibles.groupes;
+  
+  if (classes.length === 0 && groupes.length === 0) return 'Tous';
+  
+  const parties: string[] = [];
+  if (classes.length > 0) {
+    parties.push(`${classes.length} classe${classes.length > 1 ? 's' : ''}`);
+  }
+  if (groupes.length > 0) {
+    parties.push(`${groupes.length} groupe${groupes.length > 1 ? 's' : ''}`);
+  }
+  
+  return parties.join(' · ');
 }
 
 // ── Composant ─────────────────────────────────────────────────────────────────

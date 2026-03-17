@@ -13,7 +13,7 @@ const formatCurrent = (amperes: number): string => {
   if (amperes === 0) return '0 A';
   const abs = Math.abs(amperes);
   if (abs >= 1) return `${amperes.toFixed(3).replace('.', ',')} A`;
-  if (abs >= 0.001) return `${(amperes * 1000).toFixed(2).replace('.', ',')} mA`;
+  if (abs >= 0.001) return `${(amperes).toFixed(4).replace('.', ',')} A`;
   if (abs >= 0.000001) return `${(amperes * 1000000).toFixed(2).replace('.', ',')} µA`;
   return `${(amperes * 1000000000).toFixed(2).replace('.', ',')} nA`;
 };
@@ -23,7 +23,7 @@ const formatVoltage = (volts: number): string => {
   const abs = Math.abs(volts);
   if (abs >= 1000) return `${(volts / 1000).toFixed(2).replace('.', ',')} kV`;
   if (abs >= 1) return `${volts.toFixed(2).replace('.', ',')} V`;
-  if (abs >= 0.001) return `${(volts * 1000).toFixed(2).replace('.', ',')} mV`;
+  if (abs >= 0.001) return `${(volts).toFixed(4).replace('.', ',')} mV`;
   return `${(volts * 1000000).toFixed(2).replace('.', ',')} µV`;
 };
 
