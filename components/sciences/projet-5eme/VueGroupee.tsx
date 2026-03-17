@@ -15,6 +15,7 @@ interface Facture {
 }
 
 interface Appareil {
+  id: string;
   student_id: number;
   source: string;
   nom_appareil: string;
