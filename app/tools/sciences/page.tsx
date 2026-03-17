@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { FICHES_OUTILS, FICHE_COLOR_MAP } from '@/lib/sciences/fiches-outils/Registry';
+import { FICHES_OUTILS, FICHE_COLOR_MAP } from '@/lib/sciences/fiches-outils/registry';
 import { computeStatut, FicheStatut, STATUT_LABELS, STATUT_COLORS } from '@/lib/sciences/fiches-outils/attribution';
 
 interface Cibles {
