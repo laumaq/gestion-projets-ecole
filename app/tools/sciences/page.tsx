@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { FICHES_OUTILS, FICHE_COLOR_MAP } from '@/lib/sciences/fiches-outils/Registry';
+import { computeStatut, FicheStatut, STATUT_LABELS, STATUT_COLORS } from '@/lib/sciences/fiches-outils/attribution';
 
 interface Cibles {
   classes: string[];
@@ -33,6 +35,7 @@ export default function SciencesPage() {
   const [hasCiteAccess, setHasCiteAccess] = useState(false);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fichesStatuts, setFichesStatuts] = useState<Record<string, FicheStatut>>({});
 
   const expIcon = useMemo(() => {
     const icons = [
@@ -52,120 +55,97 @@ export default function SciencesPage() {
       const classe = localStorage.getItem('userClass');
       const level = localStorage.getItem('userLevel') ?? '';
 
-      if (!type || !id) {
-        router.push('/');
-        return;
-      }
+      if (!type || !id) { router.push('/'); return; }
 
-      setUserType(type);
-      setUserId(id);
-      setUserName(name || '');
-      setUserJob(job || '');
-      setUserClass(classe || '');
-      setUserLevel(level);
+      setUserType(type); setUserId(id); setUserName(name || '');
+      setUserJob(job || ''); setUserClass(classe || ''); setUserLevel(level);
 
       if (type === 'employee') {
         const { data } = await supabase
-          .from('projet_cite_commune_acces')
-          .select('id')
-          .eq('employee_id', id)
-          .single();
+          .from('projet_cite_commune_acces').select('id').eq('employee_id', id).single();
         setHasCiteAccess(!!data);
         chargerExperiencesProf(id);
       } else {
         if (level.startsWith('5')) setHasCiteAccess(true);
         chargerExperiencesEleve(parseInt(id), classe || '');
+        chargerFichesStatuts(parseInt(id));
       }
     };
     init();
   }, [router]);
 
-  // ── Chargement prof : toutes ses expériences ──────────────
+  // ── Statuts fiches pour l'élève ───────────────────────────
+  const chargerFichesStatuts = async (matricule: number) => {
+    const { data } = await supabase
+      .from('fiches_outils_progression')
+      .select('*')
+      .eq('student_id', matricule)
+      .maybeSingle();
+    if (!data) return;
+    const row = data as unknown as Record<string, string | null>;
+    const statuts: Record<string, FicheStatut> = {};
+    for (const f of FICHES_OUTILS) {
+      statuts[f.key] = computeStatut(row, f.key);
+    }
+    setFichesStatuts(statuts);
+  };
 
+  // ── Chargement prof ───────────────────────────────────────
   const chargerExperiencesProf = async (id: string) => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('experiences')
-        .select('*, experience_mesures(count)')
-        .eq('created_by', id)
-        .order('created_at', { ascending: false });
-
+        .from('experiences').select('*, experience_mesures(count)')
+        .eq('created_by', id).order('created_at', { ascending: false });
       if (error) throw error;
-
       setExperiences((data || []).map(exp => ({
         ...exp,
         _count: { mesures: exp.experience_mesures?.[0]?.count || 0 }
       })));
     } catch (error) {
       console.error('Erreur chargement expériences prof:', error);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  // ── Chargement élève : expériences où il est ciblé ────────
-  // Un élève est ciblé si :
-  //   - sa classe est dans cibles.classes, OU
-  //   - un de ses groupes (students_groups) est dans cibles.groupes
-  // On récupère d'abord ses groupes, puis on filtre côté client
-  // (Supabase ne fait pas facilement les intersections JSONB + sous-requête)
-
+  // ── Chargement élève ──────────────────────────────────────
   const chargerExperiencesEleve = async (matricule: number, classe: string) => {
     try {
       setLoading(true);
-
-      // 1. Groupes de l'élève
       const { data: groupesData } = await supabase
-        .from('students_groups')
-        .select('groupe_code')
-        .eq('matricule', matricule);
-
-      const groupesEleve = (groupesData || []).map(g => g.groupe_code);
-
-      // 2. Toutes les expériences actives
+        .from('students_groups').select('groupe_code').eq('matricule', matricule);
+      const groupesEleve = (groupesData || []).map((g: any) => g.groupe_code);
       const { data, error } = await supabase
-        .from('experiences')
-        .select('*, experience_mesures(count)')
-        .eq('statut', 'active')
-        .order('created_at', { ascending: false });
-
+        .from('experiences').select('*, experience_mesures(count)')
+        .eq('statut', 'active').order('created_at', { ascending: false });
       if (error) throw error;
-
-      // 3. Filtrer côté client selon cibles
       const visibles = (data || []).filter(exp => {
         const cibles: Cibles = exp.cibles || { classes: [exp.classe], groupes: [] };
-
-        const classeOk = cibles.classes.includes(classe);
-        const groupeOk = groupesEleve.some(g => cibles.groupes.includes(g));
-
-        return classeOk || groupeOk;
+        return cibles.classes.includes(classe) || groupesEleve.some((g: string) => cibles.groupes.includes(g));
       });
-
       setExperiences(visibles.map(exp => ({
         ...exp,
         _count: { mesures: exp.experience_mesures?.[0]?.count || 0 }
       })));
     } catch (error) {
       console.error('Erreur chargement expériences élève:', error);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
-
-  // ── Libellé résumé des cibles pour les cards prof ─────────
 
   const resumeCibles = (exp: Experience): string => {
     const cibles = exp.cibles;
     if (!cibles) return exp.classe || '—';
-    const parts = [
-      ...cibles.classes,
-      ...cibles.groupes,
-    ];
+    const parts = [...cibles.classes, ...cibles.groupes];
     if (parts.length === 0) return exp.classe || '—';
     if (parts.length <= 2) return parts.join(', ');
     return `${parts.slice(0, 2).join(', ')} +${parts.length - 2}`;
   };
+
+  // Fiches à afficher dans le dashboard :
+  // - élève : uniquement les fiches attribuées
+  // - enseignant : toutes les fiches disponibles (accès direct)
+  const fichesVisibles = FICHES_OUTILS.filter(f =>
+    userType === 'employee' || fichesStatuts[f.key] !== 'not_attributed'
+  );
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -226,6 +206,87 @@ export default function SciencesPage() {
           )}
 
         </div>
+      </div>
+
+      {/* ── FICHES-OUTILS ── */}
+      <div className="mb-12">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-700">Fiches-outils</h2>
+          <Link href="/tools/sciences/fiches-outils"
+            className="text-sm text-green-700 hover:text-green-900 font-medium">
+            {userType === 'employee' ? 'Gérer les attributions →' : 'Voir tout →'}
+          </Link>
+        </div>
+
+        {userType === 'student' && fichesVisibles.length === 0 ? (
+          <p className="text-sm text-gray-400 italic">
+            Aucune fiche-outil attribuée pour l'instant.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+            {/* Carte d'accès au panneau pour l'enseignant */}
+            {userType === 'employee' && (
+              <Link href="/tools/sciences/fiches-outils" className="block h-full">
+                <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-purple-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900">Gérer les fiches</h3>
+                    </div>
+                    <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
+                      Attribuer des fiches et suivre la progression des élèves
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            )}
+
+            {/* Fiches disponibles */}
+            {fichesVisibles.map(fiche => {
+              const c = FICHE_COLOR_MAP[fiche.color];
+              const statut: FicheStatut = userType === 'employee' ? 'attributed' : (fichesStatuts[fiche.key] ?? 'not_attributed');
+              const sc = STATUT_COLORS[statut];
+              return (
+                <Link key={fiche.key} href={fiche.href} className="block h-full">
+                  <div className="h-40 bg-white rounded-lg shadow-sm p-5 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group"
+                    style={{ border: `2px solid ${c.border}` }}>
+                    <div>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ background: c.bg }}>
+                          <svg className="w-4 h-4" fill="none" stroke={c.text} strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round"
+                              d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                          </svg>
+                        </div>
+                        {userType === 'student' && (
+                          <span className="px-2 py-0.5 text-xs font-medium rounded-full flex-shrink-0"
+                            style={{ background: sc.bg, color: sc.text, border: `0.5px solid ${sc.border}` }}>
+                            {STATUT_LABELS[statut]}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-sm font-medium text-gray-900 line-clamp-1">{fiche.title}</h3>
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2 group-hover:line-clamp-none">
+                        {fiche.description}
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full self-start"
+                      style={{ background: c.bg, color: c.text }}>
+                      {fiche.subject}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Mes projets */}
@@ -302,7 +363,6 @@ export default function SciencesPage() {
                 </div>
               </Link>
             ))}
-
           </div>
         )}
       </div>
