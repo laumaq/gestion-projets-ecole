@@ -8,7 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { FICHES_OUTILS, FICHE_COLOR_MAP, FicheOutil } from '@/lib/sciences/fiches-outils/Registry';
+import { FICHES_OUTILS, FICHE_COLOR_MAP, FicheOutil } from '@/lib/sciences/fiches-outils/registry';
 import {
   attribuerFiche,
   getStudentsByClasses,
