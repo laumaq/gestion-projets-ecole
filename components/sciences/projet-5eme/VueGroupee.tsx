@@ -218,21 +218,140 @@ function EditAppareilInline({
   );
 }
 
-// ── Vue par élève ──────────────────────────────────────────────────────────────
+// ── Formulaire d'édition inline facture (enseignant) ──────────────────────────
+
+function EditFactureInline({
+  facture,
+  isNew = false,
+  onSave,
+  onCancel,
+}: {
+  facture: Facture;
+  isNew?: boolean;
+  onSave: (studentId: number, data: Partial<Facture>) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [form, setForm] = useState({
+    nb_personnes: facture.nb_personnes?.toString() ?? '',
+    consommation_annuelle_kwh: facture.consommation_annuelle_kwh?.toString() ?? '',
+    bihoraire: facture.bihoraire,
+    consommation_jour_kwh: facture.consommation_jour_kwh?.toString() ?? '',
+    consommation_nuit_kwh: facture.consommation_nuit_kwh?.toString() ?? '',
+    prix_kwh: facture.prix_kwh?.toString() ?? '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await onSave(facture.student_id, {
+      nb_personnes: form.nb_personnes ? parseFloat(form.nb_personnes) : null,
+      consommation_annuelle_kwh: form.consommation_annuelle_kwh ? parseFloat(form.consommation_annuelle_kwh) : null,
+      bihoraire: form.bihoraire,
+      consommation_jour_kwh: form.bihoraire && form.consommation_jour_kwh ? parseFloat(form.consommation_jour_kwh) : null,
+      consommation_nuit_kwh: form.bihoraire && form.consommation_nuit_kwh ? parseFloat(form.consommation_nuit_kwh) : null,
+      prix_kwh: form.prix_kwh ? parseFloat(form.prix_kwh) : null,
+    });
+    setSaving(false);
+  };
+
+  return (
+    <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-3 space-y-2">
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-xs text-gray-500 mb-0.5 block">Nb personnes</label>
+          <input
+            type="number" min="0.5" max="20" step="0.5"
+            value={form.nb_personnes}
+            onChange={e => setForm(f => ({ ...f, nb_personnes: e.target.value }))}
+            className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 mb-0.5 block">Conso. annuelle (kWh)</label>
+          <input
+            type="number" min="0" step="1"
+            value={form.consommation_annuelle_kwh}
+            onChange={e => setForm(f => ({ ...f, consommation_annuelle_kwh: e.target.value }))}
+            className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 mb-0.5 block">Prix/kWh (€)</label>
+          <input
+            type="number" min="0" step="0.001"
+            value={form.prix_kwh}
+            onChange={e => setForm(f => ({ ...f, prix_kwh: e.target.value }))}
+            className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+          />
+        </div>
+        <div className="flex items-center gap-2 pt-4">
+          <div
+            onClick={() => setForm(f => ({ ...f, bihoraire: !f.bihoraire }))}
+            className={`w-9 h-5 rounded-full cursor-pointer transition-colors relative flex-shrink-0 ${form.bihoraire ? 'bg-blue-500' : 'bg-gray-300'}`}
+          >
+            <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.bihoraire ? 'left-4' : 'left-0.5'}`} />
+          </div>
+          <label className="text-xs text-gray-600 cursor-pointer" onClick={() => setForm(f => ({ ...f, bihoraire: !f.bihoraire }))}>
+            Bihoraire
+          </label>
+        </div>
+        {form.bihoraire && (
+          <>
+            <div>
+              <label className="text-xs text-gray-500 mb-0.5 block">Jour (kWh)</label>
+              <input
+                type="number" min="0" step="1"
+                value={form.consommation_jour_kwh}
+                onChange={e => setForm(f => ({ ...f, consommation_jour_kwh: e.target.value }))}
+                className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-0.5 block">Nuit (kWh)</label>
+              <input
+                type="number" min="0" step="1"
+                value={form.consommation_nuit_kwh}
+                onChange={e => setForm(f => ({ ...f, consommation_nuit_kwh: e.target.value }))}
+                className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+              />
+            </div>
+          </>
+        )}
+      </div>
+      <div className="flex gap-2 pt-1">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors disabled:opacity-60"
+        >
+          {saving ? '...' : '✓ Enregistrer'}
+        </button>
+        <button onClick={onCancel} className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1">
+          Annuler
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
 
 function VueParEleve({
   eleves,
   isTeacher,
   onUpdateAppareil,
+  onUpdateFacture,
 }: {
   eleves: EleveData[];
   isTeacher: boolean;
   onUpdateAppareil: (id: string, data: Partial<Appareil>) => Promise<void>;
+  onUpdateFacture: (studentId: number, data: Partial<Facture>, isNew: boolean) => Promise<void>;
 }) {
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<'nom' | 'classe' | 'conso'>('classe');
   const [editingAppareilId, setEditingAppareilId] = useState<string | null>(null);
+  const [editingFactureId, setEditingFactureId] = useState<number | null>(null);
 
   const filtered = eleves
     .filter(e => {
@@ -358,8 +477,29 @@ function VueParEleve({
 
                   {/* Facture */}
                   <div>
-                    <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">📄 Facture</h4>
-                    {f ? (
+                    <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3 flex items-center justify-between">
+                      📄 Facture
+                      {isTeacher && editingFactureId !== eleve.student_id && (
+                        <button
+                          onClick={() => setEditingFactureId(eleve.student_id)}
+                          className="text-xs text-blue-500 hover:text-blue-700 font-normal"
+                          title="Modifier"
+                        >
+                          ✎ {f ? 'Modifier' : 'Saisir'}
+                        </button>
+                      )}
+                    </h4>
+                    {editingFactureId === eleve.student_id ? (
+                      <EditFactureInline
+                        facture={f ?? { student_id: eleve.student_id, consommation_annuelle_kwh: null, bihoraire: false, consommation_jour_kwh: null, consommation_nuit_kwh: null, prix_kwh: null, nb_personnes: null, students: null }}
+                        isNew={!f}
+                        onSave={async (studentId, data) => {
+                          await onUpdateFacture(studentId, data, !f);
+                          setEditingFactureId(null);
+                        }}
+                        onCancel={() => setEditingFactureId(null)}
+                      />
+                    ) : f ? (
                       <dl className="space-y-1.5">
                         <div className="flex justify-between text-sm">
                           <dt className="text-gray-500">Personnes dans le foyer</dt>
@@ -498,6 +638,7 @@ function VueParEleve({
 
 export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
   const [tab, setTab] = useState<'factures' | 'appareils' | 'eleves'>('factures');
+  const [viewMode, setViewMode] = useState<'puissance' | 'energie'>('puissance');
   const [factures, setFactures] = useState<Facture[]>([]);
   const [appareils, setAppareils] = useState<Appareil[]>([]);
   const [eleves, setEleves] = useState<EleveData[]>([]);
@@ -556,6 +697,15 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
 
   const handleUpdateAppareil = async (id: string, data: Partial<Appareil>) => {
     await supabase.from('cite_appareils').update(data).eq('id', id);
+    await loadAll();
+  };
+
+  const handleUpdateFacture = async (studentId: number, data: Partial<Facture>, isNew: boolean) => {
+    if (isNew) {
+      await supabase.from('cite_factures').insert({ student_id: studentId, ...data });
+    } else {
+      await supabase.from('cite_factures').update(data).eq('student_id', studentId);
+    }
     await loadAll();
   };
 
@@ -786,7 +936,7 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
             <p className="text-gray-400 italic text-sm">Aucun appareil enregistré pour le moment.</p>
           ) : (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                 <StatCard label="Mesures totales" value={String(appareils.length)} />
                 <StatCard
                   label="Via wattmètre"
@@ -796,11 +946,34 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
                 <StatCard label="Catégories" value={String(Object.keys(grouped).length)} />
               </div>
 
+              {/* Switch puissance / énergie */}
+              <div className="flex items-center gap-3 mb-6">
+                <span className="text-xs text-gray-500">Afficher :</span>
+                <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+                  {(['puissance', 'energie'] as const).map(mode => (
+                    <button
+                      key={mode}
+                      onClick={() => setViewMode(mode)}
+                      className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                        viewMode === mode ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      {mode === 'puissance' ? '⚡ Puissance (W)' : '🔋 Énergie (kWh)'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-6">
                 {CATEGORIES_ORDER.filter(cat => grouped[cat.value]).map(cat => {
                   const items = grouped[cat.value];
                   const avgP = getCatAvgPower(items);
                   const withPower = items.filter(i => i.puissance_w != null);
+                  const withEnergie = items.filter(i => i.energie_kwh != null);
+
+                  // Stats énergie catégorie
+                  const energies = withEnergie.map(i => i.energie_kwh!);
+                  const avgE = avg(energies);
 
                   // Sous-grouper par nom normalisé
                   const parNom: Record<string, Appareil[]> = {};
@@ -809,8 +982,10 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
                     if (!parNom[key]) parNom[key] = [];
                     parNom[key].push(a);
                   });
-                  // Trier les groupes par nombre décroissant d'entrées
                   const nomGroupes = Object.entries(parNom).sort((a, b) => b[1].length - a[1].length);
+
+                  // Max pour les barres selon le mode
+                  const maxEnergie = Math.max(...appareils.map(a => a.energie_kwh ?? 0), 0.001);
 
                   return (
                     <div key={cat.value} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
@@ -822,28 +997,32 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
                             {items.length} mesure{items.length > 1 ? 's' : ''} · {nomGroupes.length} type{nomGroupes.length > 1 ? 's' : ''}
                           </span>
                         </div>
-                        {avgP != null && (
-                          <span className="text-sm font-medium text-gray-600">
-                            moy. cat. <strong>{Math.round(avgP)} W</strong>
-                          </span>
-                        )}
+                        <span className="text-sm font-medium text-gray-600">
+                          {viewMode === 'puissance'
+                            ? avgP != null ? <>moy. cat. <strong>{Math.round(avgP)} W</strong></> : null
+                            : avgE != null ? <>moy. cat. <strong>{avgE.toFixed(3)} kWh</strong></> : null
+                          }
+                        </span>
                       </div>
 
                       {/* Sous-groupes par nom */}
                       <div className="divide-y divide-gray-100">
                         {nomGroupes.map(([nomKey, entries]) => {
                           const puissances = entries.map(e => e.puissance_w).filter((v): v is number => v != null);
+                          const energiesNom = entries.map(e => e.energie_kwh).filter((v): v is number => v != null);
                           const avgNomP = avg(puissances);
+                          const avgNomE = avg(energiesNom);
                           const minP = puissances.length ? Math.min(...puissances) : null;
                           const maxP = puissances.length ? Math.max(...puissances) : null;
                           const medP = median(puissances);
-                          // Nom affiché = première entrée (casse originale)
+                          const minE = energiesNom.length ? Math.min(...energiesNom) : null;
+                          const maxE = energiesNom.length ? Math.max(...energiesNom) : null;
+                          const medE = median(energiesNom);
                           const nomAffiche = entries[0].nom_appareil;
                           const isMultiple = entries.length > 1;
 
                           return (
                             <div key={nomKey} className="px-4 py-3">
-                              {/* Ligne nom + stats */}
                               <div className="flex items-start justify-between gap-3 mb-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="text-sm font-medium text-gray-800">{nomAffiche}</span>
@@ -852,7 +1031,6 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
                                       {entries.length}×
                                     </span>
                                   )}
-                                  {/* badges sources */}
                                   {Array.from(new Set(entries.map(e => e.source))).map(s => (
                                     <span key={s} className={`text-xs px-1.5 py-0.5 rounded ${
                                       s === 'wattmetre' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
@@ -866,26 +1044,43 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
                                     </span>
                                   )}
                                 </div>
-                                {avgNomP != null && (
-                                  <span className="text-xs font-semibold text-gray-700 flex-shrink-0">
-                                    {isMultiple ? `moy. ${Math.round(avgNomP)} W` : `${Math.round(avgNomP)} W`}
-                                  </span>
-                                )}
+                                <span className="text-xs font-semibold text-gray-700 flex-shrink-0">
+                                  {viewMode === 'puissance'
+                                    ? avgNomP != null ? (isMultiple ? `moy. ${Math.round(avgNomP)} W` : `${Math.round(avgNomP)} W`) : '–'
+                                    : avgNomE != null ? (isMultiple ? `moy. ${avgNomE.toFixed(3)} kWh` : `${avgNomE.toFixed(3)} kWh`) : '–'
+                                  }
+                                </span>
                               </div>
 
-                              {/* Barre de puissance moyenne */}
-                              {avgNomP != null && (
-                                <MiniBar value={Math.round(avgNomP)} max={maxPower} color="bg-orange-300" />
-                              )}
+                              {/* Barre selon le mode */}
+                              {viewMode === 'puissance'
+                                ? avgNomP != null && <MiniBar value={Math.round(avgNomP)} max={maxPower} color="bg-orange-300" />
+                                : avgNomE != null && (
+                                  <div className="flex items-center gap-2 w-full">
+                                    <div className="flex-1 bg-gray-100 rounded-full h-2">
+                                      <div
+                                        className="bg-teal-400 h-2 rounded-full transition-all"
+                                        style={{ width: `${Math.min(100, Math.round((avgNomE / maxEnergie) * 100))}%` }}
+                                      />
+                                    </div>
+                                    <span className="text-xs text-gray-500 w-16 text-right">{avgNomE.toFixed(3)} kWh</span>
+                                  </div>
+                                )
+                              }
 
                               {/* Stats détaillées si plusieurs entrées */}
-                              {isMultiple && puissances.length > 1 && (
+                              {isMultiple && viewMode === 'puissance' && puissances.length > 1 && (
                                 <p className="text-xs text-gray-400 mt-1">
                                   Min {minP} W · Max {maxP} W · Médiane {round(medP, 0)} W
                                 </p>
                               )}
+                              {isMultiple && viewMode === 'energie' && energiesNom.length > 1 && (
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Min {minE?.toFixed(3)} kWh · Max {maxE?.toFixed(3)} kWh · Médiane {medE?.toFixed(3)} kWh
+                                  {entries[0].duree_mesure_min != null && ` · ${entries[0].duree_mesure_min} min`}
+                                </p>
+                              )}
 
-                              {/* Notes diverses */}
                               {entries.some(e => e.notes) && (
                                 <p className="text-xs text-gray-400 italic mt-0.5">
                                   {entries.filter(e => e.notes).map(e => e.notes).join(' · ')}
@@ -897,11 +1092,18 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
                       </div>
 
                       {/* Synthèse catégorie */}
-                      {withPower.length > 1 && (
+                      {viewMode === 'puissance' && withPower.length > 1 && (
                         <div className="bg-gray-50 px-4 py-2 text-xs text-gray-500 border-t border-gray-100">
                           Catégorie — Min : {Math.min(...withPower.map(i => i.puissance_w!))} W ·
                           Max : {Math.max(...withPower.map(i => i.puissance_w!))} W ·
                           Médiane : {round(median(withPower.map(i => i.puissance_w!)), 0)} W
+                        </div>
+                      )}
+                      {viewMode === 'energie' && withEnergie.length > 1 && (
+                        <div className="bg-gray-50 px-4 py-2 text-xs text-gray-500 border-t border-gray-100">
+                          Catégorie — Min : {Math.min(...withEnergie.map(i => i.energie_kwh!)).toFixed(3)} kWh ·
+                          Max : {Math.max(...withEnergie.map(i => i.energie_kwh!)).toFixed(3)} kWh ·
+                          Médiane : {median(withEnergie.map(i => i.energie_kwh!))?.toFixed(3)} kWh
                         </div>
                       )}
                     </div>
@@ -938,7 +1140,12 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
 
       {/* ===== PAR ÉLÈVE (enseignant uniquement) ===== */}
       {tab === 'eleves' && isTeacher && (
-        <VueParEleve eleves={eleves} isTeacher={isTeacher} onUpdateAppareil={handleUpdateAppareil} />
+        <VueParEleve
+          eleves={eleves}
+          isTeacher={isTeacher}
+          onUpdateAppareil={handleUpdateAppareil}
+          onUpdateFacture={handleUpdateFacture}
+        />
       )}
     </div>
   );
