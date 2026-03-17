@@ -1,5 +1,3 @@
-// /components/sciences/projet-5eme/FormulaireFacture.tsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,6 +13,7 @@ interface FactureData {
   consommation_jour_kwh: string;
   consommation_nuit_kwh: string;
   prix_kwh: string;
+  nb_personnes: string;
 }
 
 const EMPTY: FactureData = {
@@ -23,6 +22,7 @@ const EMPTY: FactureData = {
   consommation_jour_kwh: '',
   consommation_nuit_kwh: '',
   prix_kwh: '',
+  nb_personnes: '',
 };
 
 export default function FormulaireFacture({ userId }: Props) {
@@ -49,6 +49,7 @@ export default function FormulaireFacture({ userId }: Props) {
           consommation_jour_kwh: row.consommation_jour_kwh?.toString() ?? '',
           consommation_nuit_kwh: row.consommation_nuit_kwh?.toString() ?? '',
           prix_kwh: row.prix_kwh?.toString() ?? '',
+          nb_personnes: row.nb_personnes?.toString() ?? '',
         });
       }
       setLoading(false);
@@ -77,6 +78,7 @@ export default function FormulaireFacture({ userId }: Props) {
       consommation_jour_kwh: data.bihoraire && data.consommation_jour_kwh ? parseFloat(data.consommation_jour_kwh) : null,
       consommation_nuit_kwh: data.bihoraire && data.consommation_nuit_kwh ? parseFloat(data.consommation_nuit_kwh) : null,
       prix_kwh: data.prix_kwh ? parseFloat(data.prix_kwh) : null,
+      nb_personnes: data.nb_personnes ? parseFloat(data.nb_personnes) : null,
       updated_at: new Date().toISOString(),
     };
 
@@ -112,6 +114,28 @@ export default function FormulaireFacture({ userId }: Props) {
       )}
 
       <div className="space-y-5">
+
+        {/* Nombre de personnes */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Nombre de personnes dans le foyer
+            <span className="text-gray-400 font-normal ml-1">– en moyenne</span>
+          </label>
+          <input
+            type="number"
+            min="0.5"
+            max="20"
+            step="0.5"
+            placeholder="ex : 4 ou 2.5"
+            value={data.nb_personnes}
+            onChange={e => handleChange('nb_personnes', e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Tu peux mettre un nombre décimal si des personnes sont présentes à mi-temps (ex : 2.5 pour 2 adultes + 1 enfant en garde partagée)
+          </p>
+        </div>
+
         {/* Consommation annuelle */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -192,6 +216,7 @@ export default function FormulaireFacture({ userId }: Props) {
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
+
       </div>
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}

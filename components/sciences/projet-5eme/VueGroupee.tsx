@@ -10,6 +10,7 @@ interface Facture {
   consommation_jour_kwh: number | null;
   consommation_nuit_kwh: number | null;
   prix_kwh: number | null;
+  nb_personnes: number | null;
   students: { nom: string; prenom: string; classe: string; niveau: string } | null;
 }
 
@@ -231,11 +232,25 @@ function VueParEleve({ eleves }: { eleves: EleveData[] }) {
                     {f ? (
                       <dl className="space-y-1.5">
                         <div className="flex justify-between text-sm">
+                          <dt className="text-gray-500">Personnes dans le foyer</dt>
+                          <dd className="font-medium text-gray-800">
+                            {f.nb_personnes != null ? `${f.nb_personnes}` : '–'}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between text-sm">
                           <dt className="text-gray-500">Conso. annuelle</dt>
                           <dd className="font-medium text-gray-800">
                             {f.consommation_annuelle_kwh != null ? `${f.consommation_annuelle_kwh} kWh` : '–'}
                           </dd>
                         </div>
+                        {f.consommation_annuelle_kwh != null && f.nb_personnes != null && f.nb_personnes > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <dt className="text-gray-500">Conso. / personne</dt>
+                            <dd className="font-medium text-blue-600">
+                              {Math.round(f.consommation_annuelle_kwh / f.nb_personnes)} kWh/an
+                            </dd>
+                          </div>
+                        )}
                         <div className="flex justify-between text-sm">
                           <dt className="text-gray-500">Compteur bihoraire</dt>
                           <dd className="font-medium text-gray-800">{f.bihoraire ? 'Oui' : 'Non'}</dd>
@@ -399,6 +414,16 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
   const medConso = median(consosAnn);
   const avgPrix = avg(prixArr);
 
+  // Conso par personne (uniquement pour les foyers ayant renseigné les deux champs)
+  const consosParPersonne = factures
+    .filter(f => f.consommation_annuelle_kwh != null && f.nb_personnes != null && f.nb_personnes > 0)
+    .map(f => f.consommation_annuelle_kwh! / f.nb_personnes!);
+  const avgConsoParPersonne = avg(consosParPersonne);
+  const medConsoParPersonne = median(consosParPersonne);
+
+  const nbPersonnesArr = factures.map(f => f.nb_personnes).filter((v): v is number => v != null);
+  const avgNbPersonnes = avg(nbPersonnesArr);
+
   const buckets: Record<string, number> = {};
   consosAnn.forEach(v => {
     const b = Math.floor(v / 1000) * 1000;
@@ -454,12 +479,36 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
             <p className="text-gray-400 italic text-sm">Aucune facture enregistrée pour le moment.</p>
           ) : (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                 <StatCard label="Réponses" value={String(factures.length)} sub={`dont ${bihoraireCount} bihoraires`} />
                 <StatCard label="Moyenne annuelle" value={round(avgConso, 0)} unit="kWh" sub="par ménage" />
                 <StatCard label="Médiane annuelle" value={round(medConso, 0)} unit="kWh" sub="valeur centrale" />
                 <StatCard label="Prix moyen" value={round(avgPrix, 3)} unit="€/kWh" sub={`${prixArr.length} réponses`} />
               </div>
+
+              {/* Conso par personne — uniquement si des données nb_personnes existent */}
+              {consosParPersonne.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+                  <StatCard
+                    label="Taille moyenne du foyer"
+                    value={round(avgNbPersonnes, 1)}
+                    unit="pers."
+                    sub={`${nbPersonnesArr.length} réponses`}
+                  />
+                  <StatCard
+                    label="Conso moyenne / personne"
+                    value={round(avgConsoParPersonne, 0)}
+                    unit="kWh/an"
+                    sub={`${consosParPersonne.length} foyers`}
+                  />
+                  <StatCard
+                    label="Conso médiane / personne"
+                    value={round(medConsoParPersonne, 0)}
+                    unit="kWh/an"
+                    sub="valeur centrale"
+                  />
+                </div>
+              )}
 
               <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 text-sm text-blue-800">
                 <strong>Repères belges :</strong> Un ménage moyen en Belgique consomme ~3 500 kWh/an.
@@ -537,7 +586,9 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
                         <tr className="bg-gray-100">
                           <th className="px-3 py-2 text-left">Élève</th>
                           <th className="px-3 py-2 text-left">Classe</th>
+                          <th className="px-3 py-2 text-right">Personnes</th>
                           <th className="px-3 py-2 text-right">Conso. ann. (kWh)</th>
+                          <th className="px-3 py-2 text-right">kWh/pers.</th>
                           <th className="px-3 py-2 text-center">Bihoraire</th>
                           <th className="px-3 py-2 text-right">Jour (kWh)</th>
                           <th className="px-3 py-2 text-right">Nuit (kWh)</th>
@@ -545,17 +596,24 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {factures.map((f, i) => (
-                          <tr key={i} className="border-t border-gray-100">
-                            <td className="px-3 py-1.5">{f.students ? `${f.students.prenom} ${f.students.nom}` : '–'}</td>
-                            <td className="px-3 py-1.5">{f.students?.classe ?? '–'}</td>
-                            <td className="px-3 py-1.5 text-right">{f.consommation_annuelle_kwh ?? '–'}</td>
-                            <td className="px-3 py-1.5 text-center">{f.bihoraire ? '✓' : ''}</td>
-                            <td className="px-3 py-1.5 text-right">{f.consommation_jour_kwh ?? '–'}</td>
-                            <td className="px-3 py-1.5 text-right">{f.consommation_nuit_kwh ?? '–'}</td>
-                            <td className="px-3 py-1.5 text-right">{f.prix_kwh ?? '–'}</td>
-                          </tr>
-                        ))}
+                        {factures.map((f, i) => {
+                          const consoParP = (f.consommation_annuelle_kwh != null && f.nb_personnes != null && f.nb_personnes > 0)
+                            ? Math.round(f.consommation_annuelle_kwh / f.nb_personnes)
+                            : null;
+                          return (
+                            <tr key={i} className="border-t border-gray-100">
+                              <td className="px-3 py-1.5">{f.students ? `${f.students.prenom} ${f.students.nom}` : '–'}</td>
+                              <td className="px-3 py-1.5">{f.students?.classe ?? '–'}</td>
+                              <td className="px-3 py-1.5 text-right">{f.nb_personnes ?? '–'}</td>
+                              <td className="px-3 py-1.5 text-right">{f.consommation_annuelle_kwh ?? '–'}</td>
+                              <td className="px-3 py-1.5 text-right">{consoParP ?? '–'}</td>
+                              <td className="px-3 py-1.5 text-center">{f.bihoraire ? '✓' : ''}</td>
+                              <td className="px-3 py-1.5 text-right">{f.consommation_jour_kwh ?? '–'}</td>
+                              <td className="px-3 py-1.5 text-right">{f.consommation_nuit_kwh ?? '–'}</td>
+                              <td className="px-3 py-1.5 text-right">{f.prix_kwh ?? '–'}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
