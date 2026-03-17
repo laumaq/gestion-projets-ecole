@@ -78,7 +78,7 @@ export default function FormulaireAppareil({ userId }: Props) {
       categorie: form.categorie,
       puissance_w: form.puissance_w ? parseFloat(form.puissance_w) : null,
       energie_kwh: form.energie_kwh ? parseFloat(form.energie_kwh) : null,
-      duree_mesure_min: form.source === 'wattmetre' && form.duree_mesure_min ? parseFloat(form.duree_mesure_min) : null,
+      duree_mesure_min: form.duree_mesure_min ? parseFloat(form.duree_mesure_min) : null,
       notes: form.notes.trim() || null,
     });
 
@@ -139,7 +139,12 @@ export default function FormulaireAppareil({ userId }: Props) {
                       </div>
                       <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-3">
                         {a.puissance_w != null && <span><strong>{a.puissance_w} W</strong></span>}
-                        {a.energie_kwh != null && <span><strong>{a.energie_kwh} kWh</strong>{a.duree_mesure_min ? ` / ${a.duree_mesure_min} min` : ''}</span>}
+                        {a.energie_kwh != null && (
+                          <span>
+                            <strong>{a.energie_kwh} kWh</strong>
+                            {a.duree_mesure_min ? ` / ${a.duree_mesure_min} min` : ''}
+                          </span>
+                        )}
                         {a.notes && <span className="italic text-gray-400">{a.notes}</span>}
                       </div>
                     </div>
@@ -235,7 +240,7 @@ export default function FormulaireAppareil({ userId }: Props) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Énergie mesurée (kWh)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Énergie consommée (kWh)</label>
               <input
                 type="number"
                 min="0"
@@ -248,21 +253,27 @@ export default function FormulaireAppareil({ userId }: Props) {
             </div>
           </div>
 
-          {/* Durée (wattmètre seulement) */}
-          {form.source === 'wattmetre' && (
+          {/* Durée — visible pour les deux sources si énergie renseignée */}
+          {form.energie_kwh && (
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Durée de mesure (minutes) <span className="text-gray-400 font-normal">– optionnel</span>
+                Durée correspondante (minutes)
+                <span className="text-gray-400 font-normal ml-1">– optionnel</span>
               </label>
               <input
                 type="number"
                 min="0"
                 step="1"
-                placeholder="ex : 5"
+                placeholder={form.source === 'wattmetre' ? 'ex : 5' : 'ex : 3 (pour faire bouillir)'}
                 value={form.duree_mesure_min}
                 onChange={e => setForm(f => ({ ...f, duree_mesure_min: e.target.value }))}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
+              <p className="text-xs text-gray-400 mt-1">
+                {form.source === 'wattmetre'
+                  ? 'Durée pendant laquelle tu as mesuré avec le wattmètre'
+                  : 'Durée d\'utilisation correspondant à l\'énergie trouvée (ex : temps de chauffe)'}
+              </p>
             </div>
           )}
 
