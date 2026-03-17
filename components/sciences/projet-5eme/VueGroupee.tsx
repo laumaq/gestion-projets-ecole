@@ -87,12 +87,151 @@ function MiniBar({ value, max, color = 'bg-blue-400' }: { value: number; max: nu
   );
 }
 
+// ── Normalisation nom appareil pour groupement ────────────────────────────────
+
+function normaliserNom(nom: string): string {
+  return nom.trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // retirer accents
+    .replace(/\s+/g, ' ');
+}
+
+// ── Formulaire d'édition inline appareil (enseignant) ─────────────────────────
+
+interface EditAppareilForm {
+  nom_appareil: string;
+  puissance_w: string;
+  energie_kwh: string;
+  duree_mesure_min: string;
+  notes: string;
+  source: 'wattmetre' | 'recherche';
+}
+
+function EditAppareilInline({
+  appareil,
+  onSave,
+  onCancel,
+}: {
+  appareil: Appareil;
+  onSave: (id: string, data: Partial<Appareil>) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [form, setForm] = useState<EditAppareilForm>({
+    nom_appareil: appareil.nom_appareil,
+    puissance_w: appareil.puissance_w?.toString() ?? '',
+    energie_kwh: appareil.energie_kwh?.toString() ?? '',
+    duree_mesure_min: appareil.duree_mesure_min?.toString() ?? '',
+    notes: appareil.notes ?? '',
+    source: appareil.source as 'wattmetre' | 'recherche',
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await onSave(appareil.id, {
+      nom_appareil: form.nom_appareil.trim(),
+      puissance_w: form.puissance_w ? parseFloat(form.puissance_w) : null,
+      energie_kwh: form.energie_kwh ? parseFloat(form.energie_kwh) : null,
+      duree_mesure_min: form.duree_mesure_min ? parseFloat(form.duree_mesure_min) : null,
+      notes: form.notes.trim() || null,
+      source: form.source,
+    });
+    setSaving(false);
+  };
+
+  return (
+    <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-3 space-y-2">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="col-span-2">
+          <label className="text-xs text-gray-500 mb-0.5 block">Nom</label>
+          <input
+            type="text"
+            value={form.nom_appareil}
+            onChange={e => setForm(f => ({ ...f, nom_appareil: e.target.value }))}
+            className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 mb-0.5 block">Puissance (W)</label>
+          <input
+            type="number" min="0" step="0.1"
+            value={form.puissance_w}
+            onChange={e => setForm(f => ({ ...f, puissance_w: e.target.value }))}
+            className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 mb-0.5 block">Énergie (kWh)</label>
+          <input
+            type="number" min="0" step="0.001"
+            value={form.energie_kwh}
+            onChange={e => setForm(f => ({ ...f, energie_kwh: e.target.value }))}
+            className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 mb-0.5 block">Durée (min)</label>
+          <input
+            type="number" min="0" step="1"
+            value={form.duree_mesure_min}
+            onChange={e => setForm(f => ({ ...f, duree_mesure_min: e.target.value }))}
+            className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 mb-0.5 block">Source</label>
+          <select
+            value={form.source}
+            onChange={e => setForm(f => ({ ...f, source: e.target.value as any }))}
+            className="w-full border border-gray-300 rounded px-2 py-1 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
+          >
+            <option value="wattmetre">⚡ Wattmètre</option>
+            <option value="recherche">🔍 Recherche</option>
+          </select>
+        </div>
+        <div className="col-span-2">
+          <label className="text-xs text-gray-500 mb-0.5 block">Notes</label>
+          <input
+            type="text"
+            value={form.notes}
+            onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+            className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+          />
+        </div>
+      </div>
+      <div className="flex gap-2 pt-1">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors disabled:opacity-60"
+        >
+          {saving ? '...' : '✓ Enregistrer'}
+        </button>
+        <button
+          onClick={onCancel}
+          className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
+        >
+          Annuler
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Vue par élève ──────────────────────────────────────────────────────────────
 
-function VueParEleve({ eleves }: { eleves: EleveData[] }) {
+function VueParEleve({
+  eleves,
+  isTeacher,
+  onUpdateAppareil,
+}: {
+  eleves: EleveData[];
+  isTeacher: boolean;
+  onUpdateAppareil: (id: string, data: Partial<Appareil>) => Promise<void>;
+}) {
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<'nom' | 'classe' | 'conso'>('classe');
+  const [editingAppareilId, setEditingAppareilId] = useState<string | null>(null);
 
   const filtered = eleves
     .filter(e => {
@@ -106,7 +245,6 @@ function VueParEleve({ eleves }: { eleves: EleveData[] }) {
     .sort((a, b) => {
       if (sortBy === 'nom') return a.nom.localeCompare(b.nom);
       if (sortBy === 'classe') return a.classe.localeCompare(b.classe) || a.nom.localeCompare(b.nom);
-      // tri par conso : les sans données à la fin
       const ca = a.facture?.consommation_annuelle_kwh ?? Infinity;
       const cb = b.facture?.consommation_annuelle_kwh ?? Infinity;
       return ca - cb;
@@ -188,7 +326,6 @@ function VueParEleve({ eleves }: { eleves: EleveData[] }) {
                 onClick={() => setExpanded(isOpen ? null : eleve.student_id)}
                 className="w-full flex items-center gap-4 px-4 py-3 bg-white hover:bg-gray-50 transition-colors text-left"
               >
-                {/* Indicateurs de complétion */}
                 <div className="flex gap-1.5 flex-shrink-0">
                   <span
                     className={`w-2.5 h-2.5 rounded-full ${f ? 'bg-blue-400' : 'bg-gray-200'}`}
@@ -199,16 +336,10 @@ function VueParEleve({ eleves }: { eleves: EleveData[] }) {
                     title={eleve.appareils.length > 0 ? `${eleve.appareils.length} appareil(s)` : 'Aucun appareil'}
                   />
                 </div>
-
-                {/* Nom + classe */}
                 <div className="flex-1 min-w-0">
-                  <span className="font-medium text-sm text-gray-800">
-                    {eleve.prenom} {eleve.nom}
-                  </span>
+                  <span className="font-medium text-sm text-gray-800">{eleve.prenom} {eleve.nom}</span>
                   <span className="ml-2 text-xs text-gray-400">{eleve.classe}</span>
                 </div>
-
-                {/* Résumé inline */}
                 <div className="flex items-center gap-4 text-xs text-gray-500 flex-shrink-0">
                   {f?.consommation_annuelle_kwh != null ? (
                     <span className="font-medium text-blue-600">{f.consommation_annuelle_kwh} kWh</span>
@@ -226,16 +357,12 @@ function VueParEleve({ eleves }: { eleves: EleveData[] }) {
 
                   {/* Facture */}
                   <div>
-                    <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
-                      📄 Facture
-                    </h4>
+                    <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">📄 Facture</h4>
                     {f ? (
                       <dl className="space-y-1.5">
                         <div className="flex justify-between text-sm">
                           <dt className="text-gray-500">Personnes dans le foyer</dt>
-                          <dd className="font-medium text-gray-800">
-                            {f.nb_personnes != null ? `${f.nb_personnes}` : '–'}
-                          </dd>
+                          <dd className="font-medium text-gray-800">{f.nb_personnes != null ? `${f.nb_personnes}` : '–'}</dd>
                         </div>
                         <div className="flex justify-between text-sm">
                           <dt className="text-gray-500">Conso. annuelle</dt>
@@ -292,28 +419,53 @@ function VueParEleve({ eleves }: { eleves: EleveData[] }) {
                       <p className="text-sm text-gray-400 italic">Aucun appareil renseigné.</p>
                     ) : (
                       <div className="space-y-2">
-                        {eleve.appareils.map((a, i) => (
-                          <div key={i} className="bg-white border border-gray-200 rounded-lg px-3 py-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-gray-800">{a.nom_appareil}</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                  a.source === 'wattmetre'
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-purple-100 text-purple-700'
-                                }`}>
-                                  {a.source === 'wattmetre' ? '⚡' : '🔍'}
-                                </span>
+                        {eleve.appareils.map((a) => (
+                          <div key={a.id}>
+                            {editingAppareilId === a.id && isTeacher ? (
+                              <EditAppareilInline
+                                appareil={a}
+                                onSave={async (id, data) => {
+                                  await onUpdateAppareil(id, data);
+                                  setEditingAppareilId(null);
+                                }}
+                                onCancel={() => setEditingAppareilId(null)}
+                              />
+                            ) : (
+                              <div className="bg-white border border-gray-200 rounded-lg px-3 py-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-sm font-medium text-gray-800">{a.nom_appareil}</span>
+                                    <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                      a.source === 'wattmetre'
+                                        ? 'bg-green-100 text-green-700'
+                                        : 'bg-purple-100 text-purple-700'
+                                    }`}>
+                                      {a.source === 'wattmetre' ? '⚡' : '🔍'}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {a.puissance_w != null && (
+                                      <span className="text-xs font-medium text-gray-600">{a.puissance_w} W</span>
+                                    )}
+                                    {isTeacher && (
+                                      <button
+                                        onClick={() => setEditingAppareilId(a.id)}
+                                        className="text-xs text-blue-500 hover:text-blue-700 ml-1"
+                                        title="Modifier"
+                                      >
+                                        ✎
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                  {CATEGORIES_ORDER.find(c => c.value === a.categorie)?.label ?? a.categorie}
+                                  {a.energie_kwh != null && ` · ${a.energie_kwh} kWh`}
+                                  {a.duree_mesure_min != null && ` / ${a.duree_mesure_min} min`}
+                                  {a.notes && ` · ${a.notes}`}
+                                </p>
                               </div>
-                              {a.puissance_w != null && (
-                                <span className="text-xs font-medium text-gray-600">{a.puissance_w} W</span>
-                              )}
-                            </div>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                              {CATEGORIES_ORDER.find(c => c.value === a.categorie)?.label ?? a.categorie}
-                              {a.energie_kwh != null && ` · ${a.energie_kwh} kWh`}
-                              {a.notes && ` · ${a.notes}`}
-                            </p>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -350,59 +502,61 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
   const [eleves, setEleves] = useState<EleveData[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const loadAll = async () => {
+    const [fRes, aRes] = await Promise.all([
+      supabase
+        .from('cite_factures')
+        .select('*, students(nom, prenom, classe, niveau)')
+        .order('consommation_annuelle_kwh', { ascending: true }),
+      supabase
+        .from('cite_appareils')
+        .select('*, students(nom, prenom, classe)')
+        .order('puissance_w', { ascending: false }),
+    ]);
+
+    const facturesData: Facture[] = fRes.data ?? [];
+    const appareilsData: Appareil[] = aRes.data ?? [];
+
+    setFactures(facturesData);
+    setAppareils(appareilsData);
+
+    const allIds = new Set<number>([
+      ...facturesData.map(f => f.student_id),
+      ...appareilsData.map(a => a.student_id),
+    ]);
+
+    const factureMap = new Map(facturesData.map(f => [f.student_id, f]));
+    const appareilsMap = new Map<number, Appareil[]>();
+    appareilsData.forEach(a => {
+      if (!appareilsMap.has(a.student_id)) appareilsMap.set(a.student_id, []);
+      appareilsMap.get(a.student_id)!.push(a);
+    });
+
+    const elevesData: EleveData[] = Array.from(allIds).map(id => {
+      const f = factureMap.get(id) ?? null;
+      const apps = appareilsMap.get(id) ?? [];
+      const studentInfo = f?.students ?? apps[0]?.students ?? null;
+      return {
+        student_id: id,
+        nom: studentInfo?.nom ?? '?',
+        prenom: studentInfo?.prenom ?? '?',
+        classe: studentInfo?.classe ?? '?',
+        facture: f,
+        appareils: apps,
+      };
+    }).sort((a, b) => a.classe.localeCompare(b.classe) || a.nom.localeCompare(b.nom));
+
+    setEleves(elevesData);
+  };
+
   useEffect(() => {
-    const load = async () => {
-      const [fRes, aRes] = await Promise.all([
-        supabase
-          .from('cite_factures')
-          .select('*, students(nom, prenom, classe, niveau)')
-          .order('consommation_annuelle_kwh', { ascending: true }),
-        supabase
-          .from('cite_appareils')
-          .select('*, students(nom, prenom, classe)')
-          .order('puissance_w', { ascending: false }),
-      ]);
-
-      const facturesData: Facture[] = fRes.data ?? [];
-      const appareilsData: Appareil[] = aRes.data ?? [];
-
-      setFactures(facturesData);
-      setAppareils(appareilsData);
-
-      // Reconstituer la liste par élève
-      // On consolide tous les student_id connus (factures + appareils)
-      const allIds = new Set<number>([
-        ...facturesData.map(f => f.student_id),
-        ...appareilsData.map(a => a.student_id),
-      ]);
-
-      const factureMap = new Map(facturesData.map(f => [f.student_id, f]));
-      const appareilsMap = new Map<number, Appareil[]>();
-      appareilsData.forEach(a => {
-        if (!appareilsMap.has(a.student_id)) appareilsMap.set(a.student_id, []);
-        appareilsMap.get(a.student_id)!.push(a);
-      });
-
-      const elevesData: EleveData[] = Array.from(allIds).map(id => {
-        const f = factureMap.get(id) ?? null;
-        const apps = appareilsMap.get(id) ?? [];
-        // Récupérer le nom depuis la facture ou le premier appareil
-        const studentInfo = f?.students ?? apps[0]?.students ?? null;
-        return {
-          student_id: id,
-          nom: studentInfo?.nom ?? '?',
-          prenom: studentInfo?.prenom ?? '?',
-          classe: studentInfo?.classe ?? '?',
-          facture: f,
-          appareils: apps,
-        };
-      }).sort((a, b) => a.classe.localeCompare(b.classe) || a.nom.localeCompare(b.nom));
-
-      setEleves(elevesData);
-      setLoading(false);
-    };
-    load();
+    loadAll().then(() => setLoading(false));
   }, []);
+
+  const handleUpdateAppareil = async (id: string, data: Partial<Appareil>) => {
+    await supabase.from('cite_appareils').update(data).eq('id', id);
+    await loadAll();
+  };
 
   if (loading) return <div className="text-gray-400 text-sm">Chargement des données...</div>;
 
@@ -647,58 +801,104 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
                   const avgP = getCatAvgPower(items);
                   const withPower = items.filter(i => i.puissance_w != null);
 
+                  // Sous-grouper par nom normalisé
+                  const parNom: Record<string, Appareil[]> = {};
+                  items.forEach(a => {
+                    const key = normaliserNom(a.nom_appareil);
+                    if (!parNom[key]) parNom[key] = [];
+                    parNom[key].push(a);
+                  });
+                  // Trier les groupes par nombre décroissant d'entrées
+                  const nomGroupes = Object.entries(parNom).sort((a, b) => b[1].length - a[1].length);
+
                   return (
                     <div key={cat.value} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      {/* En-tête catégorie */}
                       <div className="bg-gray-50 px-4 py-3 flex items-center justify-between">
                         <div>
                           <span className="font-semibold text-gray-800">{cat.label}</span>
-                          <span className="ml-2 text-xs text-gray-400">{items.length} mesure{items.length > 1 ? 's' : ''}</span>
+                          <span className="ml-2 text-xs text-gray-400">
+                            {items.length} mesure{items.length > 1 ? 's' : ''} · {nomGroupes.length} type{nomGroupes.length > 1 ? 's' : ''}
+                          </span>
                         </div>
                         {avgP != null && (
                           <span className="text-sm font-medium text-gray-600">
-                            moy. <strong>{Math.round(avgP)} W</strong>
+                            moy. cat. <strong>{Math.round(avgP)} W</strong>
                           </span>
                         )}
                       </div>
 
-                      <div className="divide-y divide-gray-50">
-                        {items.map((a, i) => (
-                          <div key={i} className="px-4 py-2.5">
-                            <div className="flex items-center justify-between mb-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm text-gray-800">{a.nom_appareil}</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                  a.source === 'wattmetre'
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-purple-100 text-purple-700'
-                                }`}>
-                                  {a.source === 'wattmetre' ? '⚡' : '🔍'}
-                                </span>
-                                {isTeacher && a.students && (
-                                  <span className="text-xs text-gray-400">
-                                    {a.students.prenom} {a.students.nom} · {a.students.classe}
+                      {/* Sous-groupes par nom */}
+                      <div className="divide-y divide-gray-100">
+                        {nomGroupes.map(([nomKey, entries]) => {
+                          const puissances = entries.map(e => e.puissance_w).filter((v): v is number => v != null);
+                          const avgNomP = avg(puissances);
+                          const minP = puissances.length ? Math.min(...puissances) : null;
+                          const maxP = puissances.length ? Math.max(...puissances) : null;
+                          const medP = median(puissances);
+                          // Nom affiché = première entrée (casse originale)
+                          const nomAffiche = entries[0].nom_appareil;
+                          const isMultiple = entries.length > 1;
+
+                          return (
+                            <div key={nomKey} className="px-4 py-3">
+                              {/* Ligne nom + stats */}
+                              <div className="flex items-start justify-between gap-3 mb-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-medium text-gray-800">{nomAffiche}</span>
+                                  {isMultiple && (
+                                    <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full">
+                                      {entries.length}×
+                                    </span>
+                                  )}
+                                  {/* badges sources */}
+                                  {Array.from(new Set(entries.map(e => e.source))).map(s => (
+                                    <span key={s} className={`text-xs px-1.5 py-0.5 rounded ${
+                                      s === 'wattmetre' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
+                                    }`}>
+                                      {s === 'wattmetre' ? '⚡' : '🔍'}
+                                    </span>
+                                  ))}
+                                  {isTeacher && (
+                                    <span className="text-xs text-gray-400">
+                                      {entries.map(e => e.students?.classe).filter(Boolean).join(', ')}
+                                    </span>
+                                  )}
+                                </div>
+                                {avgNomP != null && (
+                                  <span className="text-xs font-semibold text-gray-700 flex-shrink-0">
+                                    {isMultiple ? `moy. ${Math.round(avgNomP)} W` : `${Math.round(avgNomP)} W`}
                                   </span>
                                 )}
                               </div>
-                              <div className="text-xs text-gray-500 flex gap-3">
-                                {a.energie_kwh != null && (
-                                  <span>{a.energie_kwh} kWh{a.duree_mesure_min ? `/${a.duree_mesure_min}min` : ''}</span>
-                                )}
-                              </div>
+
+                              {/* Barre de puissance moyenne */}
+                              {avgNomP != null && (
+                                <MiniBar value={Math.round(avgNomP)} max={maxPower} color="bg-orange-300" />
+                              )}
+
+                              {/* Stats détaillées si plusieurs entrées */}
+                              {isMultiple && puissances.length > 1 && (
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Min {minP} W · Max {maxP} W · Médiane {round(medP, 0)} W
+                                </p>
+                              )}
+
+                              {/* Notes diverses */}
+                              {entries.some(e => e.notes) && (
+                                <p className="text-xs text-gray-400 italic mt-0.5">
+                                  {entries.filter(e => e.notes).map(e => e.notes).join(' · ')}
+                                </p>
+                              )}
                             </div>
-                            {a.puissance_w != null && (
-                              <MiniBar value={a.puissance_w} max={maxPower} />
-                            )}
-                            {a.notes && (
-                              <p className="text-xs text-gray-400 italic mt-1">{a.notes}</p>
-                            )}
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
+                      {/* Synthèse catégorie */}
                       {withPower.length > 1 && (
                         <div className="bg-gray-50 px-4 py-2 text-xs text-gray-500 border-t border-gray-100">
-                          Min : {Math.min(...withPower.map(i => i.puissance_w!))} W ·
+                          Catégorie — Min : {Math.min(...withPower.map(i => i.puissance_w!))} W ·
                           Max : {Math.max(...withPower.map(i => i.puissance_w!))} W ·
                           Médiane : {round(median(withPower.map(i => i.puissance_w!)), 0)} W
                         </div>
@@ -707,6 +907,7 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
                   );
                 })}
 
+                {/* Catégories hors liste */}
                 {Object.keys(grouped)
                   .filter(k => !CATEGORIES_ORDER.find(c => c.value === k))
                   .map(cat => {
@@ -736,7 +937,7 @@ export default function VueGroupee({ isTeacher }: { isTeacher: boolean }) {
 
       {/* ===== PAR ÉLÈVE (enseignant uniquement) ===== */}
       {tab === 'eleves' && isTeacher && (
-        <VueParEleve eleves={eleves} />
+        <VueParEleve eleves={eleves} isTeacher={isTeacher} onUpdateAppareil={handleUpdateAppareil} />
       )}
     </div>
   );
