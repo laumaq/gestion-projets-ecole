@@ -701,6 +701,82 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
       </div>
 
       {/* Professeurs */}
+
+      {/* Encart "Mes informations" — visible pour tous les employees participants */}
+      {isEmployee && (() => {
+        const selfProf = professeursParticipants.find(p => p.professeur_id === userId);
+        if (!selfProf) return null;
+        return (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-blue-800">👤 Mes informations personnelles</h3>
+              {!editingSelfProf ? (
+                <button
+                  onClick={() => {
+                    setSelfDraft({
+                      date_naissance: selfProf.professeur.date_naissance?.split('T')[0] ?? '',
+                      nationalite: selfProf.professeur.nationalite ?? '',
+                    });
+                    setEditingSelfProf(true);
+                  }}
+                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                >
+                  ✎ Modifier
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button onClick={saveSelfProf} className="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">✓ Enregistrer</button>
+                  <button onClick={() => setEditingSelfProf(false)} className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300">Annuler</button>
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs text-blue-600 font-medium mb-1">Date de naissance</p>
+                {editingSelfProf ? (
+                  <input
+                    type="date"
+                    value={selfDraft.date_naissance}
+                    onChange={e => setSelfDraft(d => ({ ...d, date_naissance: e.target.value }))}
+                    className="w-full border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-700">
+                    {selfProf.professeur.date_naissance
+                      ? new Date(selfProf.professeur.date_naissance).toLocaleDateString('fr-BE')
+                      : <span className="text-gray-400 italic">Non renseignée</span>}
+                  </p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-blue-600 font-medium mb-1">Nationalité</p>
+                {editingSelfProf ? (
+                  <input
+                    type="text"
+                    value={selfDraft.nationalite}
+                    onChange={e => setSelfDraft(d => ({ ...d, nationalite: e.target.value }))}
+                    placeholder="ex : Belge"
+                    className="w-full border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-700">
+                    {selfProf.professeur.nationalite || <span className="text-gray-400 italic">Non renseignée</span>}
+                  </p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-blue-600 font-medium mb-1">Régime alimentaire</p>
+                <RegimeCell
+                  regime={parseRegime(selfProf.professeur.regime_alimentaire)}
+                  canEdit={true}
+                  onUpdate={r => updateRegimeProf(userId, r)}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {professeursParticipants.length > 0 && (
         <div className="bg-white rounded-lg border overflow-x-auto">
           <div className="grid gap-4 p-4 bg-purple-50 font-medium text-sm text-gray-700 border-b"
