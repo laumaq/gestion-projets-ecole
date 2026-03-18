@@ -407,9 +407,17 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
   const [classesDisponibles, setClassesDisponibles] = useState<string[]>([]);
   const [loadingClasses, setLoadingClasses] = useState(false);
   const [selectedProfRole, setSelectedProfRole] = useState('accompagnateur');
+  const [userId, setUserId] = useState<string>('');
+  const [editingSelfProf, setEditingSelfProf] = useState(false);
+  const [selfDraft, setSelfDraft] = useState({ date_naissance: '', nationalite: '' });
 
   const canEdit = userType === 'employee' && isResponsable;
   const isEmployee = userType === 'employee';
+
+  useEffect(() => {
+    const id = localStorage.getItem('userId') ?? '';
+    setUserId(id);
+  }, []);
 
   useEffect(() => { loadParticipants(); loadProfesseursParticipants(); }, [voyageId]);
 
@@ -518,6 +526,20 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
     setProfesseursParticipants(prev => prev.map(p =>
       p.professeur_id === employeeId ? { ...p, professeur: { ...p.professeur, regime_alimentaire: regime } } : p
     ));
+  };
+
+  const saveSelfProf = async () => {
+    const payload: Record<string, string | null> = {
+      date_naissance: selfDraft.date_naissance || null,
+      nationalite: selfDraft.nationalite || null,
+    };
+    await supabase.from('employees').update(payload).eq('id', userId);
+    setProfesseursParticipants(prev => prev.map(p =>
+      p.professeur_id === userId
+        ? { ...p, professeur: { ...p.professeur, ...payload } }
+        : p
+    ));
+    setEditingSelfProf(false);
   };
 
   // ── Autres actions ────────────────────────────────────────────────────────
@@ -689,10 +711,15 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
             {isEmployee && <div>Régime alimentaire</div>}
             <div />
           </div>
-          {professeursParticipants.map(prof => (
-            <div key={prof.id} className="grid gap-4 p-4 border-b hover:bg-gray-50 items-center"
+          {professeursParticipants.map(prof => {
+            const isSelf = prof.professeur_id === userId;
+            return (
+            <div key={prof.id} className={`grid gap-4 p-4 border-b hover:bg-gray-50 items-center ${isSelf ? 'bg-blue-50' : ''}`}
               style={{ gridTemplateColumns: colsProf }}>
-              <div className="font-medium">{prof.professeur.prenom} {prof.professeur.nom}</div>
+              <div className="font-medium flex items-center gap-2">
+                {prof.professeur.prenom} {prof.professeur.nom}
+                {isSelf && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">vous</span>}
+              </div>
               <div>
                 {canEdit ? (
                   <select value={prof.role} onChange={e => updateProfRole(prof.id, e.target.value)} className="text-sm border rounded px-2 py-1">
@@ -716,12 +743,37 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
               </div>
               {isResponsable && (
                 <>
+                  {/* Date de naissance — éditable uniquement sur sa propre ligne */}
                   <div className="text-sm text-gray-600">
-                    {prof.professeur.date_naissance
-                      ? new Date(prof.professeur.date_naissance).toLocaleDateString('fr-BE')
-                      : '–'}
+                    {isSelf && editingSelfProf ? (
+                      <input
+                        type="date"
+                        value={selfDraft.date_naissance}
+                        onChange={e => setSelfDraft(d => ({ ...d, date_naissance: e.target.value }))}
+                        className="border border-gray-300 rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+                      />
+                    ) : (
+                      <span>
+                        {prof.professeur.date_naissance
+                          ? new Date(prof.professeur.date_naissance).toLocaleDateString('fr-BE')
+                          : '–'}
+                      </span>
+                    )}
                   </div>
-                  <div className="text-sm text-gray-600">{prof.professeur.nationalite ?? '–'}</div>
+                  {/* Nationalité — éditable uniquement sur sa propre ligne */}
+                  <div className="text-sm text-gray-600">
+                    {isSelf && editingSelfProf ? (
+                      <input
+                        type="text"
+                        value={selfDraft.nationalite}
+                        onChange={e => setSelfDraft(d => ({ ...d, nationalite: e.target.value }))}
+                        placeholder="ex : Belge"
+                        className="border border-gray-300 rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 w-full"
+                      />
+                    ) : (
+                      <span>{prof.professeur.nationalite ?? '–'}</span>
+                    )}
+                  </div>
                 </>
               )}
               {isEmployee && (
@@ -731,13 +783,36 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
                   onUpdate={r => updateRegimeProf(prof.professeur_id, r)}
                 />
               )}
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-2">
+                {/* Bouton édition infos perso — visible uniquement sur sa propre ligne */}
+                {isSelf && isResponsable && !editingSelfProf && (
+                  <button
+                    onClick={() => {
+                      setSelfDraft({
+                        date_naissance: prof.professeur.date_naissance?.split('T')[0] ?? '',
+                        nationalite: prof.professeur.nationalite ?? '',
+                      });
+                      setEditingSelfProf(true);
+                    }}
+                    className="text-blue-500 hover:text-blue-700 text-xs"
+                    title="Modifier mes infos"
+                  >
+                    ✎
+                  </button>
+                )}
+                {isSelf && editingSelfProf && (
+                  <>
+                    <button onClick={saveSelfProf} className="text-green-600 hover:text-green-800 text-xs font-medium">✓</button>
+                    <button onClick={() => setEditingSelfProf(false)} className="text-gray-400 hover:text-gray-600 text-xs">✕</button>
+                  </>
+                )}
                 {canEdit && (
                   <button onClick={() => removeParticipant(prof as any)} className="text-red-500 hover:text-red-700 text-sm">Retirer</button>
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
