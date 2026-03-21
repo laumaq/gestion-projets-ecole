@@ -7,21 +7,20 @@ import { supabase } from '@/lib/supabase';
 import { FICHES_OUTILS, FICHE_COLOR_MAP } from '@/lib/sciences/fiches-outils/registry';
 import { computeStatut, FicheStatut, STATUT_LABELS, STATUT_COLORS } from '@/lib/sciences/fiches-outils/attribution';
 
-interface Cibles {
-  classes: string[];
-  groupes: string[];
-}
+const ALLOWED_USER_ID = '52793bea-994a-4b50-b768-75427df4747b'; // ← adapter si besoin
+
+interface Cibles { classes: string[]; groupes: string[]; }
 
 interface Experience {
+  id: string; nom: string; description: string; classe: string;
+  cibles: Cibles | null; created_at: string; statut: string; config: any;
+  _count?: { mesures: number };
+}
+
+interface ProjetActif {
   id: string;
   nom: string;
-  description: string;
-  classe: string;
-  cibles: Cibles | null;
-  created_at: string;
-  statut: string;
-  config: any;
-  _count?: { mesures: number };
+  description: string | null;
 }
 
 export default function SciencesPage() {
@@ -34,6 +33,7 @@ export default function SciencesPage() {
   const [userLevel, setUserLevel] = useState('');
   const [hasCiteAccess, setHasCiteAccess] = useState(false);
   const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [mesProjets, setMesProjets] = useState<ProjetActif[]>([]);
   const [loading, setLoading] = useState(true);
   const [fichesStatuts, setFichesStatuts] = useState<Record<string, FicheStatut>>({});
 
@@ -67,30 +67,39 @@ export default function SciencesPage() {
         chargerExperiencesProf(id);
       } else {
         if (level.startsWith('5')) setHasCiteAccess(true);
-        chargerExperiencesEleve(parseInt(id), classe || '');
-        chargerFichesStatuts(parseInt(id));
+        const mat = parseInt(id);
+        chargerExperiencesEleve(mat, classe || '');
+        chargerFichesStatuts(mat);
+        chargerMesProjets(mat); // ← nouveau
       }
     };
     init();
   }, [router]);
 
-  // ── Statuts fiches pour l'élève ───────────────────────────
+  // ── Projets actifs pour l'élève (dashboard = 'sciences') ──
+  const chargerMesProjets = async (matricule: number) => {
+    const { data } = await supabase
+      .from('projet_eleves')
+      .select('projet_id, projets(id, nom, description, dashboard, statut)')
+      .eq('matricule', matricule);
+
+    const accessibles = (data || [])
+      .map((r: any) => r.projets)
+      .filter((p: any) => p && p.statut === 'actif' && p.dashboard === 'sciences');
+
+    setMesProjets(accessibles);
+  };
+
   const chargerFichesStatuts = async (matricule: number) => {
     const { data } = await supabase
-      .from('fiches_outils_progression')
-      .select('*')
-      .eq('student_id', matricule)
-      .maybeSingle();
+      .from('fiches_outils_progression').select('*').eq('student_id', matricule).maybeSingle();
     if (!data) return;
     const row = data as unknown as Record<string, string | null>;
     const statuts: Record<string, FicheStatut> = {};
-    for (const f of FICHES_OUTILS) {
-      statuts[f.key] = computeStatut(row, f.key);
-    }
+    for (const f of FICHES_OUTILS) statuts[f.key] = computeStatut(row, f.key);
     setFichesStatuts(statuts);
   };
 
-  // ── Chargement prof ───────────────────────────────────────
   const chargerExperiencesProf = async (id: string) => {
     try {
       setLoading(true);
@@ -107,7 +116,6 @@ export default function SciencesPage() {
     } finally { setLoading(false); }
   };
 
-  // ── Chargement élève ──────────────────────────────────────
   const chargerExperiencesEleve = async (matricule: number, classe: string) => {
     try {
       setLoading(true);
@@ -140,9 +148,6 @@ export default function SciencesPage() {
     return `${parts.slice(0, 2).join(', ')} +${parts.length - 2}`;
   };
 
-  // Fiches à afficher dans le dashboard :
-  // - élève : uniquement les fiches attribuées
-  // - enseignant : toutes les fiches disponibles (accès direct)
   const fichesVisibles = FICHES_OUTILS.filter(f =>
     userType === 'employee' || fichesStatuts[f.key] !== 'not_attributed'
   );
@@ -152,9 +157,7 @@ export default function SciencesPage() {
 
       {/* Bannière */}
       <div className="mb-8 bg-gradient-to-r from-green-500 to-teal-600 rounded-lg p-6 text-white">
-        <h2 className="text-xl font-semibold mb-2">
-          Bonjour {userName || 'utilisateur'} !
-        </h2>
+        <h2 className="text-xl font-semibold mb-2">Bonjour {userName || 'utilisateur'} !</h2>
         <p>
           {userType === 'employee'
             ? 'Espace sciences — Créez et gérez vos expériences collaboratives'
@@ -184,6 +187,27 @@ export default function SciencesPage() {
               </div>
             </div>
           </Link>
+
+          {/* Lancement de projets — prof Laurent uniquement */}
+          {userType === 'employee' && userId === ALLOWED_USER_ID && (
+            <Link href="/tools/projets" className="block h-full">
+              <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-indigo-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">Lancement de projets</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
+                    Gérer les Sessions Parlementaires
+                  </p>
+                </div>
+              </div>
+            </Link>
+          )}
 
           {userType === 'employee' && (
             <Link href="/tools/sciences/nouvelle-experience" className="block h-full">
@@ -219,13 +243,9 @@ export default function SciencesPage() {
         </div>
 
         {userType === 'student' && fichesVisibles.length === 0 ? (
-          <p className="text-sm text-gray-400 italic">
-            Aucune fiche-outil attribuée pour l'instant.
-          </p>
+          <p className="text-sm text-gray-400 italic">Aucune fiche-outil attribuée pour l'instant.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-
-            {/* Carte d'accès au panneau pour l'enseignant */}
             {userType === 'employee' && (
               <Link href="/tools/sciences/fiches-outils" className="block h-full">
                 <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-purple-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
@@ -246,8 +266,6 @@ export default function SciencesPage() {
                 </div>
               </Link>
             )}
-
-            {/* Fiches disponibles */}
             {fichesVisibles.map(fiche => {
               const c = FICHE_COLOR_MAP[fiche.color];
               const statut: FicheStatut = userType === 'employee' ? 'attributed' : (fichesStatuts[fiche.key] ?? 'not_attributed');
@@ -289,10 +307,42 @@ export default function SciencesPage() {
         )}
       </div>
 
-      {/* Mes projets */}
+      {/* Mes projets sciences (élèves seulement) */}
+      {userType === 'student' && mesProjets.length > 0 && (
+        <div className="mb-12">
+          <h2 className="text-lg font-semibold text-gray-700 mb-4">Mes projets</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {mesProjets.map(projet => (
+              <Link key={projet.id} href={`/tools/projets/${projet.id}/eleve`} className="block h-full">
+                <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-indigo-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-base">🏛️</span>
+                      </div>
+                      <h3 className="text-base font-medium text-gray-900 line-clamp-1 group-hover:line-clamp-none">
+                        {projet.nom}
+                      </h3>
+                    </div>
+                    {projet.description && (
+                      <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
+                        {projet.description}
+                      </p>
+                    )}
+                  </div>
+                  <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full w-fit">
+                    Projet actif
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Mes projets scientifiques (expériences) */}
       <div>
         <h2 className="text-lg font-semibold text-gray-700 mb-4">Mes projets</h2>
-
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
@@ -300,11 +350,6 @@ export default function SciencesPage() {
           </div>
         ) : !hasCiteAccess && experiences.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
-            </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               {userType === 'employee' ? 'Aucune expérience créée' : 'Aucune expérience en cours'}
             </h3>
@@ -316,7 +361,6 @@ export default function SciencesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
             {hasCiteAccess && (
               <Link href="/tools/sciences/projet-5eme" className="block h-full">
                 <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-teal-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
@@ -332,16 +376,13 @@ export default function SciencesPage() {
                 </div>
               </Link>
             )}
-
             {experiences.map((exp) => (
               <Link key={exp.id} href={`/tools/sciences/experiences/${exp.id}`} className="block h-full">
                 <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-green-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          {expIcon}
-                        </svg>
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">{expIcon}</svg>
                       </div>
                       <h3 className="text-lg font-medium text-gray-900 leading-snug line-clamp-1 group-hover:line-clamp-none">{exp.nom}</h3>
                       <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full ml-2 flex-shrink-0 max-w-[120px] truncate" title={resumeCibles(exp)}>

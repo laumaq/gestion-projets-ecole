@@ -1,4 +1,3 @@
-// app/dashboard/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import AGStatusBadge from '@/components/ag/AGStatusBadge';
+
+const ALLOWED_USER_ID = '52793bea-994a-4b50-b768-75427df4747b'; // ← adapter si besoin
 
 interface Voyage {
   id: string;
@@ -16,12 +17,19 @@ interface Voyage {
   statut: string;
 }
 
+interface ProjetActif {
+  id: string;
+  nom: string;
+  description: string | null;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [userType, setUserType] = useState<'employee' | 'student'>('employee');
   const [userId, setUserId] = useState('');
   const [userJob, setUserJob] = useState('');
   const [mesVoyages, setMesVoyages] = useState<Voyage[]>([]);
+  const [mesProjets, setMesProjets] = useState<ProjetActif[]>([]);
   const [loading, setLoading] = useState(true);
   const [agStatut, setAgStatut] = useState<'pas_ag' | 'preparation' | 'planning_etabli'>('pas_ag');
 
@@ -30,10 +38,7 @@ export default function DashboardPage() {
     const id = localStorage.getItem('userId');
     const job = localStorage.getItem('userJob');
 
-    if (!type || !id) {
-      router.push('/');
-      return;
-    }
+    if (!type || !id) { router.push('/'); return; }
 
     setUserType(type);
     setUserId(id);
@@ -41,6 +46,10 @@ export default function DashboardPage() {
 
     chargerMesVoyages(type, id);
     chargerStatutAG();
+
+    if (type === 'student') {
+      chargerMesProjets(parseInt(id));
+    }
   }, [router]);
 
   const chargerStatutAG = async () => {
@@ -51,77 +60,51 @@ export default function DashboardPage() {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-
-      if (ag) {
-        setAgStatut(ag.statut);
-      }
+      if (ag) setAgStatut(ag.statut);
     } catch (error) {
       console.error('Erreur chargement statut AG:', error);
     }
   };
 
+  // ── Projets actifs pour l'élève (dashboard = 'principal') ──
+  const chargerMesProjets = async (matricule: number) => {
+    const { data } = await supabase
+      .from('projet_eleves')
+      .select('projet_id, projets(id, nom, description, dashboard, statut)')
+      .eq('matricule', matricule);
+
+    const accessibles = (data || [])
+      .map((r: any) => r.projets)
+      .filter((p: any) => p && p.statut === 'actif' && p.dashboard === 'principal');
+
+    setMesProjets(accessibles);
+  };
+
   const chargerMesVoyages = async (type: string, id: string) => {
     try {
       setLoading(true);
-      
       if (type === 'employee') {
         const { data: voyagesProf, error } = await supabase
           .from('voyage_professeurs')
-          .select(`
-            voyage_id,
-            voyages:voyage_id (
-              id,
-              nom,
-              destination,
-              date_debut,
-              date_fin,
-              statut
-            )
-          `)
+          .select(`voyage_id, voyages:voyage_id (id, nom, destination, date_debut, date_fin, statut)`)
           .eq('professeur_id', id);
-
-        if (error) {
-          console.error('Erreur Supabase:', error);
-          setMesVoyages([]);
-        } else if (voyagesProf) {
+        if (error) { setMesVoyages([]); }
+        else if (voyagesProf) {
           const voyages = voyagesProf
             .map((item: any) => item.voyages)
-            .filter((voyage): voyage is Voyage => 
-              voyage !== null && 
-              typeof voyage === 'object' &&
-              'id' in voyage &&
-              'nom' in voyage
-            );
+            .filter((v: any): v is Voyage => v !== null && typeof v === 'object' && 'id' in v);
           setMesVoyages(voyages);
         }
       } else {
         const { data: voyagesEleve, error } = await supabase
           .from('voyage_participants')
-          .select(`
-            voyage_id,
-            voyages:voyage_id (
-              id,
-              nom,
-              destination,
-              date_debut,
-              date_fin,
-              statut
-            )
-          `)
+          .select(`voyage_id, voyages:voyage_id (id, nom, destination, date_debut, date_fin, statut)`)
           .eq('eleve_id', parseInt(id));
-
-        if (error) {
-          console.error('Erreur Supabase:', error);
-          setMesVoyages([]);
-        } else if (voyagesEleve) {
+        if (error) { setMesVoyages([]); }
+        else if (voyagesEleve) {
           const voyages = voyagesEleve
             .map((item: any) => item.voyages)
-            .filter((voyage): voyage is Voyage => 
-              voyage !== null && 
-              typeof voyage === 'object' &&
-              'id' in voyage &&
-              'nom' in voyage
-            );
+            .filter((v: any): v is Voyage => v !== null && typeof v === 'object' && 'id' in v);
           setMesVoyages(voyages);
         }
       }
@@ -135,7 +118,8 @@ export default function DashboardPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Bannière de bienvenue personnalisée */}
+
+      {/* Bannière */}
       <div className="mb-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
         <h2 className="text-xl font-semibold mb-2">
           Bonjour {localStorage.getItem('userName') || 'utilisateur'} !
@@ -143,7 +127,7 @@ export default function DashboardPage() {
         <p>Bienvenue sur votre espace pédagogique.</p>
       </div>
 
-      {/* Outils généraux */}
+      {/* ── Outils disponibles ── */}
       <div className="mb-12">
         <h2 className="text-lg font-semibold text-gray-700 mb-4">Outils disponibles</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -168,12 +152,32 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-          {/* Assemblée Générale - Prof only */}
+          {/* Lancement de projets — prof Laurent uniquement */}
+          {userType === 'employee' && userId === ALLOWED_USER_ID && (
+            <Link href="/tools/projets" className="block h-full">
+              <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-indigo-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">Lancement de projets</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
+                    Sessions Parlementaires et projets pédagogiques
+                  </p>
+                </div>
+                <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full w-fit">Nouveau !</span>
+              </div>
+            </Link>
+          )}
+
+          {/* Assemblée Générale */}
           {userType === 'employee' && (agStatut !== 'pas_ag' || userJob === 'direction') && (
             <Link href="/tools/ag" className="block h-full">
-              <div className={`h-40 bg-white rounded-lg shadow-sm border-2 border-blue-300 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group ${
-                agStatut === 'pas_ag' ? 'opacity-60' : ''
-              }`}>
+              <div className={`h-40 bg-white rounded-lg shadow-sm border-2 border-blue-300 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group ${agStatut === 'pas_ag' ? 'opacity-60' : ''}`}>
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -194,7 +198,7 @@ export default function DashboardPage() {
             </Link>
           )}
 
-          {/* Groupe de Travail - Prof only */}
+          {/* Groupe de Travail */}
           {userType === 'employee' && userJob === 'prof' && (
             <Link href="/tools/projet-5eme" className="block h-full">
               <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-purple-300 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
@@ -244,8 +248,40 @@ export default function DashboardPage() {
           </div>
 
         </div>
-
       </div>
+
+      {/* ── Mes projets (élèves seulement, projets dashboard=principal) ── */}
+      {userType === 'student' && mesProjets.length > 0 && (
+        <div className="mb-12">
+          <h2 className="text-lg font-semibold text-gray-700 mb-4">Mes projets</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {mesProjets.map(projet => (
+              <Link key={projet.id} href={`/tools/projets/${projet.id}/eleve`} className="block h-full">
+                <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-indigo-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-base">🏛️</span>
+                      </div>
+                      <h3 className="text-base font-medium text-gray-900 line-clamp-1 group-hover:line-clamp-none">
+                        {projet.nom}
+                      </h3>
+                    </div>
+                    {projet.description && (
+                      <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
+                        {projet.description}
+                      </p>
+                    )}
+                  </div>
+                  <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full w-fit">
+                    Projet actif
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Mes voyages */}
       {mesVoyages.length > 0 && (
@@ -256,11 +292,7 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {mesVoyages.map((voyage) => (
-                <Link 
-                  key={voyage.id} 
-                  href={`/tools/voyages/${voyage.id}`}
-                  className="block"
-                >
+                <Link key={voyage.id} href={`/tools/voyages/${voyage.id}`} className="block">
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="text-lg font-medium text-gray-900">{voyage.nom}</h3>
@@ -274,7 +306,8 @@ export default function DashboardPage() {
                     </div>
                     <p className="text-sm text-gray-600 mb-2">{voyage.destination}</p>
                     <p className="text-xs text-gray-500">
-                      {new Date(voyage.date_debut).toLocaleDateString('fr-FR')} - {new Date(voyage.date_fin).toLocaleDateString('fr-FR')}
+                      {new Date(voyage.date_debut).toLocaleDateString('fr-FR')} -{' '}
+                      {new Date(voyage.date_fin).toLocaleDateString('fr-FR')}
                     </p>
                   </div>
                 </Link>
@@ -284,11 +317,12 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {!loading && mesVoyages.length === 0 && (
+      {!loading && mesVoyages.length === 0 && mesProjets.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500">Vous n'êtes impliqué dans aucun voyage pour le moment.</p>
         </div>
       )}
+
     </main>
   );
 }
