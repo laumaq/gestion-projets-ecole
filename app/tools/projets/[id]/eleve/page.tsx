@@ -249,7 +249,12 @@ export default function ProjetElevePage() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-900 text-sm">{obj.titre}</p>
-                    {obj.description && <p className="text-xs text-gray-500 mt-0.5">{obj.description}</p>}
+                    {obj.description && (
+                      <div
+                        className="text-xs text-gray-500 mt-0.5 prose prose-xs max-w-none"
+                        dangerouslySetInnerHTML={{ __html: obj.description }}
+                      />
+                    )}                    
                     {obj.echeance && (
                       <div className="flex items-center gap-2 mt-1.5">
                         <span className="text-xs text-gray-400">
@@ -273,9 +278,10 @@ export default function ProjetElevePage() {
       {/* ── Consignes ── */}
       {tab === 'consignes' && projet.consignes && (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-          <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans leading-relaxed">
-            {projet.consignes}
-          </pre>
+          <div
+            className="prose prose-sm max-w-none text-gray-700"
+            dangerouslySetInnerHTML={{ __html: projet.consignes! }}
+          />
         </div>
       )}
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import EditeurTexte from '@/components/EditeurTexte';
 
 const ALLOWED_USER_ID = '52793bea-994a-4b50-b768-75427df4747b'; // ← à adapter si l'id en base est différent
 
@@ -256,8 +257,10 @@ export default function ProjetDetailPage() {
       {tab === 'objectifs' && (
         <ObjectifsTab
           objectifs={objectifs}
+          setObjectifs={setObjectifs}
           isOwner={!!isOwner}
           onAdd={() => setModalObjectif(true)}
+          projetId={projetId}
           onDelete={async (id) => {
             await supabase.from('projet_objectifs').delete().eq('id', id);
             setObjectifs(prev => prev.filter(o => o.id !== id));
@@ -311,6 +314,7 @@ export default function ProjetDetailPage() {
             await supabase.from('projet_sources').delete().eq('id', id);
             setSources(prev => prev.filter(s => s.id !== id));
           }}
+          projetId={projetId} 
         />
       )}
 
@@ -388,7 +392,8 @@ function ConsignesTab({ projet, isOwner, editConsignes, setEditConsignes, onSave
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-semibold text-gray-800">📋 Consignes générales</h2>
         {isOwner && !editConsignes && (
-          <button onClick={() => setEditConsignes(true)} className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+          <button onClick={() => setEditConsignes(true)}
+            className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
@@ -398,30 +403,35 @@ function ConsignesTab({ projet, isOwner, editConsignes, setEditConsignes, onSave
       </div>
       {editConsignes ? (
         <div>
-          <textarea
+          <EditeurTexte
             value={val}
-            onChange={e => setVal(e.target.value)}
-            rows={10}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+            onChange={setVal}
             placeholder="Consignes générales, cadre du projet…"
+            hauteur="h-64"
           />
-          <div className="flex gap-2 mt-3 justify-end">
-            <button onClick={() => setEditConsignes(false)} className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition">
+          {/* espace pour la toolbar Quill */}
+          <div className="mt-12 flex gap-2 justify-end">
+            <button onClick={() => setEditConsignes(false)}
+              className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition">
               Annuler
             </button>
-            <button onClick={() => onSave(val)} className="text-sm bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition font-medium">
+            <button onClick={() => onSave(val)}
+              className="text-sm bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition font-medium">
               Enregistrer
             </button>
           </div>
         </div>
       ) : (
-        <div className="prose prose-sm max-w-none">
+        <div>
           {projet.consignes ? (
-            <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans leading-relaxed">
-              {projet.consignes}
-            </pre>
+            <div
+              className="prose prose-sm max-w-none text-gray-700"
+              dangerouslySetInnerHTML={{ __html: projet.consignes }}
+            />
           ) : (
-            <p className="text-gray-400 italic text-sm">Aucune consigne définie.{isOwner && ' Cliquez sur Modifier pour en ajouter.'}</p>
+            <p className="text-gray-400 italic text-sm">
+              Aucune consigne définie.{isOwner && ' Cliquez sur Modifier pour en ajouter.'}
+            </p>
           )}
         </div>
       )}
@@ -430,15 +440,44 @@ function ConsignesTab({ projet, isOwner, editConsignes, setEditConsignes, onSave
 }
 
 // ── Objectifs Tab ──────────────────────────────────────────
-function ObjectifsTab({ objectifs, isOwner, onAdd, onDelete }: {
-  objectifs: Objectif[]; isOwner: boolean;
+function ObjectifsTab({ objectifs, setObjectifs, isOwner, onAdd, onDelete, projetId }: {
+  objectifs: Objectif[]; isOwner: boolean; projetId: string;
+  setObjectifs: (fn: (prev: Objectif[]) => Objectif[]) => void;
   onAdd: () => void; onDelete: (id: string) => void;
 }) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitre, setEditTitre] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editEcheance, setEditEcheance] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const startEdit = (obj: Objectif) => {
+    setEditingId(obj.id);
+    setEditTitre(obj.titre);
+    setEditDesc(obj.description || '');
+    setEditEcheance(obj.echeance || '');
+  };
+
+  const saveEdit = async () => {
+    if (!editingId || !editTitre.trim()) return;
+    setSaving(true);
+    const updates = {
+      titre: editTitre.trim(),
+      description: editDesc || null,
+      echeance: editEcheance || null,
+    };
+    await supabase.from('projet_objectifs').update(updates).eq('id', editingId);
+    setObjectifs(prev => prev.map(o => o.id === editingId ? { ...o, ...updates } : o));
+    setSaving(false);
+    setEditingId(null);
+  };
+
   return (
     <div className="space-y-4">
       {isOwner && (
         <div className="flex justify-end">
-          <button onClick={onAdd} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+          <button onClick={onAdd}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
@@ -446,6 +485,7 @@ function ObjectifsTab({ objectifs, isOwner, onAdd, onDelete }: {
           </button>
         </div>
       )}
+
       {objectifs.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-200">
           <p className="text-gray-400 text-sm">Aucun objectif défini</p>
@@ -453,28 +493,74 @@ function ObjectifsTab({ objectifs, isOwner, onAdd, onDelete }: {
       ) : (
         <div className="space-y-3">
           {objectifs.map((obj, i) => (
-            <div key={obj.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-start gap-3">
-              <div className="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center text-sm font-bold text-indigo-700 flex-shrink-0">
-                {i + 1}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 text-sm">{obj.titre}</p>
-                {obj.description && <p className="text-xs text-gray-500 mt-1">{obj.description}</p>}
-                {obj.echeance && (
-                  <p className="text-xs text-indigo-600 mt-1.5 flex items-center gap-1">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Échéance : {new Date(obj.echeance).toLocaleDateString('fr-FR')}
-                  </p>
-                )}
-              </div>
-              {isOwner && (
-                <button onClick={() => { if (confirm('Supprimer cet objectif ?')) onDelete(obj.id); }} className="text-gray-300 hover:text-red-500 transition flex-shrink-0">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
+            <div key={obj.id} className="bg-white rounded-xl border border-gray-200 p-4">
+              {editingId === obj.id ? (
+                // Mode édition
+                <div className="space-y-3">
+                  <input value={editTitre} onChange={e => setEditTitre(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-medium" />
+                  <EditeurTexte
+                    value={editDesc}
+                    onChange={setEditDesc}
+                    placeholder="Description…"
+                    hauteur="h-32"
+                    simple
+                  />
+                  <div className="mt-10 flex items-center gap-2">
+                    <input type="date" value={editEcheance} onChange={e => setEditEcheance(e.target.value)}
+                      className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                    <div className="ml-auto flex gap-2">
+                      <button onClick={() => setEditingId(null)}
+                        className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition">
+                        Annuler
+                      </button>
+                      <button onClick={saveEdit} disabled={saving || !editTitre.trim()}
+                        className="text-sm bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition font-medium disabled:opacity-50">
+                        {saving ? 'Enregistrement…' : 'Enregistrer'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Mode lecture
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center text-sm font-bold text-indigo-700 flex-shrink-0">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 text-sm">{obj.titre}</p>
+                    {obj.description && (
+                      <div
+                        className="prose prose-xs max-w-none text-gray-500 mt-1"
+                        dangerouslySetInnerHTML={{ __html: obj.description }}
+                      />
+                    )}
+                    {obj.echeance && (
+                      <p className="text-xs text-indigo-600 mt-1.5 flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Échéance : {new Date(obj.echeance).toLocaleDateString('fr-FR')}
+                      </p>
+                    )}
+                  </div>
+                  {isOwner && (
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button onClick={() => startEdit(obj)}
+                        className="text-gray-300 hover:text-indigo-500 transition p-1 rounded hover:bg-indigo-50">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button onClick={() => { if (confirm('Supprimer cet objectif ?')) onDelete(obj.id); }}
+                        className="text-gray-300 hover:text-red-500 transition p-1 rounded hover:bg-red-50">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           ))}
@@ -577,9 +663,9 @@ function SousGroupesTab({ sousGroupes, elevesDisponibles, isOwner, onAdd, onAffe
 }
 
 // ── Sources Tab ───────────────────────────────────────────
-function SourcesTab({ sources, sousGroupes, modeSource, isOwner, onAdd, onDelete }: {
+function SourcesTab({ sources, sousGroupes, modeSource, isOwner, onAdd, onDelete, projetId }: {
   sources: Source[]; sousGroupes: SousGroupe[];
-  modeSource: string; isOwner: boolean;
+  modeSource: string; isOwner: boolean; projetId: string;
   onAdd: () => void; onDelete: (id: string) => void;
 }) {
   const MODE_LABELS: Record<string, string> = {
@@ -595,12 +681,19 @@ function SourcesTab({ sources, sousGroupes, modeSource, isOwner, onAdd, onDelete
           <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
             Mode : {MODE_LABELS[modeSource] ?? modeSource}
           </span>
-          <button onClick={onAdd} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Ajouter une source
-          </button>
+          {isOwner && (
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              {/* Carte progression */}
+              <StatSourcesEleves projetId={projetId} />
+              <button onClick={onAdd}
+                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Ajouter une source
+              </button>
+            </div>
+          )}
         </div>
       )}
       {sources.length === 0 ? (
@@ -649,6 +742,7 @@ function SourcesTab({ sources, sousGroupes, modeSource, isOwner, onAdd, onDelete
                       <span className="truncate">{src.url}</span>
                     </a>
                   )}
+                  <TagsElevesSource sourceId={src.id} projetId={projetId} />
                 </div>
                 {isOwner && (
                   <button onClick={() => { if (confirm('Supprimer cette source ?')) onDelete(src.id); }} className="text-gray-300 hover:text-red-500 transition flex-shrink-0">
@@ -704,9 +798,15 @@ function ModalObjectif({ projetId, ordre, onClose, onSave }: {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <textarea value={desc} onChange={e => setDesc(e.target.value)} rows={3}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
-            placeholder="Précisions supplémentaires…" />
+          <EditeurTexte
+            value={desc}
+            onChange={setDesc}
+            placeholder="Précisions supplémentaires…"
+            hauteur="h-40"
+            simple
+          />
+          <div className="mt-10" />
+
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Échéance</label>
@@ -1437,6 +1537,94 @@ function ParametresTab({ projet, onSave, projetId, userId }: {
         </div>
       </div>
 
+    </div>
+  );
+}
+
+// Carte stats attributions pour le prof
+function StatSourcesEleves({ projetId }: { projetId: string }) {
+  const [stats, setStats] = useState<{ total: number; avecSource: number } | null>(null);
+
+  useEffect(() => {
+    const charger = async () => {
+      const { data: eleves } = await supabase
+        .from('projet_eleves').select('matricule').eq('projet_id', projetId);
+      const total = (eleves || []).length;
+      if (total === 0) { setStats({ total: 0, avecSource: 0 }); return; }
+
+      const matricules = (eleves || []).map((e: any) => e.matricule);
+      const { data: sources } = await supabase
+        .from('projet_sources').select('id').eq('projet_id', projetId);
+      const sourceIds = (sources || []).map((s: any) => s.id);
+      if (sourceIds.length === 0) { setStats({ total, avecSource: 0 }); return; }
+
+      const { data: attr } = await supabase
+        .from('projet_source_attributions')
+        .select('eleve_matricule')
+        .in('source_id', sourceIds)
+        .in('eleve_matricule', matricules);
+
+      const avecSource = new Set((attr || []).map((a: any) => a.eleve_matricule)).size;
+      // Set est ok ici côté client, pas de downlevelIteration
+      const avecSourceCount = (attr || []).reduce((acc: number[], a: any) => {
+        if (!acc.includes(a.eleve_matricule)) acc.push(a.eleve_matricule);
+        return acc;
+      }, []).length;
+
+      setStats({ total, avecSource: avecSourceCount });
+    };
+    charger();
+  }, [projetId]);
+
+  if (!stats) return null;
+
+  const pct = stats.total > 0 ? Math.round((stats.avecSource / stats.total) * 100) : 0;
+
+  return (
+    <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-2.5 shadow-sm">
+      <div>
+        <p className="text-xs text-gray-500">Sources choisies</p>
+        <p className="text-sm font-semibold text-gray-900">
+          {stats.avecSource} / {stats.total} élève{stats.total > 1 ? 's' : ''}
+        </p>
+      </div>
+      <div className="w-16 h-16 relative flex-shrink-0">
+        <svg viewBox="0 0 36 36" className="w-16 h-16 -rotate-90">
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#6366f1" strokeWidth="3"
+            strokeDasharray={`${pct} ${100 - pct}`} strokeLinecap="round" />
+        </svg>
+        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-indigo-700">
+          {pct}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// Tags élèves sur chaque source
+function TagsElevesSource({ sourceId, projetId }: { sourceId: string; projetId: string }) {
+  const [eleves, setEleves] = useState<{ matricule: number; nom: string; prenom: string }[]>([]);
+
+  useEffect(() => {
+    supabase.from('projet_source_attributions')
+      .select('eleve_matricule, students(matricule, nom, prenom)')
+      .eq('source_id', sourceId)
+      .then(({ data }) => {
+        setEleves((data || []).map((a: any) => a.students).filter(Boolean));
+      });
+  }, [sourceId]);
+
+  if (eleves.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1 mt-2">
+      {eleves.map(e => (
+        <span key={e.matricule}
+          className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">
+          {e.nom} {e.prenom}
+        </span>
+      ))}
     </div>
   );
 }
