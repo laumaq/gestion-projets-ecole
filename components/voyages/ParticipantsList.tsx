@@ -208,6 +208,7 @@ interface ExportConfig {
   statuts: { confirme: boolean; liste_attente: boolean; annule: boolean };
   inclure_profs: boolean;
   colonne_type: boolean;
+  dateFormat: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
 }
 
 function ModalExport({ participants, professeursParticipants, isResponsable, isEmployee, onClose }: {
@@ -226,7 +227,22 @@ function ModalExport({ participants, professeursParticipants, isResponsable, isE
     statuts: { confirme: true, liste_attente: true, annule: false },
     inclure_profs: true,
     colonne_type: true,
+    dateFormat: 'DD/MM/YYYY',
   });
+
+  const formatDate = (raw: string | null | undefined): string => {
+    if (!raw) return '';
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return raw;
+    const dd = String(d.getUTCDate()).padStart(2, '0');
+    const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const yyyy = String(d.getUTCFullYear());
+    switch (config.dateFormat) {
+      case 'MM/DD/YYYY': return `${mm}/${dd}/${yyyy}`;
+      case 'YYYY-MM-DD': return `${yyyy}-${mm}-${dd}`;
+      default:           return `${dd}/${mm}/${yyyy}`;
+    }
+  };
 
   const toggleCol = (k: keyof ExportConfig['colonnes']) =>
     setConfig(c => ({ ...c, colonnes: { ...c.colonnes, [k]: !c.colonnes[k] } }));
@@ -269,7 +285,7 @@ function ModalExport({ participants, professeursParticipants, isResponsable, isE
       if (c.classe) row.push(p.classe);
       if (c.genre) row.push(GLABELS[p.genre] ?? p.genre);
       if (c.statut) row.push(SLABELS[p.statut] ?? p.statut);
-      if (c.date_naissance) row.push(p.eleve.date_naissance ?? '');
+      if (c.date_naissance) row.push(formatDate(p.eleve.date_naissance));
       if (c.nationalite) row.push(p.eleve.nationalite ?? '');
       if (c.regime) row.push(r.regime);
       if (c.notes_regime) row.push(r.notes);
@@ -289,7 +305,7 @@ function ModalExport({ participants, professeursParticipants, isResponsable, isE
           if (c.classe) row.push(p.role);
           if (c.genre) row.push('');
           if (c.statut) row.push('');
-          if (c.date_naissance) row.push(p.professeur.date_naissance ?? '');
+          if (c.date_naissance) row.push(formatDate(p.professeur.date_naissance));
           if (c.nationalite) row.push(p.professeur.nationalite ?? '');
           if (c.regime) row.push(r.regime);
           if (c.notes_regime) row.push(r.notes);
@@ -367,6 +383,32 @@ function ModalExport({ participants, professeursParticipants, isResponsable, isE
                   Ajouter une colonne "Type" (Élève / Professeur)
                 </label>
               )}
+            </div>
+          )}
+
+          {/* Format de date — uniquement si la colonne date est cochée */}
+          {config.colonnes.date_naissance && (
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-2">Format des dates</p>
+              <div className="flex gap-3">
+                {([
+                  ['DD/MM/YYYY', '31/12/2010'],
+                  ['MM/DD/YYYY', '12/31/2010'],
+                  ['YYYY-MM-DD', '2010-12-31'],
+                ] as [ExportConfig['dateFormat'], string][]).map(([fmt, ex]) => (
+                  <label key={fmt} className="flex items-center gap-2 cursor-pointer text-sm">
+                    <input
+                      type="radio"
+                      name="dateFormat"
+                      checked={config.dateFormat === fmt}
+                      onChange={() => setConfig(c => ({ ...c, dateFormat: fmt }))}
+                      className="rounded"
+                    />
+                    <span className="font-mono">{fmt}</span>
+                    <span className="text-gray-400 text-xs">({ex})</span>
+                  </label>
+                ))}
+              </div>
             </div>
           )}
 
