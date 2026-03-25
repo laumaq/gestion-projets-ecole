@@ -277,12 +277,20 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
   };
   
   const loadParticipantsDisponibles = async () => {
-    const { data: affectesEleves } = await supabase
+    // Récupérer les IDs des élèves déjà affectés à CETTE configuration (configId)
+    const { data: affectesDansCetteConfig } = await supabase
       .from('chambre_affectations')
-      .select('participant_id');
+      .select(`
+        participant_id,
+        chambres!inner (
+          hebergement_config_id
+        )
+      `)
+      .eq('chambres.hebergement_config_id', configId);  // ← Filtrer par la config actuelle
 
-    const elevesAffectesIds = affectesEleves?.map(a => a.participant_id) || [];
+    const elevesAffectesIds = affectesDansCetteConfig?.map(a => a.participant_id) || [];
 
+    // Charger les élèves participants du voyage
     const { data: elevesData } = await supabase
       .from('voyage_participants')
       .select(`
@@ -300,6 +308,7 @@ export default function PlanChambres({ configId, voyageId, isResponsable, userTy
       .eq('statut', 'confirme');
 
     if (elevesData) {
+      // Filtrer les élèves NON affectés dans CETTE configuration
       const elevesNonAffectes = elevesData.filter(e => !elevesAffectesIds.includes(e.id));
       const elevesFormates = elevesNonAffectes.map((item: any) => ({
         id: item.id,
