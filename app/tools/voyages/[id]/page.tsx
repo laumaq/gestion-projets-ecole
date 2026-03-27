@@ -12,6 +12,8 @@ import PlanChambres from '@/components/voyages/PlanChambres';
 import { useCharteVoyage } from '@/hooks/useCharteVoyage';
 import CharteModal from '@/components/voyages/CharteModal';
 import GestionCharte from '@/components/voyages/GestionCharte';
+import GestionPlanning from '@/components/voyages/activites/GestionPlanning';
+import VueElevePlanning from '@/components/voyages/activites/VueElevePlanning';
 
 interface Voyage {
   id: string;
@@ -159,6 +161,7 @@ export default function VoyageDetailPage() {
     { id: 'participants', label: 'Participants', icon: '👥' },
     { id: 'hebergement', label: 'Hébergement', icon: '🏨' },
     { id: 'charte', label: 'Charte', icon: '📜' },
+    { id: 'planning', label: 'Planning', icon: '📅' },
   ];
 
   return (
@@ -238,6 +241,21 @@ export default function VoyageDetailPage() {
             isResponsable={isResponsable}
             userType={userType}
             onConfigSelect={handleConfigSelect} 
+          />
+        )}
+
+        {activeTab === 'planning' && userType === 'student' && currentUserEleveId && (
+          <VueElevePlanning 
+            voyageId={voyageId}
+            eleveId={currentUserEleveId}
+            userType={userType}
+          />
+        )}
+
+        {activeTab === 'planning' && userType !== 'student' && (
+          <GestionPlanning 
+            voyageId={voyageId}
+            isResponsable={isResponsable}
           />
         )}
 
