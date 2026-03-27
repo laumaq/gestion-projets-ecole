@@ -14,6 +14,8 @@ import CharteModal from '@/components/voyages/CharteModal';
 import GestionCharte from '@/components/voyages/GestionCharte';
 import GestionPlanning from '@/components/voyages/activites/GestionPlanning';
 import VueElevePlanning from '@/components/voyages/activites/VueElevePlanning';
+import VueEleveChoixActivites from '@/components/voyages/activites/VueEleveChoixActivites';
+
 
 interface Voyage {
   id: string;
@@ -36,6 +38,7 @@ export default function VoyageDetailPage() {
   const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null); 
   const [currentUserEleveId, setCurrentUserEleveId] = useState<number | null>(null);
   const [showCharte, setShowCharte] = useState(false);
+  const [elevePlanningTab, setElevePlanningTab] = useState<'planning' | 'choix'>('planning');
 
 
   // Récupérer l'ID de l'élève si c'est un étudiant
@@ -49,6 +52,7 @@ export default function VoyageDetailPage() {
   }, []);
   
   const { isLoading: permissionsLoading, hasAccess, isResponsable, userType, error } = useVoyagePermissions(voyageId);
+
 
   useEffect(() => {
     if (hasAccess) {
@@ -67,6 +71,9 @@ export default function VoyageDetailPage() {
       setVoyage(data);
     }
     setLoading(false);
+      console.log('📜 Page - charte:', charte);
+      console.log('📜 Page - aAccepte:', aAccepte);
+      console.log('📜 Page - charteLoading:', charteLoading);
   };
 
   // Fonction pour recevoir la config sélectionnée depuis HebergementConfigs
@@ -76,15 +83,21 @@ export default function VoyageDetailPage() {
 
   const { charte, aAccepte, loading: charteLoading, tempsLecture, peutAccepter, accepterCharte } = 
     useCharteVoyage(voyageId, userType === 'student' ? currentUserEleveId : null);
+  console.log('📜 Page - charte mis à jour:', charte);
+  console.log('📜 Page - aAccepte mis à jour:', aAccepte);
 
 
   // Afficher la charte si l'élève ne l'a pas acceptée
   useEffect(() => {
     if (userType === 'student' && !charteLoading && charte && !aAccepte) {
+      console.log('🚨 AFFICHAGE CHARTE - aAccepte:', aAccepte);
       setShowCharte(true);
     }
+    // AJOUTE CETTE CONDITION : fermer la modale si acceptation confirmée
+    if (userType === 'student' && aAccepte) {
+      setShowCharte(false);
+    }
   }, [userType, charteLoading, charte, aAccepte]);
-  
   
   if (permissionsLoading || loading) {
     return (
@@ -160,8 +173,8 @@ export default function VoyageDetailPage() {
   const tabs = [
     { id: 'participants', label: 'Participants', icon: '👥' },
     { id: 'hebergement', label: 'Hébergement', icon: '🏨' },
-    { id: 'charte', label: 'Charte', icon: '📜' },
     { id: 'planning', label: 'Planning', icon: '📅' },
+    { id: 'charte', label: 'Charte', icon: '📜' },
   ];
 
   return (
@@ -245,11 +258,46 @@ export default function VoyageDetailPage() {
         )}
 
         {activeTab === 'planning' && userType === 'student' && currentUserEleveId && (
-          <VueElevePlanning 
-            voyageId={voyageId}
-            eleveId={currentUserEleveId}
-            userType={userType}
-          />
+          <div className="space-y-4">
+            <div className="border-b border-gray-200">
+              <nav className="flex gap-4" aria-label="Tabs planning élève">
+                <button
+                  onClick={() => setElevePlanningTab('planning')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    elevePlanningTab === 'planning'
+                      ? 'border-indigo-500 text-indigo-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  📅 Mon planning
+                </button>
+                <button
+                  onClick={() => setElevePlanningTab('choix')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    elevePlanningTab === 'choix'
+                      ? 'border-indigo-500 text-indigo-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  🎯 Choisir mes activités
+                </button>
+              </nav>
+            </div>
+
+            {elevePlanningTab === 'choix' ? (
+              <VueEleveChoixActivites
+                voyageId={voyageId}
+                eleveId={currentUserEleveId}
+                userType={userType}
+              />
+            ) : (
+              <VueElevePlanning
+                voyageId={voyageId}
+                eleveId={currentUserEleveId}
+                userType={userType}
+              />
+            )}
+          </div>
         )}
 
         {activeTab === 'planning' && userType !== 'student' && (

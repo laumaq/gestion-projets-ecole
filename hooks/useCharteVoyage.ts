@@ -14,60 +14,60 @@ export function useCharteVoyage(voyageId: string, eleveId: number | null) {
       setLoading(false);
       return;
     }
-    loadCharte();
-    checkAcceptation();
+    
+    const loadData = async () => {
+      // 1. Charger la charte
+      const { data: charteData } = await supabase
+        .from('voyage_chartes')
+        .select('contenu, version')
+        .eq('voyage_id', voyageId)
+        .order('version', { ascending: false })
+        .limit(1)
+        .single();
+
+      console.log('📜 loadCharte - data:', charteData);
+
+      if (charteData) {
+        setCharte(charteData);
+        
+        // 2. Vérifier l'acceptation de CETTE version
+        const { data: acceptData } = await supabase
+          .from('voyage_charte_acceptations')
+          .select('id')
+          .eq('voyage_id', voyageId)
+          .eq('eleve_id', eleveId)
+          .eq('charte_version', charteData.version)
+          .maybeSingle();
+
+        console.log('📜 acceptData:', acceptData);
+        setAAccepte(!!acceptData);
+      }
+      setLoading(false);
+    };
+
+    loadData();
   }, [voyageId, eleveId]);
 
-  const loadCharte = async () => {
-    const { data } = await supabase
-      .from('voyage_chartes')
-      .select('contenu, version')
-      .eq('voyage_id', voyageId)
-      .order('version', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (data) {
-      setCharte(data);
-    }
-    setLoading(false);
-  };
-
-  const checkAcceptation = async () => {
-    if (!eleveId || !charte) return;
-
-    const { data } = await supabase
-      .from('voyage_charte_acceptations')
-      .select('id, temps_lecture')
-      .eq('voyage_id', voyageId)
-      .eq('eleve_id', eleveId)
-      .eq('charte_version', charte.version)
-      .maybeSingle();
-
-    setAAccepte(!!data);
-  };
-
-  // Timer de lecture basé sur la longueur de la charte
+  // Timer de lecture - ne démarre que si charte est chargé ET non accepté
   useEffect(() => {
     if (!charte || aAccepte) return;
 
-    // Calcul du temps minimum de lecture (1 sec pour 200 caractères, min 5 sec, max 30 sec)
     const longueur = charte.contenu.length;
     const tempsMinimum = Math.min(Math.max(Math.floor(longueur / 200), 5), 30);
     
-    let timer: NodeJS.Timeout;
     let startTime = Date.now();
+    let interval: NodeJS.Timeout;
 
-    timer = setInterval(() => {
+    interval = setInterval(() => {
       const ecoule = Math.floor((Date.now() - startTime) / 1000);
       setTempsLecture(ecoule);
       if (ecoule >= tempsMinimum) {
         setPeutAccepter(true);
-        clearInterval(timer);
+        clearInterval(interval);
       }
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => clearInterval(interval);
   }, [charte, aAccepte]);
 
   const accepterCharte = async () => {
@@ -80,12 +80,13 @@ export function useCharteVoyage(voyageId: string, eleveId: number | null) {
         eleve_id: eleveId,
         charte_version: charte.version,
         temps_lecture: tempsLecture,
-        ip_address: '', // À remplir côté serveur
         user_agent: navigator.userAgent
       });
 
     if (!error) {
       setAAccepte(true);
+    } else {
+      console.error('Erreur acceptation charte:', error);
     }
   };
 

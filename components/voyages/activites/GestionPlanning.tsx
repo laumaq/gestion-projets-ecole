@@ -1,3 +1,6 @@
+//components/activites/GestionPlanning.tsx
+
+
 'use client';
 
 import { useState, useEffect } from 'react';
