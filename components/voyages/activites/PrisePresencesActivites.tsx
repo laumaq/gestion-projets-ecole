@@ -72,7 +72,7 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
   const loadActivites = async () => {
     setLoading(true);
     
-    // 1. Récupérer les activités où l'employé est inscrit
+    // 1. Récupérer les activités où l'employé est inscrit (inscriptions volontaires)
     const { data: inscriptionsData } = await supabase
       .from('inscriptions_activites')
       .select('activite_id')
@@ -80,13 +80,42 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
       .eq('participant_type', 'employee');
 
     const activitesInscritesIds = inscriptionsData?.map(i => i.activite_id) || [];
+    
+    // 2. Récupérer les activités obligatoires du voyage (pas d'inscription)
+    const { data: activitesObligatoiresData } = await supabase
+      .from('activites')
+      .select(`
+        id,
+        titre,
+        description,
+        heure_debut,
+        heure_fin,
+        est_obligatoire,
+        groupes_activites!inner (
+          nom,
+          planning_jours!inner (
+            date,
+            voyage_id
+          )
+        )
+      `)
+      .eq('groupes_activites.planning_jours.voyage_id', voyageId)
+      .eq('est_obligatoire', true);
 
-    if (activitesInscritesIds.length === 0) {
+    const activitesObligatoiresIds = activitesObligatoiresData?.map(a => a.id) || [];
+
+    // 3. Fusionner les deux listes (pas de doublons)
+    const idsSet = new Set<string>();
+    activitesInscritesIds.forEach(id => idsSet.add(id));
+    activitesObligatoiresIds.forEach(id => idsSet.add(id));
+    const tousIds = Array.from(idsSet);
+
+    if (tousIds.length === 0) {
       setLoading(false);
       return;
     }
 
-    // 2. Récupérer les détails des activités
+    // 4. Récupérer les détails de toutes ces activités
     const { data: activitesData } = await supabase
       .from('activites')
       .select(`
@@ -104,7 +133,7 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
           )
         )
       `)
-      .in('id', activitesInscritesIds)
+      .in('id', tousIds)
       .eq('groupes_activites.planning_jours.voyage_id', voyageId)
       .order('heure_debut');
 
@@ -131,60 +160,90 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
     const allPresences: Presence = {};
 
     for (const activite of activitesFormatees) {
-  // 1. Récupérer les élèves inscrits
-      const { data: elevesData } = await supabase
-        .from('inscriptions_activites')
-        .select('participant_id')
-        .eq('activite_id', activite.id)
-        .eq('participant_type', 'student');
+      let participants: Participant[] = [];
 
-      const elevesIds = elevesData?.map(e => e.participant_id) || [];
+      // Si l'activité est obligatoire, charger TOUS les élèves du voyage
+      if (activite.est_obligatoire) {
+        // Récupérer tous les élèves participants au voyage
+        const { data: voyageParticipants } = await supabase
+          .from('voyage_participants')
+          .select(`
+            eleve_id,
+            students!inner (
+              matricule,
+              nom,
+              prenom,
+              classe
+            )
+          `)
+          .eq('voyage_id', voyageId)
+          .eq('statut', 'confirme');
 
-      let eleves: Participant[] = [];
-      if (elevesIds.length > 0) {
-        const { data: studentsData } = await supabase
-          .from('students')
-          .select('matricule, nom, prenom, classe')
-          .in('matricule', elevesIds.map(id => parseInt(id)));
-
-        eleves = (studentsData || []).map(s => ({
-          id: s.matricule.toString(),
-          nom: s.nom,
-          prenom: s.prenom,
-          classe: s.classe,
+        participants = (voyageParticipants || []).map((p: any) => ({
+          id: p.eleve_id.toString(),
+          nom: p.students.nom,
+          prenom: p.students.prenom,
+          classe: p.students.classe,
           type: 'student',
-          eleve_id: s.matricule
+          eleve_id: p.eleve_id
         }));
+      } else {
+        // Activité normale : charger les inscrits
+        // 1. Récupérer les élèves inscrits
+        const { data: elevesData } = await supabase
+          .from('inscriptions_activites')
+          .select('participant_id')
+          .eq('activite_id', activite.id)
+          .eq('participant_type', 'student');
+
+        const elevesIds = elevesData?.map(e => e.participant_id) || [];
+
+        let eleves: Participant[] = [];
+        if (elevesIds.length > 0) {
+          const { data: studentsData } = await supabase
+            .from('students')
+            .select('matricule, nom, prenom, classe')
+            .in('matricule', elevesIds.map(id => parseInt(id)));
+
+          eleves = (studentsData || []).map(s => ({
+            id: s.matricule.toString(),
+            nom: s.nom,
+            prenom: s.prenom,
+            classe: s.classe,
+            type: 'student',
+            eleve_id: s.matricule
+          }));
+        }
+
+        // 2. Récupérer les employés inscrits
+        const { data: employesData } = await supabase
+          .from('inscriptions_activites')
+          .select('participant_id')
+          .eq('activite_id', activite.id)
+          .eq('participant_type', 'employee');
+
+        const employesIds = employesData?.map(e => e.participant_id) || [];
+
+        let employes: Participant[] = [];
+        if (employesIds.length > 0) {
+          const { data: employeesData } = await supabase
+            .from('employees')
+            .select('id, nom, prenom')
+            .in('id', employesIds);
+
+          employes = (employeesData || []).map(e => ({
+            id: e.id,
+            nom: e.nom,
+            prenom: e.prenom,
+            classe: '👨‍🏫 Encadrant',
+            type: 'employee'
+          }));
+        }
+
+        participants = [...eleves, ...employes];
       }
 
-      // 2. Récupérer les employés inscrits
-      const { data: employesData } = await supabase
-        .from('inscriptions_activites')
-        .select('participant_id')
-        .eq('activite_id', activite.id)
-        .eq('participant_type', 'employee');
-
-      const employesIds = employesData?.map(e => e.participant_id) || [];
-
-      let employes: Participant[] = [];
-      if (employesIds.length > 0) {
-        const { data: employeesData } = await supabase
-          .from('employees')
-          .select('id, nom, prenom')
-          .in('id', employesIds);
-
-        employes = (employeesData || []).map(e => ({
-          id: e.id,
-          nom: e.nom,
-          prenom: e.prenom,
-          classe: '👨‍🏫 Encadrant',
-          type: 'employee'
-        }));
-      }
-
-      // 3. Fusionner et trier
-      let participants = [...eleves, ...employes];
-      
+      // Trier les participants (inchangé)
       participants.sort((a, b) => {
         if (a.type === 'employee' && b.type !== 'employee') return -1;
         if (a.type !== 'employee' && b.type === 'employee') return 1;
@@ -195,13 +254,9 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
         return a.nom.localeCompare(b.nom);
       });
 
-      console.log('Activité:', activite.titre);
-      console.log('Participants chargés:', participants);
-      console.log('Nombre de participants:', participants.length);
-      
       participantsMap.set(activite.id, participants);
 
-      // Récupérer les présences existantes
+      // Récupérer les présences existantes (inchangé)
       const { data: presencesData } = await supabase
         .from('presences_activites')
         .select('eleve_id, present')
@@ -420,7 +475,7 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
                             </div>
                           )}
                           <span className="text-gray-500 text-sm">
-                            {isExpanded ? '▲' : '▼'}
+                            {estActiviteExpanded ? '▲' : '▼'}
                           </span>
                         </div>
                       </button>
