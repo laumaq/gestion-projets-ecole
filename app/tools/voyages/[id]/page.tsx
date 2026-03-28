@@ -167,9 +167,9 @@ export default function VoyageDetailPage() {
   }
 
   const tabs = [
+    { id: 'planning', label: 'Planning', icon: '📅' },
     { id: 'participants', label: 'Participants', icon: '👥' },
     { id: 'hebergement', label: 'Hébergement', icon: '🏨' },
-    { id: 'planning', label: 'Planning', icon: '📅' },
     { id: 'charte', label: 'Charte', icon: '📜' },
   ];
 
