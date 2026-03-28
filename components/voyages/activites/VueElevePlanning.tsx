@@ -31,10 +31,11 @@ export default function VueElevePlanning({ voyageId, eleveId }: Props) {
     loadPlanning();
   }, [voyageId]);
 
+
   const loadPlanning = async () => {
-    // Récupérer les inscriptions de l'élève
+    // 1. Récupérer les inscriptions de l'élève
     const { data: inscriptionsData } = await supabase
-      .from('inscriptions_eleves')
+      .from('inscriptions_activites')
       .select(`
         activite_id,
         activites!inner (
@@ -52,9 +53,10 @@ export default function VueElevePlanning({ voyageId, eleveId }: Props) {
           )
         )
       `)
-      .eq('eleve_id', eleveId);
+      .eq('participant_id', eleveId.toString())
+      .eq('participant_type', 'student');
 
-    // Récupérer TOUTES les activités obligatoires du voyage (même celles où l'élève n'est pas inscrit)
+    // 2. Récupérer TOUTES les activités obligatoires du voyage
     const { data: activitesObligatoiresData } = await supabase
       .from('activites')
       .select(`
@@ -75,7 +77,7 @@ export default function VueElevePlanning({ voyageId, eleveId }: Props) {
       .eq('est_obligatoire', true)
       .eq('groupes_activites.planning_jours.voyage_id', voyageId);
 
-    // Formater les activités inscrites
+    // 3. Formater les activités inscrites
     const inscrites = (inscriptionsData || []).map((item: any) => ({
       id: item.activites.id,
       titre: item.activites.titre,
@@ -84,24 +86,22 @@ export default function VueElevePlanning({ voyageId, eleveId }: Props) {
       heure_fin: item.activites.heure_fin,
       jour: item.activites.groupes_activites.planning_jours.date,
       groupe_nom: item.activites.groupes_activites.nom,
-      est_obligatoire: item.activites.est_obligatoire
+      est_obligatoire: false
     }));
 
-    // Formater les activités obligatoires (sans doublon avec les inscrites)
-    const obligatoires = (activitesObligatoiresData || [])
-      .filter(act => !inscrites.some(i => i.id === act.id))
-      .map((item: any) => ({
-        id: item.id,
-        titre: item.titre,
-        description: item.description,
-        heure_debut: item.heure_debut,
-        heure_fin: item.heure_fin,
-        jour: item.groupes_activites.planning_jours.date,
-        groupe_nom: item.groupes_activites.nom,
-        est_obligatoire: true
-      }));
+    // 4. Formater les activités obligatoires
+    const obligatoires = (activitesObligatoiresData || []).map((item: any) => ({
+      id: item.id,
+      titre: item.titre,
+      description: item.description,
+      heure_debut: item.heure_debut,
+      heure_fin: item.heure_fin,
+      jour: item.groupes_activites.planning_jours.date,
+      groupe_nom: item.groupes_activites.nom,
+      est_obligatoire: true
+    }));
 
-    // Fusionner les deux listes
+    // 5. Fusionner les deux listes
     const formated = [...inscrites, ...obligatoires];
     setActivites(formated);
     setLoading(false);
