@@ -44,6 +44,7 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [expandedJours, setExpandedJours] = useState<Set<string>>(new Set());
+  const [expandedActivites, setExpandedActivites] = useState<Set<string>>(new Set());
 
   const activitesParDate = useMemo(() => {
     const grouped: { [date: string]: Activite[] } = {};
@@ -57,6 +58,16 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
   useEffect(() => {
     loadActivites();
   }, [voyageId]);
+
+  const toggleActivite = (activiteId: string) => {
+    const newExpanded = new Set(expandedActivites);
+    if (newExpanded.has(activiteId)) {
+      newExpanded.delete(activiteId);
+    } else {
+      newExpanded.add(activiteId);
+    }
+    setExpandedActivites(newExpanded);
+  };
 
   const loadActivites = async () => {
     setLoading(true);
@@ -366,27 +377,32 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
 
             {isExpanded && (
               <div className="p-4 space-y-4">
+
                 {activitesDuJour.map((activite) => {
                   const participants = participantsParActivite.get(activite.id) || [];
-                  console.log('Rendu activité:', activite.titre, 'participants:', participants.length);
                   const eleves = participants.filter(p => p.type === 'student');
                   const presentes = eleves.filter(e => presences[`${activite.id}_${e.eleve_id}`]).length;
+                  const estActiviteExpanded = expandedActivites.has(activite.id);
                   
                   return (
                     <div key={activite.id} className="border rounded-lg overflow-hidden">
-                      <div className="bg-blue-50 px-4 py-3 border-b flex justify-between items-center flex-wrap gap-2">
-                        <div>
+                      {/* En-tête cliquable */}
+                      <button
+                        onClick={() => toggleActivite(activite.id)}
+                        className="w-full bg-blue-50 px-4 py-3 border-b flex justify-between items-center hover:bg-blue-100 transition"
+                      >
+                        <div className="text-left">
                           <h3 className="font-semibold text-gray-900">{activite.titre}</h3>
                           <p className="text-xs text-gray-600">
                             ⏰ {activite.heure_debut.slice(0, 5)} - {activite.heure_fin.slice(0, 5)} • {activite.groupe_nom}
                           </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex items-center gap-3">
                           <span className="text-sm text-gray-600">
                             {presentes}/{eleves.length} présents
                           </span>
                           {eleves.length > 0 && (
-                            <>
+                            <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                               <button
                                 onClick={() => toutPresent(activite.id)}
                                 disabled={saving}
@@ -401,61 +417,69 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
                               >
                                 Tout absent
                               </button>
-                            </>
+                            </div>
                           )}
+                          <span className="text-gray-500 text-sm">
+                            {isExpanded ? '▲' : '▼'}
+                          </span>
                         </div>
-                      </div>
+                      </button>
 
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Participant</th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Classe</th>
-                              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 w-20">Présent</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100">
-                            {participants.map((participant) => {
-                              const estPresent = participant.type === 'student' 
-                                ? presences[`${activite.id}_${participant.eleve_id}`] || false
-                                : false;
-                              
-                              return (
-                                <tr key={participant.id} className="hover:bg-gray-50">
-                                  <td className="px-4 py-2 text-sm">
-                                    {participant.prenom} {participant.nom}
-                                    {participant.type === 'employee' && ' (encadrant)'}
-                                  </td>
-                                  <td className="px-4 py-2 text-sm text-gray-500">
-                                    {participant.classe}
-                                  </td>
-                                  <td className="px-4 py-2 text-center">
-                                    {participant.type === 'student' ? (
-                                      <button
-                                        onClick={() => togglePresence(activite.id, participant)}
-                                        disabled={saving}
-                                        className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors ${
-                                          estPresent
-                                            ? 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
-                                            : 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200'
-                                        }`}
-                                      >
-                                        {estPresent ? '✓' : '✕'}
-                                      </button>
-                                    ) : (
-                                      <span className="text-xs text-gray-400">-</span>
-                                    )}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
+                      {/* Tableau des présences - visible seulement si déplié */}
+                      {estActiviteExpanded  && (
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Participant</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Classe</th>
+                                <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 w-20">Présent</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {participants.map((participant) => {
+                                const estPresent = participant.type === 'student' 
+                                  ? presences[`${activite.id}_${participant.eleve_id}`] || false
+                                  : false;
+                                
+                                return (
+                                  <tr key={participant.id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-2 text-sm">
+                                      {participant.prenom} {participant.nom}
+                                      {participant.type === 'employee' && ' (encadrant)'}
+                                    </td>
+                                    <td className="px-4 py-2 text-sm text-gray-500">
+                                      {participant.classe}
+                                    </td>
+                                    <td className="px-4 py-2 text-center">
+                                      {participant.type === 'student' ? (
+                                        <button
+                                          onClick={() => togglePresence(activite.id, participant)}
+                                          disabled={saving}
+                                          className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors ${
+                                            estPresent
+                                              ? 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
+                                              : 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200'
+                                          }`}
+                                        >
+                                          {estPresent ? '✓' : '✕'}
+                                        </button>
+                                      ) : (
+                                        <span className="text-xs text-gray-400">-</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
+
+
               </div>
             )}
           </div>
