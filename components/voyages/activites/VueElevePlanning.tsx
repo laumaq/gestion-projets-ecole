@@ -9,7 +9,7 @@ import { fr } from 'date-fns/locale';
 interface Props {
   voyageId: string;
   eleveId: number;
-  userType: 'student';
+  userType: 'employee' | 'student';
 }
 
 interface ActiviteInscrite {

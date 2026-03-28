@@ -1,4 +1,5 @@
 // app/tools/voyages/[id]/page.tsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,16 +7,15 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useVoyagePermissions } from '@/hooks/useVoyagePermissions';
+import { useCharteVoyage } from '@/hooks/useCharteVoyage';
 import ParticipantsList from '@/components/voyages/ParticipantsList';
 import HebergementConfigs from '@/components/voyages/HebergementConfigs';
-import PlanChambres from '@/components/voyages/PlanChambres';
-import { useCharteVoyage } from '@/hooks/useCharteVoyage';
-import CharteModal from '@/components/voyages/CharteModal';
 import GestionCharte from '@/components/voyages/GestionCharte';
+import CharteModal from '@/components/voyages/CharteModal';
 import GestionPlanning from '@/components/voyages/activites/GestionPlanning';
 import VueElevePlanning from '@/components/voyages/activites/VueElevePlanning';
 import VueEleveChoixActivites from '@/components/voyages/activites/VueEleveChoixActivites';
-
+import PrisePresencesActivites from '@/components/voyages/activites/PrisePresencesActivites';
 
 interface Voyage {
   id: string;
@@ -35,16 +35,20 @@ export default function VoyageDetailPage() {
   const [voyage, setVoyage] = useState<Voyage | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('participants');
-  const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null); 
+  const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
   const [currentUserEleveId, setCurrentUserEleveId] = useState<number | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showCharte, setShowCharte] = useState(false);
+  
+  // États pour les sous-onglets
+  const [planningTab, setPlanningTab] = useState<'eleve_planning' | 'eleve_choix' | 'presences' | 'gestion'>('eleve_planning');
   const [elevePlanningTab, setElevePlanningTab] = useState<'planning' | 'choix'>('planning');
 
-
-  // Récupérer l'ID de l'élève si c'est un étudiant
+  // Récupérer l'ID de l'utilisateur
   useEffect(() => {
     const type = localStorage.getItem('userType');
     const id = localStorage.getItem('userId');
+    setCurrentUserId(id);
     
     if (type === 'student' && id) {
       setCurrentUserEleveId(parseInt(id));
@@ -53,6 +57,8 @@ export default function VoyageDetailPage() {
   
   const { isLoading: permissionsLoading, hasAccess, isResponsable, userType, error } = useVoyagePermissions(voyageId);
 
+  const { charte, aAccepte, loading: charteLoading, tempsLecture, peutAccepter, accepterCharte } = 
+    useCharteVoyage(voyageId, userType === 'student' ? currentUserEleveId : null);
 
   useEffect(() => {
     if (hasAccess) {
@@ -71,34 +77,22 @@ export default function VoyageDetailPage() {
       setVoyage(data);
     }
     setLoading(false);
-      console.log('📜 Page - charte:', charte);
-      console.log('📜 Page - aAccepte:', aAccepte);
-      console.log('📜 Page - charteLoading:', charteLoading);
   };
 
-  // Fonction pour recevoir la config sélectionnée depuis HebergementConfigs
   const handleConfigSelect = (configId: string) => {
     setSelectedConfigId(configId);
   };
 
-  const { charte, aAccepte, loading: charteLoading, tempsLecture, peutAccepter, accepterCharte } = 
-    useCharteVoyage(voyageId, userType === 'student' ? currentUserEleveId : null);
-  console.log('📜 Page - charte mis à jour:', charte);
-  console.log('📜 Page - aAccepte mis à jour:', aAccepte);
-
-
-  // Afficher la charte si l'élève ne l'a pas acceptée
+  // Gestion de l'affichage de la charte
   useEffect(() => {
     if (userType === 'student' && !charteLoading && charte && !aAccepte) {
-      console.log('🚨 AFFICHAGE CHARTE - aAccepte:', aAccepte);
       setShowCharte(true);
     }
-    // AJOUTE CETTE CONDITION : fermer la modale si acceptation confirmée
     if (userType === 'student' && aAccepte) {
       setShowCharte(false);
     }
   }, [userType, charteLoading, charte, aAccepte]);
-  
+
   if (permissionsLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -218,7 +212,7 @@ export default function VoyageDetailPage() {
         </div>
       </div>
 
-      {/* Onglets */}
+      {/* Onglets principaux */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="flex space-x-8">
           {tabs.map((tab) => (
@@ -240,6 +234,7 @@ export default function VoyageDetailPage() {
 
       {/* Contenu des onglets */}
       <div className="mt-6">
+        {/* Onglet Participants */}
         {activeTab === 'participants' && (
           <ParticipantsList 
             voyageId={voyageId} 
@@ -248,6 +243,7 @@ export default function VoyageDetailPage() {
           />
         )}
         
+        {/* Onglet Hébergement */}
         {activeTab === 'hebergement' && (
           <HebergementConfigs 
             voyageId={voyageId}
@@ -257,14 +253,16 @@ export default function VoyageDetailPage() {
           />
         )}
 
-        {activeTab === 'planning' && userType === 'student' && currentUserEleveId && (
-          <div className="space-y-4">
-            <div className="border-b border-gray-200">
-              <nav className="flex gap-4" aria-label="Tabs planning élève">
+        {/* Onglet Planning */}
+        {activeTab === 'planning' && (
+          <>
+            {/* Sous-onglets */}
+            <div className="border-b border-gray-200 mb-6">
+              <nav className="flex gap-4">
                 <button
-                  onClick={() => setElevePlanningTab('planning')}
+                  onClick={() => setPlanningTab('eleve_planning')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    elevePlanningTab === 'planning'
+                    planningTab === 'eleve_planning'
                       ? 'border-indigo-500 text-indigo-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
@@ -272,41 +270,93 @@ export default function VoyageDetailPage() {
                   📅 Mon planning
                 </button>
                 <button
-                  onClick={() => setElevePlanningTab('choix')}
+                  onClick={() => setPlanningTab('eleve_choix')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    elevePlanningTab === 'choix'
+                    planningTab === 'eleve_choix'
                       ? 'border-indigo-500 text-indigo-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  🎯 Choisir mes activités
+                  🎯 Choix des activités
+                </button>
+                <button
+                  onClick={() => setPlanningTab('presences')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    planningTab === 'presences'
+                      ? 'border-indigo-500 text-indigo-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  📋 Prise de présence
+                </button>
+                <button
+                  onClick={() => setPlanningTab('gestion')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    planningTab === 'gestion'
+                      ? 'border-indigo-500 text-indigo-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  ⚙️ Gestion du planning
                 </button>
               </nav>
             </div>
 
-            {elevePlanningTab === 'choix' ? (
-              <VueEleveChoixActivites
-                voyageId={voyageId}
-                eleveId={currentUserEleveId}
-                userType={userType}
-              />
-            ) : (
-              <VueElevePlanning
-                voyageId={voyageId}
-                eleveId={currentUserEleveId}
-                userType={userType}
-              />
+            {/* Contenu selon le sous-onglet et les permissions */}
+            {planningTab === 'eleve_choix' && (
+              (userType === 'student' || userType === 'employee') && (
+                <VueEleveChoixActivites
+                  voyageId={voyageId}
+                  participantId={userType === 'student' ? currentUserEleveId!.toString() : currentUserId!}
+                  participantType={userType}
+                />
+              )
             )}
-          </div>
+
+            {planningTab === 'eleve_planning' && (
+              (userType === 'student' || userType === 'employee') ? (
+                <VueElevePlanning
+                  voyageId={voyageId}
+                  eleveId={userType === 'student' ? currentUserEleveId! : currentUserEleveId!}
+                  userType={userType}
+                />
+              ) : null
+            )}
+
+            {planningTab === 'presences' && (
+              userType === 'employee' ? (
+                <PrisePresencesActivites
+                  voyageId={voyageId}
+                  employeId={currentUserId!}
+                  userType={userType}
+                />
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <div className="text-4xl mb-4">🔒</div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Accès réservé</h3>
+                  <p className="text-gray-600">Seuls les employés peuvent accéder à la prise de présence.</p>
+                </div>
+              )
+            )}
+
+            {planningTab === 'gestion' && (
+              userType === 'employee' && isResponsable ? (
+                <GestionPlanning 
+                  voyageId={voyageId}
+                  isResponsable={isResponsable}
+                />
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <div className="text-4xl mb-4">🔒</div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Accès réservé</h3>
+                  <p className="text-gray-600">Seuls les responsables peuvent gérer le planning.</p>
+                </div>
+              )
+            )}
+          </>
         )}
 
-        {activeTab === 'planning' && userType !== 'student' && (
-          <GestionPlanning 
-            voyageId={voyageId}
-            isResponsable={isResponsable}
-          />
-        )}
-
+        {/* Onglet Charte */}
         {activeTab === 'charte' && (
           <GestionCharte 
             voyageId={voyageId}
@@ -314,7 +364,6 @@ export default function VoyageDetailPage() {
             userType={userType}
           />
         )}
-
       </div>
     </div>
   );

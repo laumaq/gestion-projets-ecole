@@ -1,6 +1,5 @@
 //components/activites/VueEleveChoixActivites.tsx
 
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -10,8 +9,8 @@ import { fr } from 'date-fns/locale';
 
 interface Props {
   voyageId: string;
-  eleveId: number;
-  userType: 'student';
+  participantId: string;  // ID de la personne (matricule élève ou ID employé)
+  participantType: 'student' | 'employee';
 }
 
 interface Jour {
@@ -25,7 +24,7 @@ interface Groupe {
   nom: string;
   nb_inscriptions_max: number;
   activites: Activite[];
-  inscriptions_eleve: string[];
+  inscriptions_participant: string[];
 }
 
 interface Activite {
@@ -40,7 +39,7 @@ interface Activite {
   nb_inscrits: number;
 }
 
-export default function VueEleveChoixActivites({ voyageId, eleveId, userType }: Props) {
+export default function VueChoixActivites({ voyageId, participantId, participantType }: Props) {
   const [jours, setJours] = useState<Jour[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedJour, setExpandedJour] = useState<string | null>(null);
@@ -64,10 +63,12 @@ export default function VueEleveChoixActivites({ voyageId, eleveId, userType }: 
       return;
     }
 
+    // Récupérer les inscriptions du participant
     const { data: inscriptionsData } = await supabase
-      .from('inscriptions_eleves')
+      .from('inscriptions_activites')
       .select('activite_id')
-      .eq('eleve_id', eleveId);
+      .eq('participant_id', participantId)
+      .eq('participant_type', participantType);
 
     const inscriptionsSet = new Set(inscriptionsData?.map(i => i.activite_id) || []);
     setInscriptions(inscriptionsSet);
@@ -91,7 +92,7 @@ export default function VueEleveChoixActivites({ voyageId, eleveId, userType }: 
             const activitesAvecCompteurs = await Promise.all(
               (activitesData || []).map(async (activite) => {
                 const { count } = await supabase
-                  .from('inscriptions_eleves')
+                  .from('inscriptions_activites')
                   .select('*', { count: 'exact', head: true })
                   .eq('activite_id', activite.id);
 
@@ -105,7 +106,7 @@ export default function VueEleveChoixActivites({ voyageId, eleveId, userType }: 
             return {
               ...groupe,
               activites: activitesAvecCompteurs,
-              inscriptions_eleve: activitesAvecCompteurs
+              inscriptions_participant: activitesAvecCompteurs
                 .filter(a => inscriptionsSet.has(a.id))
                 .map(a => a.id)
             };
@@ -126,7 +127,7 @@ export default function VueEleveChoixActivites({ voyageId, eleveId, userType }: 
 
   // Vérifier si deux activités se chevauchent (activité différente)
   const verifierChevauchement = (activite1: Activite, activite2: Activite): boolean => {
-    if (activite1.id === activite2.id) return false; // Pas de conflit avec soi-même
+    if (activite1.id === activite2.id) return false;
     
     const debut1 = activite1.heure_debut;
     const fin1 = activite1.heure_fin;
@@ -149,7 +150,7 @@ export default function VueEleveChoixActivites({ voyageId, eleveId, userType }: 
     return activitesInscrites.some(inscrite => verifierChevauchement(activite, inscrite));
   };
 
-  // Vérifier si l'élève peut s'inscrire à une activité
+  // Vérifier si le participant peut s'inscrire à une activité
   const peutSInscrire = (activite: Activite, groupe: Groupe): { peut: boolean; raison: string } => {
     // Activité obligatoire : pas d'inscription manuelle
     if (activite.est_obligatoire) {
@@ -166,7 +167,7 @@ export default function VueEleveChoixActivites({ voyageId, eleveId, userType }: 
       return { peut: false, raison: 'Complet' };
     }
 
-    // Conflit horaire avec d'autres activités (hors celle-ci)
+    // Conflit horaire avec d'autres activités
     const autresActivites = getAutresActivitesInscrites(activite.id);
     if (aConflit(activite, autresActivites)) {
       return { peut: false, raison: 'Conflit d\'horaire avec une autre activité' };
@@ -195,17 +196,50 @@ export default function VueEleveChoixActivites({ voyageId, eleveId, userType }: 
 
     setSaving(true);
     const { error } = await supabase
-      .from('inscriptions_eleves')
+      .from('inscriptions_activites')
       .insert({
         activite_id: activite.id,
-        eleve_id: eleveId
+        participant_id: participantId,
+        participant_type: participantType
       });
 
-    if (!error) {
-      setInscriptions(new Set(inscriptions).add(activite.id));
-      loadPlanning();
+    if (error) {
+      if (error.code === '23505') {
+        alert('Vous êtes déjà inscrit à cette activité');
+        // Rafraîchir les inscriptions
+        const { data } = await supabase
+          .from('inscriptions_activites')
+          .select('activite_id')
+          .eq('participant_id', participantId)
+          .eq('participant_type', participantType);
+        const newSet = new Set(data?.map(i => i.activite_id) || []);
+        setInscriptions(newSet);
+      } else {
+        alert('Erreur lors de l\'inscription');
+      }
     } else {
-      alert('Erreur lors de l\'inscription');
+      // Mise à jour locale
+      setInscriptions(prev => new Set(prev).add(activite.id));
+      
+      // Mettre à jour les compteurs dans l'état local
+      setJours(prevJours => 
+        prevJours.map(jour => ({
+          ...jour,
+          groupes: jour.groupes.map(g => 
+            g.id === groupe.id 
+              ? {
+                  ...g,
+                  activites: g.activites.map(a => 
+                    a.id === activite.id 
+                      ? { ...a, nb_inscrits: a.nb_inscrits + 1 }
+                      : a
+                  ),
+                  inscriptions_participant: [...g.inscriptions_participant, activite.id]
+                }
+              : g
+          )
+        }))
+      );
     }
     setSaving(false);
   };
@@ -215,16 +249,33 @@ export default function VueEleveChoixActivites({ voyageId, eleveId, userType }: 
     
     setSaving(true);
     const { error } = await supabase
-      .from('inscriptions_eleves')
+      .from('inscriptions_activites')
       .delete()
       .eq('activite_id', activite.id)
-      .eq('eleve_id', eleveId);
+      .eq('participant_id', participantId)
+      .eq('participant_type', participantType);
 
     if (!error) {
-      const newInscriptions = new Set(inscriptions);
-      newInscriptions.delete(activite.id);
-      setInscriptions(newInscriptions);
-      loadPlanning();
+      setInscriptions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(activite.id);
+        return newSet;
+      });
+      
+      setJours(prevJours => 
+        prevJours.map(jour => ({
+          ...jour,
+          groupes: jour.groupes.map(g => ({
+            ...g,
+            activites: g.activites.map(a => 
+              a.id === activite.id 
+                ? { ...a, nb_inscrits: Math.max(0, a.nb_inscrits - 1) }
+                : a
+            ),
+            inscriptions_participant: g.inscriptions_participant.filter(id => id !== activite.id)
+          }))
+        }))
+      );
     } else {
       alert('Erreur lors de la désinscription');
     }
@@ -251,7 +302,9 @@ export default function VueEleveChoixActivites({ voyageId, eleveId, userType }: 
       <div className="bg-white rounded-lg border p-4 sticky top-0 z-10">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">🎯 Choisir mes activités</h2>
+            <h2 className="text-lg font-semibold text-gray-900">
+              {participantType === 'student' ? '🎯 Choisir mes activités' : '🎯 M\'inscrire comme encadrant'}
+            </h2>
             <p className="text-sm text-gray-600">
               {totalInscrites} activité{totalInscrites > 1 ? 's' : ''} sélectionnée{totalInscrites > 1 ? 's' : ''}
             </p>
