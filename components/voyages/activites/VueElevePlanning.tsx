@@ -8,8 +8,8 @@ import { fr } from 'date-fns/locale';
 
 interface Props {
   voyageId: string;
-  eleveId: number;
-  userType: 'employee' | 'student';
+  participantId: string;
+  participantType: 'employee' | 'student';
 }
 
 interface ActiviteInscrite {
@@ -23,7 +23,7 @@ interface ActiviteInscrite {
   est_obligatoire: boolean;
 }
 
-export default function VueElevePlanning({ voyageId, eleveId }: Props) {
+export default function VueElevePlanning({ voyageId, participantId, participantType }: Props) {
   const [activites, setActivites] = useState<ActiviteInscrite[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,11 +33,13 @@ export default function VueElevePlanning({ voyageId, eleveId }: Props) {
 
 
   const loadPlanning = async () => {
-    console.log('🔍 loadPlanning - début');
-    
-    // 1. Récupérer les inscriptions de l'élève
-    console.log('🔍 Récupération des inscriptions...');
-    const { data: inscriptionsData, error: inscriptionsError } = await supabase
+    if (!participantId) {
+      setLoading(false);
+      return;
+    }
+
+    // 1. Récupérer les inscriptions du participant
+    const { data: inscriptionsData } = await supabase
       .from('inscriptions_activites')
       .select(`
         activite_id,
@@ -56,15 +58,11 @@ export default function VueElevePlanning({ voyageId, eleveId }: Props) {
           )
         )
       `)
-      .eq('participant_id', eleveId.toString())
-      .eq('participant_type', 'student');
-
-    console.log('📝 inscriptionsData:', inscriptionsData);
-    console.log('❌ inscriptionsError:', inscriptionsError);
+      .eq('participant_id', participantId)
+      .eq('participant_type', participantType);
 
     // 2. Récupérer TOUTES les activités obligatoires du voyage
-    console.log('🔍 Récupération des activités obligatoires...');
-    const { data: activitesObligatoiresData, error: obligatoiresError } = await supabase
+    const { data: activitesObligatoiresData } = await supabase
       .from('activites')
       .select(`
         id,
@@ -83,9 +81,6 @@ export default function VueElevePlanning({ voyageId, eleveId }: Props) {
       `)
       .eq('est_obligatoire', true)
       .eq('groupes_activites.planning_jours.voyage_id', voyageId);
-
-    console.log('📝 activitesObligatoiresData:', activitesObligatoiresData);
-    console.log('❌ obligatoiresError:', obligatoiresError);
 
     // 3. Formater les activités inscrites
     const inscrites = (inscriptionsData || []).map((item: any) => ({
@@ -111,9 +106,9 @@ export default function VueElevePlanning({ voyageId, eleveId }: Props) {
       est_obligatoire: true
     }));
 
-    // 5. Fusionner les deux listes
+    // 5. Fusionner et trier par date
     const formated = [...inscrites, ...obligatoires];
-    console.log('✅ Activités finales:', formated);
+    formated.sort((a, b) => a.jour.localeCompare(b.jour));
     
     setActivites(formated);
     setLoading(false);

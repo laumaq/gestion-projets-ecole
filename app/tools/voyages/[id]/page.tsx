@@ -41,7 +41,7 @@ export default function VoyageDetailPage() {
   const [showCharte, setShowCharte] = useState(false);
   
   // États pour les sous-onglets
-  const [planningTab, setPlanningTab] = useState<'eleve_planning' | 'eleve_choix' | 'presences' | 'gestion'>('eleve_planning');
+  const [planningTab, setPlanningTab] = useState<'planning' | 'eleve_choix' | 'presences' | 'gestion'>('planning');
   const [elevePlanningTab, setElevePlanningTab] = useState<'planning' | 'choix'>('planning');
 
   // Récupérer l'ID de l'utilisateur
@@ -260,9 +260,9 @@ export default function VoyageDetailPage() {
             <div className="border-b border-gray-200 mb-6">
               <nav className="flex gap-4">
                 <button
-                  onClick={() => setPlanningTab('eleve_planning')}
+                  onClick={() => setPlanningTab('planning')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    planningTab === 'eleve_planning'
+                    planningTab === 'planning'
                       ? 'border-indigo-500 text-indigo-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
@@ -313,14 +313,14 @@ export default function VoyageDetailPage() {
               )
             )}
 
-            {planningTab === 'eleve_planning' && (
-              (userType === 'student' || userType === 'employee') ? (
-                <VueElevePlanning
-                  voyageId={voyageId}
-                  eleveId={userType === 'student' ? currentUserEleveId! : currentUserEleveId!}
-                  userType={userType}
-                />
-              ) : null
+            {planningTab === 'planning' && userType && (
+              <VueElevePlanning
+                voyageId={voyageId}
+                participantId={userType === 'student' 
+                  ? currentUserEleveId!.toString() 
+                  : currentUserId!}
+                participantType={userType as 'student' | 'employee'}
+              />
             )}
 
             {planningTab === 'presences' && (
