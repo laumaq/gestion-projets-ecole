@@ -85,15 +85,17 @@ export default function VoyageDetailPage() {
 
   // Gestion de l'affichage de la charte
   useEffect(() => {
-    if (userType === 'student' && !charteLoading && charte && !aAccepte) {
+    // Ne rien faire tant qu'on charge
+    if (charteLoading || permissionsLoading || loading) {
+      return;
+    }
+    
+    if (userType === 'student' && charte && !aAccepte) {
       setShowCharte(true);
     }
-    if (userType === 'student' && aAccepte) {
-      setShowCharte(false);
-    }
-  }, [userType, charteLoading, charte, aAccepte]);
+  }, [userType, charteLoading, permissionsLoading, loading, charte, aAccepte]);
 
-  if (permissionsLoading || loading) {
+  if (permissionsLoading || loading || (userType === 'student' && charteLoading)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -201,12 +203,7 @@ export default function VoyageDetailPage() {
           {/* Badge pour indiquer le niveau de permission */}
           {isResponsable && (
             <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-medium">
-              ⭐ Vous êtes responsable de ce voyage
-            </div>
-          )}
-          {userType === 'student' && (
-            <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium">
-              👋 Mode élève - Consultation uniquement
+              ⭐ Tu es profondément responsable de ce voyage
             </div>
           )}
         </div>
@@ -256,9 +253,10 @@ export default function VoyageDetailPage() {
         {/* Onglet Planning */}
         {activeTab === 'planning' && (
           <>
-            {/* Sous-onglets */}
+            {/* Sous-onglets - visibles selon le rôle */}
             <div className="border-b border-gray-200 mb-6">
-              <nav className="flex gap-4">
+              <nav className="flex gap-4 flex-wrap">
+                {/* Mon planning - visible pour tous */}
                 <button
                   onClick={() => setPlanningTab('planning')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -269,6 +267,8 @@ export default function VoyageDetailPage() {
                 >
                   📅 Mon planning
                 </button>
+                
+                {/* Choix des activités - visible pour tous (élèves et employés) */}
                 <button
                   onClick={() => setPlanningTab('eleve_choix')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -279,26 +279,34 @@ export default function VoyageDetailPage() {
                 >
                   🎯 Choix des activités
                 </button>
-                <button
-                  onClick={() => setPlanningTab('presences')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    planningTab === 'presences'
-                      ? 'border-indigo-500 text-indigo-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  📋 Prise de présence
-                </button>
-                <button
-                  onClick={() => setPlanningTab('gestion')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    planningTab === 'gestion'
-                      ? 'border-indigo-500 text-indigo-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  ⚙️ Gestion du planning
-                </button>
+                
+                {/* Prise de présence - visible UNIQUEMENT pour les employés */}
+                {userType === 'employee' && (
+                  <button
+                    onClick={() => setPlanningTab('presences')}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      planningTab === 'presences'
+                        ? 'border-indigo-500 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    📋 Prise de présence
+                  </button>
+                )}
+                
+                {/* Gestion du planning - visible UNIQUEMENT pour les responsables */}
+                {userType === 'employee' && isResponsable && (
+                  <button
+                    onClick={() => setPlanningTab('gestion')}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      planningTab === 'gestion'
+                        ? 'border-indigo-500 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    ⚙️ Gestion du planning
+                  </button>
+                )}
               </nav>
             </div>
 
