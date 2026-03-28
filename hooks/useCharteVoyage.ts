@@ -16,6 +16,7 @@ export function useCharteVoyage(voyageId: string, eleveId: number | null) {
     }
     
     const loadData = async () => {
+      setLoading(true); 
       // 1. Charger la charte
       const { data: charteData } = await supabase
         .from('voyage_chartes')
@@ -25,7 +26,6 @@ export function useCharteVoyage(voyageId: string, eleveId: number | null) {
         .limit(1)
         .single();
 
-      console.log('📜 loadCharte - data:', charteData);
 
       if (charteData) {
         setCharte(charteData);
