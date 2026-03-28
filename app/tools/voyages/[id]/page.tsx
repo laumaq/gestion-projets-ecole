@@ -34,7 +34,7 @@ export default function VoyageDetailPage() {
   
   const [voyage, setVoyage] = useState<Voyage | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('participants');
+  const [activeTab, setActiveTab] = useState('planning');
   const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
   const [currentUserEleveId, setCurrentUserEleveId] = useState<number | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
