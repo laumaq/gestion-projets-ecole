@@ -33,8 +33,11 @@ export default function VueElevePlanning({ voyageId, eleveId }: Props) {
 
 
   const loadPlanning = async () => {
+    console.log('🔍 loadPlanning - début');
+    
     // 1. Récupérer les inscriptions de l'élève
-    const { data: inscriptionsData } = await supabase
+    console.log('🔍 Récupération des inscriptions...');
+    const { data: inscriptionsData, error: inscriptionsError } = await supabase
       .from('inscriptions_activites')
       .select(`
         activite_id,
@@ -56,8 +59,12 @@ export default function VueElevePlanning({ voyageId, eleveId }: Props) {
       .eq('participant_id', eleveId.toString())
       .eq('participant_type', 'student');
 
+    console.log('📝 inscriptionsData:', inscriptionsData);
+    console.log('❌ inscriptionsError:', inscriptionsError);
+
     // 2. Récupérer TOUTES les activités obligatoires du voyage
-    const { data: activitesObligatoiresData } = await supabase
+    console.log('🔍 Récupération des activités obligatoires...');
+    const { data: activitesObligatoiresData, error: obligatoiresError } = await supabase
       .from('activites')
       .select(`
         id,
@@ -76,6 +83,9 @@ export default function VueElevePlanning({ voyageId, eleveId }: Props) {
       `)
       .eq('est_obligatoire', true)
       .eq('groupes_activites.planning_jours.voyage_id', voyageId);
+
+    console.log('📝 activitesObligatoiresData:', activitesObligatoiresData);
+    console.log('❌ obligatoiresError:', obligatoiresError);
 
     // 3. Formater les activités inscrites
     const inscrites = (inscriptionsData || []).map((item: any) => ({
@@ -103,6 +113,8 @@ export default function VueElevePlanning({ voyageId, eleveId }: Props) {
 
     // 5. Fusionner les deux listes
     const formated = [...inscrites, ...obligatoires];
+    console.log('✅ Activités finales:', formated);
+    
     setActivites(formated);
     setLoading(false);
   };
