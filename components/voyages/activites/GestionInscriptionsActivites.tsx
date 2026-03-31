@@ -87,8 +87,10 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       .select(`
         *,
         groupes_activites!inner (
+          id,
           nom,
           planning_jours!inner (
+            id,
             date
           )
         )
@@ -96,44 +98,110 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       .ilike('titre', `%${term}%`)
       .eq('groupes_activites.planning_jours.voyage_id', voyageId);
     
-    setSearchResults(data || []);
+    // Transformer les données pour avoir date et groupe_nom directement
+    const formatted = (data || []).map((act: any) => ({
+      ...act,
+      groupe_nom: act.groupes_activites.nom,
+      date: act.groupes_activites.planning_jours.date
+    }));
+    
+    setSearchResults(formatted);
   };
 
   const loadParticipants = async (activiteId: string) => {
-    const { data } = await supabase
+    if (!activiteId) {
+      console.error('❌ loadParticipants: activiteId manquant');
+      return;
+    }
+    
+    // 1. Récupérer les élèves inscrits
+    const { data: elevesData } = await supabase
       .from('inscriptions_activites')
-      .select(`
-        participant_id,
-        participant_type,
-        students:students!inscriptions_activites_participant_id_fkey (nom, prenom, classe),
-        employees:employees!inscriptions_activites_participant_id_fkey (nom, prenom)
-      `)
-      .eq('activite_id', activiteId);
+      .select('participant_id')
+      .eq('activite_id', activiteId)
+      .eq('participant_type', 'student');
 
-    const formated: Participant[] = (data || []).map((p: any) => {
-      if (p.participant_type === 'student') {
-        return {
-          id: p.participant_id,
-          nom: p.students.nom,
-          prenom: p.students.prenom,
-          type: 'student',
-          classe: p.students.classe,
-          eleve_id: parseInt(p.participant_id)
-        };
-      } else {
-        return {
-          id: p.participant_id,
-          nom: p.employees.nom,
-          prenom: p.employees.prenom,
-          type: 'employee'
-        };
+    const elevesIds = elevesData?.map(e => e.participant_id) || [];
+    let eleves: Participant[] = [];
+
+    if (elevesIds.length > 0) {
+      const { data: studentsData } = await supabase
+        .from('students')
+        .select('matricule, nom, prenom, classe')
+        .in('matricule', elevesIds.map(id => parseInt(id)));
+
+      eleves = (studentsData || []).map(s => ({
+        id: s.matricule.toString(),
+        nom: s.nom,
+        prenom: s.prenom,
+        type: 'student',
+        classe: s.classe,
+        eleve_id: s.matricule
+      }));
+    }
+
+    // 2. Récupérer les employés inscrits
+    const { data: employesData } = await supabase
+      .from('inscriptions_activites')
+      .select('participant_id')
+      .eq('activite_id', activiteId)
+      .eq('participant_type', 'employee');
+
+    const employesIds = employesData?.map(e => e.participant_id) || [];
+    let employes: Participant[] = [];
+
+    if (employesIds.length > 0) {
+      const { data: employeesData } = await supabase
+        .from('employees')
+        .select('id, nom, prenom')
+        .in('id', employesIds);
+
+      employes = (employeesData || []).map(e => ({
+        id: e.id,
+        nom: e.nom,
+        prenom: e.prenom,
+        type: 'employee'
+      }));
+    }
+
+    // 3. Fusionner et trier
+    const participants = [...eleves, ...employes];
+    
+    // Trier les participants
+    participants.sort((a, b) => {
+      if (a.type === 'employee' && b.type !== 'employee') return -1;
+      if (a.type !== 'employee' && b.type === 'employee') return 1;
+      if (a.type === 'employee' && b.type === 'employee') {
+        return a.nom.localeCompare(b.nom);
       }
+      // Pour les élèves : tri par classe puis nom
+      const classeA = a.classe || '';
+      const classeB = b.classe || '';
+      if (classeA !== classeB) return classeA.localeCompare(classeB);
+      return a.nom.localeCompare(b.nom);
     });
-    setParticipants(formated);
+
+    setParticipants(participants);
   };
 
   const loadTousParticipants = async (activiteId: string) => {
-    // Élèves du voyage
+    if (!activiteId) {
+      console.error('❌ loadTousParticipants: activiteId manquant');
+      return;
+    }
+    
+    // 1. Récupérer les IDs des participants déjà inscrits
+    const { data: inscritsData } = await supabase
+      .from('inscriptions_activites')
+      .select('participant_id, participant_type')
+      .eq('activite_id', activiteId);
+
+    const inscritsIds = new Map();
+    (inscritsData || []).forEach((i: any) => {
+      inscritsIds.set(`${i.participant_id}_${i.participant_type}`, true);
+    });
+
+    // 2. Récupérer tous les élèves du voyage (participants confirmés)
     const { data: elevesData } = await supabase
       .from('voyage_participants')
       .select('eleve_id, students!inner(nom, prenom, classe)')
@@ -149,7 +217,7 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       eleve_id: p.eleve_id
     }));
 
-    // Employés du voyage
+    // 3. Récupérer tous les employés du voyage (professeurs participants)
     const { data: employesData } = await supabase
       .from('voyage_professeurs')
       .select('professeur_id, employees!inner(nom, prenom)')
@@ -162,11 +230,26 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       type: 'employee'
     }));
 
+    // 4. Fusionner et filtrer ceux qui ne sont pas déjà inscrits
     const tous = [...eleves, ...employes];
-    const participantsIds = new Set(participants.map(p => p.id));
-    setTousParticipants(tous.filter(p => !participantsIds.has(p.id)));
-  };
+    const nonInscrits = tous.filter(p => !inscritsIds.has(`${p.id}_${p.type}`));
+    
+    // 5. Trier
+    nonInscrits.sort((a, b) => {
+      if (a.type === 'employee' && b.type !== 'employee') return -1;
+      if (a.type !== 'employee' && b.type === 'employee') return 1;
+      if (a.type === 'employee' && b.type === 'employee') {
+        return a.nom.localeCompare(b.nom);
+      }
+      const classeA = a.classe || '';
+      const classeB = b.classe || '';
+      if (classeA !== classeB) return classeA.localeCompare(classeB);
+      return a.nom.localeCompare(b.nom);
+    });
 
+    setTousParticipants(nonInscrits);
+  };
+  
   const retirerParticipant = async (participantId: string, participantType: string) => {
     if (!confirm('Retirer ce participant de l\'activité ?')) return;
     
@@ -186,6 +269,15 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
   };
 
   const ajouterParticipant = async (participantId: string, participantType: string) => {
+    // Vérifier la jauge
+    if (selectedActivite.jauge) {
+      const nbActuels = participants.length; // participants déjà inscrits
+      if (nbActuels >= selectedActivite.jauge) {
+        alert(`Jauge atteinte (${selectedActivite.jauge}/${selectedActivite.jauge})`);
+        return;
+      }
+    }
+    
     setSaving(true);
     const { error } = await supabase
       .from('inscriptions_activites')
@@ -279,14 +371,17 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
                 {searchResults.map((act) => (
                   <button
                     key={act.id}
-                    onClick={() => setSelectedActivite(act)}
+                    onClick={() => {
+                      console.log('Activité sélectionnée (search):', act);
+                      setSelectedActivite(act);
+                    }}
                     className={`w-full text-left p-2 rounded hover:bg-gray-100 ${
                       selectedActivite?.id === act.id ? 'bg-blue-50 text-blue-700' : ''
                     }`}
                   >
                     <div className="font-medium">{act.titre}</div>
                     <div className="text-xs text-gray-500">
-                      {format(parseISO(act.groupes_activites.planning_jours.date), 'EEEE dd MMMM', { locale: fr })} • {act.heure_debut.slice(0, 5)}-{act.heure_fin.slice(0, 5)}
+                      {act.date ? format(parseISO(act.date), 'EEEE dd MMMM', { locale: fr }) : 'Date inconnue'} • {act.heure_debut?.slice(0, 5)}-{act.heure_fin?.slice(0, 5)}
                     </div>
                   </button>
                 ))}
@@ -331,7 +426,10 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
                                     {groupe.activites.map((act: any) => (
                                       <button
                                         key={act.id}
-                                        onClick={() => setSelectedActivite({ ...act, groupe_nom: groupe.nom, date: jour.date })}
+                                        onClick={() => {
+                                          console.log('Activité sélectionnée (nav):', { ...act, groupe_nom: groupe.nom, date: jour.date });
+                                          setSelectedActivite({ ...act, groupe_nom: groupe.nom, date: jour.date });
+                                        }}
                                         className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 ${
                                           selectedActivite?.id === act.id ? 'bg-blue-50 text-blue-700' : ''
                                         }`}
@@ -362,92 +460,120 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
           {selectedActivite ? (
             <div className="bg-white rounded-lg border overflow-hidden">
               {/* En-tête */}
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white">
+              <div className={`p-4 text-white ${selectedActivite.est_obligatoire ? 'bg-gradient-to-r from-gray-600 to-gray-800' : 'bg-gradient-to-r from-blue-600 to-indigo-600'}`}>
                 <h2 className="text-xl font-bold">{selectedActivite.titre}</h2>
                 <div className="flex flex-wrap gap-3 mt-2 text-sm text-blue-100">
                   <span>📅 {format(parseISO(selectedActivite.date), 'EEEE dd MMMM', { locale: fr })}</span>
                   <span>⏰ {selectedActivite.heure_debut.slice(0, 5)} - {selectedActivite.heure_fin.slice(0, 5)}</span>
                   <span>📁 {selectedActivite.groupe_nom}</span>
-                  {selectedActivite.jauge && <span>🎫 Jauge: {selectedActivite.jauge}</span>}
-                  {selectedActivite.est_obligatoire && <span className="bg-red-500 px-2 py-0.5 rounded">Obligatoire</span>}
+                  {selectedActivite.jauge && (
+                    <span className={`px-2 py-0.5 rounded ${participants.length >= selectedActivite.jauge ? 'bg-red-500' : 'bg-blue-500'}`}>
+                      🎫 {participants.length}/{selectedActivite.jauge}
+                    </span>
+                  )}
+                  {selectedActivite.est_obligatoire && (
+                    <span className="bg-gray-700 px-2 py-0.5 rounded">Obligatoire</span>
+                  )}
                 </div>
                 {selectedActivite.description && (
                   <p className="text-sm mt-2 text-blue-50">{selectedActivite.description}</p>
                 )}
               </div>
 
-              {/* Barre de recherche participants */}
-              <div className="p-4 border-b">
-                <input
-                  type="text"
-                  placeholder="🔍 Rechercher un participant..."
-                  value={searchParticipantTerm}
-                  onChange={(e) => setSearchParticipantTerm(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              {/* Pour les activités obligatoires : affichage simplifié */}
+              {selectedActivite.est_obligatoire ? (
+                <div className="p-8 text-center text-gray-500">
+                  <div className="text-4xl mb-3">👥</div>
+                  <p className="text-lg font-medium">Activité obligatoire</p>
+                  <p className="text-sm">Tous les participants sont automatiquement inscrits.</p>
+                  <p className="text-xs mt-2 text-gray-400">Aucune gestion d'inscription nécessaire.</p>
+                </div>
+              ) : (
+                <>
+                  {/* Barre de recherche participants */}
+                  <div className="p-4 border-b">
+                    <input
+                      type="text"
+                      placeholder="🔍 Rechercher un participant..."
+                      value={searchParticipantTerm}
+                      onChange={(e) => setSearchParticipantTerm(e.target.value)}
+                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
 
-              {/* Liste des participants */}
-              <div className="p-4">
-                <h3 className="font-medium text-gray-900 mb-3">
-                  Participants ({participants.length})
-                </h3>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {participantsFiltres.map((p) => (
-                    <div key={p.id} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                      <div>
-                        <span className="font-medium">
-                          {p.prenom} {p.nom}
-                        </span>
-                        {p.classe && (
-                          <span className="ml-2 text-xs text-gray-500">{p.classe}</span>
-                        )}
-                        {p.type === 'employee' && (
-                          <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
-                            Encadrant
+                  {/* Liste des participants */}
+                  <div className="p-4">
+                    <h3 className="font-medium text-gray-900 mb-3">
+                      Participants ({participants.length})
+                    </h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {participantsFiltres.map((p) => (
+                        <div key={p.id} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                          <div>
+                            <span className="font-medium">
+                              {p.prenom} {p.nom}
+                            </span>
+                            {p.classe && (
+                              <span className="ml-2 text-xs text-gray-500">{p.classe}</span>
+                            )}
+                            {p.type === 'employee' && (
+                              <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                                Encadrant
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => retirerParticipant(p.id, p.type)}
+                            disabled={saving}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      {participantsFiltres.length === 0 && (
+                        <p className="text-center text-gray-500 py-4">Aucun participant</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Ajout de participant - visible seulement si jauge non atteinte */}
+                  {(!selectedActivite.jauge || participants.length < selectedActivite.jauge) && tousParticipants.length > 0 && (
+                    <div className="p-4 border-t bg-gray-50">
+                      <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                        ➕ Ajouter un participant
+                        {selectedActivite.jauge && (
+                          <span className="text-xs text-gray-500">
+                            ({participants.length}/{selectedActivite.jauge} places)
                           </span>
                         )}
-                      </div>
-                      <button
-                        onClick={() => retirerParticipant(p.id, p.type)}
-                        disabled={saving}
-                        className="text-red-600 hover:text-red-800"
+                      </h3>
+                      <select
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            const [id, type] = e.target.value.split('|');
+                            ajouterParticipant(id, type);
+                            e.target.value = '';
+                          }
+                        }}
+                        value=""
+                        className="w-full px-3 py-2 border rounded-lg"
                       >
-                        ✕
-                      </button>
+                        <option value="">-- Sélectionner un participant --</option>
+                        {participantsDisponiblesFiltres.map((p) => (
+                          <option key={p.id} value={`${p.id}|${p.type}`}>
+                            {p.prenom} {p.nom} {p.classe ? `(${p.classe})` : '(Encadrant)'}
+                          </option>
+                        ))}
+                      </select>
+                      {selectedActivite.jauge && participants.length >= selectedActivite.jauge && (
+                        <p className="text-xs text-orange-600 mt-2">
+                          ⚠️ Jauge atteinte ({selectedActivite.jauge}/{selectedActivite.jauge})
+                        </p>
+                      )}
                     </div>
-                  ))}
-                  {participantsFiltres.length === 0 && (
-                    <p className="text-center text-gray-500 py-4">Aucun participant</p>
                   )}
-                </div>
-              </div>
-
-              {/* Ajout de participant */}
-              {tousParticipants.length > 0 && (
-                <div className="p-4 border-t bg-gray-50">
-                  <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                    ➕ Ajouter un participant
-                  </h3>
-                  <select
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        const [id, type] = e.target.value.split('|');
-                        ajouterParticipant(id, type);
-                        e.target.value = '';
-                      }
-                    }}
-                    value=""
-                    className="w-full px-3 py-2 border rounded-lg"
-                  >
-                    <option value="">-- Sélectionner un participant --</option>
-                    {participantsDisponiblesFiltres.map((p) => (
-                      <option key={p.id} value={`${p.id}|${p.type}`}>
-                        {p.prenom} {p.nom} {p.classe ? `(${p.classe})` : '(Encadrant)'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                </>
               )}
             </div>
           ) : (
@@ -457,6 +583,7 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
             </div>
           )}
         </div>
+
       </div>
     </div>
   );
