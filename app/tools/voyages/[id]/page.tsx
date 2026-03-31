@@ -16,6 +16,7 @@ import GestionPlanning from '@/components/voyages/activites/GestionPlanning';
 import VueElevePlanning from '@/components/voyages/activites/VueElevePlanning';
 import VueEleveChoixActivites from '@/components/voyages/activites/VueEleveChoixActivites';
 import PrisePresencesActivites from '@/components/voyages/activites/PrisePresencesActivites';
+import GestionInscriptionsActivites from '@/components/voyages/activites/GestionInscriptionsActivites';
 
 interface Voyage {
   id: string;
@@ -41,7 +42,7 @@ export default function VoyageDetailPage() {
   const [showCharte, setShowCharte] = useState(false);
   
   // États pour les sous-onglets
-  const [planningTab, setPlanningTab] = useState<'planning' | 'eleve_choix' | 'presences' | 'gestion'>('planning');
+  const [planningTab, setPlanningTab] = useState<'planning' | 'eleve_choix' | 'presences' | 'gestion' | 'super'>('planning');  
   const [elevePlanningTab, setElevePlanningTab] = useState<'planning' | 'choix'>('planning');
 
   // Récupérer l'ID de l'utilisateur
@@ -307,6 +308,20 @@ export default function VoyageDetailPage() {
                     ⚙️ Gestion du planning
                   </button>
                 )}
+
+                {/* SUPER - gestion avancée des inscriptions, visible UNIQUEMENT pour les responsables */}
+                {userType === 'employee' && isResponsable && (
+                  <button
+                    onClick={() => setPlanningTab('super')}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      planningTab === 'super'
+                        ? 'border-indigo-500 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    ⚡ Gestion des inscriptions
+                  </button>
+                )}
               </nav>
             </div>
 
@@ -358,6 +373,21 @@ export default function VoyageDetailPage() {
                   <div className="text-4xl mb-4">🔒</div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Accès réservé</h3>
                   <p className="text-gray-600">Seuls les responsables peuvent gérer le planning.</p>
+                </div>
+              )
+            )}
+
+            {planningTab === 'super' && (
+              userType === 'employee' && isResponsable ? (
+                <GestionInscriptionsActivites
+                  voyageId={voyageId}
+                  isResponsable={isResponsable}
+                />
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <div className="text-4xl mb-4">🔒</div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Accès réservé</h3>
+                  <p className="text-gray-600">Seuls les responsables peuvent gérer les inscriptions.</p>
                 </div>
               )
             )}
