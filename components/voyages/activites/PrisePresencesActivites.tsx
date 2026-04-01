@@ -304,20 +304,27 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
   // Trouver l'activité la plus proche dans le temps
   const trouverActiviteProche = (activitesList: Activite[]) => {
     const maintenant = new Date();
-    const heureActuelle = `${maintenant.getHours().toString().padStart(2, '0')}:${maintenant.getMinutes().toString().padStart(2, '0')}`;
     
-    // Trier par heure de début
-    const activitesTriees = [...activitesList].sort((a, b) => 
-      a.heure_debut.localeCompare(b.heure_debut)
-    );
+    // Convertir chaque activité en objet avec date et heure
+    const activitesAvecTimestamp = activitesList.map(act => {
+      const [year, month, day] = act.date.split('-').map(Number);
+      const [hours, minutes] = act.heure_debut.split(':').map(Number);
+      const dateActivite = new Date(year, month - 1, day, hours, minutes);
+      return { ...act, timestamp: dateActivite.getTime() };
+    });
     
-    // Trouver la première activité qui commence après l'heure actuelle
-    const prochaine = activitesTriees.find(a => a.heure_debut > heureActuelle);
+    // Trier par date/heure
+    const activitesTriees = [...activitesAvecTimestamp].sort((a, b) => a.timestamp - b.timestamp);
+    
+    // Trouver la première activité qui commence après maintenant
+    const maintenantTimestamp = maintenant.getTime();
+    const prochaine = activitesTriees.find(act => act.timestamp >= maintenantTimestamp);
+    
     if (prochaine) return prochaine;
     
-    // Si aucune après, prendre la dernière de la journée
+    // Si aucune après, prendre la dernière (celle qui vient de passer ou la dernière du voyage)
     return activitesTriees[activitesTriees.length - 1];
-  };  
+  };
 
   const togglePresence = async (activiteId: string, participant: Participant) => {
     if (participant.type !== 'student') return; // Seuls les élèves ont des présences
