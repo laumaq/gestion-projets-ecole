@@ -16,6 +16,7 @@ import GestionPlanning from '@/components/voyages/activites/GestionPlanning';
 import VueElevePlanning from '@/components/voyages/activites/VueElevePlanning';
 import VueEleveChoixActivites from '@/components/voyages/activites/VueEleveChoixActivites';
 import PrisePresencesActivites from '@/components/voyages/activites/PrisePresencesActivites';
+import PrisePresencesResponsable from '@/components/voyages/activites/PrisePresencesResponsable';
 import GestionInscriptionsActivites from '@/components/voyages/activites/GestionInscriptionsActivites';
 
 interface Voyage {
@@ -42,7 +43,7 @@ export default function VoyageDetailPage() {
   const [showCharte, setShowCharte] = useState(false);
   
   // États pour les sous-onglets
-  const [planningTab, setPlanningTab] = useState<'planning' | 'eleve_choix' | 'presences' | 'gestion' | 'super'>('planning');  
+  const [planningTab, setPlanningTab] = useState<'planning' | 'eleve_choix' | 'presences' | 'presences_responsable' | 'gestion' | 'super'>('planning');  
   const [elevePlanningTab, setElevePlanningTab] = useState<'planning' | 'choix'>('planning');
 
   // Récupérer l'ID de l'utilisateur
@@ -282,7 +283,7 @@ export default function VoyageDetailPage() {
                 </button>
                 
                 {/* Prise de présence - visible UNIQUEMENT pour les employés */}
-                {userType === 'employee' && (
+                {userType === 'employee' && !isResponsable && (
                   <button
                     onClick={() => setPlanningTab('presences')}
                     className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -292,6 +293,20 @@ export default function VoyageDetailPage() {
                     }`}
                   >
                     📋 Prise de présence
+                  </button>
+                )}
+
+                {/* Prise de présence responsable - visible UNIQUEMENT pour les responsables */}
+                {userType === 'employee' && isResponsable && (
+                  <button
+                    onClick={() => setPlanningTab('presences_responsable')}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      planningTab === 'presences_responsable'
+                        ? 'border-indigo-500 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    👑 Présences (responsable)
                   </button>
                 )}
                 
@@ -347,7 +362,7 @@ export default function VoyageDetailPage() {
             )}
 
             {planningTab === 'presences' && (
-              userType === 'employee' ? (
+              userType === 'employee' && !isResponsable ? (
                 <PrisePresencesActivites
                   voyageId={voyageId}
                   employeId={currentUserId!}
@@ -358,6 +373,21 @@ export default function VoyageDetailPage() {
                   <div className="text-4xl mb-4">🔒</div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Accès réservé</h3>
                   <p className="text-gray-600">Seuls les employés peuvent accéder à la prise de présence.</p>
+                </div>
+              )
+            )}
+            
+            {planningTab === 'presences_responsable' && (
+              userType === 'employee' && isResponsable ? (
+                <PrisePresencesResponsable
+                  voyageId={voyageId}
+                  isResponsable={isResponsable}
+                />
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <div className="text-4xl mb-4">🔒</div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Accès réservé</h3>
+                  <p className="text-gray-600">Seuls les responsables peuvent accéder à la prise de présence sudo.</p>
                 </div>
               )
             )}
