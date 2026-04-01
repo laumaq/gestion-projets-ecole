@@ -114,6 +114,39 @@ export default function PrisePresencesResponsable({ voyageId, isResponsable }: P
   const loadParticipants = async (activiteId: string) => {
     if (!activiteId) return;
     
+    // Vérifier si l'activité est obligatoire
+    const isObligatoire = selectedActivite?.est_obligatoire;
+    
+    if (isObligatoire) {
+      // Pour les activités obligatoires : charger TOUS les élèves du voyage
+      const { data: elevesData } = await supabase
+        .from('voyage_participants')
+        .select('eleve_id, students!inner(nom, prenom, classe)')
+        .eq('voyage_id', voyageId)
+        .eq('statut', 'confirme');
+
+      const eleves: Participant[] = (elevesData || []).map((p: any) => ({
+        id: p.eleve_id.toString(),
+        nom: p.students.nom,
+        prenom: p.students.prenom,
+        type: 'student',
+        classe: p.students.classe,
+        eleve_id: p.eleve_id
+      }));
+      
+      // Trier les élèves
+      eleves.sort((a, b) => {
+        const classeA = a.classe || '';
+        const classeB = b.classe || '';
+        if (classeA !== classeB) return classeA.localeCompare(classeB);
+        return a.nom.localeCompare(b.nom);
+      });
+      
+      setParticipants(eleves);
+      return;
+    }
+    
+    // Pour les activités normales : charger uniquement les inscrits
     // 1. Récupérer les élèves inscrits
     const { data: elevesData } = await supabase
       .from('inscriptions_activites')
