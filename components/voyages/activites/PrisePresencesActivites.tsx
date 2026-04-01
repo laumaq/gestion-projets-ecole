@@ -304,26 +304,55 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
   // Trouver l'activité la plus proche dans le temps
   const trouverActiviteProche = (activitesList: Activite[]) => {
     const maintenant = new Date();
+    const maintenantTimestamp = maintenant.getTime();
     
-    // Convertir chaque activité en objet avec date et heure
-    const activitesAvecTimestamp = activitesList.map(act => {
+    // Convertir chaque activité en objet avec timestamps de début et fin
+    const activitesAvecTimestamps = activitesList.map(act => {
       const [year, month, day] = act.date.split('-').map(Number);
-      const [hours, minutes] = act.heure_debut.split(':').map(Number);
-      const dateActivite = new Date(year, month - 1, day, hours, minutes);
-      return { ...act, timestamp: dateActivite.getTime() };
+      const [debutH, debutM] = act.heure_debut.split(':').map(Number);
+      const [finH, finM] = act.heure_fin.split(':').map(Number);
+      
+      const debutTimestamp = new Date(year, month - 1, day, debutH, debutM).getTime();
+      const finTimestamp = new Date(year, month - 1, day, finH, finM).getTime();
+      
+      return { ...act, debutTimestamp, finTimestamp };
     });
     
-    // Trier par date/heure
-    const activitesTriees = [...activitesAvecTimestamp].sort((a, b) => a.timestamp - b.timestamp);
+    // Trier par date/heure de début
+    const activitesTriees = [...activitesAvecTimestamps].sort((a, b) => a.debutTimestamp - b.debutTimestamp);
     
-    // Trouver la première activité qui commence après maintenant
-    const maintenantTimestamp = maintenant.getTime();
-    const prochaine = activitesTriees.find(act => act.timestamp >= maintenantTimestamp);
+    // 1. Chercher une activité en cours
+    const enCours = activitesTriees.find(act => 
+      maintenantTimestamp >= act.debutTimestamp && maintenantTimestamp <= act.finTimestamp
+    );
+    if (enCours) return enCours;
     
-    if (prochaine) return prochaine;
+    // 2. Trouver le point médian entre la fin d'une activité et le début de la suivante
+    for (let i = 0; i < activitesTriees.length - 1; i++) {
+      const actuelle = activitesTriees[i];
+      const suivante = activitesTriees[i + 1];
+      
+      const finActuelle = actuelle.finTimestamp;
+      const debutSuivante = suivante.debutTimestamp;
+      const pointMedian = finActuelle + (debutSuivante - finActuelle) / 2;
+      
+      if (maintenantTimestamp >= finActuelle && maintenantTimestamp <= pointMedian) {
+        return actuelle;
+      }
+      if (maintenantTimestamp > pointMedian && maintenantTimestamp < debutSuivante) {
+        return suivante;
+      }
+    }
     
-    // Si aucune après, prendre la dernière (celle qui vient de passer ou la dernière du voyage)
-    return activitesTriees[activitesTriees.length - 1];
+    // 3. Si aucune prochaine, prendre la dernière
+    const derniere = activitesTriees[activitesTriees.length - 1];
+    if (derniere && maintenantTimestamp > derniere.finTimestamp) return derniere;
+    
+    // 4. Si avant la première, prendre la première
+    const premiere = activitesTriees[0];
+    if (premiere && maintenantTimestamp < premiere.debutTimestamp) return premiere;
+    
+    return activitesTriees[0];
   };
 
   const togglePresence = async (activiteId: string, participant: Participant) => {
