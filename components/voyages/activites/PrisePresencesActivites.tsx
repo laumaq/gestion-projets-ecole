@@ -642,7 +642,7 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                              {participants.map((participant) => {
+                              {participantsFiltres.map((participant) => {
                                 const estPresent = participant.type === 'student' 
                                   ? presences[`${activite.id}_${participant.eleve_id}`] || false
                                   : false;
