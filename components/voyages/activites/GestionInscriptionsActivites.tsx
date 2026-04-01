@@ -31,7 +31,8 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
   const [tousParticipants, setTousParticipants] = useState<Participant[]>([]);
   const [saving, setSaving] = useState(false);
   const [searchParticipantTerm, setSearchParticipantTerm] = useState('');
-
+  const [participantsInvalides, setParticipantsInvalides] = useState<{ participant: Participant; raison: string }[]>([]);
+  
   useEffect(() => {
     loadJours();
   }, [voyageId]);
@@ -234,8 +235,22 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
     const tous = [...eleves, ...employes];
     const nonInscrits = tous.filter(p => !inscritsIds.has(`${p.id}_${p.type}`));
     
-    // 5. Trier
-    nonInscrits.sort((a, b) => {
+    // 5. Vérifier les règles d'inscription pour chaque participant
+    const participantsValides = await Promise.all(
+      nonInscrits.map(async (p) => {
+        const { peut, raison } = await peutSInscrire(p.id, p.type);
+        return { participant: p, peut, raison };
+      })
+    );
+    
+    const valides = participantsValides.filter(p => p.peut).map(p => p.participant);
+    const invalides = participantsValides.filter(p => !p.peut);
+    
+    // Stocker les invalides pour affichage
+    setParticipantsInvalides(invalides.map(p => ({ participant: p.participant, raison: p.raison })));
+    
+    // 6. Trier les participants valides
+    valides.sort((a, b) => {
       if (a.type === 'employee' && b.type !== 'employee') return -1;
       if (a.type !== 'employee' && b.type === 'employee') return 1;
       if (a.type === 'employee' && b.type === 'employee') {
@@ -247,9 +262,9 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       return a.nom.localeCompare(b.nom);
     });
 
-    setTousParticipants(nonInscrits);
+    setTousParticipants(valides);
   };
-  
+    
   const retirerParticipant = async (participantId: string, participantType: string) => {
     if (!confirm('Retirer ce participant de l\'activité ?')) return;
     
@@ -310,6 +325,67 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
     if (newExpanded.has(groupeId)) newExpanded.delete(groupeId);
     else newExpanded.add(groupeId);
     setExpandedGroupes(newExpanded);
+  };
+
+  // Vérifier si un participant peut s'inscrire à l'activité
+  const peutSInscrire = async (participantId: string, participantType: string): Promise<{ peut: boolean; raison: string }> => {
+    // 1. Vérifier si déjà inscrit (déjà fait dans l'appel)
+    
+    // 2. Récupérer les inscriptions du participant
+    const { data: inscriptionsParticipant } = await supabase
+      .from('inscriptions_activites')
+      .select('activite_id')
+      .eq('participant_id', participantId)
+      .eq('participant_type', participantType);
+    
+    const activitesInscritesIds = new Set(inscriptionsParticipant?.map(i => i.activite_id) || []);
+    
+    // 3. Vérifier le nombre d'inscriptions dans le groupe
+    const { data: activitesDuGroupe } = await supabase
+      .from('activites')
+      .select('id')
+      .eq('groupe_id', selectedActivite.groupe_id);
+    
+    const inscritesDansGroupe = activitesDuGroupe?.filter(a => activitesInscritesIds.has(a.id)).length || 0;
+    
+    // Récupérer le nb max du groupe
+    const { data: groupeData } = await supabase
+      .from('groupes_activites')
+      .select('nb_inscriptions_max')
+      .eq('id', selectedActivite.groupe_id)
+      .single();
+    
+    if (groupeData && inscritesDansGroupe >= groupeData.nb_inscriptions_max) {
+      return { peut: false, raison: `Maximum ${groupeData.nb_inscriptions_max} activité(s) dans ce groupe` };
+    }
+    
+    // 4. Vérifier les conflits horaires
+    // Récupérer toutes les activités du participant
+    const activitesParticipant = await Promise.all(
+      Array.from(activitesInscritesIds).map(async (actId) => {
+        const { data } = await supabase
+          .from('activites')
+          .select('heure_debut, heure_fin')
+          .eq('id', actId)
+          .single();
+        return data;
+      })
+    );
+    
+    const conflit = activitesParticipant.some(act => {
+      if (!act) return false;
+      const debutExistant = act.heure_debut;
+      const finExistant = act.heure_fin;
+      const debutNouveau = selectedActivite.heure_debut;
+      const finNouveau = selectedActivite.heure_fin;
+      return (debutNouveau < finExistant && debutExistant < finNouveau);
+    });
+    
+    if (conflit) {
+      return { peut: false, raison: 'Conflit d\'horaire avec une autre activité' };
+    }
+    
+    return { peut: true, raison: '' };
   };
 
   const participantsFiltres = useMemo(() => {
@@ -548,24 +624,24 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
                           </span>
                         )}
                       </h3>
-                      <select
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            const [id, type] = e.target.value.split('|');
-                            ajouterParticipant(id, type);
-                            e.target.value = '';
-                          }
-                        }}
-                        value=""
-                        className="w-full px-3 py-2 border rounded-lg"
-                      >
-                        <option value="">-- Sélectionner un participant --</option>
-                        {participantsDisponiblesFiltres.map((p) => (
-                          <option key={p.id} value={`${p.id}|${p.type}`}>
-                            {p.prenom} {p.nom} {p.classe ? `(${p.classe})` : '(Encadrant)'}
-                          </option>
-                        ))}
-                      </select>
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          const [id, type] = e.target.value.split('|');
+                          ajouterParticipant(id, type);
+                          e.target.value = '';
+                        }
+                      }}
+                      value=""
+                      className="w-full px-3 py-2 border rounded-lg"
+                    >
+                      <option value="">-- Sélectionner un participant --</option>
+                      {participantsDisponiblesFiltres.map((p) => (
+                        <option key={p.id} value={`${p.id}|${p.type}`}>
+                          {p.prenom} {p.nom} {p.classe ? `(${p.classe})` : '(Encadrant)'}
+                        </option>
+                      ))}
+                    </select>
                       {selectedActivite.jauge && participants.length >= selectedActivite.jauge && (
                         <p className="text-xs text-orange-600 mt-2">
                           ⚠️ Jauge atteinte ({selectedActivite.jauge}/{selectedActivite.jauge})
