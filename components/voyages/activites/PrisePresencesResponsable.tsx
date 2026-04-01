@@ -356,12 +356,23 @@ export default function PrisePresencesResponsable({ voyageId, isResponsable }: P
   };
 
   const participantsFiltres = useMemo(() => {
-    if (!searchParticipantTerm) return participants;
-    return participants.filter(p =>
-      `${p.prenom} ${p.nom}`.toLowerCase().includes(searchParticipantTerm.toLowerCase()) ||
-      (p.classe && p.classe.toLowerCase().includes(searchParticipantTerm.toLowerCase()))
-    );
-  }, [participants, searchParticipantTerm]);
+    let filtered = participants;
+    
+    // Filtrer par classe
+    if (filtreClasse !== 'all') {
+      filtered = filtered.filter(p => p.classe === filtreClasse);
+    }
+    
+    // Filtrer par recherche
+    if (searchParticipantTerm) {
+      filtered = filtered.filter(p =>
+        `${p.prenom} ${p.nom}`.toLowerCase().includes(searchParticipantTerm.toLowerCase()) ||
+        (p.classe && p.classe.toLowerCase().includes(searchParticipantTerm.toLowerCase()))
+      );
+    }
+    
+    return filtered;
+  }, [participants, filtreClasse, searchParticipantTerm]);
 
   if (!isResponsable) {
     return (
