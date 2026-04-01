@@ -37,6 +37,8 @@ export default function PrisePresencesResponsable({ voyageId, isResponsable }: P
   const [presences, setPresences] = useState<Presence>({});
   const [saving, setSaving] = useState(false);
   const [searchParticipantTerm, setSearchParticipantTerm] = useState('');
+  const [filtreClasse, setFiltreClasse] = useState<string>('all');
+  const [classes, setClasses] = useState<string[]>([]);
 
   useEffect(() => {
     loadJours();
@@ -200,6 +202,7 @@ export default function PrisePresencesResponsable({ voyageId, isResponsable }: P
     // 3. Fusionner et trier
     let participantsList = [...eleves, ...employes];
     
+    
     participantsList.sort((a, b) => {
       if (a.type === 'employee' && b.type !== 'employee') return -1;
       if (a.type !== 'employee' && b.type === 'employee') return 1;
@@ -213,6 +216,15 @@ export default function PrisePresencesResponsable({ voyageId, isResponsable }: P
     });
 
     setParticipants(participantsList);
+
+    // Version alternative
+    const classesSet = new Set<string>();
+    participantsList
+      .filter(p => p.type === 'student' && p.classe)
+      .forEach(p => classesSet.add(p.classe as string));
+    const classesUniques = Array.from(classesSet).sort();
+    setClasses(classesUniques);
+
   };
 
   const loadPresences = async (activiteId: string) => {
@@ -258,10 +270,16 @@ export default function PrisePresencesResponsable({ voyageId, isResponsable }: P
     setSaving(false);
   };
 
+
   const toutPresent = async (activiteId: string) => {
     const eleves = participants.filter(p => p.type === 'student');
     if (eleves.length === 0) return;
-
+    
+    // Confirmation
+    if (!confirm(`Marquer TOUS les ${eleves.length} élèves comme PRÉSENTS ?`)) {
+      return;
+    }
+    
     setSaving(true);
     
     const updates: Presence = {};
@@ -291,7 +309,12 @@ export default function PrisePresencesResponsable({ voyageId, isResponsable }: P
   const toutAbsent = async (activiteId: string) => {
     const eleves = participants.filter(p => p.type === 'student');
     if (eleves.length === 0) return;
-
+    
+    // Confirmation
+    if (!confirm(`Marquer TOUS les ${eleves.length} élèves comme ABSENTS ?`)) {
+      return;
+    }
+    
     setSaving(true);
     
     const updates: Presence = {};
@@ -462,25 +485,41 @@ export default function PrisePresencesResponsable({ voyageId, isResponsable }: P
         <div className="md:w-2/3">
           {selectedActivite ? (
             <div className="bg-white rounded-lg border overflow-hidden">
-              {/* En-tête */}
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white">
-                <h2 className="text-xl font-bold">{selectedActivite.titre}</h2>
-                <div className="flex flex-wrap gap-3 mt-2 text-sm text-blue-100">
-                  <span>📅 {format(parseISO(selectedActivite.date), 'EEEE dd MMMM', { locale: fr })}</span>
-                  <span>⏰ {selectedActivite.heure_debut.slice(0, 5)} - {selectedActivite.heure_fin.slice(0, 5)}</span>
-                  <span>📁 {selectedActivite.groupe_nom}</span>
-                  {selectedActivite.jauge && (
-                    <span className="bg-blue-500 px-2 py-0.5 rounded">
-                      🎫 {participants.filter(p => p.type === 'student').length}/{selectedActivite.jauge}
-                    </span>
-                  )}
-                  {selectedActivite.est_obligatoire && (
-                    <span className="bg-gray-700 px-2 py-0.5 rounded">Obligatoire</span>
+
+              {/* Barre de filtres */}
+              <div className="p-4 border-b">
+                <div className="flex flex-wrap gap-3 items-center justify-between">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => toutPresent(selectedActivite.id)}
+                      disabled={saving || participants.filter(p => p.type === 'student').length === 0}
+                      className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                    >
+                      Tout présent
+                    </button>
+                    <button
+                      onClick={() => toutAbsent(selectedActivite.id)}
+                      disabled={saving || participants.filter(p => p.type === 'student').length === 0}
+                      className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50"
+                    >
+                      Tout absent
+                    </button>
+                  </div>
+                  
+                  {/* Filtre par classe */}
+                  {classes.length > 0 && (
+                    <select
+                      value={filtreClasse}
+                      onChange={(e) => setFiltreClasse(e.target.value)}
+                      className="px-3 py-1 text-xs border rounded-lg bg-white"
+                    >
+                      <option value="all">Toutes les classes</option>
+                      {classes.map(classe => (
+                        <option key={classe} value={classe}>{classe}</option>
+                      ))}
+                    </select>
                   )}
                 </div>
-                {selectedActivite.description && (
-                  <p className="text-sm mt-2 text-blue-50">{selectedActivite.description}</p>
-                )}
               </div>
 
               {/* Barre de recherche participants */}
@@ -500,24 +539,6 @@ export default function PrisePresencesResponsable({ voyageId, isResponsable }: P
                   <h3 className="font-medium text-gray-900">
                     Participants ({participants.filter(p => p.type === 'student').length})
                   </h3>
-                  {participants.filter(p => p.type === 'student').length > 0 && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => toutPresent(selectedActivite.id)}
-                        disabled={saving}
-                        className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                      >
-                        Tout présent
-                      </button>
-                      <button
-                        onClick={() => toutAbsent(selectedActivite.id)}
-                        disabled={saving}
-                        className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50"
-                      >
-                        Tout absent
-                      </button>
-                    </div>
-                  )}
                 </div>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {participantsFiltres.map((p) => {
@@ -563,6 +584,8 @@ export default function PrisePresencesResponsable({ voyageId, isResponsable }: P
                   )}
                 </div>
               </div>
+
+
             </div>
           ) : (
             <div className="bg-white rounded-lg border p-12 text-center text-gray-500">
