@@ -45,6 +45,9 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
   const [saving, setSaving] = useState(false);
   const [expandedJours, setExpandedJours] = useState<Set<string>>(new Set());
   const [expandedActivites, setExpandedActivites] = useState<Set<string>>(new Set());
+  const [filtreClasse, setFiltreClasse] = useState<string>('all');
+  const [classes, setClasses] = useState<string[]>([]);
+  const [searchParticipantTerm, setSearchParticipantTerm] = useState('');
 
   const activitesParDate = useMemo(() => {
     const grouped: { [date: string]: Activite[] } = {};
@@ -58,6 +61,19 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
   useEffect(() => {
     loadActivites();
   }, [voyageId]);
+
+  useEffect(() => {
+    if (activites.length > 0) {
+      const proche = trouverActiviteProche(activites);
+      if (proche) {
+        // Déplier le jour correspondant
+        const jour = proche.date;
+        setExpandedJours(prev => new Set(prev).add(jour));
+        // Déplier l'activité
+        setExpandedActivites(prev => new Set(prev).add(proche.id));
+      }
+    }
+  }, [activites]);
 
   const toggleActivite = (activiteId: string) => {
     const newExpanded = new Set(expandedActivites);
@@ -269,10 +285,39 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
       }
     }
 
+    // Après avoir défini participantsMap, extraire les classes
+    const classesSet = new Set<string>();
+    participantsMap.forEach(participantsList => {
+      participantsList
+        .filter(p => p.type === 'student' && p.classe)
+        .forEach(p => classesSet.add(p.classe as string));
+    });
+    setClasses(Array.from(classesSet).sort());
+
     setParticipantsParActivite(participantsMap);
+
     setPresences(allPresences);
     setLoading(false);
   };
+
+
+  // Trouver l'activité la plus proche dans le temps
+  const trouverActiviteProche = (activitesList: Activite[]) => {
+    const maintenant = new Date();
+    const heureActuelle = `${maintenant.getHours().toString().padStart(2, '0')}:${maintenant.getMinutes().toString().padStart(2, '0')}`;
+    
+    // Trier par heure de début
+    const activitesTriees = [...activitesList].sort((a, b) => 
+      a.heure_debut.localeCompare(b.heure_debut)
+    );
+    
+    // Trouver la première activité qui commence après l'heure actuelle
+    const prochaine = activitesTriees.find(a => a.heure_debut > heureActuelle);
+    if (prochaine) return prochaine;
+    
+    // Si aucune après, prendre la dernière de la journée
+    return activitesTriees[activitesTriees.length - 1];
+  };  
 
   const togglePresence = async (activiteId: string, participant: Participant) => {
     if (participant.type !== 'student') return; // Seuls les élèves ont des présences
@@ -297,7 +342,6 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
 
     if (error) {
       setPresences(prev => ({ ...prev, [key]: !nouvelleValeur }));
-      console.error('Erreur:', error);
     }
     setSaving(false);
   };
@@ -306,6 +350,10 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
     const participants = participantsParActivite.get(activiteId) || [];
     const eleves = participants.filter(p => p.type === 'student');
     if (eleves.length === 0) return;
+
+    if (!confirm(`Marquer TOUS les ${eleves.length} élèves comme PRÉSENTS ?`)) {
+      return;
+    }    
 
     setSaving(true);
     
@@ -335,6 +383,10 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
     const participants = participantsParActivite.get(activiteId) || [];
     const eleves = participants.filter(p => p.type === 'student');
     if (eleves.length === 0) return;
+
+    if (!confirm(`Marquer TOUS les ${eleves.length} élèves comme ABSENTS ?`)) {
+      return;
+    }
 
     setSaving(true);
     
@@ -366,6 +418,7 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
     else newExpanded.add(date);
     setExpandedJours(newExpanded);
   };
+
 
   if (!userType || userType !== 'employee') {
     return (
@@ -439,6 +492,18 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
                   const presentes = eleves.filter(e => presences[`${activite.id}_${e.eleve_id}`]).length;
                   const estActiviteExpanded = expandedActivites.has(activite.id);
                   
+                  // Filtrer les participants localement
+                  let participantsFiltres = participants;
+                  if (filtreClasse !== 'all') {
+                    participantsFiltres = participantsFiltres.filter(p => p.classe === filtreClasse);
+                  }
+                  if (searchParticipantTerm) {
+                    participantsFiltres = participantsFiltres.filter(p =>
+                      `${p.prenom} ${p.nom}`.toLowerCase().includes(searchParticipantTerm.toLowerCase()) ||
+                      (p.classe && p.classe.toLowerCase().includes(searchParticipantTerm.toLowerCase()))
+                    );
+                  }
+                  
                   return (
                     <div key={activite.id} className="border rounded-lg overflow-hidden">
                       {/* En-tête cliquable */}
@@ -479,6 +544,55 @@ export default function PrisePresencesActivites({ voyageId, employeId, userType 
                           </span>
                         </div>
                       </button>
+
+                      {/* Barre de filtres - AJOUTE ICI */}
+                      {estActiviteExpanded && (
+                        <div className="p-4 border-b bg-gray-50">
+                          <div className="flex flex-wrap gap-3 items-center justify-between">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => toutPresent(activite.id)}
+                                disabled={saving || eleves.length === 0}
+                                className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                              >
+                                Tout présent
+                              </button>
+                              <button
+                                onClick={() => toutAbsent(activite.id)}
+                                disabled={saving || eleves.length === 0}
+                                className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50"
+                              >
+                                Tout absent
+                              </button>
+                            </div>
+                            
+                            {/* Filtre par classe */}
+                            {classes.length > 0 && (
+                              <select
+                                value={filtreClasse}
+                                onChange={(e) => setFiltreClasse(e.target.value)}
+                                className="px-3 py-1 text-xs border rounded-lg bg-white"
+                              >
+                                <option value="all">Toutes les classes</option>
+                                {classes.map(classe => (
+                                  <option key={classe} value={classe}>{classe}</option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                          
+                          {/* Barre de recherche */}
+                          <div className="mt-3">
+                            <input
+                              type="text"
+                              placeholder="🔍 Rechercher un participant..."
+                              value={searchParticipantTerm}
+                              onChange={(e) => setSearchParticipantTerm(e.target.value)}
+                              className="w-full px-3 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
+                      )}
 
                       {/* Tableau des présences - visible seulement si déplié */}
                       {estActiviteExpanded  && (
