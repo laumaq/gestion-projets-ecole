@@ -10,6 +10,28 @@ interface Props {
   isResponsable: boolean;
 }
 
+interface ActivitePermission {
+  id: string;
+  titre: string;
+  heure_debut: string;
+  heure_fin: string;
+  checked: boolean;
+}
+
+interface GroupePermission {
+  id: string;
+  nom: string;
+  checked: boolean;
+  activites: ActivitePermission[];
+}
+
+interface JourPermission {
+  id: string;
+  date: string;
+  checked: boolean;
+  groupes: GroupePermission[];
+}
+
 interface Participant {
   id: string;
   nom: string;
@@ -36,6 +58,12 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
   const [classesDisponibles, setClassesDisponibles] = useState<string[]>([]);
   const [classesSelectionnees, setClassesSelectionnees] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState(false);
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [permissionsVoyage, setPermissionsVoyage] = useState(false);
+  const [expandedPermissionsJours, setExpandedPermissionsJours] = useState<Set<string>>(new Set());
+  const [expandedPermissionsGroupes, setExpandedPermissionsGroupes] = useState<Set<string>>(new Set());
+  const [savingPermissions, setSavingPermissions] = useState(false);
+  const [permissionsJours, setPermissionsJours] = useState<JourPermission[]>([]);
 
   useEffect(() => {
     loadJours();
@@ -55,6 +83,12 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       chargerClassesDisponibles();
     }
   }, [tousParticipants]);
+
+  useEffect(() => {
+    if (showPermissionsModal) {
+      chargerPermissions();
+    }
+  }, [showPermissionsModal]);
 
   const loadJours = async () => {
     const { data: joursData } = await supabase
@@ -628,6 +662,369 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
     setShowClasseModal(false);
   };
 
+// ========== FONCTIONS POUR LE MODAL DES PERMISSIONS ==========
+
+  const chargerPermissions = async () => {
+    // Charger le niveau voyage
+    const { data: voyageData } = await supabase
+      .from('voyages')
+      .select('inscriptions_ouvertes')
+      .eq('id', voyageId)
+      .single();
+    
+    setPermissionsVoyage(voyageData?.inscriptions_ouvertes || false);
+    
+    // Charger les jours, groupes et activités avec leurs permissions
+    const { data: joursData } = await supabase
+      .from('planning_jours')
+      .select('*')
+      .eq('voyage_id', voyageId)
+      .order('date');
+    
+    if (!joursData) return;
+    
+      const joursAvecGroupes: JourPermission[] = await Promise.all(
+      joursData.map(async (jour) => {
+        const { data: groupesData } = await supabase
+          .from('groupes_activites')
+          .select('*')
+          .eq('planning_jour_id', jour.id)
+          .order('ordre');
+        
+        const groupesAvecActivites: GroupePermission[] = await Promise.all(
+          (groupesData || []).map(async (groupe) => {
+            const { data: activitesData } = await supabase
+              .from('activites')
+              .select('*')
+              .eq('groupe_id', groupe.id)
+              .order('heure_debut');
+            
+            return {
+              ...groupe,
+              checked: groupe.inscriptions_ouvertes || false,
+              activites: (activitesData || []).map(a => ({
+                id: a.id,
+                titre: a.titre,
+                heure_debut: a.heure_debut,
+                heure_fin: a.heure_fin,  // ← AJOUTE CETTE LIGNE
+                checked: a.inscriptions_ouvertes || false
+              }))
+            };
+          })
+        );
+        
+        return {
+          ...jour,
+          checked: jour.inscriptions_ouvertes || false,
+          groupes: groupesAvecActivites
+        };
+      })
+    );
+    
+    setPermissionsJours(joursAvecGroupes);
+  };
+
+  const updateVoyagePermission = async (value: boolean) => {
+    setSavingPermissions(true);
+    
+    await supabase
+      .from('voyages')
+      .update({ inscriptions_ouvertes: value })
+      .eq('id', voyageId);
+    
+    setPermissionsVoyage(value);
+    
+    const updatedJours: JourPermission[] = permissionsJours.map(jour => ({
+      ...jour,
+      checked: value,
+      groupes: jour.groupes.map(groupe => ({
+        ...groupe,
+        checked: value,
+        activites: groupe.activites.map(act => ({
+          ...act,
+          checked: value
+        }))
+      }))
+    }));
+    
+    setPermissionsJours(updatedJours);
+    
+    for (const jour of updatedJours) {
+      await supabase
+        .from('planning_jours')
+        .update({ inscriptions_ouvertes: value })
+        .eq('id', jour.id);
+      
+      for (const groupe of jour.groupes) {
+        await supabase
+          .from('groupes_activites')
+          .update({ inscriptions_ouvertes: value })
+          .eq('id', groupe.id);
+        
+        for (const activite of groupe.activites) {
+          await supabase
+            .from('activites')
+            .update({ inscriptions_ouvertes: value })
+            .eq('id', activite.id);
+        }
+      }
+    }
+    
+    setSavingPermissions(false);
+  };
+
+  const updateJourPermission = async (jourId: string, value: boolean) => {
+    setSavingPermissions(true);
+    
+    await supabase
+      .from('planning_jours')
+      .update({ inscriptions_ouvertes: value })
+      .eq('id', jourId);
+    
+    let updatedJours: JourPermission[] = permissionsJours.map(jour => {
+      if (jour.id !== jourId) return jour;
+      
+      return {
+        ...jour,
+        checked: value,
+        groupes: jour.groupes.map(groupe => ({
+          ...groupe,
+          checked: value,
+          activites: groupe.activites.map(act => ({
+            ...act,
+            checked: value
+          }))
+        }))
+      };
+    });
+    
+    // Mettre à jour les groupes et activités de ce jour en base
+    const jour = updatedJours.find(j => j.id === jourId);
+    if (jour) {
+      for (const groupe of jour.groupes) {
+        await supabase
+          .from('groupes_activites')
+          .update({ inscriptions_ouvertes: value })
+          .eq('id', groupe.id);
+        
+        for (const activite of groupe.activites) {
+          await supabase
+            .from('activites')
+            .update({ inscriptions_ouvertes: value })
+            .eq('id', activite.id);
+        }
+      }
+    }
+    
+    // Vérifier pour le niveau voyage
+    const tousJoursCoches = updatedJours.length > 0 && updatedJours.every(j => j.checked);
+    const tousJoursDecoches = updatedJours.length > 0 && updatedJours.every(j => !j.checked);
+    
+    let nouvelleValeurVoyage = permissionsVoyage;
+    if (tousJoursCoches && !permissionsVoyage) nouvelleValeurVoyage = true;
+    if (tousJoursDecoches && permissionsVoyage) nouvelleValeurVoyage = false;
+    
+    if (nouvelleValeurVoyage !== permissionsVoyage) {
+      await supabase
+        .from('voyages')
+        .update({ inscriptions_ouvertes: nouvelleValeurVoyage })
+        .eq('id', voyageId);
+      setPermissionsVoyage(nouvelleValeurVoyage);
+    }
+    
+    setPermissionsJours(updatedJours);
+    setSavingPermissions(false);
+  };
+
+  const updateGroupePermission = async (groupeId: string, value: boolean, jourId: string) => {
+    setSavingPermissions(true);
+    
+    await supabase
+      .from('groupes_activites')
+      .update({ inscriptions_ouvertes: value })
+      .eq('id', groupeId);
+    
+    let updatedJours: JourPermission[] = permissionsJours.map(jour => {
+      if (jour.id !== jourId) return jour;
+      
+      return {
+        ...jour,
+        groupes: jour.groupes.map(groupe => {
+          if (groupe.id !== groupeId) return groupe;
+          
+          return {
+            ...groupe,
+            checked: value,
+            activites: groupe.activites.map(act => ({
+              ...act,
+              checked: value
+            }))
+          };
+        })
+      };
+    });
+    
+    // Mettre à jour les activités du groupe en base
+    const jour = updatedJours.find(j => j.id === jourId);
+    const groupe = jour?.groupes?.find((g: any) => g.id === groupeId);
+    if (groupe) {
+      for (const activite of groupe.activites) {
+        await supabase
+          .from('activites')
+          .update({ inscriptions_ouvertes: value })
+          .eq('id', activite.id);
+      }
+    }
+    
+    // Vérifier pour le jour si tous ses groupes sont cochés/décochés
+    updatedJours = updatedJours.map(jour => {
+      if (jour.id !== jourId) return jour;
+      
+      const tousCoches = jour.groupes.length > 0 && jour.groupes.every(g => g.checked);
+      const tousDecoches = jour.groupes.length > 0 && jour.groupes.every(g => !g.checked);
+      
+      let nouvelleValeurJour = jour.checked;
+      if (tousCoches && !jour.checked) nouvelleValeurJour = true;
+      if (tousDecoches && jour.checked) nouvelleValeurJour = false;
+      
+      if (nouvelleValeurJour !== jour.checked) {
+        supabase
+          .from('planning_jours')
+          .update({ inscriptions_ouvertes: nouvelleValeurJour })
+          .eq('id', jour.id);
+      }
+      
+      return {
+        ...jour,
+        checked: nouvelleValeurJour,
+        groupes: jour.groupes
+      };
+    });
+    
+    // Vérifier pour le niveau voyage
+    const tousJoursCoches = updatedJours.length > 0 && updatedJours.every(j => j.checked);
+    const tousJoursDecoches = updatedJours.length > 0 && updatedJours.every(j => !j.checked);
+    
+    let nouvelleValeurVoyage = permissionsVoyage;
+    if (tousJoursCoches && !permissionsVoyage) nouvelleValeurVoyage = true;
+    if (tousJoursDecoches && permissionsVoyage) nouvelleValeurVoyage = false;
+    
+    if (nouvelleValeurVoyage !== permissionsVoyage) {
+      await supabase
+        .from('voyages')
+        .update({ inscriptions_ouvertes: nouvelleValeurVoyage })
+        .eq('id', voyageId);
+      setPermissionsVoyage(nouvelleValeurVoyage);
+    }
+    
+    setPermissionsJours(updatedJours);
+    setSavingPermissions(false);
+  };
+
+  const updateActivitePermission = async (activiteId: string, value: boolean) => {
+    setSavingPermissions(true);
+    
+    await supabase
+      .from('activites')
+      .update({ inscriptions_ouvertes: value })
+      .eq('id', activiteId);
+    
+    let updatedJours: JourPermission[] = permissionsJours.map(jour => ({
+      ...jour,
+      groupes: jour.groupes.map(groupe => ({
+        ...groupe,
+        activites: groupe.activites.map(act => ({
+          ...act,
+          checked: act.id === activiteId ? value : act.checked
+        }))
+      }))
+    }));
+    
+    // Vérifier pour chaque groupe si toutes ses activités sont cochées/décochées
+    updatedJours = updatedJours.map(jour => ({
+      ...jour,
+      groupes: jour.groupes.map(groupe => {
+        const toutesCochees = groupe.activites.length > 0 && groupe.activites.every(act => act.checked);
+        const toutesDecochees = groupe.activites.length > 0 && groupe.activites.every(act => !act.checked);
+        
+        let nouvelleValeurGroupe = groupe.checked;
+        if (toutesCochees && !groupe.checked) nouvelleValeurGroupe = true;
+        if (toutesDecochees && groupe.checked) nouvelleValeurGroupe = false;
+        
+        if (nouvelleValeurGroupe !== groupe.checked) {
+          // Mettre à jour en base
+          supabase
+            .from('groupes_activites')
+            .update({ inscriptions_ouvertes: nouvelleValeurGroupe })
+            .eq('id', groupe.id);
+        }
+        
+        return {
+          ...groupe,
+          checked: nouvelleValeurGroupe,
+          activites: groupe.activites
+        };
+      })
+    }));
+    
+    // Vérifier pour chaque jour si tous ses groupes sont cochés/décochés
+    updatedJours = updatedJours.map(jour => {
+      const tousCoches = jour.groupes.length > 0 && jour.groupes.every(g => g.checked);
+      const tousDecoches = jour.groupes.length > 0 && jour.groupes.every(g => !g.checked);
+      
+      let nouvelleValeurJour = jour.checked;
+      if (tousCoches && !jour.checked) nouvelleValeurJour = true;
+      if (tousDecoches && jour.checked) nouvelleValeurJour = false;
+      
+      if (nouvelleValeurJour !== jour.checked) {
+        supabase
+          .from('planning_jours')
+          .update({ inscriptions_ouvertes: nouvelleValeurJour })
+          .eq('id', jour.id);
+      }
+      
+      return {
+        ...jour,
+        checked: nouvelleValeurJour,
+        groupes: jour.groupes
+      };
+    });
+    
+    // Vérifier pour le niveau voyage si tous les jours sont cochés/décochés
+    const tousJoursCoches = updatedJours.length > 0 && updatedJours.every(j => j.checked);
+    const tousJoursDecoches = updatedJours.length > 0 && updatedJours.every(j => !j.checked);
+    
+    let nouvelleValeurVoyage = permissionsVoyage;
+    if (tousJoursCoches && !permissionsVoyage) nouvelleValeurVoyage = true;
+    if (tousJoursDecoches && permissionsVoyage) nouvelleValeurVoyage = false;
+    
+    if (nouvelleValeurVoyage !== permissionsVoyage) {
+      await supabase
+        .from('voyages')
+        .update({ inscriptions_ouvertes: nouvelleValeurVoyage })
+        .eq('id', voyageId);
+      setPermissionsVoyage(nouvelleValeurVoyage);
+    }
+    
+    setPermissionsJours(updatedJours);
+    setSavingPermissions(false);
+  };
+
+  const togglePermissionsJour = (jourId: string) => {
+    const newExpanded = new Set(expandedPermissionsJours);
+    if (newExpanded.has(jourId)) newExpanded.delete(jourId);
+    else newExpanded.add(jourId);
+    setExpandedPermissionsJours(newExpanded);
+  };
+
+  const togglePermissionsGroupe = (groupeId: string) => {
+    const newExpanded = new Set(expandedPermissionsGroupes);
+    if (newExpanded.has(groupeId)) newExpanded.delete(groupeId);
+    else newExpanded.add(groupeId);
+    setExpandedPermissionsGroupes(newExpanded);
+  };
+
+
   if (!isResponsable) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg">
@@ -644,6 +1041,13 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
 
   return (
     <div className="space-y-4">
+
+      <button
+        onClick={() => setShowPermissionsModal(true)}
+        className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 mt-3"
+      >
+        🔓 Gérer les permissions d'inscription
+      </button>
       {/* Barre de recherche globale */}
       <div className="sticky top-0 z-10 bg-white p-4 border rounded-lg shadow-sm">
         <input
@@ -966,6 +1370,143 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
               >
                 Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal pour la gestion des permissions d'inscription */}
+      {showPermissionsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div className="p-6 border-b">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold">🔓 Gestion des inscriptions</h3>
+                <button
+                  onClick={() => setShowPermissionsModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                Cochez/décochez pour autoriser ou bloquer les inscriptions des élèves
+              </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-4">
+                {/* Niveau Voyage (global) */}
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={permissionsVoyage}
+                      onChange={(e) => updateVoyagePermission(e.target.checked)}
+                      disabled={savingPermissions}
+                      className="w-5 h-5 rounded"
+                    />
+                    <span className="text-white font-semibold">🌍 Toutes les inscriptions (global)</span>
+                  </label>
+                </div>
+                
+                {/* Jours */}
+                {permissionsJours.map((jour: JourPermission) => {
+                  const dateObj = parseISO(jour.date);
+                  const jourLabel = format(dateObj, 'EEEE dd MMMM', { locale: fr });
+                  const isExpanded = expandedPermissionsJours.has(jour.id);
+                  
+                  return (
+                    <div key={jour.id} className="bg-white rounded-lg border overflow-hidden">
+                      <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
+                        <button
+                          onClick={() => togglePermissionsJour(jour.id)}
+                          className="flex items-center gap-2 text-left font-medium"
+                        >
+                          <span>{isExpanded ? '▼' : '▶'}</span>
+                          <span className="capitalize">{jourLabel}</span>
+                        </button>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={jour.checked}
+                            onChange={(e) => updateJourPermission(jour.id, e.target.checked)}
+                            disabled={savingPermissions}
+                            className="w-4 h-4 rounded"
+                          />
+                          <span className="text-sm text-gray-600">Inscriptions</span>
+                        </label>
+                      </div>
+                      
+                      {isExpanded && (
+                        <div className="p-3 space-y-3">
+                          {jour.groupes.map((groupe: GroupePermission) => {
+                            const isGroupeExpanded = expandedPermissionsGroupes.has(groupe.id);
+                            
+                            return (
+                              <div key={groupe.id} className="border rounded-lg overflow-hidden">
+                                <div className="bg-blue-50 px-3 py-2 border-b flex justify-between items-center">
+                                  <button
+                                    onClick={() => togglePermissionsGroupe(groupe.id)}
+                                    className="flex items-center gap-2 text-left"
+                                  >
+                                    <span className="text-xs">{isGroupeExpanded ? '▼' : '▶'}</span>
+                                    <span className="font-medium">{groupe.nom}</span>
+                                  </button>
+                                  <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={groupe.checked}
+                                      onChange={(e) => updateGroupePermission(groupe.id, e.target.checked, jour.id)}
+                                      disabled={savingPermissions}
+                                      className="w-4 h-4 rounded"
+                                    />
+                                    <span className="text-xs text-gray-600">Inscriptions</span>
+                                  </label>
+                                </div>
+                                
+                                {isGroupeExpanded && (
+                                  <div className="p-2 space-y-2">
+                                    {groupe.activites.map((activite: ActivitePermission) => (
+                                      <div key={activite.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                        <div>
+                                          <span className="text-sm">{activite.titre}</span>
+                                          <span className="text-xs text-gray-400 ml-2">
+                                            {activite.heure_debut.slice(0, 5)}-{activite.heure_fin.slice(0, 5)}
+                                          </span>
+                                        </div>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={activite.checked}
+                                            onChange={(e) => updateActivitePermission(activite.id, e.target.checked)}
+                                            disabled={savingPermissions}
+                                            className="w-4 h-4 rounded"
+                                          />
+                                          <span className="text-xs text-gray-600">Inscriptions</span>
+                                        </label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="p-6 border-t bg-gray-50 flex justify-end">
+              <button
+                onClick={() => setShowPermissionsModal(false)}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              >
+                Fermer
               </button>
             </div>
           </div>

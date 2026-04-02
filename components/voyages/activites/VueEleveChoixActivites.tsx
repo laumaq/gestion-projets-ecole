@@ -1,5 +1,3 @@
-//components/activites/VueEleveChoixActivites.tsx
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -9,7 +7,7 @@ import { fr } from 'date-fns/locale';
 
 interface Props {
   voyageId: string;
-  participantId: string;  // ID de la personne (matricule élève ou ID employé)
+  participantId: string;
   participantType: 'student' | 'employee';
 }
 
@@ -37,6 +35,7 @@ interface Activite {
   avec_inscription: boolean;
   est_obligatoire: boolean;
   nb_inscrits: number;
+  inscriptions_ouvertes: boolean;
 }
 
 export default function VueChoixActivites({ voyageId, participantId, participantType }: Props) {
@@ -73,6 +72,17 @@ export default function VueChoixActivites({ voyageId, participantId, participant
     const inscriptionsSet = new Set(inscriptionsData?.map(i => i.activite_id) || []);
     setInscriptions(inscriptionsSet);
 
+    // Récupérer toutes les permissions d'inscription en une seule requête
+    const { data: activitesPermises } = await supabase
+      .from('activites')
+      .select('id, inscriptions_ouvertes')
+      .eq('groupes_activites.planning_jours.voyage_id', voyageId);
+
+    const permissionsMap = new Map();
+    activitesPermises?.forEach(a => {
+      permissionsMap.set(a.id, a.inscriptions_ouvertes);
+    });
+
     const joursComplets = await Promise.all(
       joursData.map(async (jour) => {
         const { data: groupesData } = await supabase
@@ -98,7 +108,8 @@ export default function VueChoixActivites({ voyageId, participantId, participant
 
                 return {
                   ...activite,
-                  nb_inscrits: count || 0
+                  nb_inscrits: count || 0,
+                  inscriptions_ouvertes: permissionsMap.get(activite.id) || false
                 };
               })
             );
@@ -113,7 +124,6 @@ export default function VueChoixActivites({ voyageId, participantId, participant
           })
         );
 
-        // TRI DES GROUPES PAR HEURE DE DÉBUT DE LEUR PREMIÈRE ACTIVITÉ
         const groupesTries = [...groupesComplets].sort((a, b) => {
           const heureA = a.activites[0]?.heure_debut || '23:59:59';
           const heureB = b.activites[0]?.heure_debut || '23:59:59';
@@ -132,7 +142,6 @@ export default function VueChoixActivites({ voyageId, participantId, participant
     setLoading(false);
   };
 
-  // Vérifier si deux activités se chevauchent (activité différente)
   const verifierChevauchement = (activite1: Activite, activite2: Activite): boolean => {
     if (activite1.id === activite2.id) return false;
     
@@ -144,7 +153,6 @@ export default function VueChoixActivites({ voyageId, participantId, participant
     return (debut1 < fin2 && debut2 < fin1);
   };
 
-  // Récupérer toutes les activités inscrites (hors celle en cours de vérification)
   const getAutresActivitesInscrites = (activiteId?: string): Activite[] => {
     return jours
       .flatMap(j => j.groupes)
@@ -152,16 +160,19 @@ export default function VueChoixActivites({ voyageId, participantId, participant
       .filter(a => inscriptions.has(a.id) && a.id !== activiteId);
   };
 
-  // Vérifier si une activité est en conflit avec d'autres inscriptions
   const aConflit = (activite: Activite, activitesInscrites: Activite[]): boolean => {
     return activitesInscrites.some(inscrite => verifierChevauchement(activite, inscrite));
   };
 
-  // Vérifier si le participant peut s'inscrire à une activité
   const peutSInscrire = (activite: Activite, groupe: Groupe): { peut: boolean; raison: string } => {
     // Activité obligatoire : pas d'inscription manuelle
     if (activite.est_obligatoire) {
       return { peut: false, raison: 'Activité obligatoire (inscription automatique)' };
+    }
+
+    // Vérifier si les inscriptions sont ouvertes pour cette activité
+    if (!activite.inscriptions_ouvertes) {
+      return { peut: false, raison: 'Les inscriptions sont fermées pour cette activité' };
     }
 
     // Déjà inscrit
@@ -213,7 +224,6 @@ export default function VueChoixActivites({ voyageId, participantId, participant
     if (error) {
       if (error.code === '23505') {
         alert('Vous êtes déjà inscrit à cette activité');
-        // Rafraîchir les inscriptions
         const { data } = await supabase
           .from('inscriptions_activites')
           .select('activite_id')
@@ -225,10 +235,8 @@ export default function VueChoixActivites({ voyageId, participantId, participant
         alert('Erreur lors de l\'inscription');
       }
     } else {
-      // Mise à jour locale
       setInscriptions(prev => new Set(prev).add(activite.id));
       
-      // Mettre à jour les compteurs dans l'état local
       setJours(prevJours => 
         prevJours.map(jour => ({
           ...jour,
@@ -305,7 +313,6 @@ export default function VueChoixActivites({ voyageId, participantId, participant
 
   return (
     <div className="space-y-4">
-      {/* En-tête avec résumé */}
       <div className="bg-white rounded-lg border p-4 sticky top-0 z-10">
         <div className="flex justify-between items-center">
           <div>
@@ -322,7 +329,6 @@ export default function VueChoixActivites({ voyageId, participantId, participant
         </div>
       </div>
 
-      {/* Liste des jours */}
       {jours.map((jour) => {
         const estExpanded = expandedJour === jour.id;
         const dateObj = parseISO(jour.date);
@@ -382,13 +388,14 @@ export default function VueChoixActivites({ voyageId, participantId, participant
                               const estInscrit = inscriptions.has(activite.id);
                               const verification = peutSInscrire(activite, groupe);
                               const estComplet = activite.jauge && activite.nb_inscrits >= activite.jauge;
+                              const inscriptionsFermees = !activite.inscriptions_ouvertes && !activite.est_obligatoire;
                               
                               return (
                                 <div
                                   key={activite.id}
                                   className={`border rounded-lg p-3 transition hover:shadow-sm ${
                                     estInscrit ? 'bg-green-50 border-green-200' : ''
-                                  }`}
+                                  } ${inscriptionsFermees ? 'opacity-60 bg-gray-50' : ''}`}
                                 >
                                   <div className="flex justify-between items-start">
                                     <div className="flex-1">
@@ -405,6 +412,11 @@ export default function VueChoixActivites({ voyageId, participantId, participant
                                         {estComplet && (
                                           <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
                                             Complet
+                                          </span>
+                                        )}
+                                        {inscriptionsFermees && (
+                                          <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">
+                                            Inscriptions fermées
                                           </span>
                                         )}
                                       </div>
@@ -434,13 +446,13 @@ export default function VueChoixActivites({ voyageId, participantId, participant
                                         ) : (
                                           <button
                                             onClick={() => inscrire(activite, groupe)}
-                                            disabled={saving || !verification.peut}
+                                            disabled={saving || !verification.peut || inscriptionsFermees}
                                             className={`px-3 py-1.5 text-sm rounded-lg ${
-                                              verification.peut
+                                              verification.peut && !inscriptionsFermees
                                                 ? 'bg-green-600 text-white hover:bg-green-700'
                                                 : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                             } disabled:opacity-50`}
-                                            title={!verification.peut ? verification.raison : ''}
+                                            title={!verification.peut ? verification.raison : inscriptionsFermees ? 'Inscriptions fermées' : ''}
                                           >
                                             S'inscrire
                                           </button>
