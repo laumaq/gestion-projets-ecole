@@ -72,15 +72,26 @@ export default function VueChoixActivites({ voyageId, participantId, participant
     const inscriptionsSet = new Set(inscriptionsData?.map(i => i.activite_id) || []);
     setInscriptions(inscriptionsSet);
 
-    // Récupérer toutes les permissions d'inscription en une seule requête
-    const { data: activitesPermises } = await supabase
+    // Récupérer tous les IDs des jours
+    const joursIds = joursData.map(j => j.id);
+
+    // Récupérer tous les groupes de ces jours
+    const { data: tousGroupes } = await supabase
+      .from('groupes_activites')
+      .select('id')
+      .in('planning_jour_id', joursIds);
+
+    const groupesIds = tousGroupes?.map(g => g.id) || [];
+
+    // Récupérer toutes les activités de ces groupes avec leurs permissions
+    const { data: toutesActivites } = await supabase
       .from('activites')
       .select('id, inscriptions_ouvertes')
-      .eq('groupes_activites.planning_jours.voyage_id', voyageId);
+      .in('groupe_id', groupesIds);
 
     const permissionsMap = new Map();
-    activitesPermises?.forEach(a => {
-      permissionsMap.set(a.id, a.inscriptions_ouvertes);
+    toutesActivites?.forEach(a => {
+      permissionsMap.set(a.id, a.inscriptions_ouvertes || false);
     });
 
     const joursComplets = await Promise.all(
