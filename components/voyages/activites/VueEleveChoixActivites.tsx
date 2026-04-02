@@ -181,9 +181,12 @@ export default function VueChoixActivites({ voyageId, participantId, participant
       return { peut: false, raison: 'Activité obligatoire (inscription automatique)' };
     }
 
-    // Vérifier si les inscriptions sont ouvertes pour cette activité
-    if (!activite.inscriptions_ouvertes) {
-      return { peut: false, raison: 'Les inscriptions sont fermées pour cette activité' };
+    // Pour les employés, ignorer la vérification des inscriptions fermées
+    if (participantType !== 'employee') {
+      // Vérifier si les inscriptions sont ouvertes pour cette activité (uniquement pour les élèves)
+      if (!activite.inscriptions_ouvertes) {
+        return { peut: false, raison: 'Les inscriptions sont fermées pour cette activité' };
+      }
     }
 
     // Déjà inscrit
@@ -191,7 +194,7 @@ export default function VueChoixActivites({ voyageId, participantId, participant
       return { peut: false, raison: 'Déjà inscrit' };
     }
 
-    // Jauge pleine
+    // Jauge pleine (s'applique aussi aux employés)
     if (activite.jauge && activite.nb_inscrits >= activite.jauge) {
       return { peut: false, raison: 'Complet' };
     }
