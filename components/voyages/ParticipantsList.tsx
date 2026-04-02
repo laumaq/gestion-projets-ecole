@@ -151,6 +151,8 @@ interface Eleve {
   date_naissance: string | null;
   nationalite: string | null;
   regime_alimentaire: any;
+  telephone_eleve?: string;
+  telephone_parent?: string;
 }
 
 interface Professeur {
@@ -159,6 +161,8 @@ interface Professeur {
   prenom: string;
   initiale: string;
   email: string | null;
+  telephone?: string;   
+  eleve_voir_telephone?: boolean; 
   date_naissance?: string | null;
   nationalite?: string | null;
   regime_alimentaire?: any;
@@ -452,9 +456,65 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
   const [userId, setUserId] = useState<string>('');
   const [editingSelfProf, setEditingSelfProf] = useState(false);
   const [selfDraft, setSelfDraft] = useState({ date_naissance: '', nationalite: '' });
+  const [editingEleve, setEditingEleve] = useState<Eleve | null>(null);
+  const [editingEmploye, setEditingEmploye] = useState<Professeur | null>(null);
+  const [expandedParticipants, setExpandedParticipants] = useState<Set<string>>(new Set());
 
   const canEdit = userType === 'employee' && isResponsable;
   const isEmployee = userType === 'employee';
+  const isEleve = userType === 'student';
+  const currentUserId = localStorage.getItem('userId');
+
+  // Fonction pour mettre à jour les infos d'un élève
+  const updateEleveInfo = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingEleve) return;
+    
+    const formData = new FormData(e.currentTarget);
+    
+    const { error } = await supabase
+      .from('students')
+      .update({
+        telephone_eleve: formData.get('telephone_eleve'),
+        telephone_parent: formData.get('telephone_parent')
+      })
+      .eq('matricule', editingEleve.matricule);
+    
+    if (!error) {
+      setEditingEleve(null);
+      loadParticipants(); // Recharger la liste
+      loadProfesseursParticipants();
+    }
+  };
+
+  // Fonction pour mettre à jour les infos d'un employé
+  const updateEmployeInfo = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingEmploye) return;
+    
+    const formData = new FormData(e.currentTarget);
+    
+    const { error } = await supabase
+      .from('employees')
+      .update({
+        telephone: formData.get('telephone'),
+        eleve_voir_telephone: formData.get('eleve_voir_telephone') === 'on'
+      })
+      .eq('id', editingEmploye.id);
+    
+    if (!error) {
+      setEditingEmploye(null);
+      loadParticipants();
+      loadProfesseursParticipants();
+    }
+  };
+
+  const toggleExpand = (id: string) => {
+    const newExpanded = new Set(expandedParticipants);
+    if (newExpanded.has(id)) newExpanded.delete(id);
+    else newExpanded.add(id);
+    setExpandedParticipants(newExpanded);
+  };
 
   useEffect(() => {
     const id = localStorage.getItem('userId') ?? '';
@@ -678,9 +738,9 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
   // ── Grid columns dynamiques ───────────────────────────────────────────────
 
   const colsEleve = isResponsable
-    ? '3fr 2fr 1.5fr 1.5fr 2fr 1.5fr 2fr 1fr'
+    ? '3fr 2fr 1.5fr 1.5fr 2fr 1.5fr 2fr 1.5fr 1fr'  
     : isEmployee
-    ? '4fr 2fr 1.5fr 2fr 2fr 1fr'
+    ? '4fr 2fr 1.5fr 2fr 2fr 1.5fr 1fr' 
     : '5fr 2fr 1.5fr 2fr 1fr';
 
   const colsProf = isResponsable && isEmployee
@@ -820,115 +880,127 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
       })()}
 
       {professeursParticipants.length > 0 && (
-        <div className="bg-white rounded-lg border overflow-x-auto">
+        <div className="bg-white rounded-lg border overflow-hidden">
           <div className="grid gap-4 p-4 bg-purple-50 font-medium text-sm text-gray-700 border-b"
             style={{ gridTemplateColumns: colsProf }}>
             <div>Professeur</div>
             <div>Rôle</div>
             {isResponsable && <><div>Date naiss.</div><div>Nationalité</div></>}
             {isEmployee && <div>Régime alimentaire</div>}
+            <div>Téléphone</div>
             <div />
           </div>
-          {professeursParticipants.map(prof => {
-            const isSelf = prof.professeur_id === userId;
+
+          {professeursParticipants.map((prof) => {
+            const estExpanded = expandedParticipants.has(prof.id);
+            const showPhone = isEmployee || (isEleve && prof.professeur?.eleve_voir_telephone);
+            
             return (
-            <div key={prof.id} className={`grid gap-4 p-4 border-b hover:bg-gray-50 items-center ${isSelf ? 'bg-blue-50' : ''}`}
-              style={{ gridTemplateColumns: colsProf }}>
-              <div className="font-medium flex items-center gap-2">
-                {prof.professeur.prenom} {prof.professeur.nom}
-                {isSelf && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">vous</span>}
-              </div>
-              <div>
-                {canEdit ? (
-                  <select value={prof.role} onChange={e => updateProfRole(prof.id, e.target.value)} className="text-sm border rounded px-2 py-1">
-                    <option value="accompagnateur">👥 Accompagnateur</option>
-                    <option value="responsable">⭐ Responsable</option>
-                    <option value="direction">🏢 Direction</option>
-                    <option value="infirmier">🏥 Infirmier</option>
-                  </select>
-                ) : (
-                  <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
-                    prof.role === 'responsable' ? 'bg-yellow-100 text-yellow-800' :
-                    prof.role === 'direction' ? 'bg-blue-100 text-blue-800' :
-                    prof.role === 'infirmier' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {prof.role === 'accompagnateur' ? '👥 Accompagnateur' :
-                     prof.role === 'responsable' ? '⭐ Responsable' :
-                     prof.role === 'direction' ? '🏢 Direction' :
-                     prof.role === 'infirmier' ? '🏥 Infirmier' : prof.role}
-                  </span>
-                )}
-              </div>
-              {isResponsable && (
-                <>
-                  {/* Date de naissance — éditable uniquement sur sa propre ligne */}
+              <div key={prof.id} className="border-b hover:bg-gray-50">
+                <div 
+                  className="grid gap-4 p-4 items-center cursor-pointer"
+                  style={{ gridTemplateColumns: colsProf }}
+                  onClick={() => toggleExpand(prof.id)}
+                >
+                  <div>
+                    <div className="font-medium">{prof.professeur.prenom} {prof.professeur.nom}</div>
+                    <div className="text-xs text-gray-500">{prof.professeur.email || '—'}</div>
+                  </div>
+                  <div>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      prof.role === 'responsable' ? 'bg-yellow-100 text-yellow-800' :
+                      prof.role === 'direction' ? 'bg-blue-100 text-blue-800' :
+                      prof.role === 'infirmier' ? 'bg-green-100 text-green-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {prof.role === 'accompagnateur' ? '👥 Accompagnateur' :
+                      prof.role === 'responsable' ? '⭐ Responsable' :
+                      prof.role === 'direction' ? '🏢 Direction' :
+                      prof.role === 'infirmier' ? '🏥 Infirmier' : prof.role}
+                    </span>
+                  </div>
+                  {isResponsable && (
+                    <>
+                      <div className="text-sm text-gray-600">
+                        {prof.professeur.date_naissance ? new Date(prof.professeur.date_naissance).toLocaleDateString('fr-BE') : '–'}
+                      </div>
+                      <div className="text-sm text-gray-600">{prof.professeur.nationalite ?? '–'}</div>
+                    </>
+                  )}
+                  {isEmployee && (
+                    <RegimeCell
+                      regime={parseRegime(prof.professeur.regime_alimentaire)}
+                      canEdit={canEdit}
+                      onUpdate={r => updateRegimeProf(prof.professeur_id, r)}
+                    />
+                  )}
                   <div className="text-sm text-gray-600">
-                    {isSelf && editingSelfProf ? (
-                      <input
-                        type="date"
-                        value={selfDraft.date_naissance}
-                        onChange={e => setSelfDraft(d => ({ ...d, date_naissance: e.target.value }))}
-                        className="border border-gray-300 rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-                      />
+                    {showPhone && prof.professeur.telephone ? (
+                      <span className="font-mono">{prof.professeur.telephone}</span>
+                    ) : prof.professeur.telephone ? (
+                      <span className="text-gray-400 italic">Non partagé</span>
                     ) : (
-                      <span>
-                        {prof.professeur.date_naissance
-                          ? new Date(prof.professeur.date_naissance).toLocaleDateString('fr-BE')
-                          : '–'}
-                      </span>
+                      <span className="text-gray-400 italic">—</span>
                     )}
                   </div>
-                  {/* Nationalité — éditable uniquement sur sa propre ligne */}
-                  <div className="text-sm text-gray-600">
-                    {isSelf && editingSelfProf ? (
-                      <input
-                        type="text"
-                        value={selfDraft.nationalite}
-                        onChange={e => setSelfDraft(d => ({ ...d, nationalite: e.target.value }))}
-                        placeholder="ex : Belge"
-                        className="border border-gray-300 rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 w-full"
-                      />
-                    ) : (
-                      <span>{prof.professeur.nationalite ?? '–'}</span>
+                  <div className="flex justify-end gap-2">
+                    {canEdit && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingEmploye({
+                            id: prof.professeur.id,
+                            nom: prof.professeur.nom,
+                            prenom: prof.professeur.prenom,
+                            initiale: prof.professeur.initiale,
+                            email: prof.professeur.email,
+                            telephone: prof.professeur.telephone,
+                            eleve_voir_telephone: prof.professeur.eleve_voir_telephone
+                          });
+                        }}
+                        className="text-blue-600 hover:text-blue-800 text-sm"
+                      >
+                        ✏️
+                      </button>
+                    )}
+                    {canEdit && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeParticipant(prof);
+                        }}
+                        className="text-red-600 hover:text-red-800 text-sm"
+                      >
+                        Retirer
+                      </button>
                     )}
                   </div>
-                </>
-              )}
-              {isEmployee && (
-                <RegimeCell
-                  regime={parseRegime(prof.professeur.regime_alimentaire)}
-                  canEdit={isEmployee}
-                  onUpdate={r => updateRegimeProf(prof.professeur_id, r)}
-                />
-              )}
-              <div className="flex justify-end gap-2">
-                {/* Bouton édition infos perso — visible uniquement sur sa propre ligne */}
-                {isSelf && isResponsable && !editingSelfProf && (
-                  <button
-                    onClick={() => {
-                      setSelfDraft({
-                        date_naissance: prof.professeur.date_naissance?.split('T')[0] ?? '',
-                        nationalite: prof.professeur.nationalite ?? '',
-                      });
-                      setEditingSelfProf(true);
-                    }}
-                    className="text-blue-500 hover:text-blue-700 text-xs"
-                    title="Modifier mes infos"
-                  >
-                    ✎
-                  </button>
-                )}
-                {isSelf && editingSelfProf && (
-                  <>
-                    <button onClick={saveSelfProf} className="text-green-600 hover:text-green-800 text-xs font-medium">✓</button>
-                    <button onClick={() => setEditingSelfProf(false)} className="text-gray-400 hover:text-gray-600 text-xs">✕</button>
-                  </>
-                )}
-                {canEdit && (
-                  <button onClick={() => removeParticipant(prof as any)} className="text-red-500 hover:text-red-700 text-sm">Retirer</button>
+                </div>
+                
+                {/* Zone dépliée */}
+                {estExpanded && (
+                  <div className="p-4 bg-gray-50 border-t">
+                    {prof.professeur.email && (
+                      <div className="text-sm mb-2">
+                        <span className="font-medium">Email :</span> {prof.professeur.email}
+                      </div>
+                    )}
+                    {showPhone && prof.professeur.telephone && (
+                      <div className="text-sm mb-2">
+                        <span className="font-medium">📞 Téléphone :</span> {prof.professeur.telephone}
+                      </div>
+                    )}
+                    {!showPhone && prof.professeur.telephone && (
+                      <div className="text-sm text-gray-400 italic mb-2">
+                        Numéro non partagé avec les élèves
+                      </div>
+                    )}
+                    <div className="text-sm">
+                      <span className="font-medium">Rôle :</span> {prof.role}
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
             );
           })}
         </div>
@@ -944,6 +1016,7 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
           <div>Statut</div>
           {isResponsable && <><div>Date naiss.</div><div>Nationalité</div></>}
           {isEmployee && <div>Régime</div>}
+          {isEmployee && <div>Téléphone</div>}
           <div />
         </div>
 
@@ -999,6 +1072,15 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
                       canEdit={canEdit}
                       onUpdate={r => updateRegimeEleve(p.eleve.matricule, r)}
                     />
+                  )}
+                  {isEmployee && (
+                    <div>
+                      {p.eleve.telephone_eleve ? (
+                        <span className="text-xs font-mono">{p.eleve.telephone_eleve}</span>
+                      ) : (
+                        <span className="text-xs text-gray-400 italic">—</span>
+                      )}
+                    </div>
                   )}
                   <div className="flex justify-end">
                     {canEdit && (
@@ -1180,6 +1262,70 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
           </div>
         </div>
       )}
+
+      {/* Modal d'édition des numéros d'élève */}
+      {canEdit && editingEleve && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div className="p-6 border-b">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold">Modifier les numéros</h3>
+                <button onClick={() => setEditingEleve(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">{editingEleve.prenom} {editingEleve.nom}</p>
+            </div>
+            <form onSubmit={updateEleveInfo} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">📱 Téléphone de l'élève</label>
+                <input name="telephone_eleve" type="tel" defaultValue={editingEleve.telephone_eleve || ''} 
+                  className="w-full px-3 py-2 border rounded-lg" placeholder="+32 123 45 67 89" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">👪 Téléphone d'un parent</label>
+                <input name="telephone_parent" type="tel" defaultValue={editingEleve.telephone_parent || ''} 
+                  className="w-full px-3 py-2 border rounded-lg" placeholder="+32 123 45 67 89" />
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button type="button" onClick={() => setEditingEleve(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Annuler</button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Enregistrer</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal d'édition des infos employé */}
+      {canEdit && editingEmploye && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div className="p-6 border-b">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold">Modifier les informations</h3>
+                <button onClick={() => setEditingEmploye(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">{editingEmploye.prenom} {editingEmploye.nom}</p>
+            </div>
+            <form onSubmit={updateEmployeInfo} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">📞 Téléphone</label>
+                <input name="telephone" type="tel" defaultValue={editingEmploye.telephone || ''} 
+                  className="w-full px-3 py-2 border rounded-lg" placeholder="+32 123 45 67 89" />
+              </div>
+              <div>
+                <label className="flex items-center gap-2">
+                  <input name="eleve_voir_telephone" type="checkbox" defaultChecked={editingEmploye.eleve_voir_telephone || false} className="rounded" />
+                  <span className="text-sm text-gray-700">Les élèves peuvent voir mon numéro de téléphone</span>
+                </label>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button type="button" onClick={() => setEditingEmploye(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Annuler</button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Enregistrer</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
