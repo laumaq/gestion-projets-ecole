@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -43,10 +43,18 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
 
   useEffect(() => {
     if (selectedActivite) {
-      loadParticipants(selectedActivite.id);
-      loadTousParticipants(selectedActivite.id);
+      const activiteId = selectedActivite.id;
+      loadParticipants(activiteId);
+      loadTousParticipants(activiteId);
     }
   }, [selectedActivite]);
+
+  // Et ajoute ce useEffect pour charger les classes quand tousParticipants change
+  useEffect(() => {
+    if (tousParticipants.length > 0) {
+      chargerClassesDisponibles();
+    }
+  }, [tousParticipants]);
 
   const loadJours = async () => {
     const { data: joursData } = await supabase
@@ -214,7 +222,6 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
     
   const loadTousParticipants = useCallback(async (activiteId: string) => {
     if (!activiteId) {
-      console.log('❌ loadTousParticipants - pas d\'activiteId');
       return;
     }
     
@@ -271,23 +278,15 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
 
     // 4. Filtrer ceux qui ne sont pas déjà inscrits
     const nonInscrits = [...eleves, ...employes].filter(p => !inscritsIds.has(`${p.id}_${p.type}`));
-    
-    console.log('📋 nonInscrits (avant validation):', nonInscrits.length);
+  
+    console.log('📋 nonInscrits:', nonInscrits.length);
     
     // 5. Pour simplifier, on garde tous les non-inscrits (sans validation complexe)
     setTousParticipants(nonInscrits);
     
-    console.log('✅ setTousParticipants terminé, taille:', nonInscrits.length);
+    return nonInscrits;
   }, [voyageId]);
 
-  useEffect(() => {
-    if (selectedActivite) {
-      loadParticipants(selectedActivite.id);
-      loadTousParticipants(selectedActivite.id).then(() => {
-        chargerClassesDisponibles();
-      });
-    }
-  }, [selectedActivite]);
     
   const retirerParticipant = async (participantId: string, participantType: string) => {
     if (!confirm('Retirer ce participant de l\'activité ?')) return;
@@ -435,17 +434,13 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
   }, [tousParticipants, searchParticipantTerm]);
 
   const chargerClassesDisponibles = () => {
-    console.log('🔍 chargerClassesDisponibles - tousParticipants:', tousParticipants);
-    
+    if (!selectedActivite) return;
     const classesSet = new Set<string>();
     tousParticipants.forEach(p => {
-      console.log('   Participant:', p.prenom, p.nom, p.type, p.classe);
       if (p.type === 'student' && p.classe) {
         classesSet.add(p.classe);
       }
     });
-    
-    console.log('📚 Classes trouvées:', Array.from(classesSet));
     setClassesDisponibles(Array.from(classesSet).sort());
   };
 
