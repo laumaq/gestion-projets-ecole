@@ -161,8 +161,8 @@ interface Professeur {
   prenom: string;
   initiale: string;
   email: string | null;
-  telephone?: string;   
-  eleve_voir_telephone?: boolean; 
+  telephone?: string;
+  eleve_voir_telephone?: boolean;
   date_naissance?: string | null;
   nationalite?: string | null;
   regime_alimentaire?: any;
@@ -459,11 +459,78 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
   const [editingEleve, setEditingEleve] = useState<Eleve | null>(null);
   const [editingEmploye, setEditingEmploye] = useState<Professeur | null>(null);
   const [expandedParticipants, setExpandedParticipants] = useState<Set<string>>(new Set());
+  const [expandedTableEleves, setExpandedTableEleves] = useState(false);
+  const [expandedTableProfs, setExpandedTableProfs] = useState(false);
+  const [editingEleveSelf, setEditingEleveSelf] = useState(false);
+  const [selfEleveData, setSelfEleveData] = useState({ 
+    telephone_eleve: '', 
+    telephone_parent: '',
+    regime_alimentaire: null 
+  });
+  const [currentUserEleveId, setCurrentUserEleveId] = useState<number | null>(null);
 
   const canEdit = userType === 'employee' && isResponsable;
   const isEmployee = userType === 'employee';
   const isEleve = userType === 'student';
-  const currentUserId = localStorage.getItem('userId');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const [elevePeutModifierTelephone, setElevePeutModifierTelephone] = useState(false);
+  const [elevePeutModifierRegime, setElevePeutModifierRegime] = useState(false);
+  const [filtreRegime, setFiltreRegime] = useState<string>('all');
+
+  useEffect(() => {
+    setCurrentUserId(localStorage.getItem('userId'));
+  }, []);
+
+  
+  const updateSelfEleveInfo = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+    
+    const formData = new FormData(e.currentTarget);
+    const updateData: any = {};
+    
+    // Mettre à jour les téléphones seulement si la permission est activée
+    if (elevePeutModifierTelephone) {
+      const telephoneEleve = formData.get('telephone_eleve');
+      updateData.telephone_eleve = telephoneEleve || null;
+      
+      const telephoneParent = formData.get('telephone_parent');
+      updateData.telephone_parent = telephoneParent || null;
+    }
+    
+    // Mettre à jour le régime seulement si la permission est activée
+    if (elevePeutModifierRegime) {
+      const regimeData = {
+        regime: formData.get('regime') || 'Omnivore',
+        notes: formData.get('regime_notes') || ''
+      };
+      updateData.regime_alimentaire = regimeData;
+    }
+    
+    const { error } = await supabase
+      .from('students')
+      .update(updateData)
+      .eq('matricule', parseInt(userId));
+    
+    if (!error) {
+      setEditingEleveSelf(false);
+      // Recharger les données pour que l'affichage se mette à jour
+      loadParticipants();
+      loadProfesseursParticipants();
+      // Mettre à jour selfEleveData
+      setSelfEleveData({
+        telephone_eleve: updateData.telephone_eleve || '',
+        telephone_parent: updateData.telephone_parent || '',
+        regime_alimentaire: updateData.regime_alimentaire
+      });
+    }
+  };
+
+  const toggleTableEleves = () => setExpandedTableEleves(!expandedTableEleves);
+  const toggleTableProfs = () => setExpandedTableProfs(!expandedTableProfs);
 
   // Fonction pour mettre à jour les infos d'un élève
   const updateEleveInfo = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -472,17 +539,22 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
     
     const formData = new FormData(e.currentTarget);
     
+    const updateData: any = {};
+    
+    const telephoneEleve = formData.get('telephone_eleve');
+    updateData.telephone_eleve = telephoneEleve || null;
+    
+    const telephoneParent = formData.get('telephone_parent');
+    updateData.telephone_parent = telephoneParent || null;
+    
     const { error } = await supabase
       .from('students')
-      .update({
-        telephone_eleve: formData.get('telephone_eleve'),
-        telephone_parent: formData.get('telephone_parent')
-      })
+      .update(updateData)
       .eq('matricule', editingEleve.matricule);
     
     if (!error) {
       setEditingEleve(null);
-      loadParticipants(); // Recharger la liste
+      loadParticipants();
       loadProfesseursParticipants();
     }
   };
@@ -494,18 +566,45 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
     
     const formData = new FormData(e.currentTarget);
     
+    const regimeData = {
+      regime: formData.get('regime') || 'Omnivore',
+      notes: formData.get('regime_notes') || ''
+    };
+    
+    const updateData: any = {};
+    
+    // Email : si vide, mettre null
+    const email = formData.get('email');
+    updateData.email = email || null;
+    
+    // Téléphone : si vide, mettre null
+    const telephone = formData.get('telephone');
+    updateData.telephone = telephone || null;
+    
+    updateData.eleve_voir_telephone = formData.get('eleve_voir_telephone') === 'on';
+    
+    // Date de naissance : si vide, mettre null
+    const dateNaissance = formData.get('date_naissance');
+    updateData.date_naissance = dateNaissance || null;
+    
+    // Nationalité : si vide, mettre null
+    const nationalite = formData.get('nationalite');
+    updateData.nationalite = nationalite || null;
+    
+    updateData.regime_alimentaire = regimeData;
+    
     const { error } = await supabase
       .from('employees')
-      .update({
-        telephone: formData.get('telephone'),
-        eleve_voir_telephone: formData.get('eleve_voir_telephone') === 'on'
-      })
+      .update(updateData)
       .eq('id', editingEmploye.id);
     
     if (!error) {
       setEditingEmploye(null);
       loadParticipants();
       loadProfesseursParticipants();
+    } else {
+      console.error('Erreur lors de la mise à jour:', error);
+      alert('Erreur lors de l\'enregistrement');
     }
   };
 
@@ -517,8 +616,12 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
   };
 
   useEffect(() => {
-    const id = localStorage.getItem('userId') ?? '';
-    setUserId(id);
+    const type = localStorage.getItem('userType');
+    const id = localStorage.getItem('userId');
+    
+    if (type === 'student' && id) {
+      setCurrentUserEleveId(parseInt(id));
+    }
   }, []);
 
   useEffect(() => { loadParticipants(); loadProfesseursParticipants(); }, [voyageId]);
@@ -546,6 +649,46 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
 
   // ── Loaders ───────────────────────────────────────────────────────────────
 
+  const loadVoyageConfig = async () => {
+    const { data } = await supabase
+      .from('voyages')
+      .select('eleve_peut_modifier_telephone, eleve_peut_modifier_regime')
+      .eq('id', voyageId)
+      .single();
+    
+    if (data) {
+      setElevePeutModifierTelephone(data.eleve_peut_modifier_telephone || false);
+      setElevePeutModifierRegime(data.eleve_peut_modifier_regime || false);
+    }
+  };
+
+  // Appeler cette fonction dans un useEffect
+  useEffect(() => {
+    loadVoyageConfig();
+  }, [voyageId]);
+
+  const updateElevePeutModifierTelephone = async (value: boolean) => {
+    const { error } = await supabase
+      .from('voyages')
+      .update({ eleve_peut_modifier_telephone: value })
+      .eq('id', voyageId);
+    
+    if (!error) {
+      setElevePeutModifierTelephone(value);
+    }
+  };
+
+  const updateElevePeutModifierRegime = async (value: boolean) => {
+    const { error } = await supabase
+      .from('voyages')
+      .update({ eleve_peut_modifier_regime: value })
+      .eq('id', voyageId);
+    
+    if (!error) {
+      setElevePeutModifierRegime(value);
+    }
+  };
+
   const loadClassesDisponibles = async () => {
     setLoadingClasses(true);
     const { data } = await supabase.from('students').select('classe').order('classe');
@@ -558,38 +701,25 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
       .from('voyage_participants')
       .select(`*, eleve:students!inner(
         matricule, nom, prenom, classe, niveau, sexe,
-        date_naissance, nationalite, regime_alimentaire
+        date_naissance, nationalite, regime_alimentaire,
+        telephone_eleve, telephone_parent
       )`)
       .eq('voyage_id', voyageId);
     if (!error && data) setParticipants(data);
   };
-
+  
   const loadProfesseursParticipants = async () => {
-    // On essaie d'abord avec les nouvelles colonnes, fallback sans si elles n'existent pas encore
-    let data: any[] | null = null;
-    let error: any = null;
-
     const res = await supabase
       .from('voyage_professeurs')
       .select(`*, professeur:employees(
-        id, nom, prenom, initiale, email,
-        date_naissance, nationalite, regime_alimentaire
+        id, nom, prenom, initiale, email, date_naissance, nationalite, regime_alimentaire,
+        telephone, eleve_voir_telephone
       )`)
       .eq('voyage_id', voyageId);
 
-    if (res.error) {
-      // Fallback sans les nouvelles colonnes (avant migration SQL)
-      const res2 = await supabase
-        .from('voyage_professeurs')
-        .select(`*, professeur:employees(id, nom, prenom, initiale, email)`)
-        .eq('voyage_id', voyageId);
-      data = res2.data; error = res2.error;
-    } else {
-      data = res.data; error = res.error;
+    if (!res.error && res.data) {
+      setProfesseursParticipants(res.data.map((i: any) => ({ ...i, type: 'professeur', professeur: i.professeur })));
     }
-
-    if (!error && data)
-      setProfesseursParticipants(data.map((i: any) => ({ ...i, type: 'professeur', professeur: i.professeur })));
     setLoading(false);
   };
 
@@ -738,9 +868,9 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
   // ── Grid columns dynamiques ───────────────────────────────────────────────
 
   const colsEleve = isResponsable
-    ? '3fr 2fr 1.5fr 1.5fr 2fr 1.5fr 2fr 1.5fr 1fr'  
+    ? '3fr 2fr 1.5fr 1.5fr 2fr 1.5fr 2fr 1.5fr 1.5fr 1fr'  
     : isEmployee
-    ? '4fr 2fr 1.5fr 2fr 2fr 1.5fr 1fr' 
+    ? '4fr 2fr 1.5fr 2fr 2fr 1.5fr 1.5fr 1fr' 
     : '5fr 2fr 1.5fr 2fr 1fr';
 
   const colsProf = isResponsable && isEmployee
@@ -795,302 +925,316 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
       )}
 
       {/* Filtre */}
-      <div className="flex gap-4">
-        <select value={selectedClasse} onChange={e => setSelectedClasse(e.target.value)} className="px-3 py-2 border rounded-lg text-sm">
-          <option value="">Toutes les classes</option>
-          {classesParticipants.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
+      <div className="flex flex-wrap gap-4 items-center justify-between">
+        <div className="flex gap-4">
+          <select value={selectedClasse} onChange={e => setSelectedClasse(e.target.value)} className="px-3 py-2 border rounded-lg text-sm">
+            <option value="">Toutes les classes</option>
+            {classesParticipants.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          
+          {/* Filtre par régime - visible uniquement pour les employés */}
+          {isEmployee && (
+            <select 
+              value={filtreRegime} 
+              onChange={e => setFiltreRegime(e.target.value)} 
+              className="px-3 py-2 border rounded-lg text-sm"
+            >
+              <option value="all">Tous les régimes</option>
+              <option value="Omnivore">🍖 Omnivore</option>
+              <option value="Végétarien">🥬 Végétarien</option>
+              <option value="Halal">🕌 Halal</option>
+            </select>
+          )}
+        </div>
+        
+        {/* Permissions élèves - visibles uniquement pour les responsables */}
+        {canEdit && (
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={elevePeutModifierTelephone}
+                onChange={(e) => updateElevePeutModifierTelephone(e.target.checked)}
+                className="rounded"
+              />
+              <span>📱 Les élèves peuvent modifier leurs numéros</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={elevePeutModifierRegime}
+                onChange={(e) => updateElevePeutModifierRegime(e.target.checked)}
+                className="rounded"
+              />
+              <span>🍽️ Les élèves peuvent modifier leur régime</span>
+            </label>
+          </div>
+        )}
       </div>
+
+
 
       {/* Professeurs */}
 
-      {/* Encart "Mes informations" — visible pour tous les employees participants */}
-      {isEmployee && (() => {
-        const selfProf = professeursParticipants.find(p => p.professeur_id === userId);
-        if (!selfProf) return null;
-        return (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-blue-800">👤 Mes informations personnelles</h3>
-              {!editingSelfProf ? (
-                <button
-                  onClick={() => {
-                    setSelfDraft({
-                      date_naissance: selfProf.professeur.date_naissance?.split('T')[0] ?? '',
-                      nationalite: selfProf.professeur.nationalite ?? '',
-                    });
-                    setEditingSelfProf(true);
-                  }}
-                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                >
-                  ✎ Modifier
-                </button>
-              ) : (
-                <div className="flex gap-2">
-                  <button onClick={saveSelfProf} className="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">✓ Enregistrer</button>
-                  <button onClick={() => setEditingSelfProf(false)} className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300">Annuler</button>
-                </div>
-              )}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <p className="text-xs text-blue-600 font-medium mb-1">Date de naissance</p>
-                {editingSelfProf ? (
-                  <input
-                    type="date"
-                    value={selfDraft.date_naissance}
-                    onChange={e => setSelfDraft(d => ({ ...d, date_naissance: e.target.value }))}
-                    className="w-full border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
-                  />
-                ) : (
-                  <p className="text-sm text-gray-700">
-                    {selfProf.professeur.date_naissance
-                      ? new Date(selfProf.professeur.date_naissance).toLocaleDateString('fr-BE')
-                      : <span className="text-gray-400 italic">Non renseignée</span>}
-                  </p>
-                )}
-              </div>
-              <div>
-                <p className="text-xs text-blue-600 font-medium mb-1">Nationalité</p>
-                {editingSelfProf ? (
-                  <input
-                    type="text"
-                    value={selfDraft.nationalite}
-                    onChange={e => setSelfDraft(d => ({ ...d, nationalite: e.target.value }))}
-                    placeholder="ex : Belge"
-                    className="w-full border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
-                  />
-                ) : (
-                  <p className="text-sm text-gray-700">
-                    {selfProf.professeur.nationalite || <span className="text-gray-400 italic">Non renseignée</span>}
-                  </p>
-                )}
-              </div>
-              <div>
-                <p className="text-xs text-blue-600 font-medium mb-1">Régime alimentaire</p>
-                <RegimeCell
-                  regime={parseRegime(selfProf.professeur.regime_alimentaire)}
-                  canEdit={true}
-                  onUpdate={r => updateRegimeProf(userId, r)}
-                />
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
       {professeursParticipants.length > 0 && (
         <div className="bg-white rounded-lg border overflow-hidden">
-          <div className="grid gap-4 p-4 bg-purple-50 font-medium text-sm text-gray-700 border-b"
-            style={{ gridTemplateColumns: colsProf }}>
-            <div>Professeur</div>
-            <div>Rôle</div>
-            {isResponsable && <><div>Date naiss.</div><div>Nationalité</div></>}
-            {isEmployee && <div>Régime alimentaire</div>}
-            <div>Téléphone</div>
-            <div />
-          </div>
+          <button
+            onClick={toggleTableProfs}
+            className="w-full px-4 py-3 bg-purple-50 hover:bg-purple-100 transition flex justify-between items-center"
+          >
+            <div className="font-medium text-purple-800">
+              👨‍🏫 Professeurs ({professeursParticipants.length})
+            </div>
+            <span className="text-purple-600">{expandedTableProfs ? '▲' : '▼'}</span>
+          </button>
+          
+          {expandedTableProfs && (
+            <div className="overflow-x-auto">
+              <div className="grid gap-4 p-4 bg-purple-50 font-medium text-sm text-gray-700 border-b"
+                style={{ gridTemplateColumns: colsProf }}>
+                <div>Professeur</div>
+                <div>Rôle</div>
+                {isResponsable && <><div>Date naiss.</div><div>Nationalité</div></>}
+                {isEmployee && <div>Régime</div>}
+                <div>Téléphone</div>
+                <div />
+              </div>
 
-          {professeursParticipants.map((prof) => {
-            const estExpanded = expandedParticipants.has(prof.id);
-            const showPhone = isEmployee || (isEleve && prof.professeur?.eleve_voir_telephone);
-            
-            return (
-              <div key={prof.id} className="border-b hover:bg-gray-50">
-                <div 
-                  className="grid gap-4 p-4 items-center cursor-pointer"
-                  style={{ gridTemplateColumns: colsProf }}
-                  onClick={() => toggleExpand(prof.id)}
-                >
-                  <div>
-                    <div className="font-medium">{prof.professeur.prenom} {prof.professeur.nom}</div>
-                    <div className="text-xs text-gray-500">{prof.professeur.email || '—'}</div>
-                  </div>
-                  <div>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      prof.role === 'responsable' ? 'bg-yellow-100 text-yellow-800' :
-                      prof.role === 'direction' ? 'bg-blue-100 text-blue-800' :
-                      prof.role === 'infirmier' ? 'bg-green-100 text-green-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {prof.role === 'accompagnateur' ? '👥 Accompagnateur' :
-                      prof.role === 'responsable' ? '⭐ Responsable' :
-                      prof.role === 'direction' ? '🏢 Direction' :
-                      prof.role === 'infirmier' ? '🏥 Infirmier' : prof.role}
-                    </span>
-                  </div>
-                  {isResponsable && (
-                    <>
-                      <div className="text-sm text-gray-600">
-                        {prof.professeur.date_naissance ? new Date(prof.professeur.date_naissance).toLocaleDateString('fr-BE') : '–'}
-                      </div>
-                      <div className="text-sm text-gray-600">{prof.professeur.nationalite ?? '–'}</div>
-                    </>
-                  )}
-                  {isEmployee && (
-                    <RegimeCell
-                      regime={parseRegime(prof.professeur.regime_alimentaire)}
-                      canEdit={canEdit}
-                      onUpdate={r => updateRegimeProf(prof.professeur_id, r)}
-                    />
-                  )}
-                  <div className="text-sm text-gray-600">
-                    {showPhone && prof.professeur.telephone ? (
-                      <span className="font-mono">{prof.professeur.telephone}</span>
-                    ) : prof.professeur.telephone ? (
-                      <span className="text-gray-400 italic">Non partagé</span>
-                    ) : (
-                      <span className="text-gray-400 italic">—</span>
-                    )}
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    {canEdit && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingEmploye({
-                            id: prof.professeur.id,
-                            nom: prof.professeur.nom,
-                            prenom: prof.professeur.prenom,
-                            initiale: prof.professeur.initiale,
-                            email: prof.professeur.email,
-                            telephone: prof.professeur.telephone,
-                            eleve_voir_telephone: prof.professeur.eleve_voir_telephone
-                          });
-                        }}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        ✏️
-                      </button>
-                    )}
-                    {canEdit && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeParticipant(prof);
-                        }}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Retirer
-                      </button>
-                    )}
-                  </div>
-                </div>
+              {professeursParticipants.map((prof) => {
+                const showPhone = isEmployee || (isEleve && prof.professeur?.eleve_voir_telephone);
+                const isCurrentUser = prof.professeur_id === currentUserId;
                 
-                {/* Zone dépliée */}
-                {estExpanded && (
-                  <div className="p-4 bg-gray-50 border-t">
-                    {prof.professeur.email && (
-                      <div className="text-sm mb-2">
-                        <span className="font-medium">Email :</span> {prof.professeur.email}
+                return (
+                  <div key={prof.id} className="grid gap-4 p-4 border-b hover:bg-gray-50 items-center"
+                    style={{ gridTemplateColumns: colsProf }}>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium">{prof.professeur.prenom} {prof.professeur.nom}</div>
+                        {isCurrentUser && isEmployee && (
+                          <button
+                            onClick={() => {
+                              setEditingEmploye({
+                                id: prof.professeur.id,
+                                nom: prof.professeur.nom,
+                                prenom: prof.professeur.prenom,
+                                initiale: prof.professeur.initiale,
+                                email: prof.professeur.email || '',
+                                telephone: prof.professeur.telephone || '',
+                                eleve_voir_telephone: prof.professeur.eleve_voir_telephone || false,
+                                date_naissance: prof.professeur.date_naissance || '',
+                                nationalite: prof.professeur.nationalite || '',
+                                regime_alimentaire: prof.professeur.regime_alimentaire
+                              });
+                            }}
+                            className="text-blue-600 hover:text-blue-800"
+                            title="Modifier mes informations"
+                          >
+                            ✏️
+                          </button>
+                        )}
                       </div>
+                      <div className="text-xs text-gray-500">{prof.professeur.email || '—'}</div>
+                    </div>
+                    <div>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        prof.role === 'responsable' ? 'bg-yellow-100 text-yellow-800' :
+                        prof.role === 'direction' ? 'bg-blue-100 text-blue-800' :
+                        prof.role === 'infirmier' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {prof.role === 'accompagnateur' ? '👥 Accompagnateur' :
+                        prof.role === 'responsable' ? '⭐ Responsable' :
+                        prof.role === 'direction' ? '🏢 Direction' :
+                        prof.role === 'infirmier' ? '🏥 Infirmier' : prof.role}
+                      </span>
+                    </div>
+                    {isResponsable && (
+                      <>
+                        <div className="text-sm text-gray-600">
+                          {prof.professeur.date_naissance ? new Date(prof.professeur.date_naissance).toLocaleDateString('fr-BE') : '–'}
+                        </div>
+                        <div className="text-sm text-gray-600">{prof.professeur.nationalite ?? '–'}</div>
+                      </>
                     )}
-                    {showPhone && prof.professeur.telephone && (
-                      <div className="text-sm mb-2">
-                        <span className="font-medium">📞 Téléphone :</span> {prof.professeur.telephone}
-                      </div>
+                    {isEmployee && (
+                      <RegimeCell
+                        regime={parseRegime(prof.professeur.regime_alimentaire)}
+                        canEdit={canEdit && isCurrentUser}
+                        onUpdate={r => updateRegimeProf(prof.professeur_id, r)}
+                      />
                     )}
-                    {!showPhone && prof.professeur.telephone && (
-                      <div className="text-sm text-gray-400 italic mb-2">
-                        Numéro non partagé avec les élèves
-                      </div>
-                    )}
-                    <div className="text-sm">
-                      <span className="font-medium">Rôle :</span> {prof.role}
+                    <div className="text-sm text-gray-600">
+                      {showPhone && prof.professeur.telephone ? (
+                        <span className="font-mono">{prof.professeur.telephone}</span>
+                      ) : prof.professeur.telephone ? (
+                        <span className="text-gray-400 italic">Non partagé</span>
+                      ) : (
+                        <span className="text-gray-400 italic">—</span>
+                      )}
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      {canEdit && !isCurrentUser && (
+                        <button onClick={() => removeParticipant(prof)} className="text-red-600 hover:text-red-800 text-sm">
+                          Retirer
+                        </button>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            );
-          })}
+                );
+              })}
+
+            </div>
+          )}
         </div>
       )}
 
       {/* Élèves */}
-      <div className="bg-white rounded-lg border overflow-x-auto">
-        <div className="grid gap-4 p-4 bg-gray-50 font-medium text-sm text-gray-700 border-b"
-          style={{ gridTemplateColumns: colsEleve }}>
-          <div>Élève</div>
-          <div>Classe</div>
-          <div>Genre</div>
-          <div>Statut</div>
-          {isResponsable && <><div>Date naiss.</div><div>Nationalité</div></>}
-          {isEmployee && <div>Régime</div>}
-          {isEmployee && <div>Téléphone</div>}
-          <div />
+      {/* Bouton de modification des informations - visible pour les élèves si au moins une permission est activée */}
+      {isEleve && (elevePeutModifierTelephone || elevePeutModifierRegime) && (
+        <div className="mb-4 flex justify-end">
+          <button
+            onClick={() => {
+              // Charger les données actuelles de l'élève
+              const eleve = participants.find(p => p.eleve.matricule === currentUserEleveId)?.eleve;
+              if (eleve) {
+                setSelfEleveData({
+                  telephone_eleve: eleve.telephone_eleve || '',
+                  telephone_parent: eleve.telephone_parent || '',
+                  regime_alimentaire: eleve.regime_alimentaire
+                });
+              }
+              setEditingEleveSelf(true);
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+          >
+            ✏️ Modifier mes informations
+          </button>
         </div>
+      )}
 
-        {participantsTries
-          .filter(p => !selectedClasse || p.classe === selectedClasse)
-          .map((p, idx, arr) => {
-            const showDivider = idx > 0 && arr[idx - 1].statut !== p.statut;
-            return (
-              <div key={p.id}>
-                {showDivider && <div className="border-t-2 border-gray-300" />}
-                <div
-                  className={`grid gap-4 p-4 border-b hover:bg-gray-50 items-center ${
-                    p.statut === 'annule' ? 'opacity-50' :
-                    p.statut === 'liste_attente' ? 'bg-yellow-50' : ''
-                  }`}
-                  style={{ gridTemplateColumns: colsEleve }}
-                >
-                  <div className="font-medium">{p.eleve.nom} {p.eleve.prenom}</div>
-                  <div className="text-gray-600">{p.classe}</div>
-                  <div>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      p.genre === 'M' ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'
-                    }`}>{p.genre === 'M' ? 'Garçon' : 'Fille'}</span>
-                  </div>
-                  <div>
-                    {canEdit ? (
-                      <select value={p.statut} onChange={e => updateStatut(p.id, e.target.value)} className="text-sm border rounded px-2 py-1">
-                        <option value="confirme">✅ Confirmé</option>
-                        <option value="liste_attente">⏳ Liste d'attente</option>
-                        <option value="annule">❌ Annulé</option>
-                      </select>
-                    ) : (
-                      <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
-                        p.statut === 'confirme' ? 'bg-green-100 text-green-800' :
-                        p.statut === 'liste_attente' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {p.statut === 'confirme' ? '✅ Confirmé' :
-                         p.statut === 'liste_attente' ? "⏳ Liste d'attente" : '❌ Annulé'}
-                      </span>
-                    )}
-                  </div>
-                  {isResponsable && (
-                    <>
-                      <div className="text-sm text-gray-600">
-                        {p.eleve.date_naissance ? new Date(p.eleve.date_naissance).toLocaleDateString('fr-BE') : '–'}
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <button
+          onClick={toggleTableEleves}
+          className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition flex justify-between items-center"
+        >
+          <div className="font-medium text-gray-800">
+            👨‍🎓 Élèves ({participantsTries.length})
+          </div>
+          <span className="text-gray-600">{expandedTableEleves ? '▲' : '▼'}</span>
+        </button>
+        
+        {expandedTableEleves && (
+          <div className="overflow-x-auto">
+            <div className="grid gap-4 p-4 bg-gray-50 font-medium text-sm text-gray-700 border-b"
+              style={{ gridTemplateColumns: colsEleve }}>
+              <div>Élève</div>
+              <div>Classe</div>
+              <div>Genre</div>
+              <div>Statut</div>
+              {isResponsable && <><div>Date naiss.</div><div>Nationalité</div></>}
+              {isEmployee && <div>Régime</div>}
+              {isEmployee && <div>Tél. élève</div>}
+              {isEmployee && <div>Tél. parent</div>}
+              <div />
+            </div>
+
+            {participantsTries
+              .filter(p => !selectedClasse || p.classe === selectedClasse)
+              .filter(p => {
+                if (filtreRegime === 'all') return true;
+                const regime = parseRegime(p.eleve.regime_alimentaire).regime;
+                return regime === filtreRegime;
+              })
+              .map((p, idx, arr) => {
+                const showDivider = idx > 0 && arr[idx - 1].statut !== p.statut;
+                return (
+                  <div key={p.id}>
+                    {showDivider && <div className="border-t-2 border-gray-300" />}
+                    <div
+                      className={`grid gap-4 p-4 border-b hover:bg-gray-50 items-center ${
+                        p.statut === 'annule' ? 'opacity-50' :
+                        p.statut === 'liste_attente' ? 'bg-yellow-50' : ''
+                      }`}
+                      style={{ gridTemplateColumns: colsEleve }}
+                    >
+                      <div className="font-medium">{p.eleve.nom} {p.eleve.prenom}</div>
+                      <div className="text-gray-600">{p.classe}</div>
+                      <div>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          p.genre === 'M' ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'
+                        }`}>{p.genre === 'M' ? 'Garçon' : 'Fille'}</span>
                       </div>
-                      <div className="text-sm text-gray-600">{p.eleve.nationalite ?? '–'}</div>
-                    </>
-                  )}
-                  {isEmployee && (
-                    <RegimeCell
-                      regime={parseRegime(p.eleve.regime_alimentaire)}
-                      canEdit={canEdit}
-                      onUpdate={r => updateRegimeEleve(p.eleve.matricule, r)}
-                    />
-                  )}
-                  {isEmployee && (
-                    <div>
-                      {p.eleve.telephone_eleve ? (
-                        <span className="text-xs font-mono">{p.eleve.telephone_eleve}</span>
-                      ) : (
-                        <span className="text-xs text-gray-400 italic">—</span>
+                      <div>
+                        {canEdit ? (
+                          <select value={p.statut} onChange={e => updateStatut(p.id, e.target.value)} className="text-sm border rounded px-2 py-1">
+                            <option value="confirme">✅ Confirmé</option>
+                            <option value="liste_attente">⏳ Liste d'attente</option>
+                            <option value="annule">❌ Annulé</option>
+                          </select>
+                        ) : (
+                          <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                            p.statut === 'confirme' ? 'bg-green-100 text-green-800' :
+                            p.statut === 'liste_attente' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {p.statut === 'confirme' ? '✅ Confirmé' :
+                            p.statut === 'liste_attente' ? "⏳ Liste d'attente" : '❌ Annulé'}
+                          </span>
+                        )}
+                      </div>
+                      {isResponsable && (
+                        <>
+                          <div className="text-sm text-gray-600">
+                            {p.eleve.date_naissance ? new Date(p.eleve.date_naissance).toLocaleDateString('fr-BE') : '–'}
+                          </div>
+                          <div className="text-sm text-gray-600">{p.eleve.nationalite ?? '–'}</div>
+                        </>
                       )}
+                      {isEmployee && (
+                        <RegimeCell
+                          regime={parseRegime(p.eleve.regime_alimentaire)}
+                          canEdit={canEdit || (isEleve && elevePeutModifierRegime && p.eleve.matricule === currentUserEleveId)}
+                          onUpdate={r => updateRegimeEleve(p.eleve.matricule, r)}
+                        />
+                      )}
+                      {(isEmployee || (isEleve && p.eleve.matricule === currentUserEleveId)) && (
+                        <div>
+                          {p.eleve.telephone_eleve ? (
+                            <span className="text-xs font-mono">{p.eleve.telephone_eleve}</span>
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">—</span>
+                          )}
+                        </div>
+                      )}
+                      {(isEmployee || (isEleve && p.eleve.matricule === currentUserEleveId)) && (
+                        <div>
+                          {p.eleve.telephone_parent ? (
+                            <span className="text-xs font-mono">{p.eleve.telephone_parent}</span>
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">—</span>
+                          )}
+                        </div>
+                      )}
+                      <div className="flex justify-end">
+                        {canEdit && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setEditingEleve(p.eleve)}
+                              className="text-blue-600 hover:text-blue-800 text-sm"
+                            >
+                              ✏️
+                            </button>
+                            <button onClick={() => removeParticipant(p as any)} className="text-red-500 hover:text-red-700 text-sm">
+                              x
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                  <div className="flex justify-end">
-                    {canEdit && (
-                      <button onClick={() => removeParticipant(p as any)} className="text-red-500 hover:text-red-700 text-sm">Retirer</button>
-                    )}
                   </div>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+          </div>
+        )}
       </div>
 
       {/* Modal export */}
@@ -1263,30 +1407,74 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
         </div>
       )}
 
-      {/* Modal d'édition des numéros d'élève */}
-      {canEdit && editingEleve && (
+      {/* Modal d'édition des informations pour l'élève lui-même */}
+      {isEleve && editingEleveSelf && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
             <div className="p-6 border-b">
               <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold">Modifier les numéros</h3>
-                <button onClick={() => setEditingEleve(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+                <h3 className="text-xl font-bold">Mes informations</h3>
+                <button onClick={() => setEditingEleveSelf(false)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
-              <p className="text-sm text-gray-500 mt-1">{editingEleve.prenom} {editingEleve.nom}</p>
             </div>
-            <form onSubmit={updateEleveInfo} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">📱 Téléphone de l'élève</label>
-                <input name="telephone_eleve" type="tel" defaultValue={editingEleve.telephone_eleve || ''} 
-                  className="w-full px-3 py-2 border rounded-lg" placeholder="+32 123 45 67 89" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">👪 Téléphone d'un parent</label>
-                <input name="telephone_parent" type="tel" defaultValue={editingEleve.telephone_parent || ''} 
-                  className="w-full px-3 py-2 border rounded-lg" placeholder="+32 123 45 67 89" />
-              </div>
+            <form onSubmit={updateSelfEleveInfo} className="p-6 space-y-4">
+              
+              {/* Téléphone - visible seulement si la permission est activée */}
+              {elevePeutModifierTelephone && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">📱 Mon téléphone</label>
+                    <input 
+                      name="telephone_eleve" 
+                      type="tel" 
+                      defaultValue={selfEleveData.telephone_eleve || ''} 
+                      className="w-full px-3 py-2 border rounded-lg" 
+                      placeholder="+32 123 45 67 89" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">👪 Téléphone d'un parent</label>
+                    <input 
+                      name="telephone_parent" 
+                      type="tel" 
+                      defaultValue={selfEleveData.telephone_parent || ''} 
+                      className="w-full px-3 py-2 border rounded-lg" 
+                      placeholder="+32 123 45 67 89" 
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Régime alimentaire - visible seulement si la permission est activée */}
+              {elevePeutModifierRegime && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">🍽️ Régime alimentaire</label>
+                    <select
+                      name="regime"
+                      defaultValue={parseRegime(selfEleveData.regime_alimentaire).regime}
+                      className="w-full px-3 py-2 border rounded-lg"
+                    >
+                      <option value="Omnivore">Omnivore</option>
+                      <option value="Végétarien">Végétarien</option>
+                      <option value="Halal">Halal</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">📝 Allergies / intolérances</label>
+                    <textarea
+                      name="regime_notes"
+                      rows={3}
+                      defaultValue={parseRegime(selfEleveData.regime_alimentaire).notes}
+                      className="w-full px-3 py-2 border rounded-lg"
+                      placeholder="Ex: allergie aux noix, intolérance au lactose..."
+                    />
+                  </div>
+                </>
+              )}
+
               <div className="flex justify-end gap-3 pt-4">
-                <button type="button" onClick={() => setEditingEleve(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Annuler</button>
+                <button type="button" onClick={() => setEditingEleveSelf(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Annuler</button>
                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Enregistrer</button>
               </div>
             </form>
@@ -1294,32 +1482,112 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
         </div>
       )}
 
-      {/* Modal d'édition des infos employé */}
-      {canEdit && editingEmploye && (
+      {/* Modal d'édition des informations employé */}
+      {editingEmploye && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
-            <div className="p-6 border-b">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b sticky top-0 bg-white">
               <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold">Modifier les informations</h3>
+                <h3 className="text-xl font-bold">Mes informations personnelles</h3>
                 <button onClick={() => setEditingEmploye(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
               <p className="text-sm text-gray-500 mt-1">{editingEmploye.prenom} {editingEmploye.nom}</p>
             </div>
+            
             <form onSubmit={updateEmployeInfo} className="p-6 space-y-4">
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">📧 Email</label>
+                <input
+                  name="email"
+                  type="email"
+                  defaultValue={editingEmploye.email || ''}
+                  className="w-full px-3 py-2 border rounded-lg"
+                  placeholder="exemple@ecole.be"
+                />
+              </div>
+
+              {/* Téléphone */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">📞 Téléphone</label>
-                <input name="telephone" type="tel" defaultValue={editingEmploye.telephone || ''} 
-                  className="w-full px-3 py-2 border rounded-lg" placeholder="+32 123 45 67 89" />
+                <input
+                  name="telephone"
+                  type="tel"
+                  defaultValue={editingEmploye.telephone || ''}
+                  className="w-full px-3 py-2 border rounded-lg"
+                  placeholder="+32 123 45 67 89"
+                />
               </div>
+
+              {/* Visibilité du téléphone */}
               <div>
                 <label className="flex items-center gap-2">
-                  <input name="eleve_voir_telephone" type="checkbox" defaultChecked={editingEmploye.eleve_voir_telephone || false} className="rounded" />
+                  <input
+                    name="eleve_voir_telephone"
+                    type="checkbox"
+                    defaultChecked={editingEmploye.eleve_voir_telephone || false}
+                    className="rounded"
+                  />
                   <span className="text-sm text-gray-700">Les élèves peuvent voir mon numéro de téléphone</span>
                 </label>
               </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <button type="button" onClick={() => setEditingEmploye(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Annuler</button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Enregistrer</button>
+
+              {/* Date de naissance */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">🎂 Date de naissance</label>
+                <input
+                  name="date_naissance"
+                  type="date"
+                  defaultValue={editingEmploye.date_naissance?.split('T')[0] || ''}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+
+              {/* Nationalité */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">🌍 Nationalité</label>
+                <input
+                  name="nationalite"
+                  type="text"
+                  defaultValue={editingEmploye.nationalite || ''}
+                  className="w-full px-3 py-2 border rounded-lg"
+                  placeholder="Ex: Belge"
+                />
+              </div>
+
+              {/* Régime alimentaire */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">🍽️ Régime alimentaire</label>
+                <select
+                  name="regime"
+                  defaultValue={parseRegime(editingEmploye.regime_alimentaire).regime}
+                  className="w-full px-3 py-2 border rounded-lg"
+                >
+                  <option value="Omnivore">Omnivore</option>
+                  <option value="Végétarien">Végétarien</option>
+                  <option value="Halal">Halal</option>
+                </select>
+              </div>
+
+              {/* Notes régime */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">📝 Allergies / intolérances</label>
+                <textarea
+                  name="regime_notes"
+                  rows={3}
+                  defaultValue={parseRegime(editingEmploye.regime_alimentaire).notes}
+                  className="w-full px-3 py-2 border rounded-lg"
+                  placeholder="Ex: allergie aux noix, intolérance au lactose..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button type="button" onClick={() => setEditingEmploye(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
+                  Annuler
+                </button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  Enregistrer toutes mes informations
+                </button>
               </div>
             </form>
           </div>
