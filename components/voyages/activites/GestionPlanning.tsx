@@ -80,7 +80,14 @@ export default function GestionPlanning({ voyageId, isResponsable }: Props) {
             })
           );
 
-          return { ...jour, groupes: groupesAvecActivites };
+          // Trier les groupes par l'heure de début de leur première activité
+          const groupesTries = [...groupesAvecActivites].sort((a, b) => {
+            const heureA = a.activites[0]?.heure_debut || '23:59:59';
+            const heureB = b.activites[0]?.heure_debut || '23:59:59';
+            return heureA.localeCompare(heureB);
+          });
+
+          return { ...jour, groupes: groupesTries };
         })
       );
 

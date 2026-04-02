@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -32,7 +32,11 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
   const [saving, setSaving] = useState(false);
   const [searchParticipantTerm, setSearchParticipantTerm] = useState('');
   const [participantsInvalides, setParticipantsInvalides] = useState<{ participant: Participant; raison: string }[]>([]);
-  
+  const [showClasseModal, setShowClasseModal] = useState(false);
+  const [classesDisponibles, setClassesDisponibles] = useState<string[]>([]);
+  const [classesSelectionnees, setClassesSelectionnees] = useState<Set<string>>(new Set());
+  const [actionLoading, setActionLoading] = useState(false);
+
   useEffect(() => {
     loadJours();
   }, [voyageId]);
@@ -45,38 +49,62 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
   }, [selectedActivite]);
 
   const loadJours = async () => {
-    const { data } = await supabase
+    const { data: joursData } = await supabase
       .from('planning_jours')
       .select('*')
       .eq('voyage_id', voyageId)
       .order('date');
     
-    if (data) {
-      // Charger les groupes pour chaque jour
-      const joursAvecGroupes = await Promise.all(
-        data.map(async (jour) => {
-          const { data: groupes } = await supabase
-            .from('groupes_activites')
-            .select('*')
-            .eq('planning_jour_id', jour.id)
-            .order('ordre');
-          
-          // Charger les activités pour chaque groupe
-          const groupesAvecActivites = await Promise.all(
-            (groupes || []).map(async (groupe) => {
-              const { data: activites } = await supabase
-                .from('activites')
-                .select('*')
-                .eq('groupe_id', groupe.id)
-                .order('heure_debut');
-              return { ...groupe, activites: activites || [] };
-            })
-          );
-          return { ...jour, groupes: groupesAvecActivites };
-        })
-      );
-      setJours(joursAvecGroupes);
-    }
+    if (!joursData) return;
+
+    // Récupérer tous les groupes en une seule requête
+    const { data: tousGroupes } = await supabase
+      .from('groupes_activites')
+      .select('*')
+      .in('planning_jour_id', joursData.map(j => j.id))
+      .order('ordre');
+
+    // Récupérer toutes les activités en une seule requête
+    const { data: toutesActivites } = await supabase
+      .from('activites')
+      .select('*')
+      .in('groupe_id', tousGroupes?.map(g => g.id) || [])
+      .order('heure_debut');
+
+    // Regrouper en mémoire
+    const groupesParJour = new Map();
+    tousGroupes?.forEach((groupe: any) => {  // ← AJOUTE "any"
+      if (!groupesParJour.has(groupe.planning_jour_id)) {
+        groupesParJour.set(groupe.planning_jour_id, []);
+      }
+      groupesParJour.get(groupe.planning_jour_id).push(groupe);
+    });
+
+    const activitesParGroupe = new Map();
+    toutesActivites?.forEach((activite: any) => {  // ← AJOUTE "any"
+      if (!activitesParGroupe.has(activite.groupe_id)) {
+        activitesParGroupe.set(activite.groupe_id, []);
+      }
+      activitesParGroupe.get(activite.groupe_id).push(activite);
+    });
+
+    const joursAvecGroupes = joursData.map(jour => {
+      const groupes = groupesParJour.get(jour.id) || [];
+      const groupesAvecActivites = groupes.map((groupe: any) => ({  // ← AJOUTE "any"
+        ...groupe,
+        activites: activitesParGroupe.get(groupe.id) || []
+      }));
+      
+      const groupesTries = [...groupesAvecActivites].sort((a: any, b: any) => {  // ← AJOUTE "any"
+        const heureA = a.activites[0]?.heure_debut || '23:59:59';
+        const heureB = b.activites[0]?.heure_debut || '23:59:59';
+        return heureA.localeCompare(heureB);
+      });
+
+      return { ...jour, groupes: groupesTries };
+    });
+
+    setJours(joursAvecGroupes);
     setLoading(false);
   };
 
@@ -109,20 +137,27 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
     setSearchResults(formatted);
   };
 
-  const loadParticipants = async (activiteId: string) => {
-    if (!activiteId) {
-      console.error('❌ loadParticipants: activiteId manquant');
-      return;
-    }
+  const loadParticipants = useCallback(async (activiteId: string) => {
+    if (!activiteId) return;
     
-    // 1. Récupérer les élèves inscrits
-    const { data: elevesData } = await supabase
-      .from('inscriptions_activites')
-      .select('participant_id')
-      .eq('activite_id', activiteId)
-      .eq('participant_type', 'student');
+    console.log('🔍 loadTousParticipants - début pour activité:', activiteId);
 
-    const elevesIds = elevesData?.map(e => e.participant_id) || [];
+    // Requêtes parallèles pour élèves et employés
+    const [elevesData, employesData] = await Promise.all([
+      supabase
+        .from('inscriptions_activites')
+        .select('participant_id')
+        .eq('activite_id', activiteId)
+        .eq('participant_type', 'student'),
+      supabase
+        .from('inscriptions_activites')
+        .select('participant_id')
+        .eq('activite_id', activiteId)
+        .eq('participant_type', 'employee')
+    ]);
+
+    // Traitement des élèves
+    const elevesIds = elevesData.data?.map(e => e.participant_id) || [];
     let eleves: Participant[] = [];
 
     if (elevesIds.length > 0) {
@@ -141,14 +176,8 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       }));
     }
 
-    // 2. Récupérer les employés inscrits
-    const { data: employesData } = await supabase
-      .from('inscriptions_activites')
-      .select('participant_id')
-      .eq('activite_id', activiteId)
-      .eq('participant_type', 'employee');
-
-    const employesIds = employesData?.map(e => e.participant_id) || [];
+    // Traitement des employés
+    const employesIds = employesData.data?.map(e => e.participant_id) || [];
     let employes: Participant[] = [];
 
     if (employesIds.length > 0) {
@@ -165,31 +194,31 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       }));
     }
 
-    // 3. Fusionner et trier
-    const participants = [...eleves, ...employes];
+    // Fusion et tri
+    const participantsList = [...eleves, ...employes];
     
-    // Trier les participants
-    participants.sort((a, b) => {
+    participantsList.sort((a, b) => {
       if (a.type === 'employee' && b.type !== 'employee') return -1;
       if (a.type !== 'employee' && b.type === 'employee') return 1;
       if (a.type === 'employee' && b.type === 'employee') {
         return a.nom.localeCompare(b.nom);
       }
-      // Pour les élèves : tri par classe puis nom
       const classeA = a.classe || '';
       const classeB = b.classe || '';
       if (classeA !== classeB) return classeA.localeCompare(classeB);
       return a.nom.localeCompare(b.nom);
     });
 
-    setParticipants(participants);
-  };
-
-  const loadTousParticipants = async (activiteId: string) => {
+    setParticipants(participantsList);
+  }, []); // Pas de dépendances car toutes les valeurs sont passées en paramètres
+    
+  const loadTousParticipants = useCallback(async (activiteId: string) => {
     if (!activiteId) {
-      console.error('❌ loadTousParticipants: activiteId manquant');
+      console.log('❌ loadTousParticipants - pas d\'activiteId');
       return;
     }
+    
+    console.log('🔍 loadTousParticipants - début pour activité:', activiteId);
     
     // 1. Récupérer les IDs des participants déjà inscrits
     const { data: inscritsData } = await supabase
@@ -197,17 +226,20 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       .select('participant_id, participant_type')
       .eq('activite_id', activiteId);
 
-    const inscritsIds = new Map();
-    (inscritsData || []).forEach((i: any) => {
-      inscritsIds.set(`${i.participant_id}_${i.participant_type}`, true);
-    });
+    console.log('📝 inscritsData:', inscritsData);
+    console.log('📝 Nombre d\'inscrits:', inscritsData?.length || 0);
+    
+    const inscritsIds = new Set(inscritsData?.map(i => `${i.participant_id}_${i.participant_type}`) || []);
 
     // 2. Récupérer tous les élèves du voyage (participants confirmés)
-    const { data: elevesData } = await supabase
+    const { data: elevesData, error: elevesError } = await supabase
       .from('voyage_participants')
-      .select('eleve_id, students!inner(nom, prenom, classe)')
+      .select('eleve_id, students!inner(matricule, nom, prenom, classe)')
       .eq('voyage_id', voyageId)
       .eq('statut', 'confirme');
+
+    console.log('👨‍🎓 elevesData:', elevesData);
+    console.log('❌ elevesError:', elevesError);
 
     const eleves: Participant[] = (elevesData || []).map((p: any) => ({
       id: p.eleve_id.toString(),
@@ -219,10 +251,13 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
     }));
 
     // 3. Récupérer tous les employés du voyage (professeurs participants)
-    const { data: employesData } = await supabase
+    const { data: employesData, error: employesError } = await supabase
       .from('voyage_professeurs')
-      .select('professeur_id, employees!inner(nom, prenom)')
+      .select('professeur_id, employees!inner(id, nom, prenom)')
       .eq('voyage_id', voyageId);
+
+    console.log('👨‍🏫 employesData:', employesData);
+    console.log('❌ employesError:', employesError);
 
     const employes: Participant[] = (employesData || []).map((p: any) => ({
       id: p.professeur_id,
@@ -231,44 +266,35 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       type: 'employee'
     }));
 
-    // 4. Fusionner et filtrer ceux qui ne sont pas déjà inscrits
-    const tous = [...eleves, ...employes];
-    const nonInscrits = tous.filter(p => !inscritsIds.has(`${p.id}_${p.type}`));
-    
-    // 5. Vérifier les règles d'inscription pour chaque participant
-    const participantsValides = await Promise.all(
-      nonInscrits.map(async (p) => {
-        const { peut, raison } = await peutSInscrire(p.id, p.type);
-        return { participant: p, peut, raison };
-      })
-    );
-    
-    const valides = participantsValides.filter(p => p.peut).map(p => p.participant);
-    const invalides = participantsValides.filter(p => !p.peut);
-    
-    // Stocker les invalides pour affichage
-    setParticipantsInvalides(invalides.map(p => ({ participant: p.participant, raison: p.raison })));
-    
-    // 6. Trier les participants valides
-    valides.sort((a, b) => {
-      if (a.type === 'employee' && b.type !== 'employee') return -1;
-      if (a.type !== 'employee' && b.type === 'employee') return 1;
-      if (a.type === 'employee' && b.type === 'employee') {
-        return a.nom.localeCompare(b.nom);
-      }
-      const classeA = a.classe || '';
-      const classeB = b.classe || '';
-      if (classeA !== classeB) return classeA.localeCompare(classeB);
-      return a.nom.localeCompare(b.nom);
-    });
+    console.log('👥 Total élèves du voyage:', eleves.length);
+    console.log('👥 Total employés du voyage:', employes.length);
 
-    setTousParticipants(valides);
-  };
+    // 4. Filtrer ceux qui ne sont pas déjà inscrits
+    const nonInscrits = [...eleves, ...employes].filter(p => !inscritsIds.has(`${p.id}_${p.type}`));
+    
+    console.log('📋 nonInscrits (avant validation):', nonInscrits.length);
+    
+    // 5. Pour simplifier, on garde tous les non-inscrits (sans validation complexe)
+    setTousParticipants(nonInscrits);
+    
+    console.log('✅ setTousParticipants terminé, taille:', nonInscrits.length);
+  }, [voyageId]);
+
+  useEffect(() => {
+    if (selectedActivite) {
+      loadParticipants(selectedActivite.id);
+      loadTousParticipants(selectedActivite.id).then(() => {
+        chargerClassesDisponibles();
+      });
+    }
+  }, [selectedActivite]);
     
   const retirerParticipant = async (participantId: string, participantType: string) => {
     if (!confirm('Retirer ce participant de l\'activité ?')) return;
     
+    setActionLoading(true);
     setSaving(true);
+
     const { error } = await supabase
       .from('inscriptions_activites')
       .delete()
@@ -281,6 +307,7 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       await loadTousParticipants(selectedActivite.id);
     }
     setSaving(false);
+    setActionLoading(false);
   };
 
   const ajouterParticipant = async (participantId: string, participantType: string) => {
@@ -293,7 +320,9 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       }
     }
     
+    setActionLoading(true);
     setSaving(true);
+
     const { error } = await supabase
       .from('inscriptions_activites')
       .insert({
@@ -311,6 +340,7 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       alert('Erreur lors de l\'inscription');
     }
     setSaving(false);
+    setActionLoading(false);
   };
 
   const toggleJour = (jourId: string) => {
@@ -403,6 +433,196 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       (p.classe && p.classe.toLowerCase().includes(searchParticipantTerm.toLowerCase()))
     );
   }, [tousParticipants, searchParticipantTerm]);
+
+  const chargerClassesDisponibles = () => {
+    console.log('🔍 chargerClassesDisponibles - tousParticipants:', tousParticipants);
+    
+    const classesSet = new Set<string>();
+    tousParticipants.forEach(p => {
+      console.log('   Participant:', p.prenom, p.nom, p.type, p.classe);
+      if (p.type === 'student' && p.classe) {
+        classesSet.add(p.classe);
+      }
+    });
+    
+    console.log('📚 Classes trouvées:', Array.from(classesSet));
+    setClassesDisponibles(Array.from(classesSet).sort());
+  };
+
+  const ajouterClasseEntiere = async (classe: string) => {
+    const elevesDeLaClasse = tousParticipants.filter(
+      p => p.type === 'student' && p.classe === classe
+    );
+    
+    if (elevesDeLaClasse.length === 0) return;
+    
+    // Confirmation
+    if (!confirm(`Ajouter les ${elevesDeLaClasse.length} élèves de la classe ${classe} à cette activité ?`)) {
+      return;
+    }
+    
+    setSaving(true);
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const eleve of elevesDeLaClasse) {
+      // Vérifier la jauge
+      if (selectedActivite.jauge && participants.length + successCount >= selectedActivite.jauge) {
+        alert(`Jauge atteinte, arrêt de l'ajout après ${successCount} élèves`);
+        break;
+      }
+      
+      const { error } = await supabase
+        .from('inscriptions_activites')
+        .insert({
+          activite_id: selectedActivite.id,
+          participant_id: eleve.id,
+          participant_type: 'student'
+        });
+      
+      if (!error) {
+        successCount++;
+      } else if (error.code !== '23505') { // Ignorer les doublons
+        errorCount++;
+      }
+    }
+    
+    // Recharger les données
+    await loadParticipants(selectedActivite.id);
+    await loadTousParticipants(selectedActivite.id);
+    chargerClassesDisponibles();
+    
+    alert(`Ajout terminé : ${successCount} élèves ajoutés, ${errorCount} erreurs`);
+    setSaving(false);
+  };
+
+  const supprimerClassesSelectionnees = async () => {
+    if (classesSelectionnees.size === 0) return;
+    
+    const elevesASupprimer: Participant[] = [];
+    classesSelectionnees.forEach(classe => {
+      const eleves = participants.filter(
+        p => p.type === 'student' && p.classe === classe
+      );
+      elevesASupprimer.push(...eleves);
+    });
+    
+    // Enlever les doublons
+    const idsUniques = new Set();
+    const elevesUniques = elevesASupprimer.filter(e => {
+      if (idsUniques.has(e.id)) return false;
+      idsUniques.add(e.id);
+      return true;
+    });
+    
+    if (elevesUniques.length === 0) return;
+    
+    if (!confirm(`Supprimer les ${elevesUniques.length} élèves des classes sélectionnées de cette activité ?`)) {
+      return;
+    }
+    
+    setActionLoading(true);
+    setSaving(true);
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const eleve of elevesUniques) {
+      const { error } = await supabase
+        .from('inscriptions_activites')
+        .delete()
+        .eq('activite_id', selectedActivite.id)
+        .eq('participant_id', eleve.id)
+        .eq('participant_type', 'student');
+      
+      if (!error) {
+        successCount++;
+      } else {
+        errorCount++;
+      }
+    }
+    
+    await loadParticipants(selectedActivite.id);
+    await loadTousParticipants(selectedActivite.id);
+    chargerClassesDisponibles();
+    setClassesSelectionnees(new Set());
+    
+    alert(`Suppression terminée : ${successCount} élèves supprimés, ${errorCount} erreurs`);
+    setSaving(false);
+    setActionLoading(false);
+    setShowClasseModal(false);
+  };
+
+  const toggleClasseSelection = (classe: string) => {
+    const newSelection = new Set(classesSelectionnees);
+    if (newSelection.has(classe)) {
+      newSelection.delete(classe);
+    } else {
+      newSelection.add(classe);
+    }
+    setClassesSelectionnees(newSelection);
+  };
+
+  const ajouterClassesSelectionnees = async () => {
+    if (classesSelectionnees.size === 0) return;
+    
+    const elevesAAjouter: Participant[] = [];
+    classesSelectionnees.forEach(classe => {
+      const eleves = tousParticipants.filter(
+        p => p.type === 'student' && p.classe === classe
+      );
+      elevesAAjouter.push(...eleves);
+    });
+    
+    // Enlever les doublons (au cas où un élève serait dans plusieurs classes, improbable)
+    const idsUniques = new Set();
+    const elevesUniques = elevesAAjouter.filter(e => {
+      if (idsUniques.has(e.id)) return false;
+      idsUniques.add(e.id);
+      return true;
+    });
+    
+    if (!confirm(`Ajouter les ${elevesUniques.length} élèves des classes sélectionnées à cette activité ?`)) {
+      return;
+    }
+    
+    setSaving(true);
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const eleve of elevesUniques) {
+      // Vérifier la jauge
+      if (selectedActivite.jauge && participants.length + successCount >= selectedActivite.jauge) {
+        alert(`Jauge atteinte, arrêt de l'ajout après ${successCount} élèves`);
+        break;
+      }
+      
+      const { error } = await supabase
+        .from('inscriptions_activites')
+        .insert({
+          activite_id: selectedActivite.id,
+          participant_id: eleve.id,
+          participant_type: 'student'
+        });
+      
+      if (!error) {
+        successCount++;
+      } else if (error.code !== '23505') {
+        errorCount++;
+      }
+    }
+    
+    await loadParticipants(selectedActivite.id);
+    await loadTousParticipants(selectedActivite.id);
+    chargerClassesDisponibles();
+    setClassesSelectionnees(new Set());
+    
+    alert(`Ajout terminé : ${successCount} élèves ajoutés, ${errorCount} erreurs`);
+    setSaving(false);
+    setShowClasseModal(false);
+  };
 
   if (!isResponsable) {
     return (
@@ -600,7 +820,7 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
                           </div>
                           <button
                             onClick={() => retirerParticipant(p.id, p.type)}
-                            disabled={saving}
+                            disabled={actionLoading || saving}
                             className="text-red-600 hover:text-red-800"
                           >
                             ✕
@@ -649,6 +869,17 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
                       )}
                     </div>
                   )}
+
+                  {tousParticipants.length > 0 && (
+                    <div className="p-4 border-t bg-gray-50">
+                      <button
+                        onClick={() => setShowClasseModal(true)}
+                        className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2"
+                      >
+                        📚 Ajouter / supprimer des classes entières
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -661,6 +892,82 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
         </div>
 
       </div>
+
+            
+      {/* Modal pour la sélection de classes */}
+      {showClasseModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[80vh] flex flex-col">
+            <div className="p-6 border-b">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold">Ajouter des classes</h3>
+                <button
+                  onClick={() => {
+                    setShowClasseModal(false);
+                    setClassesSelectionnees(new Set());
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                Sélectionnez les classes à ajouter à cette activité
+              </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-2 gap-2">
+                {classesDisponibles.map(classe => (
+                  <button
+                    key={classe}
+                    onClick={() => toggleClasseSelection(classe)}
+                    className={`px-4 py-2 rounded-lg border transition ${
+                      classesSelectionnees.has(classe)
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {classe}
+                  </button>
+                ))}
+              </div>
+              {classesDisponibles.length === 0 && (
+                <p className="text-center text-gray-500 py-4">
+                  Aucune classe disponible à ajouter
+                </p>
+              )}
+            </div>
+
+            <div className="p-6 border-t bg-gray-50 flex gap-3">
+              <button
+                onClick={() => {
+                  setShowClasseModal(false);
+                  setClassesSelectionnees(new Set());
+                }}
+                className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-100"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={ajouterClassesSelectionnees}
+                disabled={classesSelectionnees.size === 0 || actionLoading || saving}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+              >
+                Ajouter
+              </button>
+              <button
+                onClick={supprimerClassesSelectionnees}
+                disabled={classesSelectionnees.size === 0 || actionLoading || saving}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

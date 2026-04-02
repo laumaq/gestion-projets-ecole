@@ -113,10 +113,17 @@ export default function VueChoixActivites({ voyageId, participantId, participant
           })
         );
 
+        // TRI DES GROUPES PAR HEURE DE DÉBUT DE LEUR PREMIÈRE ACTIVITÉ
+        const groupesTries = [...groupesComplets].sort((a, b) => {
+          const heureA = a.activites[0]?.heure_debut || '23:59:59';
+          const heureB = b.activites[0]?.heure_debut || '23:59:59';
+          return heureA.localeCompare(heureB);
+        });
+
         return {
           id: jour.id,
           date: jour.date,
-          groupes: groupesComplets
+          groupes: groupesTries
         };
       })
     );
