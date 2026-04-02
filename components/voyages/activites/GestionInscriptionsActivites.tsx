@@ -433,14 +433,23 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
     );
   }, [tousParticipants, searchParticipantTerm]);
 
-  const chargerClassesDisponibles = () => {
+  const chargerClassesDisponibles = async () => {
     if (!selectedActivite) return;
+    
+    // Récupérer toutes les classes des élèves du voyage
+    const { data: elevesData } = await supabase
+      .from('voyage_participants')
+      .select('students!inner(classe)')
+      .eq('voyage_id', voyageId)
+      .eq('statut', 'confirme');
+    
     const classesSet = new Set<string>();
-    tousParticipants.forEach(p => {
-      if (p.type === 'student' && p.classe) {
-        classesSet.add(p.classe);
+    elevesData?.forEach((p: any) => {
+      if (p.students.classe) {
+        classesSet.add(p.students.classe);
       }
     });
+    
     setClassesDisponibles(Array.from(classesSet).sort());
   };
 
