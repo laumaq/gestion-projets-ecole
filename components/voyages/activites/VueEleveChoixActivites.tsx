@@ -43,7 +43,7 @@ export default function VueChoixActivites({ voyageId, participantId, participant
   const [loading, setLoading] = useState(true);
   const [expandedJour, setExpandedJour] = useState<string | null>(null);
   const [expandedGroupe, setExpandedGroupe] = useState<string | null>(null);
-  const [inscriptions, setInscriptions] = useState<Set<string>>(new Set());
+  const [inscriptions, setInscriptions] = useState<{ [key: string]: boolean }>({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -69,8 +69,9 @@ export default function VueChoixActivites({ voyageId, participantId, participant
       .eq('participant_id', participantId)
       .eq('participant_type', participantType);
 
-    const inscriptionsSet = new Set(inscriptionsData?.map(i => i.activite_id) || []);
-    setInscriptions(inscriptionsSet);
+    const inscriptionsMap: { [key: string]: boolean } = {};
+    inscriptionsData?.forEach(i => { inscriptionsMap[i.activite_id] = true; });
+    setInscriptions(inscriptionsMap);
 
     // Récupérer tous les IDs des jours
     const joursIds = joursData.map(j => j.id);
@@ -129,7 +130,7 @@ export default function VueChoixActivites({ voyageId, participantId, participant
               ...groupe,
               activites: activitesAvecCompteurs,
               inscriptions_participant: activitesAvecCompteurs
-                .filter(a => inscriptionsSet.has(a.id))
+                .filter(a => inscriptionsMap[a.id])
                 .map(a => a.id)
             };
           })
@@ -164,11 +165,20 @@ export default function VueChoixActivites({ voyageId, participantId, participant
     return (debut1 < fin2 && debut2 < fin1);
   };
 
-  const getAutresActivitesInscrites = (activiteId?: string): Activite[] => {
-    return jours
-      .flatMap(j => j.groupes)
+  const getAutresActivitesInscrites = (activite: Activite, activiteId?: string): Activite[] => {
+    // Trouver le jour de l'activité
+    const jourActuel = jours.find(jour => 
+      jour.groupes.some(g => 
+        g.activites.some(a => a.id === activite.id)
+      )
+    );
+    
+    if (!jourActuel) return [];
+    
+    // Ne prendre que les activités du même jour
+    return jourActuel.groupes
       .flatMap(g => g.activites)
-      .filter(a => inscriptions.has(a.id) && a.id !== activiteId);
+      .filter(a => inscriptions[a.id] && a.id !== activiteId);
   };
 
   const aConflit = (activite: Activite, activitesInscrites: Activite[]): boolean => {
@@ -190,7 +200,7 @@ export default function VueChoixActivites({ voyageId, participantId, participant
     }
 
     // Déjà inscrit
-    if (inscriptions.has(activite.id)) {
+    if (inscriptions[activite.id]) {
       return { peut: false, raison: 'Déjà inscrit' };
     }
 
@@ -199,15 +209,15 @@ export default function VueChoixActivites({ voyageId, participantId, participant
       return { peut: false, raison: 'Complet' };
     }
 
-    // Conflit horaire avec d'autres activités
-    const autresActivites = getAutresActivitesInscrites(activite.id);
+    // Conflit horaire avec d'autres activités du même jour
+    const autresActivites = getAutresActivitesInscrites(activite, activite.id);
     if (aConflit(activite, autresActivites)) {
       return { peut: false, raison: 'Conflit d\'horaire avec une autre activité' };
     }
 
     // Nombre max d'inscriptions dans le groupe
     const inscriptionsDansGroupe = groupe.activites
-      .filter(a => inscriptions.has(a.id))
+      .filter(a => inscriptions[a.id])
       .length;
     
     if (inscriptionsDansGroupe >= groupe.nb_inscriptions_max) {
@@ -243,13 +253,16 @@ export default function VueChoixActivites({ voyageId, participantId, participant
           .select('activite_id')
           .eq('participant_id', participantId)
           .eq('participant_type', participantType);
-        const newSet = new Set(data?.map(i => i.activite_id) || []);
-        setInscriptions(newSet);
+        
+        // Convertir les données en objet au lieu de Set
+        const newInscriptions: { [key: string]: boolean } = {};
+        data?.forEach(i => { newInscriptions[i.activite_id] = true; });
+        setInscriptions(newInscriptions);
       } else {
         alert('Erreur lors de l\'inscription');
       }
     } else {
-      setInscriptions(prev => new Set(prev).add(activite.id));
+      setInscriptions(prev => ({ ...prev, [activite.id]: true }));
       
       setJours(prevJours => 
         prevJours.map(jour => ({
@@ -286,9 +299,9 @@ export default function VueChoixActivites({ voyageId, participantId, participant
 
     if (!error) {
       setInscriptions(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(activite.id);
-        return newSet;
+        const newMap = { ...prev };
+        delete newMap[activite.id];
+        return newMap;
       });
       
       setJours(prevJours => 
@@ -311,7 +324,7 @@ export default function VueChoixActivites({ voyageId, participantId, participant
     setSaving(false);
   };
 
-  const totalInscrites = inscriptions.size;
+  const totalInscrites = Object.keys(inscriptions).length;
 
   if (loading) return <div className="text-center py-8">Chargement des activités...</div>;
 
@@ -373,7 +386,9 @@ export default function VueChoixActivites({ voyageId, participantId, participant
                 ) : (
                   jour.groupes.map((groupe) => {
                     const estGroupeExpanded = expandedGroupe === groupe.id;
-                    const inscriptionsDansGroupe = groupe.activites.filter(a => inscriptions.has(a.id)).length;
+                    const inscriptionsDansGroupe = groupe.activites
+                      .filter(a => inscriptions[a.id])
+                      .length;
                     const placesRestantes = groupe.nb_inscriptions_max - inscriptionsDansGroupe;
                     
                     return (
@@ -399,7 +414,7 @@ export default function VueChoixActivites({ voyageId, participantId, participant
                         {estGroupeExpanded && (
                           <div className="p-3 space-y-2">
                             {groupe.activites.map((activite) => {
-                              const estInscrit = inscriptions.has(activite.id);
+                              const estInscrit = !!inscriptions[activite.id];
                               const verification = peutSInscrire(activite, groupe);
                               const estComplet = activite.jauge && activite.nb_inscrits >= activite.jauge;
                               const inscriptionsFermees = !activite.inscriptions_ouvertes && !activite.est_obligatoire;
