@@ -1,3 +1,5 @@
+// /components/Header.tsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,6 +10,7 @@ export default function Header() {
   const [userName, setUserName] = useState('');
   const [userType, setUserType] = useState<'employee' | 'student'>('employee');
   const [userJob, setUserJob] = useState('');
+  const [userId, setUserId] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -17,13 +20,13 @@ export default function Header() {
     const name = localStorage.getItem('userName');
     const type = localStorage.getItem('userType') as 'employee' | 'student';
     const job = localStorage.getItem('userJob');
-    
-    console.log('Header - Données localStorage:', { name, type, job });
-    
+    const id = localStorage.getItem('userId');
+        
     if (name) setUserName(name);
     if (type) setUserType(type);
     if (job) setUserJob(job);
-  }, [pathname]); // Se relance à chaque changement de page
+    if (id) setUserId(id);
+  }, [pathname]);
 
   if (pathname === '/') return null;
 
@@ -31,6 +34,10 @@ export default function Header() {
     localStorage.clear();
     router.push('/');
   };
+
+  // Liste des UUID autorisés pour l'admin
+  const adminUUIDs = ['52793bea-994a-4b50-b768-75427df4747b'];
+  const isAdmin = userType === 'employee' && userId && adminUUIDs.includes(userId);
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -46,6 +53,11 @@ export default function Header() {
           </Link>
           
           <div className="flex items-center space-x-4">
+            {isAdmin && (
+              <Link href="/admin" className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">
+                Admin
+              </Link>
+            )}
             <Link href="/help" className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">
               Aide
             </Link>
