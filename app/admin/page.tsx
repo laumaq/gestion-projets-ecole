@@ -69,14 +69,49 @@ export default function AdminPage() {
     if (data) setStudents(data);
   };
 
+  const getJobLabel = (job: string | undefined): string => {
+    switch (job) {
+      case 'direction': return 'Direction';
+      case 'administration': return 'Administratif·ve';
+      case 'educ': return 'Éducateur·trice';
+      case 'prof': return 'Professeur·e';
+      default: return job || 'Personnel';
+    }
+  };  
+
   const loadEmployees = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('employees')
-      .select('id, nom, prenom, job')
+      .select('id, nom, prenom, job, email')
       .order('nom')
       .order('prenom');
     
-    if (data) setEmployees(data);
+    if (error) {
+      console.error('Erreur chargement employees:', error);
+      return;
+    }
+    
+    if (data) {
+      // Ordre de tri personnalisé pour les jobs
+      const jobOrder: { [key: string]: number } = {
+        'direction': 1,
+        'administration': 2,
+        'educ': 3,
+        'prof': 4,
+        '': 5
+      };
+      
+      // Trier les employés selon l'ordre des jobs, puis par nom, puis par prénom
+      const sortedEmployees = [...data].sort((a, b) => {
+        const orderA = jobOrder[a.job || ''] || 99;
+        const orderB = jobOrder[b.job || ''] || 99;
+        if (orderA !== orderB) return orderA - orderB;
+        if (a.nom !== b.nom) return a.nom.localeCompare(b.nom);
+        return a.prenom.localeCompare(b.prenom);
+      });
+      
+      setEmployees(sortedEmployees);
+    }
   };
 
   const resetPassword = async (id: string, type: 'student' | 'employee', name: string) => {
@@ -233,13 +268,13 @@ export default function AdminPage() {
                     filteredEmployees.map((employee) => (
                       <tr key={employee.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 text-sm text-gray-900">
-                          {employee.job === 'prof' ? 'Professeur' : employee.job || 'Personnel'}
+                          {getJobLabel(employee.job)}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">{employee.nom}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{employee.prenom}</td>
                         <td className="px-6 py-4 text-right">
                           <button
-                            onClick={() => resetPassword(employee.id, 'employee', `${employee.prenom} ${employee.nom} (${employee.job === 'prof' ? 'Professeur' : employee.job || 'Personnel'})`)}
+                            onClick={() => resetPassword(employee.id, 'employee', `${employee.prenom} ${employee.nom} (${getJobLabel(employee.job)})`)}
                             className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition"
                           >
                             Réinitialiser le mot de passe
