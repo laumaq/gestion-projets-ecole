@@ -18,7 +18,6 @@ interface Employee {
   id: string;
   nom: string;
   prenom: string;
-  role: string;
   job?: string;
   email?: string;
 }
@@ -73,7 +72,7 @@ export default function AdminPage() {
   const loadEmployees = async () => {
     const { data } = await supabase
       .from('employees')
-      .select('id, nom, prenom, role, job')
+      .select('id, nom, prenom, job')
       .order('nom')
       .order('prenom');
     
@@ -104,7 +103,7 @@ export default function AdminPage() {
   );
 
   const filteredEmployees = employees.filter(e =>
-    `${e.nom} ${e.prenom} ${e.role || ''} ${e.job || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
+    `${e.nom} ${e.prenom} ${e.job || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (!isAdmin) {
@@ -234,7 +233,7 @@ export default function AdminPage() {
                     filteredEmployees.map((employee) => (
                       <tr key={employee.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 text-sm text-gray-900">
-                          {employee.job === 'prof' ? 'Professeur' : employee.job || employee.role || 'Personnel'}
+                          {employee.job === 'prof' ? 'Professeur' : employee.job || 'Personnel'}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">{employee.nom}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{employee.prenom}</td>
