@@ -40,7 +40,7 @@ export default function AdminPage() {
     setCurrentUserId(userId);
     
     // Liste des UUID autorisés (à remplacer par les vrais)
-    const adminUUIDs = ['52793bea-994a-4b50-b768-75427df4747b','a06b22ec-11f6-49a7-ab8a-13607ff2ac87']; // À remplacer par ton UUID
+    const adminUUIDs = ['52793bea-994a-4b50-b768-75427df4747b','a06b22ec-11f6-49a7-ab8a-13607ff2ac87']; 
     
     if (userType !== 'employee' || !adminUUIDs.includes(userId || '')) {
       router.push('/dashboard');
