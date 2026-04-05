@@ -182,8 +182,6 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
   const loadParticipants = useCallback(async (activiteId: string) => {
     if (!activiteId) return;
     
-    console.log('🔍 loadTousParticipants - début pour activité:', activiteId);
-
     // Requêtes parallèles pour élèves et employés
     const [elevesData, employesData] = await Promise.all([
       supabase
@@ -255,32 +253,24 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
   }, []); // Pas de dépendances car toutes les valeurs sont passées en paramètres
     
   const loadTousParticipants = useCallback(async (activiteId: string) => {
-    if (!activiteId) {
-      return;
-    }
+    if (!activiteId) return;
     
     console.log('🔍 loadTousParticipants - début pour activité:', activiteId);
     
-    // 1. Récupérer les IDs des participants déjà inscrits
+    // 1. Récupérer les IDs des participants déjà inscrits à CETTE activité
     const { data: inscritsData } = await supabase
       .from('inscriptions_activites')
       .select('participant_id, participant_type')
       .eq('activite_id', activiteId);
 
-    console.log('📝 inscritsData:', inscritsData);
-    console.log('📝 Nombre d\'inscrits:', inscritsData?.length || 0);
-    
     const inscritsIds = new Set(inscritsData?.map(i => `${i.participant_id}_${i.participant_type}`) || []);
 
-    // 2. Récupérer tous les élèves du voyage (participants confirmés)
-    const { data: elevesData, error: elevesError } = await supabase
+    // 2. Récupérer tous les élèves du voyage
+    const { data: elevesData } = await supabase
       .from('voyage_participants')
       .select('eleve_id, students!inner(matricule, nom, prenom, classe)')
       .eq('voyage_id', voyageId)
       .eq('statut', 'confirme');
-
-    console.log('👨‍🎓 elevesData:', elevesData);
-    console.log('❌ elevesError:', elevesError);
 
     const eleves: Participant[] = (elevesData || []).map((p: any) => ({
       id: p.eleve_id.toString(),
@@ -291,14 +281,11 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       eleve_id: p.eleve_id
     }));
 
-    // 3. Récupérer tous les employés du voyage (professeurs participants)
-    const { data: employesData, error: employesError } = await supabase
+    // 3. Récupérer tous les employés du voyage
+    const { data: employesData } = await supabase
       .from('voyage_professeurs')
       .select('professeur_id, employees!inner(id, nom, prenom)')
       .eq('voyage_id', voyageId);
-
-    console.log('👨‍🏫 employesData:', employesData);
-    console.log('❌ employesError:', employesError);
 
     const employes: Participant[] = (employesData || []).map((p: any) => ({
       id: p.professeur_id,
@@ -307,19 +294,70 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       type: 'employee'
     }));
 
-    console.log('👥 Total élèves du voyage:', eleves.length);
-    console.log('👥 Total employés du voyage:', employes.length);
+    // 4. Récupérer toutes les inscriptions pour chaque participant (pour vérifier les règles)
+    const tousParticipantsPotentiels = [...eleves, ...employes];
+    
+    // Récupérer les inscriptions de tous ces participants
+    const allParticipantsIds = tousParticipantsPotentiels.map(p => p.id);
+    const { data: toutesInscriptions } = await supabase
+      .from('inscriptions_activites')
+      .select('participant_id, participant_type, activite_id')
+      .in('participant_id', allParticipantsIds);
 
-    // 4. Filtrer ceux qui ne sont pas déjà inscrits
-    const nonInscrits = [...eleves, ...employes].filter(p => !inscritsIds.has(`${p.id}_${p.type}`));
-  
-    console.log('📋 nonInscrits:', nonInscrits.length);
-    
-    // 5. Pour simplifier, on garde tous les non-inscrits (sans validation complexe)
-    setTousParticipants(nonInscrits);
-    
-    return nonInscrits;
-  }, [voyageId]);
+    // Récupérer les activités du groupe
+    const { data: activitesDuGroupe } = await supabase
+      .from('activites')
+      .select('id')
+      .eq('groupe_id', selectedActivite.groupe_id);
+    const activitesGroupeIds = new Set(activitesDuGroupe?.map(a => a.id) || []);
+
+    // Récupérer le nb max du groupe
+    const { data: groupeData } = await supabase
+      .from('groupes_activites')
+      .select('nb_inscriptions_max')
+      .eq('id', selectedActivite.groupe_id)
+      .single();
+
+    // Filtrer les participants valides
+    const participantsValides = tousParticipantsPotentiels.filter(p => {
+      // Déjà inscrit à cette activité ?
+      if (inscritsIds.has(`${p.id}_${p.type}`)) return false;
+      
+      // Récupérer les inscriptions du participant
+      const inscriptionsParticipant = toutesInscriptions?.filter(i => 
+        i.participant_id === p.id && i.participant_type === p.type
+      ) || [];
+      
+      // Vérifier le nombre d'inscriptions dans le groupe
+      const inscritesDansGroupe = inscriptionsParticipant.filter(i => 
+        activitesGroupeIds.has(i.activite_id)
+      ).length;
+      
+      if (groupeData && inscritesDansGroupe >= groupeData.nb_inscriptions_max) {
+        return false;
+      }
+      
+      // Vérifier les conflits horaires (optionnel, selon besoin)
+      // Pour l'instant, on garde tous ceux qui passent les règles du groupe
+      
+      return true;
+    });
+
+    // Trier les participants valides
+    participantsValides.sort((a, b) => {
+      if (a.type === 'employee' && b.type !== 'employee') return -1;
+      if (a.type !== 'employee' && b.type === 'employee') return 1;
+      if (a.type === 'employee' && b.type === 'employee') {
+        return a.nom.localeCompare(b.nom);
+      }
+      const classeA = a.classe || '';
+      const classeB = b.classe || '';
+      if (classeA !== classeB) return classeA.localeCompare(classeB);
+      return a.nom.localeCompare(b.nom);
+    });
+
+    setTousParticipants(participantsValides);
+  }, [voyageId, selectedActivite]);
 
     
   const retirerParticipant = async (participantId: string, participantType: string) => {
