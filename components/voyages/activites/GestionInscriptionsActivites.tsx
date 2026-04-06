@@ -294,31 +294,44 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       type: 'employee'
     }));
 
-    // 4. Récupérer toutes les inscriptions pour chaque participant (pour vérifier les règles)
+    // 4. Récupérer toutes les inscriptions pour chaque participant
     const tousParticipantsPotentiels = [...eleves, ...employes];
-    
-    // Récupérer les inscriptions de tous ces participants
     const allParticipantsIds = tousParticipantsPotentiels.map(p => p.id);
+    
     const { data: toutesInscriptions } = await supabase
       .from('inscriptions_activites')
       .select('participant_id, participant_type, activite_id')
       .in('participant_id', allParticipantsIds);
 
-    // Récupérer les activités du groupe
+    // 5. Récupérer les activités du groupe
     const { data: activitesDuGroupe } = await supabase
       .from('activites')
       .select('id')
       .eq('groupe_id', selectedActivite.groupe_id);
     const activitesGroupeIds = new Set(activitesDuGroupe?.map(a => a.id) || []);
 
-    // Récupérer le nb max du groupe
+    // 6. Récupérer le nb max du groupe
     const { data: groupeData } = await supabase
       .from('groupes_activites')
       .select('nb_inscriptions_max')
       .eq('id', selectedActivite.groupe_id)
       .single();
 
-    // Filtrer les participants valides
+    // 7. Récupérer les horaires de l'activité candidate
+    const debutNouveau = selectedActivite.heure_debut;
+    const finNouveau = selectedActivite.heure_fin;
+
+    // 8. Récupérer tous les détails des activités pour vérifier les conflits
+    const { data: toutesActivitesDetails } = await supabase
+      .from('activites')
+      .select('id, heure_debut, heure_fin');
+
+    const activitesDetailsMap = new Map();
+    toutesActivitesDetails?.forEach(a => {
+      activitesDetailsMap.set(a.id, { debut: a.heure_debut, fin: a.heure_fin });
+    });
+
+    // 9. Filtrer les participants valides
     const participantsValides = tousParticipantsPotentiels.filter(p => {
       // Déjà inscrit à cette activité ?
       if (inscritsIds.has(`${p.id}_${p.type}`)) return false;
@@ -337,8 +350,17 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
         return false;
       }
       
-      // Vérifier les conflits horaires (optionnel, selon besoin)
-      // Pour l'instant, on garde tous ceux qui passent les règles du groupe
+      // Vérifier les conflits horaires
+      const activitesInscrites = inscriptionsParticipant.map(i => i.activite_id);
+      const aConflit = activitesInscrites.some(actId => {
+        const actDetails = activitesDetailsMap.get(actId);
+        if (!actDetails) return false;
+        const debutExistant = actDetails.debut;
+        const finExistant = actDetails.fin;
+        return (debutNouveau < finExistant && debutExistant < finNouveau);
+      });
+      
+      if (aConflit) return false;
       
       return true;
     });
