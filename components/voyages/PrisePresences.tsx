@@ -75,9 +75,6 @@ export default function PrisePresences({ configId, voyageId, isResponsable, user
     return nuits;
   }, [configDates]);
 
-
-
-
   const isEmployee = userType === 'employee';
   const canReset = isEmployee && isResponsable;
 
@@ -107,6 +104,29 @@ export default function PrisePresences({ configId, voyageId, isResponsable, user
     if (isEmployee) {
       loadChambres();
     }
+
+    const channel = supabase
+      .channel(`presences-${configId}-${selectedNuitee}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chambre_presences',
+          filter: `config_id=eq.${configId}`
+        },
+        (payload) => {
+          if (payload.new && (payload.new as any).nuitee === selectedNuitee) {
+            const { affectation_id, present } = payload.new as any;
+            setPresences(prev => new Map(prev).set(affectation_id, present));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [configId, selectedNuitee]);
 
   const loadChambres = async () => {
