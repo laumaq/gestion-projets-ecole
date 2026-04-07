@@ -414,7 +414,14 @@ export default function PrisePresences({ configId, voyageId, isResponsable, user
 
       {/* Grille des chambres */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {chambres.map((chambre) => {
+        {[...chambres].sort((a, b) => {
+          const affsA = getAffectationsForChambre(a.id);
+          const affsB = getAffectationsForChambre(b.id);
+          const tousPresentA = affsA.length > 0 && affsA.every(aff => presences.get(aff.id));
+          const tousPresentB = affsB.length > 0 && affsB.every(aff => presences.get(aff.id));
+          if (tousPresentA !== tousPresentB) return tousPresentA ? 1 : -1;
+          return a.numero_chambre.localeCompare(b.numero_chambre);
+        }).map((chambre) => {
           const affectationsChambre = getAffectationsForChambre(chambre.id);
           
           if (affectationsChambre.length === 0) return null;
