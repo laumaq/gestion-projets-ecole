@@ -255,133 +255,134 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
   const loadTousParticipants = useCallback(async (activiteId: string) => {
     if (!activiteId) return;
     
-    console.log('🔍 loadTousParticipants - début pour activité:', activiteId);
-    
-    // 1. Récupérer les IDs des participants déjà inscrits à CETTE activité
-    const { data: inscritsData } = await supabase
-      .from('inscriptions_activites')
-      .select('participant_id, participant_type')
-      .eq('activite_id', activiteId);
+    try {
+      // 1. Participants déjà inscrits à CETTE activité (à exclure)
+      const { data: inscritsData } = await supabase
+        .from('inscriptions_activites')
+        .select('participant_id, participant_type')
+        .eq('activite_id', activiteId);
 
-    const inscritsIds = new Set(inscritsData?.map(i => `${i.participant_id}_${i.participant_type}`) || []);
+      const inscritsIds = new Set(
+        inscritsData?.map(i => `${i.participant_id}_${i.participant_type}`) || []
+      );
 
-    // 2. Récupérer tous les élèves du voyage
-    const { data: elevesData } = await supabase
-      .from('voyage_participants')
-      .select('eleve_id, students!inner(matricule, nom, prenom, classe)')
-      .eq('voyage_id', voyageId)
-      .eq('statut', 'confirme');
+      // 2. Tous les élèves confirmés du voyage
+      const { data: elevesData } = await supabase
+        .from('voyage_participants')
+        .select('eleve_id, students!inner(matricule, nom, prenom, classe)')
+        .eq('voyage_id', voyageId)
+        .eq('statut', 'confirme');
 
-    const eleves: Participant[] = (elevesData || []).map((p: any) => ({
-      id: p.eleve_id.toString(),
-      nom: p.students.nom,
-      prenom: p.students.prenom,
-      type: 'student',
-      classe: p.students.classe,
-      eleve_id: p.eleve_id
-    }));
+      const eleves: Participant[] = (elevesData || []).map((p: any) => ({
+        id: p.eleve_id.toString(),
+        nom: p.students.nom,
+        prenom: p.students.prenom,
+        type: 'student',
+        classe: p.students.classe,
+        eleve_id: p.eleve_id
+      }));
 
-    // 3. Récupérer tous les employés du voyage
-    const { data: employesData } = await supabase
-      .from('voyage_professeurs')
-      .select('professeur_id, employees!inner(id, nom, prenom)')
-      .eq('voyage_id', voyageId);
+      // 3. Tous les employés du voyage
+      const { data: employesData } = await supabase
+        .from('voyage_professeurs')
+        .select('professeur_id, employees!inner(id, nom, prenom)')
+        .eq('voyage_id', voyageId);
 
-    const employes: Participant[] = (employesData || []).map((p: any) => ({
-      id: p.professeur_id,
-      nom: p.employees.nom,
-      prenom: p.employees.prenom,
-      type: 'employee'
-    }));
+      const employes: Participant[] = (employesData || []).map((p: any) => ({
+        id: p.professeur_id,
+        nom: p.employees.nom,
+        prenom: p.employees.prenom,
+        type: 'employee'
+      }));
 
-    // 4. Récupérer toutes les inscriptions pour chaque participant
-    const tousParticipantsPotentiels = [...eleves, ...employes];
-    const allParticipantsIds = tousParticipantsPotentiels.map(p => p.id);
-    
-    const { data: toutesInscriptions } = await supabase
-      .from('inscriptions_activites')
-      .select('participant_id, participant_type, activite_id')
-      .in('participant_id', allParticipantsIds);
+      const tousParticipantsPotentiels = [...eleves, ...employes];
 
-    // 5. Récupérer les activités du groupe
-    const { data: activitesDuGroupe } = await supabase
-      .from('activites')
-      .select('id')
-      .eq('groupe_id', selectedActivite.groupe_id);
-    const activitesGroupeIds = new Set(activitesDuGroupe?.map(a => a.id) || []);
+      // 4. Récupérer les activités du groupe + nb_max en une seule requête
+      const { data: groupeData } = await supabase
+        .from('groupes_activites')
+        .select('nb_inscriptions_max')
+        .eq('id', selectedActivite.groupe_id)
+        .single();
 
-    // 6. Récupérer le nb max du groupe
-    const { data: groupeData } = await supabase
-      .from('groupes_activites')
-      .select('nb_inscriptions_max')
-      .eq('id', selectedActivite.groupe_id)
-      .single();
+      const { data: activitesDuGroupe } = await supabase
+        .from('activites')
+        .select('id')
+        .eq('groupe_id', selectedActivite.groupe_id);
 
-    // 7. Récupérer les horaires de l'activité candidate
-    const debutNouveau = selectedActivite.heure_debut;
-    const finNouveau = selectedActivite.heure_fin;
+      const activitesGroupeIds = new Set(activitesDuGroupe?.map(a => a.id) || []);
 
-    // 8. Récupérer tous les détails des activités pour vérifier les conflits
-    const { data: toutesActivitesDetails } = await supabase
-      .from('activites')
-      .select('id, heure_debut, heure_fin');
+      // 5. Participants déjà au max dans le groupe
+      // On récupère toutes les inscriptions aux activités de ce groupe
+      const { data: inscriptionsGroupe } = await supabase
+        .from('inscriptions_activites')
+        .select('participant_id, participant_type')
+        .in('activite_id', Array.from(activitesGroupeIds));
 
-    const activitesDetailsMap = new Map();
-    toutesActivitesDetails?.forEach(a => {
-      activitesDetailsMap.set(a.id, { debut: a.heure_debut, fin: a.heure_fin });
-    });
-
-    // 9. Filtrer les participants valides
-    const participantsValides = tousParticipantsPotentiels.filter(p => {
-      // Déjà inscrit à cette activité ?
-      if (inscritsIds.has(`${p.id}_${p.type}`)) return false;
-      
-      // Récupérer les inscriptions du participant
-      const inscriptionsParticipant = toutesInscriptions?.filter(i => 
-        i.participant_id === p.id && i.participant_type === p.type
-      ) || [];
-      
-      // Vérifier le nombre d'inscriptions dans le groupe
-      const inscritesDansGroupe = inscriptionsParticipant.filter(i => 
-        activitesGroupeIds.has(i.activite_id)
-      ).length;
-      
-      if (groupeData && inscritesDansGroupe >= groupeData.nb_inscriptions_max) {
-        return false;
-      }
-      
-      // Vérifier les conflits horaires
-      const activitesInscrites = inscriptionsParticipant.map(i => i.activite_id);
-      const aConflit = activitesInscrites.some(actId => {
-        const actDetails = activitesDetailsMap.get(actId);
-        if (!actDetails) return false;
-        const debutExistant = actDetails.debut;
-        const finExistant = actDetails.fin;
-        return (debutNouveau < finExistant && debutExistant < finNouveau);
+      // Compter par participant
+      const compteurGroupe = new Map<string, number>();
+      inscriptionsGroupe?.forEach(i => {
+        const key = `${i.participant_id}_${i.participant_type}`;
+        compteurGroupe.set(key, (compteurGroupe.get(key) || 0) + 1);
       });
-      
-      if (aConflit) return false;
-      
-      return true;
-    });
 
-    // Trier les participants valides
-    participantsValides.sort((a, b) => {
-      if (a.type === 'employee' && b.type !== 'employee') return -1;
-      if (a.type !== 'employee' && b.type === 'employee') return 1;
-      if (a.type === 'employee' && b.type === 'employee') {
-        return a.nom.localeCompare(b.nom);
+      // 6. Participants en conflit horaire
+      // Récupérer toutes les activités qui se chevauchent avec l'activité candidate
+      const { data: activitesEnConflit } = await supabase
+        .from('activites')
+        .select(`
+          id,
+          groupes_activites!inner(
+            planning_jours!inner( date )
+          )
+        `)
+        .neq('id', activiteId)
+        .lt('heure_debut', selectedActivite.heure_fin)
+        .gt('heure_fin', selectedActivite.heure_debut)
+        .eq('groupes_activites.planning_jours.date', selectedActivite.date);
+
+      const activitesConflitIds = activitesEnConflit?.map(a => a.id) || [];
+
+      // Participants inscrits dans une activité en conflit
+      const enConflitIds = new Set<string>();
+      if (activitesConflitIds.length > 0) {
+        const { data: inscriptionsConflit } = await supabase
+          .from('inscriptions_activites')
+          .select('participant_id, participant_type')
+          .in('activite_id', activitesConflitIds);
+
+        inscriptionsConflit?.forEach(i => {
+          enConflitIds.add(`${i.participant_id}_${i.participant_type}`);
+        });
       }
-      const classeA = a.classe || '';
-      const classeB = b.classe || '';
-      if (classeA !== classeB) return classeA.localeCompare(classeB);
-      return a.nom.localeCompare(b.nom);
-    });
 
-    setTousParticipants(participantsValides);
+      // 7. Filtrer
+      const nbMax = groupeData?.nb_inscriptions_max ?? 1;
+
+      const participantsValides = tousParticipantsPotentiels.filter(p => {
+        const key = `${p.id}_${p.type}`;
+        if (inscritsIds.has(key)) return false;
+        if ((compteurGroupe.get(key) || 0) >= nbMax) return false;
+        if (enConflitIds.has(key)) return false;
+        return true;
+      });
+
+      participantsValides.sort((a, b) => {
+        if (a.type === 'employee' && b.type !== 'employee') return -1;
+        if (a.type !== 'employee' && b.type === 'employee') return 1;
+        if (a.type === 'employee' && b.type === 'employee') return a.nom.localeCompare(b.nom);
+        const classeA = a.classe || '';
+        const classeB = b.classe || '';
+        if (classeA !== classeB) return classeA.localeCompare(classeB);
+        return a.nom.localeCompare(b.nom);
+      });
+
+      setTousParticipants(participantsValides);
+
+    } catch (error) {
+      console.error('❌ Erreur dans loadTousParticipants:', error);
+    }
   }, [voyageId, selectedActivite]);
 
-    
   const retirerParticipant = async (participantId: string, participantType: string) => {
     if (!confirm('Retirer ce participant de l\'activité ?')) return;
     
@@ -462,7 +463,8 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
       .eq('participant_type', participantType);
     
     const activitesInscritesIds = new Set(inscriptionsParticipant?.map(i => i.activite_id) || []);
-    
+
+
     // 3. Vérifier le nombre d'inscriptions dans le groupe
     const { data: activitesDuGroupe } = await supabase
       .from('activites')
@@ -494,6 +496,8 @@ export default function GestionInscriptionsActivites({ voyageId, isResponsable }
         return data;
       })
     );
+
+    
     
     const conflit = activitesParticipant.some(act => {
       if (!act) return false;
