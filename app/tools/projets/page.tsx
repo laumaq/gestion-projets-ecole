@@ -42,7 +42,7 @@ export default function ProjetsPage() {
     const type = localStorage.getItem('userType');
 
     if (!id || type !== 'employee') { router.push('/'); return; }
-    if (id !== ALLOWED_USER_ID) { router.push('/dashboard'); return; }
+    if (id !== ALLOWED_USER_ID) { router.push('/dashboard/main'); return; }
 
     setUserId(id);
     chargerProjets(id);

@@ -1,4 +1,4 @@
-// app/dashboard/layout.tsx
+// app/dashboard/main/layout.tsx
 'use client';
 
 import { useEffect, useState } from 'react';

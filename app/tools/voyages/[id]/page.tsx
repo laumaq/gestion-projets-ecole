@@ -6,12 +6,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { useVoyagePermissions } from '@/hooks/useVoyagePermissions';
-import { useCharteVoyage } from '@/hooks/useCharteVoyage';
+import { useVoyagePermissions } from '@/hooks/voyages/useVoyagePermissions';
+import { useCharteVoyage } from '@/hooks/voyages/useCharteVoyage';
 import ParticipantsList from '@/components/voyages/ParticipantsList';
-import HebergementConfigs from '@/components/voyages/HebergementConfigs';
-import GestionCharte from '@/components/voyages/GestionCharte';
-import CharteModal from '@/components/voyages/CharteModal';
+import HebergementConfigs from '@/components/voyages/chambres/HebergementConfigs';
+import GestionCharte from '@/components/voyages/charte/GestionCharte';
+import CharteModal from '@/components/voyages/charte/CharteModal';
 import GestionPlanning from '@/components/voyages/activites/GestionPlanning';
 import VueElevePlanning from '@/components/voyages/activites/VueElevePlanning';
 import VueEleveChoixActivites from '@/components/voyages/activites/VueEleveChoixActivites';
@@ -120,7 +120,7 @@ export default function VoyageDetailPage() {
           setShowCharte(false);
         }}
         onRefuser={() => {
-          router.push('/dashboard');
+          router.push('/dashboard/main');
         }}
       />
     );
@@ -141,7 +141,7 @@ export default function VoyageDetailPage() {
           </p>
           <div className="space-y-3">
             <Link
-              href="/dashboard"
+              href="/dashboard/main"
               className="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Retour au tableau de bord

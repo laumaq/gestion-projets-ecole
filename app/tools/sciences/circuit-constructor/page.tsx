@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { solveCircuit } from '@/lib/circuitSolver';
+import { solveCircuit } from '@/lib/sciences/applets/circuitSolver';
 
 // Types pour nos composants
 type ComponentType = 'battery' | 'resistor' | 'ammeter' | 'voltmeter' | 'wattmeter' | 'energymeter';

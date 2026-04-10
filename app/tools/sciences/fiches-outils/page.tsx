@@ -353,6 +353,7 @@ function ProgressionPanel() {
       if (uniq.length > 0) setFilterClasse(uniq[0]);
     });
   }, []);
+  
 
   useEffect(() => {
     if (!filterClasse) return;

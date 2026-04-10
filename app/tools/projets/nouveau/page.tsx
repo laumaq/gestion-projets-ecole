@@ -73,7 +73,7 @@ export default function NouveauProjetPage() {
   useEffect(() => {
     const id = localStorage.getItem('userId');
     const type = localStorage.getItem('userType');
-    if (!id || type !== 'employee' || id !== ALLOWED_USER_ID) { router.push('/dashboard'); return; }
+    if (!id || type !== 'employee' || id !== ALLOWED_USER_ID) { router.push('/dashboard/main'); return; }
     setUserId(id);
     chargerOptions();
   }, [router]);

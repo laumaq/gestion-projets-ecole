@@ -102,7 +102,7 @@ export default function LoginPage() {
           localStorage.setItem('userLevel', userData.niveau || '');
         }
         
-        router.push('/dashboard');
+        router.push('/dashboard/main');
         return;
       }
 
@@ -124,7 +124,7 @@ export default function LoginPage() {
           localStorage.setItem('userLevel', userData.niveau || '');
         }
         
-        router.push('/dashboard');
+        router.push('/dashboard/main');
         return;
       } else {
         console.log("❌ Mot de passe incorrect");

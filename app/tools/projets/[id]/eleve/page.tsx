@@ -68,14 +68,14 @@ export default function ProjetElevePage() {
       const { data: p } = await supabase.from('projets')
         .select('id, nom, description, consignes, mode_sources, max_sources_par_eleve, statut')
         .eq('id', projetId).single();
-      if (!p || p.statut !== 'actif') { router.push('/dashboard'); return; }
+      if (!p || p.statut !== 'actif') { router.push('/dashboard/main'); return; }
       setProjet(p);
 
       // Vérification accès via projet_eleves
       const { data: eleveData } = await supabase
         .from('projet_eleves').select('matricule')
         .eq('projet_id', projetId).eq('matricule', mat).single();
-      if (!eleveData) { router.push('/dashboard'); return; }
+      if (!eleveData) { router.push('/dashboard/main'); return; }
 
       // Objectifs
       const { data: obj } = await supabase.from('projet_objectifs')

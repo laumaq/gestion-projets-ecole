@@ -133,7 +133,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
           {/* Sciences */}
-          <Link href="/tools/sciences" className="block h-full">
+          <Link href="/dashboard/sciences" className="block h-full">
             <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-green-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
               <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -145,15 +145,14 @@ export default function DashboardPage() {
                   <h3 className="text-lg font-medium text-gray-900">Sciences</h3>
                 </div>
                 <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
-                  Expériences collaboratives en temps réel
+                  Expériences collaboratives, simulations, fiches-outils
                 </p>
               </div>
-              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full w-fit">Nouveau !</span>
             </div>
           </Link>
 
           {/* Lancement de projets — prof Laurent uniquement */}
-          {userType === 'employee' && userId === ALLOWED_USER_ID && (
+          {userType === 'employee' && (
             <Link href="/tools/projets" className="block h-full">
               <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-indigo-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
                 <div>
@@ -166,10 +165,9 @@ export default function DashboardPage() {
                     <h3 className="text-lg font-medium text-gray-900">Lancement de projets</h3>
                   </div>
                   <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
-                    Sessions Parlementaires et projets pédagogiques
+                    Planification de projets pédagogiques
                   </p>
                 </div>
-                <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full w-fit">Nouveau !</span>
               </div>
             </Link>
           )}
@@ -227,21 +225,6 @@ export default function DashboardPage() {
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900">Travail de fin d'humanité</h3>
-              </div>
-              <p className="text-sm text-gray-500">Bientôt disponible</p>
-            </div>
-          </div>
-
-          {/* Gestion de projets */}
-          <div className="h-40 bg-white rounded-lg shadow-sm border border-gray-200 p-6 opacity-50 cursor-not-allowed flex flex-col justify-between overflow-hidden">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900">Gestion de projets</h3>
               </div>
               <p className="text-sm text-gray-500">Bientôt disponible</p>
             </div>

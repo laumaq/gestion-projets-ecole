@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase';
 import DataTable from '@/components/sciences/experiences/DataTable';
 import GraphiqueIntelligent from '@/components/sciences/experiences/GraphiqueIntelligent';
 import GraphiqueConfigurator from '@/components/sciences/experiences/GraphiqueConfigurator';
+import VerificationManager from '@/components/sciences/experiences/VerificationManager';
+import VerificationResults from '@/components/sciences/experiences/VerificationResults';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -21,6 +23,15 @@ interface GraphiqueConfig {
   axe_x: string;
   axe_y: string;
   groupe_par?: string;
+}
+
+interface VerificationConfig {
+  tableau_index: number;
+  nom: string;
+  expression: string;
+  variable_cible: string;
+  tolerance: number;
+  active: boolean;
 }
 
 interface Experience {
@@ -45,6 +56,7 @@ interface Experience {
       }[];
     }[];
     graphiques: GraphiqueConfig[];
+    verifications?: VerificationConfig[];  // AJOUTÉ
   };
 }
 
@@ -58,21 +70,20 @@ interface Mesure {
   eleve?: { nom: string; prenom: string };
 }
 
+interface EleveInfo {
+  matricule: number;
+  nom: string;
+  prenom: string;
+  classe: string;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/**
- * Vérifie si un élève a accès à une expérience.
- * Compatibilité assurée : si cibles est absent, on retombe sur l'ancienne
- * logique (classe = exp.classe).
- */
-// Fonction pour vérifier si un élève a accès à une expérience
 function eleveAAcces(
   exp: Experience,
   classeEleve: string,
   groupesEleve: string[]
 ): boolean {
-  // Si cibles n'existe pas (anciennes données), on considère que c'est la classe du premier tableau
-  // mais en réalité, les anciennes données avaient un champ classe direct
   const cibles = exp.cibles ?? { 
     classes: exp.classe ? [exp.classe] : [], 
     groupes: [] 
@@ -84,15 +95,12 @@ function eleveAAcces(
   );
 }
 
-// Fonction pour obtenir un résumé des cibles
 function resumeCibles(exp: Experience): string {
   const cibles = exp.cibles;
   
-  // Si cibles existe et a des éléments
   if (cibles) {
     const parts = [...cibles.classes, ...cibles.groupes];
     if (parts.length > 0) {
-      // Limiter l'affichage à 3 éléments pour ne pas surcharger
       if (parts.length <= 3) {
         return parts.join(', ');
       } else {
@@ -101,7 +109,6 @@ function resumeCibles(exp: Experience): string {
     }
   }
   
-  // Fallback : utiliser l'ancien champ classe si présent
   if (exp.classe) {
     return exp.classe;
   }
@@ -109,8 +116,6 @@ function resumeCibles(exp: Experience): string {
   return 'Tous';
 }
 
-
-// Et si vous voulez une version plus détaillée pour l'affichage dans l'en-tête :
 function afficherCiblesDetail(exp: Experience): string {
   const cibles = exp.cibles;
   if (!cibles) return 'Tous';
@@ -153,6 +158,11 @@ export default function ExperienceDetailPage() {
   const [showConfigurator, setShowConfigurator] = useState(false);
   const [currentGraphique, setCurrentGraphique] = useState<GraphiqueConfig | null>(null);
   const [currentGraphiqueIndex, setCurrentGraphiqueIndex] = useState(-1);
+  
+  // Nouveaux états pour les vérifications
+  const [editingVerifications, setEditingVerifications] = useState(false);
+  const [tempVerifications, setTempVerifications] = useState<VerificationConfig[]>([]);
+  const [elevesList, setElevesList] = useState<EleveInfo[]>([]);
 
   useEffect(() => {
     const type = localStorage.getItem('userType') as 'employee' | 'student';
@@ -204,6 +214,7 @@ export default function ExperienceDetailPage() {
 
       setExperience(expData);
 
+      // Charger les mesures
       const { data: mesuresData, error: mesuresError } = await supabase
         .from('experience_mesures')
         .select(`
@@ -217,6 +228,21 @@ export default function ExperienceDetailPage() {
 
       if (mesuresError) throw mesuresError;
       setMesures(mesuresData || []);
+
+      // Charger la liste des élèves de la classe (pour les résultats)
+      if (type === 'employee' && expData.cibles) {
+        const toutesClasses = expData.cibles.classes || [];
+        if (toutesClasses.length > 0) {
+          const { data: elevesData } = await supabase
+            .from('students')
+            .select('matricule, nom, prenom, classe')
+            .in('classe', toutesClasses);
+          
+          if (elevesData) {
+            setElevesList(elevesData);
+          }
+        }
+      }
 
       // Subscription temps réel
       const subscription = supabase
@@ -335,7 +361,8 @@ export default function ExperienceDetailPage() {
     try {
       const newConfig = {
         tableaux: experience?.config.tableaux || [],
-        graphiques: tempGraphiques
+        graphiques: tempGraphiques,
+        verifications: experience?.config.verifications || []
       };
       const { error } = await supabase.from('experiences').update({ config: newConfig }).eq('id', experienceId);
       if (error) throw error;
@@ -343,6 +370,30 @@ export default function ExperienceDetailPage() {
       setEditingGraphiques(false);
     } catch (error) {
       console.error('Erreur sauvegarde graphiques:', error);
+      alert('Erreur lors de la sauvegarde');
+    }
+  };
+
+  // ── Vérifications ─────────────────────────────────────────
+
+  const handleEditVerifications = () => {
+    setTempVerifications(experience?.config.verifications || []);
+    setEditingVerifications(true);
+  };
+
+  const handleSaveVerifications = async (verifications: VerificationConfig[]) => {
+    try {
+      const newConfig = {
+        tableaux: experience?.config.tableaux || [],
+        graphiques: experience?.config.graphiques || [],
+        verifications: verifications
+      };
+      const { error } = await supabase.from('experiences').update({ config: newConfig }).eq('id', experienceId);
+      if (error) throw error;
+      setExperience(prev => prev ? { ...prev, config: newConfig } : null);
+      setEditingVerifications(false);
+    } catch (error) {
+      console.error('Erreur sauvegarde vérifications:', error);
       alert('Erreur lors de la sauvegarde');
     }
   };
@@ -384,6 +435,17 @@ export default function ExperienceDetailPage() {
     return acc;
   }, {} as Record<number, Mesure[]>);
 
+  // Définir les onglets disponibles
+  const tabs = [
+    { label: `Données (${mesures.length} mesures)`, index: 0 },
+    { label: 'Graphiques', index: 1 },
+  ];
+  
+  if (userType === 'employee') {
+    tabs.push({ label: 'Configuration', index: 2 });
+    tabs.push({ label: 'Évaluation', index: 3 });
+  }
+
   return (
     <div>
       {/* En-tête */}
@@ -417,11 +479,7 @@ export default function ExperienceDetailPage() {
       {/* Onglets */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="flex space-x-8">
-          {[
-            { label: `Données (${mesures.length} mesures)`, index: 0 },
-            { label: 'Graphiques', index: 1 },
-            ...(userType === 'employee' ? [{ label: 'Configuration', index: 2 }] : []),
-          ].map(({ label, index }) => (
+          {tabs.map(({ label, index }) => (
             <button
               key={index}
               onClick={() => setActiveTab(index)}
@@ -494,25 +552,60 @@ export default function ExperienceDetailPage() {
       {activeTab === 2 && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Configuration des graphiques</h2>
-            {!editingGraphiques ? (
-              <button onClick={handleEditGraphiques} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                Modifier
-              </button>
-            ) : (
-              <div className="space-x-2">
-                <button onClick={handleSaveGraphiquesConfig} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                  Sauvegarder
-                </button>
-                <button onClick={() => setEditingGraphiques(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
-                  Annuler
-                </button>
-              </div>
-            )}
+            <h2 className="text-lg font-semibold text-gray-900">Configuration</h2>
           </div>
 
-          {!editingGraphiques ? (
+          {/* Sous-onglets de configuration */}
+          <div className="border-b border-gray-200 mb-6">
+            <nav className="flex space-x-8">
+              <button
+                onClick={() => {
+                  setEditingGraphiques(false);
+                  setEditingVerifications(false);
+                }}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  !editingGraphiques && !editingVerifications
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Graphiques
+              </button>
+              <button
+                onClick={() => {
+                  setEditingGraphiques(true);
+                  setEditingVerifications(false);
+                  handleEditGraphiques();
+                }}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  editingGraphiques && !editingVerifications
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Modifier les graphiques
+              </button>
+              <button
+                onClick={() => {
+                  setEditingGraphiques(false);
+                  setEditingVerifications(true);
+                  handleEditVerifications();
+                }}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  editingVerifications
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Vérifications automatiques
+              </button>
+            </nav>
+          </div>
+
+          {/* Contenu Configuration - Graphiques (lecture seule) */}
+          {!editingGraphiques && !editingVerifications && (
             <div className="space-y-4">
+              <h3 className="text-md font-medium text-gray-900">Graphiques configurés</h3>
               {experience.config.graphiques.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">Aucun graphique configuré</p>
               ) : (
@@ -526,48 +619,115 @@ export default function ExperienceDetailPage() {
                   </div>
                 ))
               )}
-            </div>
-          ) : showConfigurator ? (
-            <GraphiqueConfigurator
-              tableaux={experience.config.tableaux}
-              config={currentGraphique || undefined}
-              onSave={handleSaveGraphique}
-              onCancel={() => { setShowConfigurator(false); setCurrentGraphique(null); }}
-            />
-          ) : (
-            <div className="space-y-6">
-              <button onClick={handleAddGraphique} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                + Ajouter un graphique
-              </button>
-
-              {tempGraphiques.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">Aucun graphique configuré</p>
-              ) : (
-                tempGraphiques.map((graphique, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{graphique.nom}</h3>
-                        <p className="text-sm text-gray-600">
-                          {graphique.axe_y} en fonction de {graphique.axe_x}
-                          {graphique.groupe_par && ` (groupé par ${graphique.groupe_par})`}
-                        </p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button onClick={() => handleEditGraphique(graphique, index)} className="text-blue-600 hover:text-blue-800 text-sm">
-                          Modifier
-                        </button>
-                        <button onClick={() => handleRemoveGraphique(index)} className="text-red-600 hover:text-red-800 text-sm">
-                          Supprimer
-                        </button>
+              
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <h3 className="text-md font-medium text-gray-900 mb-4">Vérifications configurées</h3>
+                {experience.config.verifications?.length === 0 ? (
+                  <p className="text-gray-500 text-center py-4">Aucune vérification configurée</p>
+                ) : (
+                  experience.config.verifications?.map((verif, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4 mb-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium text-gray-900">{verif.nom}</h4>
+                          <p className="text-sm text-gray-600">
+                            {verif.expression} (tolérance: {verif.tolerance}%)
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Tableau: {experience.config.tableaux[verif.tableau_index]?.nom} | 
+                            Cible: {verif.variable_cible}
+                          </p>
+                        </div>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          verif.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          {verif.active ? 'Active' : 'Inactive'}
+                        </span>
                       </div>
                     </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Édition des graphiques */}
+          {editingGraphiques && !editingVerifications && (
+            <div>
+              {showConfigurator ? (
+                <GraphiqueConfigurator
+                  tableaux={experience.config.tableaux}
+                  config={currentGraphique || undefined}
+                  onSave={handleSaveGraphique}
+                  onCancel={() => { setShowConfigurator(false); setCurrentGraphique(null); }}
+                />
+              ) : (
+                <div className="space-y-6">
+                  <button onClick={handleAddGraphique} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                    + Ajouter un graphique
+                  </button>
+
+                  {tempGraphiques.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">Aucun graphique configuré</p>
+                  ) : (
+                    tempGraphiques.map((graphique, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium text-gray-900">{graphique.nom}</h3>
+                            <p className="text-sm text-gray-600">
+                              {graphique.axe_y} en fonction de {graphique.axe_x}
+                              {graphique.groupe_par && ` (groupé par ${graphique.groupe_par})`}
+                            </p>
+                          </div>
+                          <div className="flex space-x-2">
+                            <button onClick={() => handleEditGraphique(graphique, index)} className="text-blue-600 hover:text-blue-800 text-sm">
+                              Modifier
+                            </button>
+                            <button onClick={() => handleRemoveGraphique(index)} className="text-red-600 hover:text-red-800 text-sm">
+                              Supprimer
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  
+                  <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button onClick={() => setEditingGraphiques(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+                      Annuler
+                    </button>
+                    <button onClick={handleSaveGraphiquesConfig} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                      Sauvegarder les graphiques
+                    </button>
                   </div>
-                ))
+                </div>
               )}
             </div>
           )}
+
+          {/* Édition des vérifications */}
+          {editingVerifications && (
+            <div>
+              <VerificationManager
+                tableaux={experience.config.tableaux}
+                verifications={tempVerifications}
+                onSave={handleSaveVerifications}
+                onCancel={() => setEditingVerifications(false)}
+              />
+            </div>
+          )}
         </div>
+      )}
+
+      {/* Onglet Évaluation */}
+      {activeTab === 3 && userType === 'employee' && (
+        <VerificationResults
+          verifications={experience.config.verifications || []}
+          tableaux={experience.config.tableaux}
+          mesures={mesures}
+          eleves={elevesList}
+        />
       )}
     </div>
   );

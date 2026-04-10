@@ -3,8 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAGPermissions } from '@/hooks/useAGPermissions';
-import { useAGData } from '@/hooks/useAGData';
+import { useAGPermissions } from '@/hooks/ag/useAGPermissions';
+import { useAGData } from '@/hooks/ag/useAGData';
 import { useVotes } from '@/hooks/votes/useVotes';
 import AGTabs from '../../../components/ag/AGTabs';
 import AGPreparationTabs from '../../../components/ag/AGPreparationTabs';
@@ -78,7 +78,7 @@ export default function AGPage() {
 
   useEffect(() => {
     if (!permissionsLoading && agStatut === 'pas_ag' && !canConfigure) {
-      router.push('/dashboard?ag=desactivee');
+      router.push('/dashboard/main?ag=desactivee');
     }
   }, [agStatut, permissionsLoading, canConfigure, router]);
 
