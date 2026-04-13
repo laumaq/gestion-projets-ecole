@@ -1,39 +1,91 @@
 // ============================================================
-// lib/fiches-outils/unites.ts
-// Génération des exercices "Contrat — Unités"
+// lib/sciences/fiches-outils/unites.ts
 // ============================================================
 
-export type SectionId =
-  | 'toSI'        // préfixé → SI
-  | 'toPrefix'    // SI → unité usuelle la plus proche
-  | 'toSci'       // SI → notation scientifique
-  | 'fromSci'     // notation scientifique → SI + préfixe
-  | 'mixed'       // mélange des 4 ci-dessus (unités simples)
-  | 'composed';   // unités composées (m/s, N·m…)
+export type FicheMode = 'normal' | 'advanced';
 
-export interface ExRow {
-  /** Colonne donnée : 'prefix' | 'si' | 'sci' */
-  given: 'prefix' | 'si' | 'sci';
-  /** Valeur affichée dans la colonne donnée */
-  givenDisplay: string;
-  /** Valeur SI numérique (référence de vérification) */
-  siValue: number;
-  /** Unité SI (ex: 'm', 'kg', 'N·m') */
-  siUnit: string;
-  /** Préfixe utilisé */
-  prefixSym: string;
-  prefixExp: number;
-  /** Mantisse dans la colonne préfixe */
-  mantissa: number;
-  /** Réponses attendues (display) */
-  answerPrefix: string;
-  answerSI: string;
-  answerSci: string;
-  /** Pour 'toPrefix' : plusieurs préfixes acceptables */
-  acceptedPrefixes?: { sym: string; exp: number; mantissa: number }[];
+export type SectionId =
+  | 'toSI'
+  | 'toPrefix'
+  | 'mixed'
+  | 'toSci'
+  | 'fromSci'
+  | 'mixedFull'
+  | 'composed';
+
+export interface SectionDef {
+  id: SectionId;
+  label: string;
+  description: string;
+  example: string;
+  columns: ('prefix' | 'si' | 'sci')[];
+  mode: FicheMode | 'both';
 }
 
-// ── Préfixes ────────────────────────────────────────────────
+export const SECTIONS: SectionDef[] = [
+  {
+    id: 'toSI',
+    label: 'Préfixe → SI',
+    description: 'Convertir une valeur avec préfixe vers l\'unité SI',
+    example: '12 km → 12 000 m  ·  45 mA → 0,045 A  ·  3,2 μs → 0,0000032 s',
+    columns: ['prefix', 'si'],
+    mode: 'both',
+  },
+  {
+    id: 'toPrefix',
+    label: 'SI → préfixe',
+    description: 'Exprimer une valeur SI dans l\'unité usuelle la plus proche',
+    example: '0,003 m → 3 mm  ·  12 000 W → 12 kW  ·  0,000045 s → 45 μs',
+    columns: ['si', 'prefix'],
+    mode: 'both',
+  },
+  {
+    id: 'mixed',
+    label: 'Mixte',
+    description: 'Conversion dans les deux sens — préfixe ↔ SI',
+    example: '250 ms → ? s  ou  0,0042 N → ? mN  ·  La colonne donnée varie',
+    columns: ['prefix', 'si'],
+    mode: 'normal',
+  },
+  {
+    id: 'toSci',
+    label: 'SI → notation sci.',
+    description: 'Exprimer la valeur SI en notation scientifique',
+    example: '0,0042 m → 4,2×10⁻³ m  ·  12 000 W → 1,2×10⁴ W',
+    columns: ['si', 'sci'],
+    mode: 'advanced',
+  },
+  {
+    id: 'fromSci',
+    label: 'Sci. → SI + préfixe',
+    description: 'Lire une notation scientifique, trouver la valeur SI et l\'unité préfixée',
+    example: '3,5×10⁻³ A → 0,0035 A → 3,5 mA',
+    columns: ['sci', 'si', 'prefix'],
+    mode: 'advanced',
+  },
+  {
+    id: 'mixedFull',
+    label: 'Mixte complet',
+    description: 'Les 3 colonnes, colonne donnée aléatoire',
+    example: 'Colonne donnée aléatoire — trouver les deux autres',
+    columns: ['prefix', 'si', 'sci'],
+    mode: 'advanced',
+  },
+  {
+    id: 'composed',
+    label: 'Unités composées',
+    description: 'Conversions avec m/s, N·m, V/m…',
+    example: '3,6 km/s → 3 600 m/s  ·  250 mN·m → 0,25 N·m',
+    columns: ['prefix', 'si'],
+    mode: 'both',
+  },
+];
+
+export function getSections(mode: FicheMode): SectionDef[] {
+  return SECTIONS.filter(s => s.mode === 'both' || s.mode === mode);
+}
+
+// ── Préfixes ─────────────────────────────────────────────────
 export const PREFIXES = [
   { name: 'Nano',  sym: 'n',  exp: -9 },
   { name: 'Micro', sym: 'μ',  exp: -6 },
@@ -47,23 +99,20 @@ export const PREFIXES = [
   { name: 'Giga',  sym: 'G',  exp:  9 },
 ] as const;
 
-// Préfixes courants (évite da/h qui sont rares en pratique sauf sections dédiées)
 const COMMON_PREFIXES = PREFIXES.filter(p =>
-  ['n','μ','m','c','k','M','G'].includes(p.sym)
+  ['n', 'μ', 'm', 'c', 'k', 'M', 'G'].includes(p.sym)
 );
+
 const ALL_PREFIXES_WITH_BASE = [
   ...PREFIXES,
   { name: 'Base', sym: '', exp: 0 },
 ];
 
-// ── Unités simples ───────────────────────────────────────────
-// siBase = unité SI réelle (m, kg, s…)
-// displayBase = unité dans laquelle on affiche les préfixes (m, g, s…)
-// Note : mass SI = kg, mais on préfixe 'g' (kilo-gramme = base)
+// ── Unités simples (sans Ω) ───────────────────────────────────
 export interface UnitDef {
-  displayBase: string; // ex: 'g' pour la masse
-  siBase: string;      // ex: 'kg'
-  siOffset: number;    // facteur displayBase → siBase (ex: 1e-3 pour g→kg)
+  displayBase: string;
+  siBase: string;
+  siOffset: number;
   label: string;
 }
 
@@ -76,37 +125,43 @@ export const SIMPLE_UNITS: UnitDef[] = [
   { displayBase: 'J',  siBase: 'J',  siOffset: 1,    label: 'énergie' },
   { displayBase: 'V',  siBase: 'V',  siOffset: 1,    label: 'tension' },
   { displayBase: 'A',  siBase: 'A',  siOffset: 1,    label: 'intensité' },
-  { displayBase: 'Ω',  siBase: 'Ω',  siOffset: 1,    label: 'résistance' },
   { displayBase: 'Pa', siBase: 'Pa', siOffset: 1,    label: 'pression' },
   { displayBase: 'T',  siBase: 'T',  siOffset: 1,    label: 'champ B' },
   { displayBase: 'Hz', siBase: 'Hz', siOffset: 1,    label: 'fréquence' },
 ];
 
-// ── Unités composées ─────────────────────────────────────────
-// Pour les composées, on préfixe le PREMIER sous-élément.
-// Ex: km/s → k sur 'm', le '/s' reste. SI = m/s.
+// ── Unités composées ──────────────────────────────────────────
 export interface ComposedUnitDef {
-  /** Unité SI complète (ex: 'm/s') */
   siUnit: string;
-  /** Partie qui reçoit le préfixe (ex: 'm') */
   prefixTarget: string;
-  /** Suffixe fixe (ex: '/s') */
   suffix: string;
-  /** facteur displayBase→siBase pour la partie préfixée */
   targetSiOffset: number;
   label: string;
 }
 
 export const COMPOSED_UNITS: ComposedUnitDef[] = [
-  { siUnit: 'm/s',   prefixTarget: 'm',  suffix: '/s',   targetSiOffset: 1,    label: 'vitesse' },
-  { siUnit: 'm/s²',  prefixTarget: 'm',  suffix: '/s²',  targetSiOffset: 1,    label: 'accélération' },
-  { siUnit: 'N·m',   prefixTarget: 'N',  suffix: '·m',   targetSiOffset: 1,    label: 'moment de force' },
-  { siUnit: 'N/kg',  prefixTarget: 'N',  suffix: '/kg',  targetSiOffset: 1,    label: 'champ de pesanteur' },
-  { siUnit: 'N/m²',  prefixTarget: 'N',  suffix: '/m²',  targetSiOffset: 1,    label: 'pression (N/m²)' },
-  { siUnit: 'J/kg',  prefixTarget: 'J',  suffix: '/kg',  targetSiOffset: 1,    label: 'énergie massique' },
-  { siUnit: 'V/m',   prefixTarget: 'V',  suffix: '/m',   targetSiOffset: 1,    label: 'champ électrique' },
-  { siUnit: 'N·km',  prefixTarget: 'N',  suffix: '·km',  targetSiOffset: 1e3,  label: 'travail (kN·km…)' },
+  { siUnit: 'm/s',  prefixTarget: 'm', suffix: '/s',  targetSiOffset: 1,   label: 'vitesse' },
+  { siUnit: 'm/s²', prefixTarget: 'm', suffix: '/s²', targetSiOffset: 1,   label: 'accélération' },
+  { siUnit: 'N·m',  prefixTarget: 'N', suffix: '·m',  targetSiOffset: 1,   label: 'moment' },
+  { siUnit: 'N/kg', prefixTarget: 'N', suffix: '/kg', targetSiOffset: 1,   label: 'pesanteur' },
+  { siUnit: 'V/m',  prefixTarget: 'V', suffix: '/m',  targetSiOffset: 1,   label: 'champ E' },
+  { siUnit: 'J/kg', prefixTarget: 'J', suffix: '/kg', targetSiOffset: 1,   label: 'énergie massique' },
 ];
+
+// ── ExRow ─────────────────────────────────────────────────────
+export interface ExRow {
+  given: 'prefix' | 'si' | 'sci';
+  givenDisplay: string;
+  siValue: number;
+  siUnit: string;
+  prefixSym: string;
+  prefixExp: number;
+  mantissa: number;
+  answerPrefix: string;
+  answerSI: string;
+  answerSci: string;
+  acceptedPrefixes?: { sym: string; exp: number; mantissa: number }[];
+}
 
 // ── Helpers ───────────────────────────────────────────────────
 function rand(a: number, b: number) {
@@ -115,8 +170,6 @@ function rand(a: number, b: number) {
 function pick<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
-
-/** Mantisse à 1–4 chiffres significatifs, ≥ 1 */
 function randMantissa(): number {
   const sigs = rand(1, 4);
   const mag = Math.pow(10, sigs - 1);
@@ -150,7 +203,6 @@ export function toDecimalDisplay(n: number): string {
   return toSciDisplay(n, '').trim();
 }
 
-/** Parse une saisie élève → nombre ou null */
 export function parseInput(s: string): number | null {
   if (!s?.trim()) return null;
   let t = s.trim()
@@ -158,7 +210,6 @@ export function parseInput(s: string): number | null {
     .replace(/\s/g, '')
     .replace(/[×xX*]/g, 'e')
     .replace(/\^/g, '');
-  // Superscript digits → ASCII
   const sup: Record<string, string> = {
     '⁰':'0','¹':'1','²':'2','³':'3','⁴':'4',
     '⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁻':'-',
@@ -174,18 +225,13 @@ export function approxEq(a: number, b: number, tol = 0.005): boolean {
   return Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b)) < tol;
 }
 
-// ── Conversion "unité usuelle la plus proche" ─────────────────
-// Choisit le préfixe qui donne une mantisse entre 1 et 999 (ou 0,1 à 9,99).
-// Retourne tous les préfixes acceptables (mantisse entre 0,1 et 999).
 export function naturalPrefixes(
   siValue: number,
-  siOffset: number // facteur SI→displayBase (inverse de siOffset de UnitDef)
+  siOffset: number
 ): { sym: string; exp: number; mantissa: number }[] {
   const results: { sym: string; exp: number; mantissa: number }[] = [];
   for (const p of ALL_PREFIXES_WITH_BASE) {
-    // valeur dans displayBase = siValue / siOffset
-    // valeur avec préfixe = (siValue / siOffset) / 10^p.exp
-    const displayVal = siValue / siOffset; // en displayBase (ex: en g si masse)
+    const displayVal = siValue / siOffset;
     const prefixedVal = displayVal / Math.pow(10, p.exp);
     if (prefixedVal >= 0.1 && prefixedVal < 1000) {
       results.push({
@@ -198,24 +244,20 @@ export function naturalPrefixes(
   return results;
 }
 
-// ── Génération d'une ligne ────────────────────────────────────
-function makeSimpleRow(
-  sectionId: SectionId,
-  unit: UnitDef,
-  prefixPool: typeof COMMON_PREFIXES
-): ExRow {
-  const pre = pick(prefixPool);
-  const mantissa = randMantissa();
+// ── Génération ────────────────────────────────────────────────
+function makeSimpleRow(sectionId: SectionId, unit: UnitDef): ExRow {
+  const pool = (sectionId === 'toSI' || sectionId === 'mixed' || sectionId === 'mixedFull')
+    ? [...COMMON_PREFIXES, ...PREFIXES.filter(p => p.sym === 'da' || p.sym === 'h')]
+    : COMMON_PREFIXES;
 
-  // Valeur en displayBase (ex: en 'g')
+  const pre = pick(pool as typeof COMMON_PREFIXES);
+  const mantissa = randMantissa();
   const displayBaseVal = mantissa * Math.pow(10, pre.exp);
-  // Valeur SI réelle (ex: en 'kg')
   const siValue = displayBaseVal * unit.siOffset;
 
   const prefixedDisplay = `${toDecimalDisplay(mantissa)} ${pre.sym}${unit.displayBase}`;
-  const siDisplay = `${toDecimalDisplay(siValue)} ${unit.siBase}`;
-  const sciDisplay = toSciDisplay(siValue, unit.siBase);
-
+  const siDisplay       = `${toDecimalDisplay(siValue)} ${unit.siBase}`;
+  const sciDisplay      = toSciDisplay(siValue, unit.siBase);
   const acceptedPrefixes = naturalPrefixes(siValue, unit.siOffset);
 
   let given: ExRow['given'];
@@ -224,6 +266,7 @@ function makeSimpleRow(
     case 'toPrefix': given = 'si';     break;
     case 'toSci':    given = 'si';     break;
     case 'fromSci':  given = 'sci';    break;
+    case 'mixed':    given = pick(['prefix', 'si'] as const); break;
     default:         given = pick(['prefix', 'si', 'sci'] as const);
   }
 
@@ -242,34 +285,26 @@ function makeSimpleRow(
   };
 }
 
-function makeComposedRow(unit: ComposedUnitDef): ExRow {
-  const pre = pick(COMMON_PREFIXES);
+function makeComposedRow(sectionId: SectionId): ExRow {
+  const unit = pick(COMPOSED_UNITS);
+  const pre  = pick(COMMON_PREFIXES);
   const mantissa = randMantissa();
+  const siValue  = mantissa * Math.pow(10, pre.exp) * unit.targetSiOffset;
 
-  // Valeur dans l'unité préfixée-cible
-  const targetBaseVal = mantissa * Math.pow(10, pre.exp);
-  // Valeur SI de la sous-unité préfixée
-  const targetSiVal = targetBaseVal * unit.targetSiOffset;
-  // La valeur SI complète (ex: pour km/s, siValue est en m/s)
-  // On stocke le NOMBRE tel que N prefixUnit+suffix = siValue siUnit
-  // ex: 3 km/s → siValue = 3000 (en m/s)
-  const siValue = targetSiVal; // simplification: suffix n'a pas de préfixe
-
-  const prefixedUnit = `${pre.sym}${unit.prefixTarget}${unit.suffix}`;
+  const prefixedUnit    = `${pre.sym}${unit.prefixTarget}${unit.suffix}`;
   const prefixedDisplay = `${toDecimalDisplay(mantissa)} ${prefixedUnit}`;
-  const siDisplay = `${toDecimalDisplay(siValue)} ${unit.siUnit}`;
-  const sciDisplay = toSciDisplay(siValue, unit.siUnit);
+  const siDisplay       = `${toDecimalDisplay(siValue)} ${unit.siUnit}`;
+  const sciDisplay      = toSciDisplay(siValue, unit.siUnit);
 
-  const given = pick(['prefix', 'si', 'sci'] as const);
+  const given: ExRow['given'] = sectionId === 'toSI' ? 'prefix'
+    : sectionId === 'toPrefix' ? 'si'
+    : pick(['prefix', 'si'] as const);
 
   return {
     given,
     givenDisplay: given === 'prefix' ? prefixedDisplay : given === 'si' ? siDisplay : sciDisplay,
-    siValue,
-    siUnit: unit.siUnit,
-    prefixSym: pre.sym,
-    prefixExp: pre.exp,
-    mantissa,
+    siValue, siUnit: unit.siUnit,
+    prefixSym: pre.sym, prefixExp: pre.exp, mantissa,
     answerPrefix: prefixedDisplay,
     answerSI: siDisplay,
     answerSci: sciDisplay,
@@ -277,57 +312,39 @@ function makeComposedRow(unit: ComposedUnitDef): ExRow {
   };
 }
 
-// ── Export principal ──────────────────────────────────────────
-export function generateRows(sectionId: SectionId, count: number): ExRow[] {
-  const rows: ExRow[] = [];
-  const pool = sectionId === 'toSI' || sectionId === 'mixed'
-    ? [...COMMON_PREFIXES, ...PREFIXES.filter(p => p.sym === 'da' || p.sym === 'h')]
-    : COMMON_PREFIXES;
+export const ROW_COUNT = 10;
 
+export function generateRows(sectionId: SectionId, count: number = ROW_COUNT): ExRow[] {
+  const rows: ExRow[] = [];
   for (let i = 0; i < count; i++) {
-    if (sectionId === 'composed') {
-      rows.push(makeComposedRow(pick(COMPOSED_UNITS)));
-    } else if (sectionId === 'mixed') {
-      // 70% simples, 30% composées
-      if (Math.random() < 0.3) {
-        rows.push(makeComposedRow(pick(COMPOSED_UNITS)));
-      } else {
-        rows.push(makeSimpleRow(sectionId, pick(SIMPLE_UNITS), pool as typeof COMMON_PREFIXES));
-      }
-    } else {
-      rows.push(makeSimpleRow(sectionId, pick(SIMPLE_UNITS), pool as typeof COMMON_PREFIXES));
-    }
+    rows.push(sectionId === 'composed'
+      ? makeComposedRow(sectionId)
+      : makeSimpleRow(sectionId, pick(SIMPLE_UNITS))
+    );
   }
   return rows;
 }
 
-// ── Vérification d'une réponse élève ─────────────────────────
-export interface CheckResult {
-  prefixOk: boolean | null; // null si non demandé (colonne donnée)
-  siOk: boolean | null;
-  sciOk: boolean | null;
+// ── Seuils de score ───────────────────────────────────────────
+export type ScoreLevel = 'not_done' | 'redo' | 'advise_redo' | 'succeeded';
+
+export function scoreLevel(pct: number): ScoreLevel {
+  if (pct >= 85) return 'succeeded';
+  if (pct >= 70) return 'advise_redo';
+  if (pct >= 40) return 'redo';
+  return 'not_done';
 }
 
-export function checkRow(row: ExRow, inputs: { prefix: string; si: string; sci: string }): CheckResult {
-  const result: CheckResult = { prefixOk: null, siOk: null, sciOk: null };
+export const SCORE_LEVEL_LABELS: Record<ScoreLevel, string> = {
+  not_done:    'À refaire',
+  redo:        'À refaire',
+  advise_redo: 'Conseil de refaire',
+  succeeded:   'Réussi',
+};
 
-  if (row.given !== 'si') {
-    const v = parseInput(inputs.si);
-    result.siOk = v !== null && approxEq(v, row.siValue);
-  }
-  if (row.given !== 'sci') {
-    const v = parseInput(inputs.sci);
-    result.sciOk = v !== null && approxEq(v, row.siValue);
-  }
-  if (row.given !== 'prefix') {
-    const v = parseInput(inputs.prefix);
-    if (v === null) {
-      result.prefixOk = false;
-    } else {
-      // Accepter tous les préfixes donnant une mantisse cohérente
-      result.prefixOk = (row.acceptedPrefixes ?? [{ sym: row.prefixSym, exp: row.prefixExp, mantissa: row.mantissa }])
-        .some(ap => approxEq(v, ap.mantissa));
-    }
-  }
-  return result;
-}
+export const SCORE_LEVEL_COLORS: Record<ScoreLevel, { bg: string; text: string; border: string }> = {
+  not_done:    { bg: '#FCEBEB', text: '#A32D2D', border: '#F09595' },
+  redo:        { bg: '#FCEBEB', text: '#A32D2D', border: '#F09595' },
+  advise_redo: { bg: '#FAEEDA', text: '#854F0B', border: '#FAC775' },
+  succeeded:   { bg: '#EAF3DE', text: '#3B6D11', border: '#C0DD97' },
+};

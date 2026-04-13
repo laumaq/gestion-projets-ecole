@@ -1,6 +1,5 @@
 // ============================================================
-// hooks/useProgressionFiche.ts
-// Hook réutilisable pour toutes les fiches-outils
+// hooks/sciences/useProgressionFiche.ts
 // ============================================================
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -11,19 +10,18 @@ export interface ProgressionFiche {
   attributed_at: string | null;
   opened_at: string | null;
   succeeded_at: string | null;
+  score: number | null;
+  last_attempt_at: string | null;
+  mode: 'normal' | 'advanced' | null;
 }
 
 export interface UseProgressionFicheReturn {
   progression: ProgressionFiche | null;
   loading: boolean;
   markOpened: () => Promise<void>;
-  markSucceeded: () => Promise<void>;
+  markScore: (pct: number) => Promise<void>;
 }
 
-/**
- * @param studentId  matricule de l'élève connecté (parseInt du localStorage userId)
- * @param ficheKey   ex: 'unites', 'grandeurs'  — doit correspondre aux colonnes SQL
- */
 export function useProgressionFiche(
   studentId: number | null,
   ficheKey: string
@@ -32,23 +30,33 @@ export function useProgressionFiche(
   const [loading, setLoading] = useState(true);
 
   const fetchProgression = useCallback(async () => {
-      if (!studentId) return;
-      const { data } = await supabase
-        .from('fiches_outils_progression')
-        .select(`${ficheKey}_attributed_at, ${ficheKey}_opened_at, ${ficheKey}_succeeded_at`)
-        .eq('student_id', studentId)
-        .maybeSingle();
+    if (!studentId) { setLoading(false); return; }
+    const { data } = await supabase
+      .from('fiches_outils_progression')
+      .select([
+        `${ficheKey}_attributed_at`,
+        `${ficheKey}_opened_at`,
+        `${ficheKey}_succeeded_at`,
+        `${ficheKey}_score`,
+        `${ficheKey}_last_attempt_at`,
+        `${ficheKey}_mode`,
+      ].join(', '))
+      .eq('student_id', studentId)
+      .maybeSingle();
 
-      if (data) {
-        const d = data as unknown as Record<string, string | null>;
-        setProgression({
-          attributed_at: d[`${ficheKey}_attributed_at`] ?? null,
-          opened_at:     d[`${ficheKey}_opened_at`]     ?? null,
-          succeeded_at:  d[`${ficheKey}_succeeded_at`]  ?? null,
-        });
-      }
-      setLoading(false);
-    }, [studentId, ficheKey]);
+    if (data) {
+      const d = data as unknown as Record<string, string | null>;
+      setProgression({
+        attributed_at:   d[`${ficheKey}_attributed_at`]   ?? null,
+        opened_at:       d[`${ficheKey}_opened_at`]       ?? null,
+        succeeded_at:    d[`${ficheKey}_succeeded_at`]    ?? null,
+        score:           d[`${ficheKey}_score`] != null ? Number(d[`${ficheKey}_score`]) : null,
+        last_attempt_at: d[`${ficheKey}_last_attempt_at`] ?? null,
+        mode:            (d[`${ficheKey}_mode`] as 'normal' | 'advanced') ?? null,
+      });
+    }
+    setLoading(false);
+  }, [studentId, ficheKey]);
 
   useEffect(() => { fetchProgression(); }, [fetchProgression]);
 
@@ -62,10 +70,20 @@ export function useProgressionFiche(
     await fetchProgression();
   }, [studentId, ficheKey, fetchProgression]);
 
+  const markScore = useCallback(async (pct: number) => {
+    if (!studentId) return;
+    await supabase.rpc('save_fiche_score', {
+      p_student_id: studentId,
+      p_fiche: ficheKey,
+      p_score: pct,
+    });
+    await fetchProgression();
+  }, [studentId, ficheKey, fetchProgression]);
+
   return {
     progression,
     loading,
     markOpened:    () => markEvent('opened'),
-    markSucceeded: () => markEvent('succeeded'),
+    markScore,
   };
 }
