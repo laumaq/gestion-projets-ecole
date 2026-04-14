@@ -372,6 +372,89 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
         </div>
       </div>
 
+      {/* Détails par expérience */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <h4 className="text-sm font-medium text-gray-700 mb-3">Détails par expérience</h4>
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left text-xs font-medium text-gray-500 py-2">Expérience</th>
+                <th className="text-center text-xs font-medium text-gray-500 py-2">Nb réponses</th>
+                <th className="text-center text-xs font-medium text-gray-500 py-2">Médiane</th>
+                <th className="text-center text-xs font-medium text-gray-500 py-2">Nb correctes</th>
+                <th className="text-center text-xs font-medium text-gray-500 py-2">Taux correct</th>
+              </tr>
+            </thead>
+            <tbody>
+              {colonnes.map((verif, idx) => {
+                const tableau = tableaux[verif.tableau_index];
+                const key = `${tableau?.nom} - ${verif.nom}`;
+                const couleur = couleurMap.get(key) || '';
+                
+                // Collecter les stats pour cette expérience
+                let totalReponses = 0;
+                let totalCorrectes = 0;
+                const reponsesParEleve: number[] = [];
+                
+                for (const score of scores) {
+                  const scoreTableau = score.scoresParTableau.find(
+                    (s: { tableauNom: string; verificationNom: string }) => 
+                      s.tableauNom === tableau?.nom && s.verificationNom === verif.nom
+                  );
+                  if (scoreTableau && scoreTableau.totalMesures > 0) {
+                    totalReponses += scoreTableau.totalMesures;
+                    totalCorrectes += scoreTableau.mesuresValides;
+                    reponsesParEleve.push(scoreTableau.totalMesures);
+                  }
+                }
+                
+                // Calculer la médiane
+                let mediane = 0;
+                if (reponsesParEleve.length > 0) {
+                  reponsesParEleve.sort((a, b) => a - b);
+                  const milieu = Math.floor(reponsesParEleve.length / 2);
+                  mediane = reponsesParEleve.length % 2 === 0
+                    ? (reponsesParEleve[milieu - 1] + reponsesParEleve[milieu]) / 2
+                    : reponsesParEleve[milieu];
+                }
+                
+                const tauxCorrect = totalReponses > 0 ? (totalCorrectes / totalReponses) * 100 : 0;
+                
+                return (
+                  <tr key={idx} className="border-b border-gray-100">
+                    <td className="py-2 text-sm font-medium text-gray-900">
+                      <div className={`inline-block px-2 py-0.5 rounded-full ${couleur}`}>
+                        {tableau?.nom}<br />
+                        <span className="text-xs font-normal">{verif.nom}</span>
+                      </div>
+                    </td>
+                    <td className="text-center text-sm text-gray-600 py-2">
+                      {totalReponses}
+                    </td>
+                    <td className="text-center text-sm text-gray-600 py-2">
+                      {mediane}
+                    </td>
+                    <td className="text-center text-sm text-gray-600 py-2">
+                      {totalCorrectes}
+                    </td>
+                    <td className="text-center py-2">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-sm font-medium ${
+                        tauxCorrect < seuilRouge ? 'bg-red-100 text-red-800' :
+                        tauxCorrect < seuilJaune ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {tauxCorrect.toFixed(1)}%
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Double slider pour les seuils */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <h4 className="text-sm font-medium text-gray-700 mb-4">Seuils de couleur</h4>
