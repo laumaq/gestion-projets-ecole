@@ -55,7 +55,7 @@ interface EleveScore {
   };
 }
 
-type ModeCalcul = 'standard' | 'pondere_median';
+type ModeCalcul = 'standard' | 'moyenne_experiences' | 'pondere_efficacite';
 
 interface ModeCalculProps {
   mode: ModeCalcul;
@@ -66,8 +66,9 @@ function ModeSelector({ mode, onChange }: ModeCalculProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const modes = [
-    { value: 'standard', label: 'Standard', description: 'Moyenne arithmétique des pourcentages bruts' },
-    { value: 'pondere_median', label: 'Pondéré (médiane)', description: 'Pondéré par rapport à la médiane des réponses par tableau' }
+    { value: 'standard', label: 'Standard', description: '(Total correctes / Total mesures) × 100' },
+    { value: 'moyenne_experiences', label: 'Moyenne des expériences', description: 'Moyenne arithmétique des scores par tableau' },
+    { value: 'pondere_efficacite', label: 'Pondéré par efficacité', description: 'Pondéré par le rapport réponses/médiane' }
   ];
   
   const currentMode = modes.find(m => m.value === mode);
@@ -159,9 +160,7 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
         mesuresParEleve.get(mesure.eleve_matricule)!.push(mesure);
       }
 
-      // Collecter les scores bruts pour TOUS les élèves
-      const scoresBruts: { eleveId: number; total: number; valides: number; pourcentage: number }[] = [];
-
+      // Collecter les scores pour TOUS les élèves
       for (const eleve of eleves) {
         const mesuresEleve = mesuresParEleve.get(eleve.matricule) || [];
         
@@ -183,41 +182,30 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
         }
 
         const pourcentage = total > 0 ? (valides / total) * 100 : 0;
-        
-        scoresBruts.push({
-          eleveId: eleve.matricule,
-          total,
-          valides,
-          pourcentage
-        });
-      }
 
-      // Stocker les scores bruts (sans pondération pour les scores par tableau)
-      for (const brut of scoresBruts) {
         const score = {
           tableauIndex: verif.tableau_index,
           tableauNom: tableau.nom,
           verificationNom: verif.nom,
-          totalMesures: brut.total,
-          mesuresValides: brut.valides,
-          pourcentage: brut.pourcentage  // Toujours le pourcentage brut
+          totalMesures: total,
+          mesuresValides: valides,
+          pourcentage: pourcentage
         };
 
-        const eleveScore = scoresParEleve.get(brut.eleveId);
+        const eleveScore = scoresParEleve.get(eleve.matricule);
         if (eleveScore) {
           eleveScore.scoresParTableau.push(score);
         }
       }
     }
 
-    // Calculer les médianes par tableau pour le mode pondéré
+    // Calculer les médianes par tableau pour le mode pondere_efficacite
     const mediansParTableau: Record<number, number> = {};
     
-    if (modeCalculGlobal === 'pondere_median') {
+    if (modeCalculGlobal === 'pondere_efficacite') {
       for (const verif of verificationsActives) {
         const tableauIndex = verif.tableau_index;
         
-        // Collecter le nombre de réponses de chaque élève pour ce tableau
         const reponsesParEleve: number[] = [];
         for (const eleveScore of Array.from(scoresParEleve.values())) {
           const scoreTableau = eleveScore.scoresParTableau.find(st => st.tableauIndex === tableauIndex);
@@ -226,7 +214,6 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
           }
         }
         
-        // Calculer la médiane
         if (reponsesParEleve.length > 0) {
           reponsesParEleve.sort((a, b) => a - b);
           const milieu = Math.floor(reponsesParEleve.length / 2);
@@ -239,11 +226,9 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
       }
     }
 
-    // Calculer les scores globaux
+    // Calculer les scores globaux selon le mode
     for (const eleveScore of Array.from(scoresParEleve.values())) {
       const scoresTableaux = eleveScore.scoresParTableau;
-      const nombreTotalTableaux = scoresTableaux.length;
-      
       const aDesMesures = scoresTableaux.some(st => st.totalMesures > 0);
       
       if (!aDesMesures) {
@@ -253,38 +238,65 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
         continue;
       }
       
-      let totalMesuresGlobal = 0;
-      let validesGlobal = 0;
-      let sommeScores = 0;
-      
-      for (const st of scoresTableaux) {
-        let scoreTableau = 0;
+      if (modeCalculGlobal === 'standard') {
+        // Mode Standard : (total correctes / total mesures) × 100
+        let totalMesuresGlobal = 0;
+        let validesGlobal = 0;
         
-        if (st.totalMesures === 0) {
-          scoreTableau = 0;
-        } else {
-          const pourcentageBrut = (st.mesuresValides / st.totalMesures) * 100;
-          
-          if (modeCalculGlobal === 'pondere_median') {
-            const mediane = mediansParTableau[st.tableauIndex] || 1;
-            let facteur = st.totalMesures / mediane;
-            facteur = Math.min(1, facteur);
-            scoreTableau = pourcentageBrut * facteur;
-          } else {
-            // Mode standard : pourcentage brut
-            scoreTableau = pourcentageBrut;
-          }
-          
+        for (const st of scoresTableaux) {
           totalMesuresGlobal += st.totalMesures;
           validesGlobal += st.mesuresValides;
         }
         
-        sommeScores += scoreTableau;
+        eleveScore.scoreGlobal.pourcentage = totalMesuresGlobal > 0 ? (validesGlobal / totalMesuresGlobal) * 100 : 0;
+        eleveScore.scoreGlobal.totalMesures = totalMesuresGlobal;
+        eleveScore.scoreGlobal.mesuresValides = validesGlobal;
+        
+      } else if (modeCalculGlobal === 'moyenne_experiences') {
+        // Mode Moyenne des expériences : moyenne arithmétique des scores par tableau (0% si pas de données)
+        let sommePourcentages = 0;
+        let totalMesuresGlobal = 0;
+        let validesGlobal = 0;
+        
+        for (const st of scoresTableaux) {
+          const pourcentageTableau = st.totalMesures > 0 ? (st.mesuresValides / st.totalMesures) * 100 : 0;
+          sommePourcentages += pourcentageTableau;
+          totalMesuresGlobal += st.totalMesures;
+          validesGlobal += st.mesuresValides;
+        }
+        
+        eleveScore.scoreGlobal.pourcentage = sommePourcentages / scoresTableaux.length;
+        eleveScore.scoreGlobal.totalMesures = totalMesuresGlobal;
+        eleveScore.scoreGlobal.mesuresValides = validesGlobal;
+        
+      } else if (modeCalculGlobal === 'pondere_efficacite') {
+        // Mode Pondéré par efficacité : moyenne des (score_tableau × min(réponses/médiane, 1))
+        let sommeScoresPonderes = 0;
+        let totalMesuresGlobal = 0;
+        let validesGlobal = 0;
+        
+        for (const st of scoresTableaux) {
+          let scoreTableau = 0;
+          
+          if (st.totalMesures === 0) {
+            scoreTableau = 0;
+          } else {
+            const pourcentageBrut = (st.mesuresValides / st.totalMesures) * 100;
+            const mediane = mediansParTableau[st.tableauIndex] || 1;
+            let facteur = st.totalMesures / mediane;
+            facteur = Math.min(1, facteur);
+            scoreTableau = pourcentageBrut * facteur;
+            totalMesuresGlobal += st.totalMesures;
+            validesGlobal += st.mesuresValides;
+          }
+          
+          sommeScoresPonderes += scoreTableau;
+        }
+        
+        eleveScore.scoreGlobal.pourcentage = sommeScoresPonderes / scoresTableaux.length;
+        eleveScore.scoreGlobal.totalMesures = totalMesuresGlobal;
+        eleveScore.scoreGlobal.mesuresValides = validesGlobal;
       }
-      
-      eleveScore.scoreGlobal.pourcentage = sommeScores / nombreTotalTableaux;
-      eleveScore.scoreGlobal.totalMesures = totalMesuresGlobal;
-      eleveScore.scoreGlobal.mesuresValides = validesGlobal;
     }
 
     return Array.from(scoresParEleve.values());
