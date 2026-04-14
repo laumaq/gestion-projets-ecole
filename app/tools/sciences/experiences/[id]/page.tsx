@@ -229,19 +229,60 @@ export default function ExperienceDetailPage() {
       if (mesuresError) throw mesuresError;
       setMesures(mesuresData || []);
 
-      // Charger la liste des élèves de la classe (pour les résultats)
+      // Dans chargerExperience, modifiez le chargement des élèves :
+
       if (type === 'employee' && expData.cibles) {
         const toutesClasses = expData.cibles.classes || [];
+        const tousGroupes = expData.cibles.groupes || [];
+        
+        let elevesData: any[] = [];
+        
+        // Charger les élèves des classes
         if (toutesClasses.length > 0) {
-          const { data: elevesData } = await supabase
+          const { data } = await supabase
             .from('students')
             .select('matricule, nom, prenom, classe')
             .in('classe', toutesClasses);
+          if (data) elevesData.push(...data);
+        }
+        
+        // Charger les élèves des groupes - Version corrigée
+        if (tousGroupes.length > 0) {
+          const { data } = await supabase
+            .from('students_groups')
+            .select(`
+              matricule,
+              students (
+                nom,
+                prenom,
+                classe
+              )
+            `)
+            .in('groupe_code', tousGroupes);
           
-          if (elevesData) {
-            setElevesList(elevesData);
+          if (data) {
+            data.forEach(item => {
+              // students est un tableau, on prend le premier élément
+              const studentArray = item.students as { nom: string; prenom: string; classe: string }[];
+              const student = studentArray?.[0];
+              if (student) {
+                elevesData.push({
+                  matricule: item.matricule,
+                  nom: student.nom,
+                  prenom: student.prenom,
+                  classe: student.classe
+                });
+              }
+            });
           }
         }
+        
+        // Dédupliquer par matricule
+        const elevesUniques = Array.from(
+          new Map(elevesData.map(e => [e.matricule, e])).values()
+        );
+        
+        setElevesList(elevesUniques);
       }
 
       // Subscription temps réel
