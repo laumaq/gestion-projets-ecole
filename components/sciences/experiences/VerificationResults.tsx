@@ -65,10 +65,9 @@ interface ModeCalculProps {
 function ModeSelector({ mode, onChange }: ModeCalculProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  
   const modes = [
-    { value: 'standard', label: 'Standard', description: 'Pourcentage brut de mesures correctes' },
-    { value: 'pondere_median', label: 'Pondéré (médiane)', description: 'Pondéré par rapport à la médiane des réponses' }
+    { value: 'standard', label: 'Standard', description: 'Moyenne arithmétique des pourcentages bruts' },
+    { value: 'pondere_median', label: 'Pondéré (médiane)', description: 'Pondéré par rapport à la médiane des réponses par tableau' }
   ];
   
   const currentMode = modes.find(m => m.value === mode);
@@ -86,7 +85,7 @@ function ModeSelector({ mode, onChange }: ModeCalculProps) {
       </button>
       
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-20 min-w-[200px]">
+        <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-20 min-w-[220px]">
           {modes.map(m => (
             <button
               key={m.value}
@@ -123,36 +122,10 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
   const [seuilRouge, setSeuilRouge] = useState(70);
   const [seuilJaune, setSeuilJaune] = useState(85);
   
-  // Mode de calcul par vérification (une map pour stocker le mode de chaque colonne)
-  const [modesCalcul, setModesCalcul] = useState<Record<string, ModeCalcul>>({});
+  // Mode de calcul global
   const [modeCalculGlobal, setModeCalculGlobal] = useState<ModeCalcul>('standard');
 
-  const handleModeChange = (key: string, mode: ModeCalcul) => {
-    setModesCalcul(prev => ({ ...prev, [key]: mode }));
-  };
-
-  // Fonction pour calculer la médiane des nombres de réponses par élève
-  const calculerMedianReponses = (scoresParEleve: EleveScore[], verifKey: string) => {
-    const reponsesParEleve = scoresParEleve
-      .map(s => {
-        const score = s.scoresParTableau.find(st => `${st.tableauNom} - ${st.verificationNom}` === verifKey);
-        return score?.totalMesures || 0;
-      })
-      .filter(n => n > 0);
-    
-    if (reponsesParEleve.length === 0) return 0;
-    
-    reponsesParEleve.sort((a, b) => a - b);
-    const milieu = Math.floor(reponsesParEleve.length / 2);
-    
-    if (reponsesParEleve.length % 2 === 0) {
-      return (reponsesParEleve[milieu - 1] + reponsesParEleve[milieu]) / 2;
-    } else {
-      return reponsesParEleve[milieu];
-    }
-  };
-
-  // Calcul des scores (version corrigée)
+  // Calcul des scores
   const scores = useMemo(() => {
     const verificationsActives = verifications.filter(v => v.active && v.expression.trim());
     
@@ -169,13 +142,10 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
       });
     });
 
-    // Pour chaque vérification active
+    // Pour chaque vérification active (tableau)
     for (const verif of verificationsActives) {
       const tableau = tableaux[verif.tableau_index];
       if (!tableau) continue;
-      
-      const verifKey = `${tableau.nom} - ${verif.nom}`;
-      const mode = modesCalcul[verifKey] || 'standard';
 
       // Filtrer les mesures de ce tableau
       const mesuresTableau = mesures.filter(m => m.tableau_index === verif.tableau_index);
@@ -189,10 +159,9 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
         mesuresParEleve.get(mesure.eleve_matricule)!.push(mesure);
       }
 
-      // Première passe : collecter les scores bruts pour TOUS les élèves
+      // Collecter les scores bruts pour TOUS les élèves
       const scoresBruts: { eleveId: number; total: number; valides: number; pourcentage: number }[] = [];
 
-      // Pour chaque élève (même ceux sans mesures)
       for (const eleve of eleves) {
         const mesuresEleve = mesuresParEleve.get(eleve.matricule) || [];
         
@@ -223,38 +192,15 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
         });
       }
 
-      // Calculer la médiane des nombres de réponses pour ce tableau (uniquement ceux qui ont répondu)
-      let medianReponses = 0;
-      if (mode === 'pondere_median') {
-        const reponses = scoresBruts.map(s => s.total).filter(n => n > 0);
-        if (reponses.length > 0) {
-          reponses.sort((a, b) => a - b);
-          const milieu = Math.floor(reponses.length / 2);
-          medianReponses = reponses.length % 2 === 0 
-            ? (reponses[milieu - 1] + reponses[milieu]) / 2 
-            : reponses[milieu];
-        }
-      }
-
-      // Deuxième passe : stocker les scores (avec ou sans pondération)
+      // Stocker les scores bruts (sans pondération pour les scores par tableau)
       for (const brut of scoresBruts) {
-        let pourcentageFinal = brut.pourcentage;
-        
-        // Pour le mode pondéré, on applique le facteur (plafonné à 1)
-        if (mode === 'pondere_median' && medianReponses > 0 && brut.total > 0) {
-          let facteur = brut.total / medianReponses;
-          facteur = Math.min(1, facteur);
-          pourcentageFinal = brut.pourcentage * facteur;
-        }
-        // Si l'élève n'a pas de mesures (total === 0), pourcentageFinal reste 0
-
         const score = {
           tableauIndex: verif.tableau_index,
           tableauNom: tableau.nom,
           verificationNom: verif.nom,
           totalMesures: brut.total,
           mesuresValides: brut.valides,
-          pourcentage: pourcentageFinal
+          pourcentage: brut.pourcentage  // Toujours le pourcentage brut
         };
 
         const eleveScore = scoresParEleve.get(brut.eleveId);
@@ -264,16 +210,44 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
       }
     }
 
-    // Calculer les scores globaux (selon le mode sélectionné)
+    // Calculer les médianes par tableau pour le mode pondéré
+    const mediansParTableau: Record<number, number> = {};
+    
+    if (modeCalculGlobal === 'pondere_median') {
+      for (const verif of verificationsActives) {
+        const tableauIndex = verif.tableau_index;
+        
+        // Collecter le nombre de réponses de chaque élève pour ce tableau
+        const reponsesParEleve: number[] = [];
+        for (const eleveScore of Array.from(scoresParEleve.values())) {
+          const scoreTableau = eleveScore.scoresParTableau.find(st => st.tableauIndex === tableauIndex);
+          if (scoreTableau && scoreTableau.totalMesures > 0) {
+            reponsesParEleve.push(scoreTableau.totalMesures);
+          }
+        }
+        
+        // Calculer la médiane
+        if (reponsesParEleve.length > 0) {
+          reponsesParEleve.sort((a, b) => a - b);
+          const milieu = Math.floor(reponsesParEleve.length / 2);
+          mediansParTableau[tableauIndex] = reponsesParEleve.length % 2 === 0
+            ? (reponsesParEleve[milieu - 1] + reponsesParEleve[milieu]) / 2
+            : reponsesParEleve[milieu];
+        } else {
+          mediansParTableau[tableauIndex] = 1;
+        }
+      }
+    }
+
+    // Calculer les scores globaux
     for (const eleveScore of Array.from(scoresParEleve.values())) {
       const scoresTableaux = eleveScore.scoresParTableau;
+      const nombreTotalTableaux = scoresTableaux.length;
       
-      // Vérifier si l'élève a au moins une mesure dans UN des tableaux
       const aDesMesures = scoresTableaux.some(st => st.totalMesures > 0);
       
       if (!aDesMesures) {
-        // Élève absent : score global = null (pas 0)
-        eleveScore.scoreGlobal.pourcentage = -1; // Valeur spéciale pour "absent"
+        eleveScore.scoreGlobal.pourcentage = -1;
         eleveScore.scoreGlobal.totalMesures = 0;
         eleveScore.scoreGlobal.mesuresValides = 0;
         continue;
@@ -281,38 +255,40 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
       
       let totalMesuresGlobal = 0;
       let validesGlobal = 0;
-      let sommePourcentages = 0;
-      let compteurTableauxAvecMesures = 0;
+      let sommeScores = 0;
       
       for (const st of scoresTableaux) {
-        if (st.totalMesures === 0) continue; // Ignorer les tableaux sans mesures
+        let scoreTableau = 0;
         
-        // Pourcentage BRUT du tableau
-        const pourcentageBrut = (st.mesuresValides / st.totalMesures) * 100;
-        sommePourcentages += pourcentageBrut;
-        compteurTableauxAvecMesures++;
-        totalMesuresGlobal += st.totalMesures;
-        validesGlobal += st.mesuresValides;
+        if (st.totalMesures === 0) {
+          scoreTableau = 0;
+        } else {
+          const pourcentageBrut = (st.mesuresValides / st.totalMesures) * 100;
+          
+          if (modeCalculGlobal === 'pondere_median') {
+            const mediane = mediansParTableau[st.tableauIndex] || 1;
+            let facteur = st.totalMesures / mediane;
+            facteur = Math.min(1, facteur);
+            scoreTableau = pourcentageBrut * facteur;
+          } else {
+            // Mode standard : pourcentage brut
+            scoreTableau = pourcentageBrut;
+          }
+          
+          totalMesuresGlobal += st.totalMesures;
+          validesGlobal += st.mesuresValides;
+        }
+        
+        sommeScores += scoreTableau;
       }
       
-      if (modeCalculGlobal === 'standard') {
-        // Moyenne arithmétique simple des pourcentages bruts (uniquement sur les tableaux avec mesures)
-        eleveScore.scoreGlobal.pourcentage = compteurTableauxAvecMesures > 0 
-          ? sommePourcentages / compteurTableauxAvecMesures 
-          : 0;
-      } else {
-        // Mode pondéré (à implémenter selon vos besoins)
-        eleveScore.scoreGlobal.pourcentage = compteurTableauxAvecMesures > 0 
-          ? sommePourcentages / compteurTableauxAvecMesures 
-          : 0;
-      }
-      
+      eleveScore.scoreGlobal.pourcentage = sommeScores / nombreTotalTableaux;
       eleveScore.scoreGlobal.totalMesures = totalMesuresGlobal;
       eleveScore.scoreGlobal.mesuresValides = validesGlobal;
     }
 
     return Array.from(scoresParEleve.values());
-  }, [verifications, tableaux, mesures, eleves, modesCalcul]);
+  }, [verifications, tableaux, mesures, eleves, modeCalculGlobal]);
 
   // Fonction pour obtenir la classe de couleur selon le pourcentage
   const getPourcentageColor = (pourcentage: number) => {
@@ -357,52 +333,44 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
     );
   }
 
-  // Calcul des stats globales
-  const totalGlobal = scores.reduce((sum, s) => sum + s.scoreGlobal.totalMesures, 0);
-  const validesGlobal = scores.reduce((sum, s) => sum + s.scoreGlobal.mesuresValides, 0);
-  const pourcentageGlobal = totalGlobal > 0 ? (validesGlobal / totalGlobal) * 100 : 0;
-
   return (
     <div className="space-y-6">
 
-    {/* En-tête avec scores globaux */}
-    <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
-      <h3 className="text-lg font-semibold mb-2">Résultats globaux</h3>
-      <div className="flex items-center justify-between">
-        <div>
-          {/* Moyenne des scores globaux des élèves QUI ONT PARTICIPÉ (exclure les absents) */}
-          <p className="text-3xl font-bold">
-            {(() => {
-              const elevesAvecScore = scores.filter(s => s.scoreGlobal.pourcentage !== -1);
-              const moyenne = elevesAvecScore.reduce((sum, s) => sum + s.scoreGlobal.pourcentage, 0) / (elevesAvecScore.length || 1);
-              return moyenne.toFixed(1);
-            })()}%
-          </p>
-          <p className="text-sm opacity-90">
-            Moyenne des scores globaux des élèves ayant participé
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm opacity-90">
-            {scores.filter(s => s.scoreGlobal.pourcentage !== -1).length} / {scores.length} élèves ont participé
-          </p>
+      {/* En-tête avec scores globaux */}
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
+        <h3 className="text-lg font-semibold mb-2">Résultats globaux</h3>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-3xl font-bold">
+              {(() => {
+                const elevesAvecScore = scores.filter(s => s.scoreGlobal.pourcentage !== -1);
+                const moyenne = elevesAvecScore.reduce((sum, s) => sum + s.scoreGlobal.pourcentage, 0) / (elevesAvecScore.length || 1);
+                return moyenne.toFixed(1);
+              })()}%
+            </p>
+            <p className="text-sm opacity-90">
+              Moyenne des scores globaux des élèves ayant participé
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm opacity-90">
+              {scores.filter(s => s.scoreGlobal.pourcentage !== -1).length} / {scores.length} élèves ont participé
+            </p>
+          </div>
         </div>
       </div>
-    </div>
 
       {/* Double slider pour les seuils */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <h4 className="text-sm font-medium text-gray-700 mb-4">Seuils de couleur</h4>
         
         <div className="relative pt-6 pb-2">
-          {/* Barre de fond avec les trois couleurs */}
           <div className="absolute top-1/2 left-0 right-0 h-2 -translate-y-1/2 rounded-full">
             <div className="absolute left-0 top-0 h-full rounded-l-full" style={{ width: `${seuilRouge}%`, backgroundColor: '#f87171' }} />
             <div className="absolute top-0 h-full" style={{ left: `${seuilRouge}%`, width: `${seuilJaune - seuilRouge}%`, backgroundColor: '#fbbf24' }} />
             <div className="absolute top-0 right-0 h-full rounded-r-full" style={{ width: `${100 - seuilJaune}%`, backgroundColor: '#4ade80' }} />
           </div>
           
-          {/* Poignée rouge (seuil bas) */}
           <div 
             className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-red-600 rounded-full shadow-md cursor-pointer hover:scale-110 transition-transform z-10"
             style={{ left: `${seuilRouge}%` }}
@@ -428,7 +396,6 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
             </div>
           </div>
           
-          {/* Poignée jaune (seuil haut) */}
           <div 
             className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-yellow-600 rounded-full shadow-md cursor-pointer hover:scale-110 transition-transform z-10"
             style={{ left: `${seuilJaune}%` }}
@@ -454,7 +421,6 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
             </div>
           </div>
         </div>
-
       </div>
 
       {/* Tableau des résultats par élève */}
@@ -480,7 +446,6 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
                         {tableau?.nom}<br />
                         <span className="text-xs font-normal">{verif.nom}</span>
                       </div>
-                      {/* PLUS DE ModeSelector ici */}
                     </th>
                   );
                 })}
@@ -500,7 +465,6 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
                 .sort((a, b) => a.eleve.nom.localeCompare(b.eleve.nom))
                 .map((score) => {
                   const eleve = score.eleve;
-                  // Utiliser le score global déjà calculé (moyenne pondérée)
                   const globalPourcentage = score.scoreGlobal.pourcentage;
                   const globalColor = getPourcentageColor(globalPourcentage);
                   const globalBadge = getBadgeColor(globalPourcentage);
@@ -524,7 +488,6 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
                             s.tableauNom === tableau?.nom && s.verificationNom === verif.nom
                         );
                         
-                        // Si l'élève n'a aucune mesure pour ce tableau
                         if (!scoreTableau || scoreTableau.totalMesures === 0) {
                           return (
                             <td key={idx} className="px-6 py-4 whitespace-nowrap text-center">
@@ -549,7 +512,6 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
                         );
                       })}
 
-                      {/* Score global */}
                       <td className="px-6 py-4 whitespace-nowrap text-center bg-gray-50">
                         {score.scoreGlobal.pourcentage === -1 ? (
                           <span className="text-gray-400 text-sm">—</span>
@@ -569,8 +531,6 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
           </table>
         </div>
       </div>
-
-
     </div>
   );
 }
