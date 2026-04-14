@@ -229,26 +229,29 @@ export default function ExperienceDetailPage() {
       if (mesuresError) throw mesuresError;
       setMesures(mesuresData || []);
 
-      // Dans chargerExperience, modifiez le chargement des élèves :
+      // Dans chargerExperience, modifions la partie du chargement des élèves :
 
       if (type === 'employee' && expData.cibles) {
         const toutesClasses = expData.cibles.classes || [];
         const tousGroupes = expData.cibles.groupes || [];
+
         
         let elevesData: any[] = [];
         
         // Charger les élèves des classes
         if (toutesClasses.length > 0) {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('students')
             .select('matricule, nom, prenom, classe')
             .in('classe', toutesClasses);
+          
+          console.log('Élèves des classes:', data, error);
           if (data) elevesData.push(...data);
         }
         
-        // Charger les élèves des groupes - Version corrigée
+        // Charger les élèves des groupes
         if (tousGroupes.length > 0) {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('students_groups')
             .select(`
               matricule,
@@ -261,11 +264,10 @@ export default function ExperienceDetailPage() {
             .in('groupe_code', tousGroupes);
           
           if (data) {
-            data.forEach(item => {
-              // students est un tableau, on prend le premier élément
-              const studentArray = item.students as { nom: string; prenom: string; classe: string }[];
-              const student = studentArray?.[0];
-              if (student) {
+            data.forEach((item: any) => {
+              // Maintenant students est un objet, pas un tableau
+              const student = item.students;
+              if (student && student.nom) {
                 elevesData.push({
                   matricule: item.matricule,
                   nom: student.nom,
