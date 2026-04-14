@@ -17,24 +17,36 @@ export class ExpressionEvaluator {
     abs: Math.abs,
     floor: Math.floor,
     ceil: Math.ceil,
-    round: Math.round
+    round: Math.round,
+    asin: Math.asin,
+    acos: Math.acos,
+    atan: Math.atan
   };
 
-  /**
-   * Valide et parse une expression mathématique
-   * Remplace les {nom_colonne} par des variables
-   */
+  // lib/expressionEvaluator.ts - Version corrigée de parseExpression
+
   static parseExpression(expression: string, colonnesDisponibles: string[]): {
     isValid: boolean;
     parsedExpression?: string;
     variables?: string[];
     error?: string;
   } {
+    // Enlever les espaces et gérer le cas avec =
+    let cleanExpression = expression.trim();
+    
+    // Si l'expression contient un =, on ne garde que la partie droite pour la validation
+    if (cleanExpression.includes('=')) {
+      const parts = cleanExpression.split('=');
+      if (parts.length === 2) {
+        cleanExpression = parts[1].trim();
+      }
+    }
+    
     // Vérifier que toutes les colonnes entre {} existent
     const colonnePattern = /\{([^}]+)\}/g;
     const matches: RegExpExecArray[] = [];
     let match;
-    while ((match = colonnePattern.exec(expression)) !== null) {
+    while ((match = colonnePattern.exec(cleanExpression)) !== null) {
       matches.push(match);
     }
     const variables = matches.map(m => m[1]);
@@ -48,7 +60,7 @@ export class ExpressionEvaluator {
     }
 
     // Remplacer les {colonne} par des noms de variables valides
-    let parsed = expression;
+    let parsed = cleanExpression;
     variables.forEach(v => {
       const regex = new RegExp(`\\{${v}\\}`, 'g');
       parsed = parsed.replace(regex, `__col__${v.replace(/[^a-zA-Z0-9]/g, '_')}`);
@@ -81,19 +93,23 @@ export class ExpressionEvaluator {
       expr = expr.replace(new RegExp(`\\b${constName}\\b`, 'g'), constValue.toString());
     }
 
-    // Fonctions supportées
-    const functionNames = Object.keys(this.FUNCTIONS);
-    functionNames.forEach(fnName => {
-      const fn = this.FUNCTIONS[fnName];
-      expr = expr.replace(new RegExp(`${fnName}\\(([^)]+)\\)`, 'g'), (match, arg) => {
-        return fn(parseFloat(arg)).toString();
-      });
-    });
+    // Remplacer les variables par leurs valeurs
+    for (const [varName, varValue] of Object.entries(variables)) {
+      const regex = new RegExp(`\\b${varName}\\b`, 'g');
+      expr = expr.replace(regex, varValue.toString());
+    }
 
-    // Évaluation sécurisée avec Function
+    // Créer un objet avec toutes les fonctions mathématiques
+    const mathContext: Record<string, any> = {};
+    for (const [fnName, fn] of Object.entries(this.FUNCTIONS)) {
+      mathContext[fnName] = fn;
+    }
+
+    // Construire la fonction avec les fonctions mathématiques dans le scope
+    const functionBody = `with (mathContext) { return ${expr}; }`;
     // eslint-disable-next-line no-new-func
-    const evaluator = new Function(...Object.keys(variables), `return ${expr};`);
-    return evaluator(...Object.values(variables));
+    const evaluator = new Function('mathContext', functionBody);
+    return evaluator(mathContext);
   }
 
   /**

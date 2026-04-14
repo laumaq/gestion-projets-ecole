@@ -64,6 +64,7 @@ interface ModeCalculProps {
 
 function ModeSelector({ mode, onChange }: ModeCalculProps) {
   const [isOpen, setIsOpen] = useState(false);
+
   
   const modes = [
     { value: 'standard', label: 'Standard', description: 'Pourcentage brut de mesures correctes' },
@@ -124,6 +125,7 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
   
   // Mode de calcul par vérification (une map pour stocker le mode de chaque colonne)
   const [modesCalcul, setModesCalcul] = useState<Record<string, ModeCalcul>>({});
+  const [modeCalculGlobal, setModeCalculGlobal] = useState<ModeCalcul>('standard');
 
   const handleModeChange = (key: string, mode: ModeCalcul) => {
     setModesCalcul(prev => ({ ...prev, [key]: mode }));
@@ -262,28 +264,51 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
       }
     }
 
-    // Calculer les scores globaux (moyenne arithmétique des scores pondérés de chaque tableau)
+    // Calculer les scores globaux (selon le mode sélectionné)
     for (const eleveScore of Array.from(scoresParEleve.values())) {
       const scoresTableaux = eleveScore.scoresParTableau;
       
-      if (scoresTableaux.length === 0) {
-        eleveScore.scoreGlobal.pourcentage = 0;
+      // Vérifier si l'élève a au moins une mesure dans UN des tableaux
+      const aDesMesures = scoresTableaux.some(st => st.totalMesures > 0);
+      
+      if (!aDesMesures) {
+        // Élève absent : score global = null (pas 0)
+        eleveScore.scoreGlobal.pourcentage = -1; // Valeur spéciale pour "absent"
+        eleveScore.scoreGlobal.totalMesures = 0;
+        eleveScore.scoreGlobal.mesuresValides = 0;
         continue;
       }
       
-      // Moyenne arithmétique simple des scores de chaque tableau
-      let sommeScores = 0;
-      let compteurTableaux = 0;
+      let totalMesuresGlobal = 0;
+      let validesGlobal = 0;
+      let sommePourcentages = 0;
+      let compteurTableauxAvecMesures = 0;
       
       for (const st of scoresTableaux) {
-        sommeScores += st.pourcentage;
-        compteurTableaux++;
-        eleveScore.scoreGlobal.totalMesures += st.totalMesures;
-        eleveScore.scoreGlobal.mesuresValides += st.mesuresValides;
+        if (st.totalMesures === 0) continue; // Ignorer les tableaux sans mesures
+        
+        // Pourcentage BRUT du tableau
+        const pourcentageBrut = (st.mesuresValides / st.totalMesures) * 100;
+        sommePourcentages += pourcentageBrut;
+        compteurTableauxAvecMesures++;
+        totalMesuresGlobal += st.totalMesures;
+        validesGlobal += st.mesuresValides;
       }
       
-      // Moyenne arithmétique (tous les tableaux ont le même poids)
-      eleveScore.scoreGlobal.pourcentage = compteurTableaux > 0 ? sommeScores / compteurTableaux : 0;
+      if (modeCalculGlobal === 'standard') {
+        // Moyenne arithmétique simple des pourcentages bruts (uniquement sur les tableaux avec mesures)
+        eleveScore.scoreGlobal.pourcentage = compteurTableauxAvecMesures > 0 
+          ? sommePourcentages / compteurTableauxAvecMesures 
+          : 0;
+      } else {
+        // Mode pondéré (à implémenter selon vos besoins)
+        eleveScore.scoreGlobal.pourcentage = compteurTableauxAvecMesures > 0 
+          ? sommePourcentages / compteurTableauxAvecMesures 
+          : 0;
+      }
+      
+      eleveScore.scoreGlobal.totalMesures = totalMesuresGlobal;
+      eleveScore.scoreGlobal.mesuresValides = validesGlobal;
     }
 
     return Array.from(scoresParEleve.values());
@@ -340,26 +365,30 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
   return (
     <div className="space-y-6">
 
-      {/* En-tête avec scores globaux */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
-        <h3 className="text-lg font-semibold mb-2">Résultats globaux</h3>
-        <div className="flex items-center justify-between">
-          <div>
-            {/* Moyenne des scores globaux des élèves */}
-            <p className="text-3xl font-bold">
-              {(scores.reduce((sum, s) => sum + s.scoreGlobal.pourcentage, 0) / (scores.length || 1)).toFixed(1)}%
-            </p>
-            <p className="text-sm opacity-90">
-              Moyenne des scores globaux
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm opacity-90">
-              {scores.filter(s => s.scoreGlobal.totalMesures > 0).length} / {scores.length} élèves ont participé
-            </p>
-          </div>
+    {/* En-tête avec scores globaux */}
+    <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
+      <h3 className="text-lg font-semibold mb-2">Résultats globaux</h3>
+      <div className="flex items-center justify-between">
+        <div>
+          {/* Moyenne des scores globaux des élèves QUI ONT PARTICIPÉ (exclure les absents) */}
+          <p className="text-3xl font-bold">
+            {(() => {
+              const elevesAvecScore = scores.filter(s => s.scoreGlobal.pourcentage !== -1);
+              const moyenne = elevesAvecScore.reduce((sum, s) => sum + s.scoreGlobal.pourcentage, 0) / (elevesAvecScore.length || 1);
+              return moyenne.toFixed(1);
+            })()}%
+          </p>
+          <p className="text-sm opacity-90">
+            Moyenne des scores globaux des élèves ayant participé
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-sm opacity-90">
+            {scores.filter(s => s.scoreGlobal.pourcentage !== -1).length} / {scores.length} élèves ont participé
+          </p>
         </div>
       </div>
+    </div>
 
       {/* Double slider pour les seuils */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -444,25 +473,25 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
                   const tableau = tableaux[verif.tableau_index];
                   const key = `${tableau?.nom} - ${verif.nom}`;
                   const couleur = couleurMap.get(key) || '';
-                  const currentMode = modesCalcul[key] || 'standard';
                   
                   return (
                     <th key={idx} className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
-                      <div className="flex flex-col items-center gap-1">
-                        <div className={`inline-block px-2 py-1 rounded-full ${couleur}`}>
-                          {tableau?.nom}<br />
-                          <span className="text-xs font-normal">{verif.nom}</span>
-                        </div>
-                        <ModeSelector 
-                          mode={currentMode}
-                          onChange={(mode) => handleModeChange(key, mode)}
-                        />
+                      <div className={`inline-block px-2 py-1 rounded-full ${couleur}`}>
+                        {tableau?.nom}<br />
+                        <span className="text-xs font-normal">{verif.nom}</span>
                       </div>
+                      {/* PLUS DE ModeSelector ici */}
                     </th>
                   );
                 })}
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-100">
-                  Score global
+                  <div className="flex flex-col items-center gap-1">
+                    <span>Score global</span>
+                    <ModeSelector 
+                      mode={modeCalculGlobal}
+                      onChange={(mode) => setModeCalculGlobal(mode)}
+                    />
+                  </div>
                 </th>
               </tr>
             </thead>
@@ -519,14 +548,19 @@ export default function VerificationResults({ verifications, tableaux, mesures, 
                           </td>
                         );
                       })}
+
+                      {/* Score global */}
                       <td className="px-6 py-4 whitespace-nowrap text-center bg-gray-50">
-                        <div className={`inline-flex flex-col items-center px-3 py-1 rounded-full ${globalBadge}`}>
-                          <span className={`text-sm font-bold ${globalColor}`}>{globalPourcentage.toFixed(0)}%</span>
-                          <span className="text-xs opacity-75">
-                            {/* Afficher le nombre total de mesures et le nombre de correctes */}
-                            {score.scoreGlobal.mesuresValides}/{score.scoreGlobal.totalMesures}
-                          </span>
-                        </div>
+                        {score.scoreGlobal.pourcentage === -1 ? (
+                          <span className="text-gray-400 text-sm">—</span>
+                        ) : (
+                          <div className={`inline-flex flex-col items-center px-3 py-1 rounded-full ${globalBadge}`}>
+                            <span className={`text-sm font-bold ${globalColor}`}>{score.scoreGlobal.pourcentage.toFixed(0)}%</span>
+                            <span className="text-xs opacity-75">
+                              {score.scoreGlobal.mesuresValides}/{score.scoreGlobal.totalMesures}
+                            </span>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );
