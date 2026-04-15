@@ -1,11 +1,16 @@
 // components/sciences/GraphiqueIntelligent.tsx
+
 'use client';
+
+import { ExpressionEvaluator } from '@/lib/sciences/expressionEvaluator';
+
 
 import { useRef, useMemo, useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
+  LogarithmicScale,
   PointElement,
   LineElement,
   BarElement,
@@ -21,9 +26,11 @@ import {
 } from 'chart.js';
 import { Chart } from 'react-chartjs-2';
 
+// Enregistrer LogarithmicScale
 ChartJS.register(
   CategoryScale,
   LinearScale,
+  LogarithmicScale,
   PointElement,
   LineElement,
   BarElement,
@@ -60,20 +67,207 @@ interface Mesure {
   };
 }
 
+interface VerificationConfig {
+  tableau_index: number;
+  expression: string;
+  variable_cible: string;
+  tolerance: number;
+  active: boolean;
+}
+
 interface GraphiqueIntelligentProps {
   config: GraphiqueConfig;
   tableaux: Tableau[];
-  mesuresParTableau: Record<number, Mesure[]>;  // <- Vérifiez que c'est bien écrit comme ça
+  mesuresParTableau: Record<number, Mesure[]>;
+  verifications?: VerificationConfig[];
   userType: 'employee' | 'student';
   userId: number;
   onModifierMesure?: (mesureId: string, valeurs: Record<string, number | null>) => void;
   onSupprimerMesure?: (mesureId: string) => void;
 }
 
+// Configuration des axes
+interface AxesConfig {
+  x: {
+    min?: number;
+    max?: number;
+    beginAtZero: boolean;
+    type: 'linear' | 'logarithmic';
+  };
+  y: {
+    min?: number;
+    max?: number;
+    beginAtZero: boolean;
+    type: 'linear' | 'logarithmic';
+  };
+}
+
+// Composant de configuration des axes
+function AxesConfigPanel({ config, onChange }: { config: AxesConfig; onChange: (newConfig: AxesConfig) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [localConfig, setLocalConfig] = useState(config);
+
+  const handleSave = () => {
+    onChange(localConfig);
+    setIsOpen(false);
+  };
+
+  const handleCancel = () => {
+    setLocalConfig(config);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="text-xs text-gray-400 hover:text-gray-600 ml-2"
+        title="Configurer les axes"
+      >
+        ⚙️
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 z-30 p-4 min-w-[300px]">
+          <h4 className="text-sm font-medium text-gray-900 mb-3">Configuration des axes</h4>
+          
+          {/* Axe X */}
+          <div className="mb-4">
+            <h5 className="text-xs font-medium text-gray-700 mb-2">Axe X</h5>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs text-gray-500">Min</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={localConfig.x.min ?? ''}
+                  onChange={(e) => setLocalConfig({
+                    ...localConfig,
+                    x: { ...localConfig.x, min: e.target.value ? parseFloat(e.target.value) : undefined }
+                  })}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  placeholder="auto"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500">Max</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={localConfig.x.max ?? ''}
+                  onChange={(e) => setLocalConfig({
+                    ...localConfig,
+                    x: { ...localConfig.x, max: e.target.value ? parseFloat(e.target.value) : undefined }
+                  })}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  placeholder="auto"
+                />
+              </div>
+            </div>
+            <div className="mt-2 flex items-center gap-4">
+              <label className="flex items-center gap-1 text-xs text-gray-500">
+                <input
+                  type="checkbox"
+                  checked={localConfig.x.beginAtZero}
+                  onChange={(e) => setLocalConfig({
+                    ...localConfig,
+                    x: { ...localConfig.x, beginAtZero: e.target.checked }
+                  })}
+                />
+                Commencer à 0
+              </label>
+              <label className="flex items-center gap-1 text-xs text-gray-500">
+                <input
+                  type="checkbox"
+                  checked={localConfig.x.type === 'logarithmic'}
+                  onChange={(e) => setLocalConfig({
+                    ...localConfig,
+                    x: { ...localConfig.x, type: e.target.checked ? 'logarithmic' : 'linear' }
+                  })}
+                />
+                Échelle logarithmique
+              </label>
+            </div>
+          </div>
+
+          {/* Axe Y */}
+          <div className="mb-4">
+            <h5 className="text-xs font-medium text-gray-700 mb-2">Axe Y</h5>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs text-gray-500">Min</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={localConfig.y.min ?? ''}
+                  onChange={(e) => setLocalConfig({
+                    ...localConfig,
+                    y: { ...localConfig.y, min: e.target.value ? parseFloat(e.target.value) : undefined }
+                  })}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  placeholder="auto"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500">Max</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={localConfig.y.max ?? ''}
+                  onChange={(e) => setLocalConfig({
+                    ...localConfig,
+                    y: { ...localConfig.y, max: e.target.value ? parseFloat(e.target.value) : undefined }
+                  })}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  placeholder="auto"
+                />
+              </div>
+            </div>
+            <div className="mt-2 flex items-center gap-4">
+              <label className="flex items-center gap-1 text-xs text-gray-500">
+                <input
+                  type="checkbox"
+                  checked={localConfig.y.beginAtZero}
+                  onChange={(e) => setLocalConfig({
+                    ...localConfig,
+                    y: { ...localConfig.y, beginAtZero: e.target.checked }
+                  })}
+                />
+                Commencer à 0
+              </label>
+              <label className="flex items-center gap-1 text-xs text-gray-500">
+                <input
+                  type="checkbox"
+                  checked={localConfig.y.type === 'logarithmic'}
+                  onChange={(e) => setLocalConfig({
+                    ...localConfig,
+                    y: { ...localConfig.y, type: e.target.checked ? 'logarithmic' : 'linear' }
+                  })}
+                />
+                Échelle logarithmique
+              </label>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+            <button onClick={handleCancel} className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700">
+              Annuler
+            </button>
+            <button onClick={handleSave} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700">
+              Appliquer
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function GraphiqueIntelligent({ 
   config, 
   tableaux, 
-  mesuresParTableau, 
+  mesuresParTableau,
+  verifications = [],
   userType,
   userId,
   onModifierMesure,
@@ -82,6 +276,15 @@ export default function GraphiqueIntelligent({
   const tableau = tableaux[config.tableau_index];
   const mesures = mesuresParTableau[config.tableau_index] || [];
   
+  // État pour le filtrage par vérification
+  const [filterByVerification, setFilterByVerification] = useState(false);
+  
+  // État pour la configuration des axes
+  const [axesConfig, setAxesConfig] = useState<AxesConfig>({
+    x: { beginAtZero: true, type: 'linear' },
+    y: { beginAtZero: true, type: 'linear' }
+  });
+
   const chartRef = useRef<ChartJS>(null);
 
   const [selectedPoint, setSelectedPoint] = useState<Mesure | null>(null);
@@ -90,17 +293,59 @@ export default function GraphiqueIntelligent({
   const [editingMesure, setEditingMesure] = useState<Mesure | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
 
+  // Récupérer la vérification active pour ce tableau
+  const verification = verifications.find(v => v.active && v.tableau_index === config.tableau_index);
+
+  // FONCTION CORRIGÉE : utilise ExpressionEvaluator
+  const evaluateVerification = (verif: VerificationConfig, valeurs: Record<string, number | null>) => {
+    // Vérifier que toutes les colonnes nécessaires sont présentes
+    const colonnePattern = /\{([^}]+)\}/g;
+    const matches = [];
+    let match;
+    while ((match = colonnePattern.exec(verif.expression)) !== null) {
+      matches.push(match);
+    }
+    const colonnesNecessaires = matches.map(m => m[1]);
+    
+    for (const col of colonnesNecessaires) {
+      if (valeurs[col] === null || valeurs[col] === undefined) {
+        return { estValide: false };
+      }
+    }
+    
+    const resultat = ExpressionEvaluator.verifierMesure(
+      verif.expression,
+      valeurs,
+      verif.variable_cible,
+      verif.tolerance
+    );
+    
+    return { estValide: resultat.estValide };
+  };
+    
+  // Filtrer les mesures selon la vérification
+  const mesuresFiltrees = useMemo(() => {
+    if (!filterByVerification || !verification) return mesures;
+    
+    return mesures.filter(mesure => {
+      const resultat = evaluateVerification(verification, mesure.mesures);
+      return resultat.estValide;
+    });
+  }, [mesures, filterByVerification, verification]);
+
+
+
   // Trouver les colonnes pour les axes
   const xCol = tableau?.colonnes.find(c => c.nom === config.axe_x);
   const yCol = tableau?.colonnes.find(c => c.nom === config.axe_y);
   const groupeCol = config.groupe_par ? tableau?.colonnes.find(c => c.nom === config.groupe_par) : null;
 
-  // Grouper intelligemment les données
-  const { series, xValues } = useMemo(() => {
-    if (!mesures.length || !tableau) return { series: [], xValues: [] };
+  // Grouper intelligemment les données (avec mesures filtrées)
+  const { series, xValues, rawData } = useMemo(() => {
+    if (!mesuresFiltrees.length || !tableau) return { series: [], xValues: [], rawData: [] };
 
     // Filtrer les mesures valides
-    const mesuresValides = mesures.filter(m => 
+    const mesuresValides = mesuresFiltrees.filter(m => 
       m.mesures[config.axe_x] !== null && 
       m.mesures[config.axe_x] !== undefined &&
       m.mesures[config.axe_y] !== null && 
@@ -108,7 +353,6 @@ export default function GraphiqueIntelligent({
     );
 
     if (!config.groupe_par) {
-      // Pas de grouping : une seule série
       const points = mesuresValides.map(m => ({
         x: m.mesures[config.axe_x] as number,
         y: m.mesures[config.axe_y] as number
@@ -128,10 +372,10 @@ export default function GraphiqueIntelligent({
 
       return {
         series: seriesData,
-        xValues: xUniques
+        xValues: xUniques,
+        rawData: mesuresValides
       };
     } else {
-      // Grouper par la variable spécifiée
       const groupes = new Map<string, typeof mesuresValides>();
 
       mesuresValides.forEach(m => {
@@ -170,10 +414,63 @@ export default function GraphiqueIntelligent({
 
       return {
         series: seriesData,
-        xValues: xUniques
+        xValues: xUniques,
+        rawData: mesuresValides
       };
     }
-  }, [mesures, config, tableau, groupeCol]);
+  }, [mesuresFiltrees, config, tableau, groupeCol]);
+
+  // Calculer l'échelle Y (si non configurée manuellement)
+  const yMinMax = useMemo(() => {
+    if (axesConfig.y.min !== undefined && axesConfig.y.max !== undefined) {
+      return { min: axesConfig.y.min, max: axesConfig.y.max };
+    }
+    
+    let min = Infinity;
+    let max = -Infinity;
+    
+    series.forEach(serie => {
+      serie.data.forEach(point => {
+        min = Math.min(min, point.y);
+        max = Math.max(max, point.y);
+      });
+    });
+    
+    if (min === Infinity) return { min: 0, max: 1 };
+    
+    const range = max - min;
+    const margin = range * 0.1;
+    return {
+      min: axesConfig.y.min ?? (axesConfig.y.beginAtZero ? Math.min(0, min - margin) : min - margin),
+      max: axesConfig.y.max ?? max + margin
+    };
+  }, [series, axesConfig.y]);
+
+  // Calculer l'échelle X
+  const xMinMax = useMemo(() => {
+    if (axesConfig.x.min !== undefined && axesConfig.x.max !== undefined) {
+      return { min: axesConfig.x.min, max: axesConfig.x.max };
+    }
+    
+    let min = Infinity;
+    let max = -Infinity;
+    
+    series.forEach(serie => {
+      serie.data.forEach(point => {
+        min = Math.min(min, point.x);
+        max = Math.max(max, point.x);
+      });
+    });
+    
+    if (min === Infinity) return { min: 0, max: 1 };
+    
+    const range = max - min;
+    const margin = range * 0.1;
+    return {
+      min: axesConfig.x.min ?? (axesConfig.x.beginAtZero ? Math.min(0, min - margin) : min - margin),
+      max: axesConfig.x.max ?? max + margin
+    };
+  }, [series, axesConfig.x]);
 
   // Préparer les données pour Chart.js
   const data = useMemo((): ChartData => {
@@ -189,14 +486,8 @@ export default function GraphiqueIntelligent({
         }))
       };
     } else {
-      // Pour line et bar, on doit réorganiser les données
       const datasets = series.map((serie, index) => {
-        // Créer un map des valeurs Y pour chaque X
-        const yParX = new Map(
-          serie.data.map(p => [p.x, p.y])
-        );
-
-        // Prendre tous les X dans l'ordre
+        const yParX = new Map(serie.data.map(p => [p.x, p.y]));
         const yValues = xValues.map(x => yParX.get(x) ?? null);
 
         return {
@@ -216,40 +507,16 @@ export default function GraphiqueIntelligent({
     }
   }, [series, xValues, config.type]);
 
-  // Calculer l'échelle Y
-  const yMinMax = useMemo(() => {
-    let min = Infinity;
-    let max = -Infinity;
-    
-    series.forEach(serie => {
-      serie.data.forEach(point => {
-        min = Math.min(min, point.y);
-        max = Math.max(max, point.y);
-      });
-    });
-    
-    if (min === Infinity) return { min: 0, max: 1 };
-    
-    const range = max - min;
-    const margin = range * 0.1;
-    return {
-      min: Math.min(0, min - margin),
-      max: max + margin
-    };
-  }, [series]);
-
   const handlePointClick = (event: any, elements: any[], chart: any) => {
     if (elements.length > 0) {
       const element = elements[0];
       const datasetIndex = element.datasetIndex;
       const index = element.index;
       
-      // Récupérer le point cliqué
       const serie = series[datasetIndex];
       const point = serie.data[index];
       
-      // Trouver la mesure correspondante
-      const mesureTrouvee = mesures.find(m => {
+      const mesureTrouvee = rawData.find(m => {
         const xVal = m.mesures[config.axe_x];
         const yVal = m.mesures[config.axe_y];
         return Math.abs((xVal as number) - point.x) < 0.001 && 
@@ -257,14 +524,12 @@ export default function GraphiqueIntelligent({
       });
 
       if (mesureTrouvee) {
-        // Vérifier si l'utilisateur peut modifier cette mesure
         const peutModifier = userType === 'employee' || 
                             (userType === 'student' && mesureTrouvee.eleve_matricule === userId);
 
         if (peutModifier) {
           setSelectedPoint(mesureTrouvee);
           
-          // Calculer la position du menu
           const rect = event.chart.canvas.getBoundingClientRect();
           setMenuPosition({
             x: event.native.clientX - rect.left,
@@ -328,22 +593,24 @@ export default function GraphiqueIntelligent({
     },
     scales: {
       x: {
+        type: axesConfig.x.type === 'logarithmic' ? 'logarithmic' : 'linear',
         title: {
           display: true,
           text: xCol ? `${xCol.nom} (${xCol.unite})` : 'X'
         },
-        beginAtZero: true
+        min: xMinMax.min,
+        max: xMinMax.max,
+        beginAtZero: axesConfig.x.beginAtZero
       },
       y: {
+        type: axesConfig.y.type === 'logarithmic' ? 'logarithmic' : 'linear',
         title: {
           display: true,
           text: yCol ? `${yCol.nom} (${yCol.unite})` : 'Y'
         },
-        beginAtZero: true,
-        min: 0,
+        min: yMinMax.min,
         max: yMinMax.max,
-        suggestedMin: 0,
-        suggestedMax: yMinMax.max
+        beginAtZero: axesConfig.y.beginAtZero
       }
     }
   };
@@ -476,14 +743,29 @@ export default function GraphiqueIntelligent({
   if (series.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{config.nom}</h3>
+        <div className="flex justify-between items-start mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">{config.nom}</h3>
+          <div className="flex items-center gap-2">
+            {verification && (
+              <label className="flex items-center gap-1 text-xs text-gray-500">
+                <input
+                  type="checkbox"
+                  checked={filterByVerification}
+                  onChange={(e) => setFilterByVerification(e.target.checked)}
+                />
+                Filtrer par vérification
+              </label>
+            )}
+            <AxesConfigPanel config={axesConfig} onChange={setAxesConfig} />
+          </div>
+        </div>
         <div className="h-64 flex flex-col items-center justify-center text-gray-500">
           <svg className="w-12 h-12 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
           <p className="text-center">
-            {mesures.length === 0 
-              ? "En attente de données..." 
+            {mesuresFiltrees.length === 0 
+              ? filterByVerification ? "Aucune donnée ne vérifie la relation" : "En attente de données..."
               : "Pas assez de points pour afficher le graphique (minimum 2 points par série)"}
           </p>
         </div>
@@ -493,7 +775,22 @@ export default function GraphiqueIntelligent({
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 relative">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">{config.nom}</h3>
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">{config.nom}</h3>
+        <div className="flex items-center gap-2">
+          {verification && (
+            <label className="flex items-center gap-1 text-xs text-gray-500">
+              <input
+                type="checkbox"
+                checked={filterByVerification}
+                onChange={(e) => setFilterByVerification(e.target.checked)}
+              />
+              Filtrer par vérification
+            </label>
+          )}
+          <AxesConfigPanel config={axesConfig} onChange={setAxesConfig} />
+        </div>
+      </div>
       <div className="h-96 relative">
         <Chart
           ref={chartRef}
@@ -505,7 +802,12 @@ export default function GraphiqueIntelligent({
         <EditModal />
       </div>
       <div className="mt-4 text-sm text-gray-500">
-        {mesures.length} point{mesures.length > 1 ? 's' : ''} de mesure
+        {rawData.length} point{rawData.length > 1 ? 's' : ''} de mesure
+        {filterByVerification && rawData.length !== mesures.length && (
+          <span className="ml-2 text-xs text-green-600">
+            (filtrés: {rawData.length}/{mesures.length})
+          </span>
+        )}
         {userType === 'employee' && (
           <span className="ml-2 text-xs text-gray-400">
             (cliquez sur un point pour le modifier)

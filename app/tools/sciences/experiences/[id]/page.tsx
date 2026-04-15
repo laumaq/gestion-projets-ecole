@@ -581,6 +581,7 @@ export default function ExperienceDetailPage() {
                 config={graphique}
                 tableaux={experience.config.tableaux}
                 mesuresParTableau={mesuresParTableau}
+                verifications={experience.config.verifications}
                 userType={userType}
                 userId={parseInt(userId)}
                 onModifierMesure={modifierMesure}

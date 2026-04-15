@@ -1,3 +1,4 @@
+// app/dashboard/main/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -5,8 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import AGStatusBadge from '@/components/ag/AGStatusBadge';
-
-const ALLOWED_USER_ID = '52793bea-994a-4b50-b768-75427df4747b'; // ← adapter si besoin
+import { getTfhDashboardType, TfhDashboardType } from '@/lib/tfh/permissions';
 
 interface Voyage {
   id: string;
@@ -23,6 +23,11 @@ interface ProjetActif {
   description: string | null;
 }
 
+interface GroupeTravail {
+  id: string;
+  nom: string;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [userType, setUserType] = useState<'employee' | 'student'>('employee');
@@ -32,6 +37,8 @@ export default function DashboardPage() {
   const [mesProjets, setMesProjets] = useState<ProjetActif[]>([]);
   const [loading, setLoading] = useState(true);
   const [agStatut, setAgStatut] = useState<'pas_ag' | 'preparation' | 'planning_etabli'>('pas_ag');
+  const [groupeTravail, setGroupeTravail] = useState<GroupeTravail | null>(null);
+  const [tfhDashboardType, setTfhDashboardType] = useState<TfhDashboardType>(null);
 
   useEffect(() => {
     const type = localStorage.getItem('userType') as 'employee' | 'student';
@@ -46,6 +53,8 @@ export default function DashboardPage() {
 
     chargerMesVoyages(type, id);
     chargerStatutAG();
+    chargerGroupeTravail(type, id);
+    chargerTfhDashboardType(userType, userId, userJob);
 
     if (type === 'student') {
       chargerMesProjets(parseInt(id));
@@ -66,7 +75,6 @@ export default function DashboardPage() {
     }
   };
 
-  // ── Projets actifs pour l'élève (dashboard = 'principal') ──
   const chargerMesProjets = async (matricule: number) => {
     const { data } = await supabase
       .from('projet_eleves')
@@ -115,6 +123,95 @@ export default function DashboardPage() {
       setLoading(false);
     }
   };
+
+  const chargerGroupeTravail = async (type: string, id: string) => {
+    if (type !== 'employee') return;
+
+    try {
+      const { data, error } = await supabase
+        .from('tfh_groupes_travail_membres')
+        .select(`
+          groupe_id,
+          tfh_groupes_travail!inner (id, nom)
+        `)
+        .eq('employee_id', id)
+        .maybeSingle();
+
+      if (error || !data) {
+        setGroupeTravail(null);
+        return;
+      }
+
+      setGroupeTravail({
+        id: data.groupe_id,
+        nom: (data.tfh_groupes_travail as any).nom
+      });
+    } catch (error) {
+      console.error('Erreur chargement groupe de travail:', error);
+      setGroupeTravail(null);
+    }
+  };
+
+  const chargerTfhDashboardType = async (type: 'employee' | 'student', id: string, job: string) => {
+    const dashboardType = await getTfhDashboardType(type, id, job);
+    setTfhDashboardType(dashboardType);
+  };
+
+  // Déterminer le libellé et le lien pour la case TFH
+  const getTfhCardInfo = () => {
+    if (userType === 'student') {
+      const niveau = localStorage.getItem('userLevel') || '';
+      if (niveau.startsWith('6')) {
+        return {
+          title: 'Mon TFH',
+          description: 'Mon travail de fin d\'humanité',
+          href: '/tools/tfh/eleve',
+          iconBg: 'bg-purple-100',
+          iconColor: 'text-purple-600',
+          borderColor: 'border-purple-400'
+        };
+      }
+      return null;
+    }
+
+    // Employees
+    if (tfhDashboardType === 'coordination') {
+      return {
+        title: groupeTravail?.nom || 'Groupe de travail TFH',
+        description: 'Coordination et suivi des TFH',
+        href: '/tools/tfh/coordination',
+        iconBg: 'bg-indigo-100',
+        iconColor: 'text-indigo-600',
+        borderColor: 'border-indigo-400'
+      };
+    }
+    
+    if (tfhDashboardType === 'direction') {
+      return {
+        title: 'TFH - Direction',
+        description: 'Supervision des travaux de fin d\'humanité',
+        href: '/tools/tfh/direction',
+        iconBg: 'bg-red-100',
+        iconColor: 'text-red-600',
+        borderColor: 'border-red-400'
+      };
+    }
+    
+    if (tfhDashboardType === 'guide') {
+      return {
+        title: 'TFH - Guide',
+        description: 'Accompagnement des travaux de fin d\'humanité',
+        href: '/tools/tfh/guide',
+        iconBg: 'bg-blue-100',
+        iconColor: 'text-blue-600',
+        borderColor: 'border-blue-400'
+      };
+    }
+
+    return null;
+  };
+
+  const tfhCardInfo = getTfhCardInfo();
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -196,39 +293,26 @@ export default function DashboardPage() {
             </Link>
           )}
 
-          {/* Groupe de Travail */}
-          {userType === 'employee' && userJob === 'prof' && (
-            <Link href="/tools/projet-5eme" className="block h-full">
-              <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-purple-300 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
+          {/* Groupe de Travail / TFH */}
+          {tfhCardInfo && (
+            <Link href={tfhCardInfo.href} className="block h-full">
+              <div className={`h-40 bg-white rounded-lg shadow-sm border-2 ${tfhCardInfo.borderColor} p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group`}>
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    <div className={`w-8 h-8 ${tfhCardInfo.iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                      <svg className={`w-5 h-5 ${tfhCardInfo.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900">Groupe de Travail</h3>
+                    <h3 className="text-lg font-medium text-gray-900">{tfhCardInfo.title}</h3>
                   </div>
-                  <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">Projet 5e</p>
+                  <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
+                    {tfhCardInfo.description}
+                  </p>
                 </div>
               </div>
             </Link>
           )}
-
-          {/* Travail de fin d'humanité */}
-          <div className="h-40 bg-white rounded-lg shadow-sm border border-gray-200 p-6 opacity-50 cursor-not-allowed flex flex-col justify-between overflow-hidden">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900">Travail de fin d'humanité</h3>
-              </div>
-              <p className="text-sm text-gray-500">Bientôt disponible</p>
-            </div>
-          </div>
 
         </div>
       </div>
@@ -300,7 +384,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {!loading && mesVoyages.length === 0 && mesProjets.length === 0 && (
+      {!loading && mesVoyages.length === 0 && mesProjets.length === 0 && !tfhCardInfo && (
         <div className="text-center py-12">
           <p className="text-gray-500">Vous n'êtes impliqué dans aucun voyage pour le moment.</p>
         </div>
