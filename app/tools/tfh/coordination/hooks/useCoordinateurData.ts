@@ -23,29 +23,23 @@ export function useCoordinateurData() {
         .from('employees')
         .select('id, nom, prenom, initiale, email, mot_de_passe, job')
         .neq('job', 'direction')
-        .not('id', 'in', (
-          supabase
-            .from('tfh_groupes_travail_membres')
-            .select('employee_id')
-            .eq('groupe_id', '0092b3db-1f7e-40e1-8f6b-70219d6a50f2')
-        ))
         .order('nom', { ascending: true });
 
       if (guidesError) throw guidesError;
       setGuides(guidesData || []);
 
-      // 2. Charger les lecteurs externes (table existante)
+      // 2. Charger les lecteurs externes
       const { data: lecteursExternesData, error: lecteursError } = await supabase
         .from('tfh_lecteurs_externes')
-        .select('id, nom, prenom, email');
+        .select('id, nom, prenom, email, telephone, mot_de_passe');
 
       if (lecteursError) throw lecteursError;
       setLecteursExternes(lecteursExternesData || []);
 
-      // 3. Charger les médiateurs (table existante)
+      // 3. Charger les médiateurs
       const { data: mediateursData, error: mediateursError } = await supabase
         .from('tfh_mediateurs')
-        .select('id, nom, prenom, email');
+        .select('id, nom, prenom, email, telephone, mot_de_passe');
 
       if (mediateursError) {
         setMediateurs([]);
@@ -53,7 +47,7 @@ export function useCoordinateurData() {
         setMediateurs(mediateursData || []);
       }
 
-      // 4. Charger les élèves avec jointures vers employees et tfh_lecteurs_externes
+      // 4. Charger les élèves avec jointure vers students (pour récupérer nom, prenom, classe, mot_de_passe)
       const { data: elevesData, error: elevesError } = await supabase
         .from('tfh_eleves')
         .select(`
@@ -122,31 +116,34 @@ export function useCoordinateurData() {
           objectif_particulier,
           created_at,
           updated_at,
-          students!inner (nom, prenom, classe, mot_de_passe)
-        `)
-        .order('students(classe)', { ascending: true })
-        .order('students(nom)', { ascending: true });
+          students!inner (
+            nom,
+            prenom,
+            classe,
+            mot_de_passe
+          )
+        `);
 
       if (elevesError) throw elevesError;
 
-      // Formater les élèves avec les noms des relations
+      // Formater les élèves
       const elevesFormatted: Eleve[] = (elevesData || []).map(eleve => {
+        const studentInfo = (eleve as any).students;
+        
         // Récupérer les infos du guide depuis employees
         const guideInfo = guidesData?.find(g => g.id === eleve.guide_id);
         const lecteurInterneInfo = guidesData?.find(g => g.id === eleve.lecteur_interne_id);
         const mediateurInfo = mediateursData?.find(m => m.id === eleve.mediateur_id);
         const lecteurExterneInfo = lecteursExternesData?.find(l => l.id === eleve.lecteur_externe_id);
         
-        // Récupérer les infos de l'élève depuis students
-        const studentInfo = (eleve as any).students;
-        
         return {
           ...eleve,
           id: eleve.student_matricule,
+          student_matricule: eleve.student_matricule,
           nom: studentInfo?.nom || '',
           prenom: studentInfo?.prenom || '',
           classe: studentInfo?.classe || '',
-          mot_de_passe: studentInfo?.mot_de_passe || null, 
+          mot_de_passe: studentInfo?.mot_de_passe || null,
           guide_nom: guideInfo?.nom || '-',
           guide_prenom: guideInfo?.prenom || '-',
           lecteur_interne_nom: lecteurInterneInfo?.nom || '-',

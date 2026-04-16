@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function ToolsLayout({
   children,
@@ -10,14 +10,21 @@ export default function ToolsLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Vérification d'authentification
     const userId = localStorage.getItem('userId');
     if (!userId) {
       router.push('/');
     }
   }, [router]);
+
+  // Si on est dans tfh/coordination, ne pas appliquer le wrapper
+  const isTfhCoordination = pathname?.startsWith('/tools/tfh/coordination');
+
+  if (isTfhCoordination) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

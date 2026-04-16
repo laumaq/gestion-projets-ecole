@@ -33,6 +33,7 @@ export default function DashboardPage() {
   const [userType, setUserType] = useState<'employee' | 'student'>('employee');
   const [userId, setUserId] = useState('');
   const [userJob, setUserJob] = useState('');
+  const [userGroupeId, setUserGroupeId] = useState<string | null>(null);
   const [mesVoyages, setMesVoyages] = useState<Voyage[]>([]);
   const [mesProjets, setMesProjets] = useState<ProjetActif[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,15 +52,43 @@ export default function DashboardPage() {
     setUserId(id);
     setUserJob(job || '');
 
+    chargerInfosUtilisateur(id);
     chargerMesVoyages(type, id);
     chargerStatutAG();
-    chargerGroupeTravail(type, id);
-    chargerTfhDashboardType(userType, userId, userJob);
+    chargerTfhDashboardType(type, id, job || '');
 
     if (type === 'student') {
       chargerMesProjets(parseInt(id));
     }
   }, [router]);
+
+  const chargerInfosUtilisateur = async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('groupe_id')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      
+      setUserGroupeId(data?.groupe_id || null);
+      
+      if (data?.groupe_id) {
+        const { data: groupe, error: groupeError } = await supabase
+          .from('ag_groupes')
+          .select('id, nom')
+          .eq('id', data.groupe_id)
+          .single();
+        
+        if (!groupeError && groupe) {
+          setGroupeTravail({ id: groupe.id, nom: groupe.nom });
+        }
+      }
+    } catch (error) {
+      console.error('Erreur chargement infos utilisateur:', error);
+    }
+  };
 
   const chargerStatutAG = async () => {
     try {
@@ -124,40 +153,53 @@ export default function DashboardPage() {
     }
   };
 
-  const chargerGroupeTravail = async (type: string, id: string) => {
-    if (type !== 'employee') return;
-
-    try {
-      const { data, error } = await supabase
-        .from('tfh_groupes_travail_membres')
-        .select(`
-          groupe_id,
-          tfh_groupes_travail!inner (id, nom)
-        `)
-        .eq('employee_id', id)
-        .maybeSingle();
-
-      if (error || !data) {
-        setGroupeTravail(null);
-        return;
-      }
-
-      setGroupeTravail({
-        id: data.groupe_id,
-        nom: (data.tfh_groupes_travail as any).nom
-      });
-    } catch (error) {
-      console.error('Erreur chargement groupe de travail:', error);
-      setGroupeTravail(null);
-    }
-  };
-
   const chargerTfhDashboardType = async (type: 'employee' | 'student', id: string, job: string) => {
     const dashboardType = await getTfhDashboardType(type, id, job);
     setTfhDashboardType(dashboardType);
   };
 
-  // Déterminer le libellé et le lien pour la case TFH
+
+  // Déterminer le libellé et le lien pour la case Groupe de Travail
+  const getGroupeTravailCardInfo = () => {
+    if (userType !== 'employee') return null;
+    if (!groupeTravail) return null;
+    
+    // Cas spécial TFH
+    if (tfhDashboardType === 'coordination') {
+      return {
+        title: <span>Groupe TFH</span>,
+        description: 'Coordination et suivi des TFH',
+        href: '/tools/tfh/coordination',
+        iconBg: 'bg-red-100',
+        iconColor: 'text-red-600',
+        borderColor: 'border-red-400'
+      };
+    }
+    
+    // Cas spécial Projet 5ème
+    if (groupeTravail.nom === 'Projet 5eme' || groupeTravail.nom === 'Projet 5ème') {
+      return {
+        title: <span>Projet 5<sup>ème</sup></span>,
+        description: <span>Projet pédagogique et voyage de 5<sup>ème</sup> année</span>,
+        href: '/tools/projet-5eme',
+        iconBg: 'bg-red-100',
+        iconColor: 'text-red-600',
+        borderColor: 'border-red-400'
+      };
+    }
+    
+    // Pour les autres groupes de travail
+    return {
+      title: <span>{groupeTravail.nom}</span>,
+      description: 'Espace de travail collaboratif',
+      href: `/tools/groupes/${groupeTravail.id}`,
+      iconBg: 'bg-red-100',
+      iconColor: 'text-red-600',
+      borderColor: 'border-red-400'
+    };
+  };
+
+  // Déterminer le libellé et le lien pour la case TFH (non coordinateur)
   const getTfhCardInfo = () => {
     if (userType === 'student') {
       const niveau = localStorage.getItem('userLevel') || '';
@@ -174,18 +216,7 @@ export default function DashboardPage() {
       return null;
     }
 
-    // Employees
-    if (tfhDashboardType === 'coordination') {
-      return {
-        title: groupeTravail?.nom || 'Groupe de travail TFH',
-        description: 'Coordination et suivi des TFH',
-        href: '/tools/tfh/coordination',
-        iconBg: 'bg-indigo-100',
-        iconColor: 'text-indigo-600',
-        borderColor: 'border-indigo-400'
-      };
-    }
-    
+    // Employees non coordinateurs
     if (tfhDashboardType === 'direction') {
       return {
         title: 'TFH - Direction',
@@ -211,6 +242,7 @@ export default function DashboardPage() {
     return null;
   };
 
+  const groupeTravailCardInfo = getGroupeTravailCardInfo();
   const tfhCardInfo = getTfhCardInfo();
 
   return (
@@ -248,7 +280,7 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-          {/* Lancement de projets — prof Laurent uniquement */}
+          {/* Lancement de projets */}
           {userType === 'employee' && (
             <Link href="/tools/projets" className="block h-full">
               <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-indigo-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
@@ -293,8 +325,31 @@ export default function DashboardPage() {
             </Link>
           )}
 
-          {/* Groupe de Travail / TFH */}
-          {tfhCardInfo && (
+          {/* Groupe de Travail */}
+          {groupeTravailCardInfo && (
+            <Link href={groupeTravailCardInfo.href} className="block h-full">
+              <div className={`h-40 bg-white rounded-lg shadow-sm border-2 ${groupeTravailCardInfo.borderColor} p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group`}>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-8 h-8 ${groupeTravailCardInfo.iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                      <svg className={`w-5 h-5 ${groupeTravailCardInfo.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {groupeTravailCardInfo.title}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
+                    {groupeTravailCardInfo.description}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          )}
+
+          {/* TFH (pour direction, guide, ou élève) - uniquement si différent du groupe de travail */}
+          {tfhCardInfo && !(groupeTravailCardInfo && tfhDashboardType === 'coordination') && (
             <Link href={tfhCardInfo.href} className="block h-full">
               <div className={`h-40 bg-white rounded-lg shadow-sm border-2 ${tfhCardInfo.borderColor} p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group`}>
                 <div>
@@ -317,7 +372,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Mes projets (élèves seulement, projets dashboard=principal) ── */}
+      {/* ── Mes projets (élèves seulement) ── */}
       {userType === 'student' && mesProjets.length > 0 && (
         <div className="mb-12">
           <h2 className="text-lg font-semibold text-gray-700 mb-4">Mes projets</h2>
@@ -384,7 +439,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {!loading && mesVoyages.length === 0 && mesProjets.length === 0 && !tfhCardInfo && (
+      {!loading && mesVoyages.length === 0 && mesProjets.length === 0 && !groupeTravailCardInfo && !tfhCardInfo && (
         <div className="text-center py-12">
           <p className="text-gray-500">Vous n'êtes impliqué dans aucun voyage pour le moment.</p>
         </div>

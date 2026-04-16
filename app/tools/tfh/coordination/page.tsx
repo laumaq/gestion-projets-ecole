@@ -33,6 +33,7 @@ export default function CoordinateurDashboard() {
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   // Vérifier que l'utilisateur est bien dans le groupe de coordination TFH
+
   useEffect(() => {
     const checkAuthorization = async () => {
       const userType = localStorage.getItem('userType');
@@ -44,15 +45,21 @@ export default function CoordinateurDashboard() {
         return;
       }
 
-      // Vérifier si l'employé appartient au groupe de coordination TFH
-      const { data, error } = await supabase
-        .from('tfh_groupes_travail_membres')
+      // Vérifier si l'employé a le groupe_id correspondant au groupe TFH
+      const { data: employee, error } = await supabase
+        .from('employees')
         .select('groupe_id')
-        .eq('employee_id', id)
-        .eq('groupe_id', '0092b3db-1f7e-40e1-8f6b-70219d6a50f2')
-        .maybeSingle();
+        .eq('id', id)
+        .single();
 
-      if (error || !data) {
+      if (error || !employee) {
+        router.push('/dashboard');
+        return;
+      }
+
+      // Vérifier si le groupe_id correspond à l'ID du groupe TFH dans ag_groupes
+      // L'ID du groupe TFH est '0092b3db-1f7e-40e1-8f6b-70219d6a50f2'
+      if (employee.groupe_id !== '0092b3db-1f7e-40e1-8f6b-70219d6a50f2') {
         router.push('/dashboard');
         return;
       }
@@ -254,7 +261,7 @@ export default function CoordinateurDashboard() {
             }}
           />
           
-          <div className="p-4 md:p-6">
+          <div className="p-4">
             {renderActiveTab()}
           </div>
         </main>

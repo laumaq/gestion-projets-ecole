@@ -44,7 +44,7 @@ export default function Header({ activeTab, userName, onLogout }: HeaderProps) {
   };
 
   return (
-    <header className="hidden md:block p-6 border-b border-gray-200 bg-white">
+    <header className="hidden md:block px-6 py-4 border-b border-gray-200 bg-white">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
@@ -54,18 +54,7 @@ export default function Header({ activeTab, userName, onLogout }: HeaderProps) {
             {getTabDescription(activeTab)}
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-sm text-gray-600">
-            Connecté en tant que <span className="font-semibold">{userName}</span>
-          </div>
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Déconnexion</span>
-          </button>
-        </div>
+
       </div>
     </header>
   );

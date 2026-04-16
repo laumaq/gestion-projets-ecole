@@ -306,10 +306,6 @@ export default function DashboardTab({
 
   return (
     <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Tableau de bord Coordination</h1>
-        <p className="text-gray-600">Bienvenue {coordinateurPrenom} {coordinateurNom}. Voici votre panneau de gestion des TFH.</p>
-      </div>
 
       {/* Aperçu du système */}
       <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
