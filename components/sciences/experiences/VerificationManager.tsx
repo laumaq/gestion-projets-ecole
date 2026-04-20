@@ -1,4 +1,6 @@
 // components/sciences/experiences/VerificationManager.tsx
+
+
 'use client';
 
 import { useState } from 'react';
@@ -47,7 +49,6 @@ export default function VerificationManager({ tableaux, verifications, onSave, o
   const supprimerVerification = (index: number) => {
     setTempVerifications(tempVerifications.filter((_, i) => i !== index));
     if (editingIndex === index) setEditingIndex(null);
-    // Nettoyer le validationStatus pour cette vérification
     const newValidationStatus = { ...validationStatus };
     delete newValidationStatus[index];
     setValidationStatus(newValidationStatus);
@@ -58,7 +59,6 @@ export default function VerificationManager({ tableaux, verifications, onSave, o
     nouvelles[index] = { ...nouvelles[index], [field]: value };
     setTempVerifications(nouvelles);
     
-    // Mettre à jour l'aperçu de l'expression pour cette vérification seulement
     if (field === 'expression' || field === 'tableau_index') {
       const tableau = tableaux[nouvelles[index].tableau_index];
       const colonnesDisponibles = tableau?.colonnes.map(c => c.nom) || [];
@@ -166,19 +166,20 @@ export default function VerificationManager({ tableaux, verifications, onSave, o
           <div className="mb-4">
             <label className="block text-xs text-gray-500 mb-1">
               Relation mathématique
-              <span className="text-gray-400 ml-2">Ex: {`{Tension} = {Résistance} * {Intensité}`}</span>
+              <span className="text-gray-400 ml-2">Ex: {`{U} = {R} * {I} && {U} > 5`}</span>
             </label>
             <input
               type="text"
               value={verif.expression}
               onChange={(e) => updateVerification(index, 'expression', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
-              placeholder="{grandeur_cible} = expression avec {autres_grandeurs}"
+              placeholder="{grandeur_cible} = expression avec {autres_grandeurs} [&& autre condition]"
             />
-            {/* AFFICHAGE CORRIGÉ : utilisation de validationStatus[index] */}
             {validationStatus[index]?.formatted && (
               <div className="mt-1 text-sm text-gray-600">
-                Aperçu: {validationStatus[index].formatted}
+                {validationStatus[index].formatted.split('&&').map((part, i) => (
+                  <div key={i} className="font-mono">{part.trim()}</div>
+                ))}
               </div>
             )}
             {validationStatus[index] && !validationStatus[index].isValid && (

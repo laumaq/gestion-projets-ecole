@@ -1,5 +1,4 @@
-// lib/expressionEvaluator.ts
-
+// lib/sciences/expressionEvaluator.ts
 export class ExpressionEvaluator {
   private static readonly CONSTANTS: Record<string, number> = {
     pi: Math.PI,
@@ -23,18 +22,15 @@ export class ExpressionEvaluator {
     atan: Math.atan
   };
 
-  // lib/expressionEvaluator.ts - Version corrigée de parseExpression
-
   static parseExpression(expression: string, colonnesDisponibles: string[]): {
     isValid: boolean;
     parsedExpression?: string;
     variables?: string[];
     error?: string;
   } {
-    // Enlever les espaces et gérer le cas avec =
     let cleanExpression = expression.trim();
     
-    // Si l'expression contient un =, on ne garde que la partie droite pour la validation
+    // Gérer les conditions multiples : on prend la dernière partie après le dernier = si présent
     if (cleanExpression.includes('=')) {
       const parts = cleanExpression.split('=');
       if (parts.length === 2) {
@@ -42,7 +38,7 @@ export class ExpressionEvaluator {
       }
     }
     
-    // Vérifier que toutes les colonnes entre {} existent
+    // Extraire les colonnes
     const colonnePattern = /\{([^}]+)\}/g;
     const matches: RegExpExecArray[] = [];
     let match;
@@ -59,16 +55,13 @@ export class ExpressionEvaluator {
       };
     }
 
-    // Remplacer les {colonne} par des noms de variables valides
     let parsed = cleanExpression;
     variables.forEach(v => {
       const regex = new RegExp(`\\{${v}\\}`, 'g');
       parsed = parsed.replace(regex, `__col__${v.replace(/[^a-zA-Z0-9]/g, '_')}`);
     });
 
-    // Vérifier que l'expression est syntaxiquement valide
     try {
-      // Test d'évaluation avec des valeurs factices
       const testVars: Record<string, number> = {};
       variables.forEach(v => {
         testVars[`__col__${v.replace(/[^a-zA-Z0-9]/g, '_')}`] = 1;
@@ -83,55 +76,61 @@ export class ExpressionEvaluator {
     }
   }
 
-  /**
-   * Évalue une expression mathématique avec les valeurs des variables
-   */
   static evaluateExpression(expression: string, variables: Record<string, number>): number {
-    // Remplacer les constantes
     let expr = expression;
     for (const [constName, constValue] of Object.entries(this.CONSTANTS)) {
       expr = expr.replace(new RegExp(`\\b${constName}\\b`, 'g'), constValue.toString());
     }
-
-    // Remplacer les variables par leurs valeurs
     for (const [varName, varValue] of Object.entries(variables)) {
       const regex = new RegExp(`\\b${varName}\\b`, 'g');
       expr = expr.replace(regex, varValue.toString());
     }
-
-    // Créer un objet avec toutes les fonctions mathématiques
-    const mathContext: Record<string, any> = {};
-    for (const [fnName, fn] of Object.entries(this.FUNCTIONS)) {
-      mathContext[fnName] = fn;
-    }
-
-    // Construire la fonction avec les fonctions mathématiques dans le scope
-    const functionBody = `with (mathContext) { return ${expr}; }`;
     // eslint-disable-next-line no-new-func
-    const evaluator = new Function('mathContext', functionBody);
-    return evaluator(mathContext);
+    const evaluator = new Function('return ' + expr);
+    return evaluator();
   }
 
-  /**
-   * Vérifie si une mesure est correcte selon l'expression
-   * @param expression Expression mathématique (ex: "{Tension} = {Résistance} * {Intensité}")
-   * @param valeurs Les valeurs de toutes les colonnes pour cette mesure
-   * @param variableCible La colonne qui est mesurée (celle qu'on vérifie)
-   * @param tolerance Pourcentage de tolérance (ex: 5 pour 5%)
-   */
+  // Point d'entrée principal : supporte les conditions multiples séparées par &&
   static verifierMesure(
     expression: string,
     valeurs: Record<string, number | null>,
     variableCible: string,
     tolerance: number
   ): { estValide: boolean; valeurCalculee: number | null; valeurReelle: number | null; ecart: number | null } {
-    
+    const subExprs = expression.split('&&').map(e => e.trim());
+    let toutesValides = true;
+    let derniereValeurCalculee: number | null = null;
+
+    for (const subExpr of subExprs) {
+      const result = this.verifierUneExpression(subExpr, valeurs, variableCible, tolerance);
+      if (!result.estValide) {
+        toutesValides = false;
+        break;
+      }
+      if (result.valeurCalculee !== null) {
+        derniereValeurCalculee = result.valeurCalculee;
+      }
+    }
+
+    return {
+      estValide: toutesValides,
+      valeurCalculee: toutesValides ? derniereValeurCalculee : null,
+      valeurReelle: valeurs[variableCible] ?? null,
+      ecart: null
+    };
+  }
+
+  private static verifierUneExpression(
+    expression: string,
+    valeurs: Record<string, number | null>,
+    variableCible: string,
+    tolerance: number
+  ): { estValide: boolean; valeurCalculee: number | null; valeurReelle: number | null; ecart: number | null } {
     const valeurReelle = valeurs[variableCible];
     if (valeurReelle === null || valeurReelle === undefined) {
       return { estValide: false, valeurCalculee: null, valeurReelle: null, ecart: null };
     }
 
-    // Extraire les colonnes de l'expression
     const colonnePattern = /\{([^}]+)\}/g;
     const matches: RegExpExecArray[] = [];
     let match;
@@ -140,17 +139,14 @@ export class ExpressionEvaluator {
     }
     const variables = matches.map(m => m[1]);
 
-    // Vérifier que toutes les colonnes nécessaires sont présentes
     for (const varName of variables) {
       if (valeurs[varName] === null || valeurs[varName] === undefined) {
         return { estValide: false, valeurCalculee: null, valeurReelle: valeurReelle, ecart: null };
       }
     }
 
-    // Préparer l'expression pour l'évaluation (remplacer {colonne} par des variables)
     let exprEval = expression;
     const evalVars: Record<string, number> = {};
-    
     for (const varName of variables) {
       const varKey = `__col__${varName.replace(/[^a-zA-Z0-9]/g, '_')}`;
       exprEval = exprEval.replace(new RegExp(`\\{${varName}\\}`, 'g'), varKey);
@@ -158,16 +154,13 @@ export class ExpressionEvaluator {
     }
 
     try {
-      // Extraire le côté droit de l'égalité si présent
       let expressionToEvaluate = exprEval;
       if (exprEval.includes('=')) {
         const parts = exprEval.split('=');
         if (parts.length === 2) {
-          // On évalue le côté droit
           expressionToEvaluate = parts[1].trim();
         }
       }
-
       const valeurCalculee = this.evaluateExpression(expressionToEvaluate, evalVars);
       const ecartAbsolu = Math.abs(valeurCalculee - valeurReelle);
       const toleranceAbsolue = (Math.abs(valeurCalculee) * tolerance) / 100;
@@ -185,19 +178,11 @@ export class ExpressionEvaluator {
     }
   }
 
-  /**
-   * Formate l'expression pour l'affichage LaTeX-like
-   */
   static formaterExpression(expression: string): string {
-    // Remplacer les noms de colonnes par leur version lisible
     let formatted = expression.replace(/\{([^}]+)\}/g, '$1');
-    
-    // Remplacer les opérateurs
     formatted = formatted.replace(/\*/g, '×');
     formatted = formatted.replace(/\//g, '÷');
     formatted = formatted.replace(/\^/g, '^');
-    
-    // Remplacer les fonctions
     formatted = formatted.replace(/sqrt\(/g, '√(');
     formatted = formatted.replace(/exp\(/g, 'e^(');
     formatted = formatted.replace(/log\(/g, 'log₁₀(');
@@ -205,7 +190,6 @@ export class ExpressionEvaluator {
     formatted = formatted.replace(/sin\(/g, 'sin(');
     formatted = formatted.replace(/cos\(/g, 'cos(');
     formatted = formatted.replace(/tan\(/g, 'tan(');
-    
     return formatted;
   }
 }
