@@ -1,6 +1,5 @@
 // components/sciences/experiences/DataTable.tsx
 
-
 'use client';
 
 import { useState } from 'react';
@@ -74,7 +73,7 @@ export default function DataTable({
   const [editingMesure, setEditingMesure] = useState<Mesure | null>(null);
   const [valeurs, setValeurs] = useState<Record<string, string>>({});
 
-  const verification = verifications.find(v => v.active && v.tableau_index === tableauIndex);
+  const verification = verifications?.[0];
 
   const estMesureGelee = (mesure: Mesure) => {
     if (!experienceParams?.freezeDataBefore) return false;
@@ -90,28 +89,6 @@ export default function DataTable({
   const peutVoirCorrection = (mesure: Mesure) => {
     if (!experienceParams?.showCorrectionsForBefore) return false;
     return new Date(mesure.created_at) < new Date(experienceParams.showCorrectionsForBefore);
-  };
-
-  const getValeurCalculee = (mesure: Mesure) => {
-    if (!verification) return null;
-    const resultat = ExpressionEvaluator.verifierMesure(
-      verification.expression,
-      mesure.mesures,
-      verification.variable_cible,
-      verification.tolerance
-    );
-    return resultat.valeurCalculee;
-  };
-
-  const estMesureCorrecte = (mesure: Mesure) => {
-    if (!verification) return true;
-    const resultat = ExpressionEvaluator.verifierMesure(
-      verification.expression,
-      mesure.mesures,
-      verification.variable_cible,
-      verification.tolerance
-    );
-    return resultat.estValide;
   };
 
   const isDuplicateMeasure = (nouvellesValeurs: Record<string, number | null>, excludeId?: string) => {
@@ -271,87 +248,101 @@ export default function DataTable({
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {mesuresTriees.map((mesure) => {
-                  // Évaluation unique de la vérification pour cette mesure
-                  let verificationResult = null;
-                  if (verification && peutVoirCorrection(mesure)) {
+            <tbody className="bg-white divide-y divide-gray-200">
+              {mesuresTriees.map((mesure) => {
+                // Évaluation de la vérification (avec gestion des erreurs)
+                let verificationResult = null;
+                let calculImpossible = false;
+                if (verification && peutVoirCorrection(mesure) && isMyMesure(mesure)) {
+                  try {
                     verificationResult = ExpressionEvaluator.verifierMesure(
                       verification.expression,
                       mesure.mesures,
                       verification.variable_cible,
                       verification.tolerance
                     );
+                    if (verificationResult.valeurCalculee === null) {
+                      calculImpossible = true;
+                    }
+                  } catch (e) {
+                    calculImpossible = true;
                   }
-                  const valeurCalculee = verificationResult?.valeurCalculee ?? null;
-                  const estCorrecte = verificationResult?.estValide ?? true;
-                  const afficherCorrection = verification && valeurCalculee !== null && !estCorrecte;
+                }
+                const valeurCalculee = verificationResult?.valeurCalculee ?? null;
+                const estCorrecte = verificationResult?.estValide ?? false;
+                const afficherCorrection = verification && valeurCalculee !== null && !estCorrecte && isMyMesure(mesure);
+                const afficherIncalculable = verification && calculImpossible && isMyMesure(mesure);
 
-                  return (
-                    <tr key={mesure.id} className={isMyMesure(mesure) ? 'bg-green-50' : ''}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getEleveName(mesure)}
-                        {isMyMesure(mesure) && <span className="ml-2 text-xs text-green-600">(moi)</span>}
-                      </td>
-                      {tableau.colonnes.map((colonne) => {
-                        const valeur = mesure.mesures[colonne.nom];
-                        const estColonneCible = verification && verification.variable_cible === colonne.nom;
-                        const estValeurIncorrecte = estColonneCible && afficherCorrection;
-                        return (
-                          <td key={colonne.nom} className="px-6 py-4 whitespace-nowrap text-sm">
-                            <span className={estValeurIncorrecte ? 'text-red-600 line-through' : 'text-gray-900'}>
-                              {valeur !== null && valeur !== undefined
-                                ? valeur.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
-                                : '-'}
+                return (
+                  <tr key={mesure.id} className={isMyMesure(mesure) ? 'bg-green-50' : ''}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {getEleveName(mesure)}
+                      {isMyMesure(mesure) && <span className="ml-2 text-xs text-green-600">(moi)</span>}
+                    </td>
+                    {tableau.colonnes.map((colonne) => {
+                      const valeur = mesure.mesures[colonne.nom];
+                      const estColonneCible = verification && verification.variable_cible === colonne.nom;
+                      const estValeurIncorrecte = estColonneCible && afficherCorrection;
+                      return (
+                        <td key={colonne.nom} className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={estValeurIncorrecte ? 'text-red-600 line-through' : 'text-gray-900'}>
+                            {valeur !== null && valeur !== undefined
+                              ? valeur.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+                              : '-'}
+                          </span>
+                          {estColonneCible && afficherCorrection && (
+                            <span className="text-green-600 ml-2">
+                              (corrigé: {valeurCalculee!.toFixed(2)})
                             </span>
-                            {estColonneCible && afficherCorrection && (
-                              <span className="text-green-600 ml-2">
-                                (corrigé: {valeurCalculee!.toFixed(2)})
-                              </span>
-                            )}
-                          </td>
-                        );
-                      })}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(mesure.created_at).toLocaleString('fr-FR')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {userType === 'student' && isMyMesure(mesure) && !estMesureGelee(mesure) && !afficherCorrection && (
-                          <button onClick={() => handleEdit(mesure)} className="text-blue-600 hover:text-blue-800">
+                          )}
+                          {estColonneCible && afficherIncalculable && (
+                            <span className="text-orange-500 ml-2" title="Les valeurs fournies ne permettent pas un calcul valide (hors domaine, division par zéro, etc.)">
+                              (calcul impossible)
+                            </span>
+                          )}
+                        </td>
+                      );
+                    })}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(mesure.created_at).toLocaleString('fr-FR')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {userType === 'student' && isMyMesure(mesure) && !estMesureGelee(mesure) && !afficherCorrection && !afficherIncalculable && (
+                        <button onClick={() => handleEdit(mesure)} className="text-blue-600 hover:text-blue-800">
+                          Modifier
+                        </button>
+                      )}
+                      {userType === 'employee' && (
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => {
+                              const valeursInitiales: Record<string, string> = {};
+                              Object.entries(mesure.mesures).forEach(([key, value]) => {
+                                valeursInitiales[key] = value?.toString() || '';
+                              });
+                              setValeurs(valeursInitiales);
+                              setEditingMesure(mesure);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                          >
                             Modifier
                           </button>
-                        )}
-                        {userType === 'employee' && (
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => {
-                                const valeursInitiales: Record<string, string> = {};
-                                Object.entries(mesure.mesures).forEach(([key, value]) => {
-                                  valeursInitiales[key] = value?.toString() || '';
-                                });
-                                setValeurs(valeursInitiales);
-                                setEditingMesure(mesure);
-                              }}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              Modifier
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (confirm('Voulez-vous vraiment supprimer cette mesure ?')) onSupprimerMesure(mesure.id);
-                              }}
-                              className="text-red-600 hover:text-red-800 text-sm"
-                            >
-                              Supprimer
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-           </table>
+                          <button
+                            onClick={() => {
+                              if (confirm('Voulez-vous vraiment supprimer cette mesure ?')) onSupprimerMesure(mesure.id);
+                            }}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div className="text-center py-8">

@@ -1,52 +1,18 @@
 // lib/sciences/expressionEvaluator.ts
+
 export class ExpressionEvaluator {
-  private static readonly CONSTANTS: Record<string, number> = {
-    pi: Math.PI,
-    e: Math.E
-  };
-
-  private static readonly FUNCTIONS: Record<string, (...args: number[]) => number> = {
-    sqrt: Math.sqrt,
-    exp: Math.exp,
-    log: (x: number) => Math.log10(x),
-    ln: Math.log,
-    sin: Math.sin,
-    cos: Math.cos,
-    tan: Math.tan,
-    abs: Math.abs,
-    floor: Math.floor,
-    ceil: Math.ceil,
-    round: Math.round,
-    asin: Math.asin,
-    acos: Math.acos,
-    atan: Math.atan
-  };
-
   static parseExpression(expression: string, colonnesDisponibles: string[]): {
     isValid: boolean;
-    parsedExpression?: string;
     variables?: string[];
     error?: string;
   } {
-    let cleanExpression = expression.trim();
-    
-    // Gérer les conditions multiples : on prend la dernière partie après le dernier = si présent
-    if (cleanExpression.includes('=')) {
-      const parts = cleanExpression.split('=');
-      if (parts.length === 2) {
-        cleanExpression = parts[1].trim();
-      }
-    }
-    
-    // Extraire les colonnes
     const colonnePattern = /\{([^}]+)\}/g;
     const matches: RegExpExecArray[] = [];
     let match;
-    while ((match = colonnePattern.exec(cleanExpression)) !== null) {
+    while ((match = colonnePattern.exec(expression)) !== null) {
       matches.push(match);
     }
     const variables = matches.map(m => m[1]);
-    
     const colonnesInvalides = variables.filter(v => !colonnesDisponibles.includes(v));
     if (colonnesInvalides.length > 0) {
       return {
@@ -54,73 +20,10 @@ export class ExpressionEvaluator {
         error: `Colonnes inconnues: ${colonnesInvalides.join(', ')}`
       };
     }
-
-    let parsed = cleanExpression;
-    variables.forEach(v => {
-      const regex = new RegExp(`\\{${v}\\}`, 'g');
-      parsed = parsed.replace(regex, `__col__${v.replace(/[^a-zA-Z0-9]/g, '_')}`);
-    });
-
-    try {
-      const testVars: Record<string, number> = {};
-      variables.forEach(v => {
-        testVars[`__col__${v.replace(/[^a-zA-Z0-9]/g, '_')}`] = 1;
-      });
-      this.evaluateExpression(parsed, testVars);
-      return { isValid: true, parsedExpression: parsed, variables };
-    } catch (error) {
-      return {
-        isValid: false,
-        error: `Erreur de syntaxe: ${(error as Error).message}`
-      };
-    }
+    return { isValid: true, variables };
   }
 
-  static evaluateExpression(expression: string, variables: Record<string, number>): number {
-    let expr = expression;
-    for (const [constName, constValue] of Object.entries(this.CONSTANTS)) {
-      expr = expr.replace(new RegExp(`\\b${constName}\\b`, 'g'), constValue.toString());
-    }
-    for (const [varName, varValue] of Object.entries(variables)) {
-      const regex = new RegExp(`\\b${varName}\\b`, 'g');
-      expr = expr.replace(regex, varValue.toString());
-    }
-    // eslint-disable-next-line no-new-func
-    const evaluator = new Function('return ' + expr);
-    return evaluator();
-  }
-
-  // Point d'entrée principal : supporte les conditions multiples séparées par &&
   static verifierMesure(
-    expression: string,
-    valeurs: Record<string, number | null>,
-    variableCible: string,
-    tolerance: number
-  ): { estValide: boolean; valeurCalculee: number | null; valeurReelle: number | null; ecart: number | null } {
-    const subExprs = expression.split('&&').map(e => e.trim());
-    let toutesValides = true;
-    let derniereValeurCalculee: number | null = null;
-
-    for (const subExpr of subExprs) {
-      const result = this.verifierUneExpression(subExpr, valeurs, variableCible, tolerance);
-      if (!result.estValide) {
-        toutesValides = false;
-        break;
-      }
-      if (result.valeurCalculee !== null) {
-        derniereValeurCalculee = result.valeurCalculee;
-      }
-    }
-
-    return {
-      estValide: toutesValides,
-      valeurCalculee: toutesValides ? derniereValeurCalculee : null,
-      valeurReelle: valeurs[variableCible] ?? null,
-      ecart: null
-    };
-  }
-
-  private static verifierUneExpression(
     expression: string,
     valeurs: Record<string, number | null>,
     variableCible: string,
@@ -131,6 +34,7 @@ export class ExpressionEvaluator {
       return { estValide: false, valeurCalculee: null, valeurReelle: null, ecart: null };
     }
 
+    // Extraire les colonnes
     const colonnePattern = /\{([^}]+)\}/g;
     const matches: RegExpExecArray[] = [];
     let match;
@@ -139,29 +43,54 @@ export class ExpressionEvaluator {
     }
     const variables = matches.map(m => m[1]);
 
+    // Vérifier que toutes les colonnes sont présentes
     for (const varName of variables) {
       if (valeurs[varName] === null || valeurs[varName] === undefined) {
         return { estValide: false, valeurCalculee: null, valeurReelle: valeurReelle, ecart: null };
       }
     }
 
-    let exprEval = expression;
-    const evalVars: Record<string, number> = {};
+    // Construire l'expression en remplaçant les {colonne} par les valeurs (avec conversion virgule->point)
+    let expr: string = expression;
     for (const varName of variables) {
-      const varKey = `__col__${varName.replace(/[^a-zA-Z0-9]/g, '_')}`;
-      exprEval = exprEval.replace(new RegExp(`\\{${varName}\\}`, 'g'), varKey);
-      evalVars[varKey] = valeurs[varName] as number;
+      let valeur = valeurs[varName];
+      let valeurStr: string;
+      if (typeof valeur === 'number') {
+        valeurStr = valeur.toString();
+      } else {
+        valeurStr = String(valeur).replace(',', '.');
+      }
+      // S'assurer que c'est un nombre valide
+      const num = parseFloat(valeurStr);
+      if (isNaN(num)) {
+        console.warn(`Valeur invalide pour ${varName}:`, valeur);
+        return { estValide: false, valeurCalculee: null, valeurReelle, ecart: null };
+      }
+      const regex = new RegExp(`\\{${varName}\\}`, 'g');
+      expr = expr.replace(regex, num.toString());
     }
 
-    try {
-      let expressionToEvaluate = exprEval;
-      if (exprEval.includes('=')) {
-        const parts = exprEval.split('=');
-        if (parts.length === 2) {
-          expressionToEvaluate = parts[1].trim();
-        }
+    // Gérer l'égalité
+    if (expr.includes('=')) {
+      const parts = expr.split('=');
+      if (parts.length === 2) {
+        expr = parts[1].trim();
       }
-      const valeurCalculee = this.evaluateExpression(expressionToEvaluate, evalVars);
+    }
+
+    // Évaluer l'expression
+    try {
+      // Remplacer les fonctions mathématiques par Math.fn
+      expr = expr.replace(/\b(asin|acos|atan|sin|cos|tan|sqrt|exp|log|ln|abs|floor|ceil|round)\b/g, (m) => {
+        if (m === 'ln') return 'Math.log';
+        return `Math.${m}`;
+      });
+      expr = expr.replace(/\bpi\b/g, 'Math.PI');
+      expr = expr.replace(/\be\b/g, 'Math.E');
+
+      console.log('Expression évaluée:', expr);
+      // eslint-disable-next-line no-eval
+      const valeurCalculee = eval(expr);
       const ecartAbsolu = Math.abs(valeurCalculee - valeurReelle);
       const toleranceAbsolue = (Math.abs(valeurCalculee) * tolerance) / 100;
       const estValide = ecartAbsolu <= toleranceAbsolue;
@@ -173,7 +102,7 @@ export class ExpressionEvaluator {
         ecart: (ecartAbsolu / Math.abs(valeurCalculee)) * 100
       };
     } catch (error) {
-      console.error('Erreur évaluation:', error);
+      console.error('Erreur évaluation:', error, 'Expression:', expr);
       return { estValide: false, valeurCalculee: null, valeurReelle, ecart: null };
     }
   }

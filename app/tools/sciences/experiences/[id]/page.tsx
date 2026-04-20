@@ -557,7 +557,6 @@ export default function ExperienceDetailPage() {
         </nav>
       </div>
 
-      {/* Onglet Données */}
       {activeTab === 0 && (
         <div className="space-y-8">
           {experience.config.tableaux.map((tableau, index) => (
@@ -570,6 +569,7 @@ export default function ExperienceDetailPage() {
               userId={parseInt(userId)}
               userName={userName}
               experienceParams={experience.params}
+              verifications={experience.config.verifications?.filter(v => v.tableau_index === index)}
               onAjouterMesure={(valeurs) => ajouterMesure(index, valeurs)}
               onModifierMesure={modifierMesure}
               onSupprimerMesure={supprimerMesure}
