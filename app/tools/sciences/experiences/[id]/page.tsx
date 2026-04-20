@@ -8,6 +8,7 @@ import GraphiqueIntelligent from '@/components/sciences/experiences/GraphiqueInt
 import GraphiqueConfigurator from '@/components/sciences/experiences/GraphiqueConfigurator';
 import VerificationManager from '@/components/sciences/experiences/VerificationManager';
 import VerificationResults from '@/components/sciences/experiences/VerificationResults';
+import ExperienceParamsManager from '@/components/sciences/experiences/ExperienceParamsManager';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -34,6 +35,12 @@ interface VerificationConfig {
   active: boolean;
 }
 
+interface ExperienceParams {
+  canAddNewMeasures: boolean;
+  freezeDataBefore?: string;
+  showCorrectionsForBefore?: string;
+}
+
 interface Experience {
   id: string;
   nom: string;
@@ -46,6 +53,7 @@ interface Experience {
   created_by: string;
   created_at: string;
   statut: string;
+  params?: ExperienceParams;
   config: {
     tableaux: {
       nom: string;
@@ -56,7 +64,7 @@ interface Experience {
       }[];
     }[];
     graphiques: GraphiqueConfig[];
-    verifications?: VerificationConfig[];  // AJOUTÉ
+    verifications?: VerificationConfig[];
   };
 }
 
@@ -116,26 +124,6 @@ function resumeCibles(exp: Experience): string {
   return 'Tous';
 }
 
-function afficherCiblesDetail(exp: Experience): string {
-  const cibles = exp.cibles;
-  if (!cibles) return 'Tous';
-  
-  const classes = cibles.classes;
-  const groupes = cibles.groupes;
-  
-  if (classes.length === 0 && groupes.length === 0) return 'Tous';
-  
-  const parties: string[] = [];
-  if (classes.length > 0) {
-    parties.push(`${classes.length} classe${classes.length > 1 ? 's' : ''}`);
-  }
-  if (groupes.length > 0) {
-    parties.push(`${groupes.length} groupe${groupes.length > 1 ? 's' : ''}`);
-  }
-  
-  return parties.join(' · ');
-}
-
 // ── Composant ─────────────────────────────────────────────────────────────────
 
 export default function ExperienceDetailPage() {
@@ -159,10 +147,12 @@ export default function ExperienceDetailPage() {
   const [currentGraphique, setCurrentGraphique] = useState<GraphiqueConfig | null>(null);
   const [currentGraphiqueIndex, setCurrentGraphiqueIndex] = useState(-1);
   
-  // Nouveaux états pour les vérifications
   const [editingVerifications, setEditingVerifications] = useState(false);
   const [tempVerifications, setTempVerifications] = useState<VerificationConfig[]>([]);
   const [elevesList, setElevesList] = useState<EleveInfo[]>([]);
+
+  const [editingParams, setEditingParams] = useState(false);
+  const [tempParams, setTempParams] = useState<ExperienceParams>({ canAddNewMeasures: true });
 
   useEffect(() => {
     const type = localStorage.getItem('userType') as 'employee' | 'student';
@@ -180,6 +170,16 @@ export default function ExperienceDetailPage() {
     chargerExperience(type, id);
   }, [router, experienceId]);
 
+  useEffect(() => {
+    if (editingParams && experience?.params) {
+      setTempParams({
+        canAddNewMeasures: experience.params.canAddNewMeasures ?? true,
+        freezeDataBefore: experience.params.freezeDataBefore || '',
+        showCorrectionsForBefore: experience.params.showCorrectionsForBefore || ''
+      });
+    }
+  }, [editingParams, experience?.params]);
+
   // ── Chargement ─────────────────────────────────────────────
 
   const chargerExperience = async (type: string, id: string) => {
@@ -194,7 +194,6 @@ export default function ExperienceDetailPage() {
 
       if (expError) throw expError;
 
-      // Vérification d'accès pour les élèves
       if (type === 'student') {
         const classeEleve = localStorage.getItem('userClass') || '';
         const matricule = parseInt(id);
@@ -214,7 +213,8 @@ export default function ExperienceDetailPage() {
 
       setExperience(expData);
 
-      // Charger les mesures
+      console.log('Experience chargée - params:', expData.params);
+
       const { data: mesuresData, error: mesuresError } = await supabase
         .from('experience_mesures')
         .select(`
@@ -229,29 +229,22 @@ export default function ExperienceDetailPage() {
       if (mesuresError) throw mesuresError;
       setMesures(mesuresData || []);
 
-      // Dans chargerExperience, modifions la partie du chargement des élèves :
-
       if (type === 'employee' && expData.cibles) {
         const toutesClasses = expData.cibles.classes || [];
         const tousGroupes = expData.cibles.groupes || [];
-
         
         let elevesData: any[] = [];
         
-        // Charger les élèves des classes
         if (toutesClasses.length > 0) {
-          const { data, error } = await supabase
+          const { data } = await supabase
             .from('students')
             .select('matricule, nom, prenom, classe')
             .in('classe', toutesClasses);
-          
-          console.log('Élèves des classes:', data, error);
           if (data) elevesData.push(...data);
         }
         
-        // Charger les élèves des groupes
         if (tousGroupes.length > 0) {
-          const { data, error } = await supabase
+          const { data } = await supabase
             .from('students_groups')
             .select(`
               matricule,
@@ -265,7 +258,6 @@ export default function ExperienceDetailPage() {
           
           if (data) {
             data.forEach((item: any) => {
-              // Maintenant students est un objet, pas un tableau
               const student = item.students;
               if (student && student.nom) {
                 elevesData.push({
@@ -279,7 +271,6 @@ export default function ExperienceDetailPage() {
           }
         }
         
-        // Dédupliquer par matricule
         const elevesUniques = Array.from(
           new Map(elevesData.map(e => [e.matricule, e])).values()
         );
@@ -287,7 +278,6 @@ export default function ExperienceDetailPage() {
         setElevesList(elevesUniques);
       }
 
-      // Subscription temps réel
       const subscription = supabase
         .channel(`experience-${experienceId}`)
         .on(
@@ -441,6 +431,36 @@ export default function ExperienceDetailPage() {
     }
   };
 
+  // ── Paramètres ─────────────────────────────────────────────
+
+  const handleEditParams = () => {
+    setEditingParams(true);
+  };
+
+  const handleSaveParams = async (newParams: ExperienceParams) => {
+    try {
+      const paramsToSave = {
+        canAddNewMeasures: newParams.canAddNewMeasures ?? true,
+        freezeDataBefore: newParams.freezeDataBefore || null,
+        showCorrectionsForBefore: newParams.showCorrectionsForBefore || null
+      };
+      
+      const { error } = await supabase
+        .from('experiences')
+        .update({ params: paramsToSave })
+        .eq('id', experienceId);
+      
+      if (error) throw error;
+      
+      // Recharger l'expérience
+      await chargerExperience(userType, userId);
+      setEditingParams(false);
+    } catch (error) {
+      console.error('Erreur sauvegarde paramètres:', error);
+      alert('Erreur lors de la sauvegarde');
+    }
+  };
+
   const supprimerExperience = async () => {
     if (userType !== 'employee') return;
     if (!confirm('Voulez-vous vraiment supprimer cette expérience ? Toutes les données seront perdues.')) return;
@@ -478,7 +498,6 @@ export default function ExperienceDetailPage() {
     return acc;
   }, {} as Record<number, Mesure[]>);
 
-  // Définir les onglets disponibles
   const tabs = [
     { label: `Données (${mesures.length} mesures)`, index: 0 },
     { label: 'Graphiques', index: 1 },
@@ -550,6 +569,7 @@ export default function ExperienceDetailPage() {
               userType={userType}
               userId={parseInt(userId)}
               userName={userName}
+              experienceParams={experience.params}
               onAjouterMesure={(valeurs) => ajouterMesure(index, valeurs)}
               onModifierMesure={modifierMesure}
               onSupprimerMesure={supprimerMesure}
@@ -595,10 +615,7 @@ export default function ExperienceDetailPage() {
       {/* Onglet Configuration */}
       {activeTab === 2 && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Configuration</h2>
-          </div>
-
+          
           {/* Sous-onglets de configuration */}
           <div className="border-b border-gray-200 mb-6">
             <nav className="flex space-x-8">
@@ -606,9 +623,25 @@ export default function ExperienceDetailPage() {
                 onClick={() => {
                   setEditingGraphiques(false);
                   setEditingVerifications(false);
+                  setEditingParams(false);
                 }}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  !editingGraphiques && !editingVerifications
+                  !editingGraphiques && !editingVerifications && !editingParams
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Récapitulatif
+              </button>
+              <button
+                onClick={() => {
+                  setEditingGraphiques(true);
+                  setEditingVerifications(false);
+                  setEditingParams(false);
+                  handleEditGraphiques();
+                }}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  editingGraphiques && !editingVerifications && !editingParams
                     ? 'border-green-500 text-green-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
@@ -617,86 +650,90 @@ export default function ExperienceDetailPage() {
               </button>
               <button
                 onClick={() => {
-                  setEditingGraphiques(true);
-                  setEditingVerifications(false);
-                  handleEditGraphiques();
+                  setEditingGraphiques(false);
+                  setEditingVerifications(true);
+                  setEditingParams(false);
+                  handleEditVerifications();
                 }}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  editingGraphiques && !editingVerifications
+                  editingVerifications && !editingGraphiques && !editingParams
                     ? 'border-green-500 text-green-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Modifier les graphiques
+                Vérifications
               </button>
               <button
                 onClick={() => {
                   setEditingGraphiques(false);
-                  setEditingVerifications(true);
-                  handleEditVerifications();
+                  setEditingVerifications(false);
+                  setEditingParams(true);
                 }}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  editingVerifications
+                  editingParams && !editingGraphiques && !editingVerifications
                     ? 'border-green-500 text-green-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Vérifications automatiques
+                Paramètres
               </button>
             </nav>
           </div>
 
-          {/* Contenu Configuration - Graphiques (lecture seule) */}
-          {!editingGraphiques && !editingVerifications && (
-            <div className="space-y-4">
-              <h3 className="text-md font-medium text-gray-900">Graphiques configurés</h3>
-              {experience.config.graphiques.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">Aucun graphique configuré</p>
-              ) : (
-                experience.config.graphiques.map((graphique, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900">{graphique.nom}</h3>
-                    <p className="text-sm text-gray-600">
-                      {graphique.axe_y} en fonction de {graphique.axe_x}
-                      {graphique.groupe_par && ` (groupé par ${graphique.groupe_par})`}
-                    </p>
-                  </div>
-                ))
-              )}
-              
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <h3 className="text-md font-medium text-gray-900 mb-4">Vérifications configurées</h3>
-                {experience.config.verifications?.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">Aucune vérification configurée</p>
+          {/* RÉCAPITULATIF */}
+          {!editingGraphiques && !editingVerifications && !editingParams && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-md font-medium text-gray-900 mb-3">Graphiques configurés</h3>
+                {experience.config.graphiques.length === 0 ? (
+                  <p className="text-gray-500 text-center py-4 bg-gray-50 rounded-lg">Aucun graphique configuré</p>
                 ) : (
-                  experience.config.verifications?.map((verif, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4 mb-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-medium text-gray-900">{verif.nom}</h4>
-                          <p className="text-sm text-gray-600">
-                            {verif.expression} (tolérance: {verif.tolerance}%)
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Tableau: {experience.config.tableaux[verif.tableau_index]?.nom} | 
-                            Cible: {verif.variable_cible}
-                          </p>
-                        </div>
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          verif.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                        }`}>
-                          {verif.active ? 'Active' : 'Inactive'}
-                        </span>
+                  <div className="space-y-3">
+                    {experience.config.graphiques.map((graphique, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-3">
+                        <h4 className="font-medium text-gray-900">{graphique.nom}</h4>
+                        <p className="text-sm text-gray-600">
+                          {graphique.axe_y} en fonction de {graphique.axe_x}
+                          {graphique.groupe_par && ` (groupé par ${graphique.groupe_par})`}
+                        </p>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-4 border-t border-gray-200">
+                <h3 className="text-md font-medium text-gray-900 mb-3">Vérifications configurées</h3>
+                {experience.config.verifications?.length === 0 ? (
+                  <p className="text-gray-500 text-center py-4 bg-gray-50 rounded-lg">Aucune vérification configurée</p>
+                ) : (
+                  <div className="space-y-3">
+                    {experience.config.verifications?.map((verif, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium text-gray-900">{verif.nom}</h4>
+                            <p className="text-sm text-gray-600 font-mono">{verif.expression}</p>
+                            <p className="text-xs text-gray-500">
+                              Tolérance: {verif.tolerance}% | Cible: {verif.variable_cible}
+                            </p>
+                          </div>
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            verif.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                          }`}>
+                            {verif.active ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
           )}
 
           {/* Édition des graphiques */}
-          {editingGraphiques && !editingVerifications && (
+          {editingGraphiques && !editingVerifications && !editingParams && (
             <div>
               {showConfigurator ? (
                 <GraphiqueConfigurator
@@ -751,15 +788,23 @@ export default function ExperienceDetailPage() {
           )}
 
           {/* Édition des vérifications */}
-          {editingVerifications && (
-            <div>
-              <VerificationManager
-                tableaux={experience.config.tableaux}
-                verifications={tempVerifications}
-                onSave={handleSaveVerifications}
-                onCancel={() => setEditingVerifications(false)}
-              />
-            </div>
+          {editingVerifications && !editingGraphiques && !editingParams && (
+            <VerificationManager
+              tableaux={experience.config.tableaux}
+              verifications={tempVerifications}
+              onSave={handleSaveVerifications}
+              onCancel={() => setEditingVerifications(false)}
+            />
+          )}
+
+          {/* Édition des paramètres */}
+          {editingParams && !editingGraphiques && !editingVerifications && (
+            <ExperienceParamsManager
+              key={JSON.stringify(experience.params)}
+              params={tempParams}
+              onSave={handleSaveParams}
+              onCancel={() => setEditingParams(false)}
+            />
           )}
         </div>
       )}
