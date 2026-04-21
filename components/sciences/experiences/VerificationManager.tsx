@@ -62,7 +62,12 @@ export default function VerificationManager({ tableaux, verifications, onSave, o
     if (field === 'expression' || field === 'tableau_index') {
       const tableau = tableaux[nouvelles[index].tableau_index];
       const colonnesDisponibles = tableau?.colonnes.map(c => c.nom) || [];
-      const result = ExpressionEvaluator.parseExpression(value || '', colonnesDisponibles);
+      // Extraire la première partie avant && pour la validation (la partie qui contient l'égalité)
+      let expressionToValidate = value || '';
+      if (expressionToValidate.includes('&&')) {
+        expressionToValidate = expressionToValidate.split('&&')[0].trim();
+      }
+      const result = ExpressionEvaluator.parseExpression(expressionToValidate, colonnesDisponibles);
       setValidationStatus(prev => ({
         ...prev,
         [index]: {

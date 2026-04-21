@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface SliderZoneProps {
-  label: string;
+  label: React.ReactNode;
   value: number;
   onChange: (value: number) => void;
   side: 'top' | 'bottom';

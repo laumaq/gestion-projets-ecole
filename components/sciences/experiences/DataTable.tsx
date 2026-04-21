@@ -1,5 +1,6 @@
 // components/sciences/experiences/DataTable.tsx
 
+
 'use client';
 
 import { useState } from 'react';
@@ -136,13 +137,14 @@ export default function DataTable({
     setEditingMesure(null);
   };
 
-  const getEleveName = (mesure: Mesure) => {
+    const getEleveName = (mesure: Mesure) => {
     if (mesure.eleve) return `${mesure.eleve.prenom} ${mesure.eleve.nom}`;
     return `Élève #${mesure.eleve_matricule}`;
   };
 
   const isMyMesure = (mesure: Mesure) => userType === 'student' && mesure.eleve_matricule === userId;
 
+  // Tri des mesures
   const mesuresTriees = [...mesures].sort((a, b) => {
     const aIsMine = isMyMesure(a);
     const bIsMine = isMyMesure(b);
@@ -250,10 +252,13 @@ export default function DataTable({
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {mesuresTriees.map((mesure) => {
-                // Évaluation de la vérification (avec gestion des erreurs)
+                // NE calculer la correction que pour l'élève connecté et si autorisé
                 let verificationResult = null;
-                let calculImpossible = false;
-                if (verification && peutVoirCorrection(mesure) && isMyMesure(mesure)) {
+                let erreurCalcul = false;
+                const estMaMesure = isMyMesure(mesure);
+                const peutCorriger = verification && peutVoirCorrection(mesure) && estMaMesure;
+                
+                if (peutCorriger) {
                   try {
                     verificationResult = ExpressionEvaluator.verifierMesure(
                       verification.expression,
@@ -261,42 +266,43 @@ export default function DataTable({
                       verification.variable_cible,
                       verification.tolerance
                     );
-                    if (verificationResult.valeurCalculee === null) {
-                      calculImpossible = true;
-                    }
                   } catch (e) {
-                    calculImpossible = true;
+                    console.error('Erreur évaluation:', e);
+                    erreurCalcul = true;
                   }
                 }
+                
+                const corrections = verificationResult?.corrections ?? {};
                 const valeurCalculee = verificationResult?.valeurCalculee ?? null;
                 const estCorrecte = verificationResult?.estValide ?? false;
-                const afficherCorrection = verification && valeurCalculee !== null && !estCorrecte && isMyMesure(mesure);
-                const afficherIncalculable = verification && calculImpossible && isMyMesure(mesure);
 
                 return (
-                  <tr key={mesure.id} className={isMyMesure(mesure) ? 'bg-green-50' : ''}>
+                  <tr key={mesure.id} className={estMaMesure ? 'bg-green-50' : ''}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {getEleveName(mesure)}
-                      {isMyMesure(mesure) && <span className="ml-2 text-xs text-green-600">(moi)</span>}
+                      {estMaMesure && <span className="ml-2 text-xs text-green-600">(moi)</span>}
                     </td>
                     {tableau.colonnes.map((colonne) => {
                       const valeur = mesure.mesures[colonne.nom];
-                      const estColonneCible = verification && verification.variable_cible === colonne.nom;
-                      const estValeurIncorrecte = estColonneCible && afficherCorrection;
+                      const correction = corrections[colonne.nom];
+                      // Déterminer si la valeur est incorrecte (correction présente ou colonne cible fausse)
+                      const estIncorrect = (correction !== undefined) || (colonne.nom === verification?.variable_cible && !estCorrecte);
+                      const correctionToShow = correction !== undefined ? correction : (colonne.nom === verification?.variable_cible && valeurCalculee !== null ? valeurCalculee : null);
+                      const afficherCorrection = correctionToShow !== null && estMaMesure;
                       return (
                         <td key={colonne.nom} className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={estValeurIncorrecte ? 'text-red-600 line-through' : 'text-gray-900'}>
+                          <span className={estIncorrect && estMaMesure ? 'text-red-600 line-through' : 'text-gray-900'}>
                             {valeur !== null && valeur !== undefined
                               ? valeur.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
                               : '-'}
                           </span>
-                          {estColonneCible && afficherCorrection && (
+                          {afficherCorrection && (
                             <span className="text-green-600 ml-2">
-                              (corrigé: {valeurCalculee!.toFixed(2)})
+                              (corrigé: {correctionToShow.toFixed(2)})
                             </span>
                           )}
-                          {estColonneCible && afficherIncalculable && (
-                            <span className="text-orange-500 ml-2" title="Les valeurs fournies ne permettent pas un calcul valide (hors domaine, division par zéro, etc.)">
+                          {colonne.nom === verification?.variable_cible && erreurCalcul && estMaMesure && (
+                            <span className="text-orange-500 ml-2">
                               (calcul impossible)
                             </span>
                           )}
@@ -307,32 +313,17 @@ export default function DataTable({
                       {new Date(mesure.created_at).toLocaleString('fr-FR')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {userType === 'student' && isMyMesure(mesure) && !estMesureGelee(mesure) && !afficherCorrection && !afficherIncalculable && (
+                      {userType === 'student' && estMaMesure && !estMesureGelee(mesure) && Object.keys(corrections).length === 0 && !erreurCalcul && (
                         <button onClick={() => handleEdit(mesure)} className="text-blue-600 hover:text-blue-800">
                           Modifier
                         </button>
                       )}
                       {userType === 'employee' && (
                         <div className="flex space-x-2">
-                          <button
-                            onClick={() => {
-                              const valeursInitiales: Record<string, string> = {};
-                              Object.entries(mesure.mesures).forEach(([key, value]) => {
-                                valeursInitiales[key] = value?.toString() || '';
-                              });
-                              setValeurs(valeursInitiales);
-                              setEditingMesure(mesure);
-                            }}
-                            className="text-blue-600 hover:text-blue-800 text-sm"
-                          >
+                          <button onClick={() => handleEdit(mesure)} className="text-blue-600 hover:text-blue-800 text-sm">
                             Modifier
                           </button>
-                          <button
-                            onClick={() => {
-                              if (confirm('Voulez-vous vraiment supprimer cette mesure ?')) onSupprimerMesure(mesure.id);
-                            }}
-                            className="text-red-600 hover:text-red-800 text-sm"
-                          >
+                          <button onClick={() => onSupprimerMesure(mesure.id)} className="text-red-600 hover:text-red-800 text-sm">
                             Supprimer
                           </button>
                         </div>

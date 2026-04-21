@@ -76,14 +76,14 @@ export const RefractionSimulator: React.FC = () => {
             
             {/* Sliders */}
             <SliderZone
-              label="n₁"
+              label={<span>n<sub>i</sub></span>}
               value={n1}
               onChange={setN1}
               side="top"
             />
             
             <SliderZone
-              label="n₂"
+              label={<span>n<sub>R</sub></span>}
               value={n2}
               onChange={setN2}
               side="bottom"
