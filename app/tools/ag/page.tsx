@@ -144,13 +144,24 @@ export default function AGPage() {
   };
 
   const handleResetCommunications = async () => {
-    if (!confirm('Êtes-vous sûr de vouloir effacer toutes les demandes des GT ?')) return;
+    if (!confirm('Êtes-vous sûr de vouloir effacer toutes les demandes des GT et les interventions libres ?')) return;
     
     setSaving(true);
     try {
       await resetCommunications();
+      
+      // Supprimer aussi toutes les interventions libres
+      const { error: deleteLibresError } = await supabase
+        .from('ag_interventions_libres')
+        .delete()
+        .eq('ag_id', config?.id);
+
+      if (deleteLibresError) throw deleteLibresError;
+      
+      await refresh();
       setStatusMessage({ type: 'success', text: 'Toutes les demandes ont été effacées' });
     } catch (err) {
+      console.error('Erreur effacement:', err);
       setStatusMessage({ type: 'error', text: 'Erreur lors de l\'effacement' });
     } finally {
       setSaving(false);
