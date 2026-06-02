@@ -12,6 +12,7 @@ export interface AGConfig {
   heure_debut: string;
   heure_fin: string;
   statut: 'pas_ag' | 'preparation' | 'planning_etabli';
+  type_ag: 'classique' | 'greve' | 'assemblee_generale';
 }
 
 export interface Bureau {
@@ -110,6 +111,7 @@ export function useAGData() {
             heure_debut: '09:00',
             heure_fin: '12:00',
             statut: 'pas_ag',
+            type_ag: 'classique',
             created_by: localStorage.getItem('userId')
           }])
           .select()
@@ -517,6 +519,26 @@ export function useAGData() {
     }
   };
 
+
+  const updateAGType = async (type: 'classique' | 'greve' | 'assemblee_generale') => {
+    try {
+      const { error } = await supabase
+        .from('ag_configs')
+        .update({ 
+          type_ag: type,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', AG_ID);
+
+      if (error) throw error;
+      await loadData();
+    } catch (err) {
+      console.error('Erreur mise à jour type AG:', err);
+      throw err;
+    }
+  };
+
+
   // Mettre à jour l'ordre global des interventions (GT et libres)
   const updateOrdre = async (ordreData: { id: string; position: number; type: 'gt' | 'libre' }[]) => {
     try {
@@ -559,6 +581,7 @@ export function useAGData() {
     
     // Actions
     updateConfig,
+    updateAGType,
     addBureau,
     removeBureau,
     assignGroupe,
