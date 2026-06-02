@@ -120,6 +120,7 @@ export const useVotes = (context: {
     communicationId?: string; 
     interventionLibreId?: string;
     electorate_type?: string; 
+    anonymous_vote?: boolean;
   }) => {
     if (!user) throw new Error('Utilisateur non authentifié');
     if (!context.id) throw new Error('ID de contexte manquant');
@@ -155,7 +156,8 @@ export const useVotes = (context: {
           module_id: context.id,
           communication_id: voteData.communicationId,
           intervention_libre_id: voteData.interventionLibreId,
-          statut: 'brouillon'
+          statut: 'brouillon',
+          anonymous_vote: voteData.anonymous_vote || false
         }])
         .select()
         .single();
