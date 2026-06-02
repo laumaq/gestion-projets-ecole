@@ -6,13 +6,15 @@ import { Vote } from '@/hooks/votes/useVotes';
 import { useUser } from '@/hooks/useUser';
 import { useVotes } from '@/hooks/votes/useVotes';
 import { supabase } from '@/lib/supabase';
+import { VoteEditor } from './VoteEditor';
 import { ResultsViewer } from '@/components/votes/ResultsViewer';
 import {
   ClockIcon,
   CheckCircleIcon,
   TrashIcon,
   PlayIcon,
-  StopIcon
+  StopIcon,
+  PencilIcon
 } from '@heroicons/react/24/outline';
 
 interface VoteCardProps {
@@ -45,7 +47,8 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   const [userPreviousVote, setUserPreviousVote] = useState<Record<string, any>>({});
   const [error, setError] = useState<string | null>(null);
   const [ranks, setRanks] = useState<Record<string, number>>({});
-  
+  const [showEditor, setShowEditor] = useState(false);
+
   useEffect(() => {
     if (user) {
       checkIfVoted();
@@ -271,6 +274,10 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
     }
   };
 
+  const handleEdit = () => {
+    setShowEditor(true);
+  };
+
   const handleOptionChange = (optId: string) => {
     if (vote.type_scrutin === 'uninominal') {
       setSelectedOptions([optId]);
@@ -390,6 +397,14 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
             <>
               {vote.statut === 'brouillon' && (
                 <div className="flex gap-1">
+                  <button 
+                    onClick={handleEdit} 
+                    className="p-2 text-gray-600 hover:text-blue-600 disabled:opacity-50" 
+                    title="Modifier"
+                    disabled={loading}
+                  >
+                    <PencilIcon className="h-5 w-5" />
+                  </button>
                   <button 
                     onClick={handleDelete} 
                     className="p-2 text-gray-600 hover:text-red-600 disabled:opacity-50" 
@@ -631,6 +646,17 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
         </div>
       )}
 
+      {/* Modal d'édition */}
+      {showEditor && (
+        <VoteEditor
+          vote={vote}
+          onClose={() => setShowEditor(false)}
+          onSuccess={() => {
+            setShowEditor(false);
+            if (onUpdate) onUpdate();
+          }}
+        />
+      )}
     </>
   );
 }
