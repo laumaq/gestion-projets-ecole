@@ -240,8 +240,17 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
           choix = [{ optionId: selectedOptions[0], selected: true }];
       }
 
-      await submitVote(vote.id, choix);
+      const result = await submitVote(vote.id, choix);
       setHasVoted(true);
+      
+      // Afficher le reçu avec le hash
+      if (result.ballotHash) {
+        alert(`✓ Vote enregistré !\n\n🔑 Votre identifiant de vote : ${result.ballotHash}\n\n📝 Notez ce code. Vous pourrez l'utiliser pour vérifier que votre vote a bien été compté.`);
+      } else {
+        alert(hasVoted ? 'Votre vote a été modifié' : 'Votre vote a été enregistré');
+      }
+
+      await submitVote(vote.id, choix);
       
       if (vote.type_scrutin === 'jugement') {
         setUserPreviousVote(selectedJugements);
@@ -283,6 +292,51 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
 
   const isJugementValid = () => {
     return Object.keys(selectedJugements).length === vote.options.length;
+  };
+
+  const verifyMyVote = async () => {
+    try {
+      const { data: voter } = await supabase
+        .from('vote_voters')
+        .select('ballot_hash, voted_at')
+        .eq('vote_id', vote.id)
+        .eq('voter_id', user?.id)
+        .single();
+
+      if (!voter) {
+        alert('❌ Vous n\'avez pas voté pour ce scrutin');
+        return;
+      }
+
+      // Compter combien de votes au total
+      const { count } = await supabase
+        .from('vote_ballots')
+        .select('id', { count: 'exact', head: true })
+        .eq('vote_id', vote.id);
+
+      // Vérifier que le hash est bien dans la liste publique
+      const { data: ballot } = await supabase
+        .from('vote_ballots')
+        .select('vote_hash')
+        .eq('vote_hash', voter.ballot_hash)
+        .single();
+
+      if (ballot) {
+        alert(
+          `🔍 Vérification de votre vote\n\n` +
+          `✅ Vote trouvé\n` +
+          `📅 Date : ${new Date(voter.voted_at).toLocaleString()}\n` +
+          `📊 Position : parmi ${count || 0} votes\n` +
+          `🔑 Votre identifiant : ${voter.ballot_hash.slice(0, 8)}...\n\n` +
+          `💡 Vous pouvez vérifier sur la liste publique que votre identifiant est bien présent.`
+        );
+      } else {
+        alert('❌ Vote non trouvé ! Contactez l\'administrateur.');
+      }
+    } catch (error) {
+      console.error('Erreur vérification:', error);
+      alert('Erreur lors de la vérification');
+    }
   };
 
   if (!user) {
@@ -531,6 +585,14 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
               Voir les résultats
             </button>
           )}
+          {hasVoted && vote.anonymous_vote && (
+            <button
+              onClick={() => verifyMyVote()}
+              className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 text-sm"
+            >
+              🔍 Vérifier mon vote
+            </button>
+          )}
         </div>
       </div>
 
@@ -551,6 +613,20 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                 Fermer
               </button>
             </div>
+
+
+            {canShowResults() && (
+              <div className="mt-4 text-center">
+                <a 
+                  href={`/votes/public-list/${vote.id}`}
+                  target="_blank"
+                  className="text-xs text-blue-600 hover:underline"
+                >
+                  📋 Voir la liste publique des votes
+                </a>
+              </div>
+            )}
+
           </div>
         </div>
       )}

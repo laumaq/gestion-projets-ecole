@@ -31,6 +31,7 @@ export function VoteCreator({
     options: ['', ''],
     type_scrutin: 'uninominal' as ScrutinType,
     anonymous: true,
+    anonymous_vote: false,  // ← NOUVEAU : vote anonyme avec hash
     show_results: 'after_vote' as ShowResultsType
   });
 
@@ -38,7 +39,6 @@ export function VoteCreator({
     e.preventDefault();
     
     try {
-      // Créer un objet avec les données du vote
       const voteData: any = {
         titre: formData.titre,
         description: formData.description,
@@ -48,17 +48,11 @@ export function VoteCreator({
         parametres: {
           anonymous: formData.anonymous,
           show_results: formData.show_results
-        }
+        },
+        anonymous_vote: formData.anonymous_vote,  // ← NOUVEAU
+        communicationId,
+        interventionLibreId
       };
-
-      // Ajouter communicationId ou interventionLibreId si présents
-      if (communicationId) {
-        voteData.communicationId = communicationId;
-      }
-      
-      if (interventionLibreId) {
-        voteData.interventionLibreId = interventionLibreId;
-      }
 
       await createVote(voteData);
       onSuccess();
@@ -153,7 +147,7 @@ export function VoteCreator({
             >
               <option value="uninominal">Uninominal (un seul choix)</option>
               <option value="plurinominal">Plurinominal (plusieurs choix)</option>
-              <option value="jugement">Jugement (notation)</option>
+              <option value="jugement">Jugement majoritaire (mentions)</option>
               <option value="rang">Classement (ordre de préférence)</option>
             </select>
           </div>
@@ -212,8 +206,24 @@ export function VoteCreator({
                 onChange={e => setFormData(prev => ({ ...prev, anonymous: e.target.checked }))}
                 className="rounded text-blue-600"
               />
-              <span className="text-sm">Vote anonyme</span>
+              <span className="text-sm">Afficher comme vote anonyme (icône)</span>
             </label>
+
+            {/* NOUVEAU : Vote anonyme avec vérification par hash */}
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.anonymous_vote}
+                onChange={e => setFormData(prev => ({ ...prev, anonymous_vote: e.target.checked }))}
+                className="rounded text-blue-600"
+              />
+              <span className="text-sm">🔒 Vote anonyme avec vérification par hash</span>
+            </label>
+            {formData.anonymous_vote && (
+              <p className="text-xs text-gray-500 ml-6">
+                Les votes seront anonymes. Chaque votant recevra un identifiant unique pour vérifier que son vote a bien été compté.
+              </p>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -233,7 +243,7 @@ export function VoteCreator({
               </select>
             </div>
 
-            {/* Afficher un petit indicateur du contexte */}
+            {/* Indicateur du contexte */}
             {communicationId && (
               <p className="text-xs text-gray-500">
                 Ce vote sera lié à votre intervention de GT

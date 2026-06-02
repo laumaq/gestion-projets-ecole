@@ -46,6 +46,7 @@ export interface Vote {
   intervention_libre_id?: string | null;
   electorate_type: string;
   results: any;
+  anonymous_vote:boolean;
 }
 
 export const useVotes = (context: { 
@@ -285,43 +286,69 @@ export const useVotes = (context: {
     if (!user) throw new Error('Utilisateur non authentifié');
 
     try {
+      // Récupérer le vote pour savoir s'il est anonyme
+      const { data: vote } = await supabase
+        .from('votes')
+        .select('anonymous_vote')
+        .eq('id', voteId)
+        .single();
+
       // Vérifier si l'utilisateur a déjà voté
-      const { data: existingBallot } = await supabase
-        .from('vote_ballots')
+      const { data: existingVoter } = await supabase
+        .from('vote_voters')
         .select('id')
         .eq('vote_id', voteId)
         .eq('voter_id', user.id)
-        .eq('voter_type', user.type)
         .maybeSingle();
 
-      if (existingBallot) {
-        // MISE À JOUR : l'utilisateur a déjà voté, on met à jour
-        const { error } = await supabase
-          .from('vote_ballots')
-          .update({
-            choix: choix,
-            vote_timestamp: new Date().toISOString()
-          })
-          .eq('id', existingBallot.id);
+      if (existingVoter) {
+        throw new Error('Vous avez déjà voté');
+      }
 
-        if (error) throw error;
+      // Générer un hash unique pour ce vote
+      const ballotHash = crypto.randomUUID();
+
+      if (vote?.anonymous_vote) {
+        // Vote anonyme : on ne lie pas l'identité au choix
+        const { error: ballotError } = await supabase
+          .from('vote_ballots')
+          .insert({
+            vote_id: voteId,
+            vote_hash: ballotHash,
+            choix: choix
+          });
+
+        if (ballotError) throw ballotError;
+
+        // Enregistrer que l'utilisateur a voté (sans lien direct)
+        const { error: voterError } = await supabase
+          .from('vote_voters')
+          .insert({
+            vote_id: voteId,
+            voter_id: user.id,
+            ballot_hash: ballotHash
+          });
+
+        if (voterError) throw voterError;
+        
+        // Retourner le hash pour l'afficher à l'utilisateur
+        return { ballotHash };
+        
       } else {
-        // CRÉATION : premier vote
+        // Vote non anonyme : stockage direct
         const { error } = await supabase
           .from('vote_ballots')
-          .insert([{
+          .insert({
             vote_id: voteId,
             voter_id: user.id,
             voter_type: user.type,
-            choix: choix,
-            ip_address: window.clientInformation?.platform,
-            user_agent: navigator.userAgent
-          }]);
+            choix: choix
+          });
 
         if (error) throw error;
+        return { ballotHash: null };
       }
       
-      await fetchVotes();
     } catch (err) {
       setError(getErrorMessage(err));
       throw err;
