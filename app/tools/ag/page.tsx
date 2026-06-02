@@ -32,6 +32,7 @@ export default function AGPage() {
     loading: dataLoading,
     error,
     updateConfig,
+    updateAGType,
     addBureau,
     removeBureau,
     assignGroupe,
@@ -67,12 +68,14 @@ export default function AGPage() {
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+  const [typeAG, setTypeAG] = useState<'classique' | 'greve' | 'assemblee_generale'>('classique');
 
   useEffect(() => {
     if (config) {
       setDateAG(config.date_ag || '');
       setHeureDebut(config.heure_debut || '09:00');
       setHeureFin(config.heure_fin || '12:00');
+      setTypeAG(config.type_ag || 'classique');
     }
   }, [config]);
 
@@ -228,6 +231,7 @@ export default function AGPage() {
           <AGPreparationTabs 
             activeTab={preparationSubTab} 
             onTabChange={setPreparationSubTab}
+            hideGtTab={config?.type_ag === 'greve'}
           />
 
           {/* SOUS-ONGLET CONFIGURATION */}
@@ -358,6 +362,71 @@ export default function AGPage() {
                   onRemove={removePause}
                 />
               </div>
+
+              {/* Type d'AG - NOUVEAU */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Type d'Assemblée</h3>
+                
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="type_ag"
+                      value="classique"
+                      checked={typeAG === 'classique'}
+                      onChange={(e) => {
+                        const newType = e.target.value as 'classique' | 'greve' | 'assemblee_generale';
+                        setTypeAG(newType);
+                        updateAGType(newType);
+                      }}
+                      className="h-4 w-4 text-blue-600"
+                    />
+                    <div>
+                      <p className="font-medium text-gray-900">AG classique</p>
+                      <p className="text-sm text-gray-500">Avec groupes de travail et interventions libres</p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="type_ag"
+                      value="greve"
+                      checked={typeAG === 'greve'}
+                      onChange={(e) => {
+                        const newType = e.target.value as 'classique' | 'greve' | 'assemblee_generale';
+                        setTypeAG(newType);
+                        updateAGType(newType);
+                      }}
+                      className="h-4 w-4 text-blue-600"
+                    />
+                    <div>
+                      <p className="font-medium text-gray-900">AG de grévistes</p>
+                      <p className="text-sm text-gray-500">Sans groupes de travail, votes anonymes par défaut</p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="type_ag"
+                      value="assemblee_generale"
+                      checked={typeAG === 'assemblee_generale'}
+                      onChange={(e) => {
+                        const newType = e.target.value as 'classique' | 'greve' | 'assemblee_generale';
+                        setTypeAG(newType);
+                        updateAGType(newType);
+                      }}
+                      className="h-4 w-4 text-blue-600"
+                    />
+                    <div>
+                      <p className="font-medium text-gray-900">Assemblée générale</p>
+                      <p className="text-sm text-gray-500">Mode mixte, groupes de travail optionnels</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
             </div>
           )}
 

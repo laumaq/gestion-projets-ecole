@@ -4,6 +4,7 @@
 interface AGPreparationTabsProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  hideGtTab?: boolean;
 }
 
 export default function AGPreparationTabs({ activeTab, onTabChange }: AGPreparationTabsProps) {
