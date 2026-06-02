@@ -31,13 +31,19 @@ export function VoteCreator({
     options: ['', ''],
     type_scrutin: 'uninominal' as ScrutinType,
     anonymous: true,
-    anonymous_vote: false,  // ← NOUVEAU : vote anonyme avec hash
+    anonymous_vote: false, 
     show_results: 'after_vote' as ShowResultsType
   });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
     
+    setIsSubmitting(true);
+
     try {
       const voteData: any = {
         titre: formData.titre,
@@ -59,6 +65,8 @@ export function VoteCreator({
     } catch (error) {
       console.error('Erreur création vote:', getErrorMessage(error));
       alert(`Erreur: ${getErrorMessage(error)}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

@@ -126,6 +126,41 @@ export const useVotes = (context: {
     if (!context.id) throw new Error('ID de contexte manquant');
 
     try {
+      // 🔍 VÉRIFIER LES DOUBLONS POUR LES INTERVENTIONS LIBRES
+      if (voteData.interventionLibreId) {
+        const { data: existing, error: checkError } = await supabase
+          .from('votes')
+          .select('id, titre')
+          .eq('intervention_libre_id', voteData.interventionLibreId)
+          .eq('module_contexte', context.module)
+          .eq('module_id', context.id)
+          .maybeSingle();
+
+        if (checkError) throw checkError;
+
+        if (existing) {
+          throw new Error(`Un vote existe déjà pour cette intervention libre : "${existing.titre}"`);
+        }
+      }
+
+      // 🔍 VÉRIFIER LES DOUBLONS POUR LES COMMUNICATIONS GT
+      if (voteData.communicationId) {
+        const { data: existing, error: checkError } = await supabase
+          .from('votes')
+          .select('id, titre')
+          .eq('communication_id', voteData.communicationId)
+          .eq('module_contexte', context.module)
+          .eq('module_id', context.id)
+          .maybeSingle();
+
+        if (checkError) throw checkError;
+
+        if (existing) {
+          throw new Error(`Un vote existe déjà pour cette communication GT : "${existing.titre}"`);
+        }
+      }
+
+      // Générer les options avec leurs IDs
       const options = voteData.options.map((texte, index) => ({
         id: crypto.randomUUID(),
         texte,
@@ -154,10 +189,11 @@ export const useVotes = (context: {
           electorate_type: voteData.electorate_type || 'all_employees',
           module_contexte: context.module,
           module_id: context.id,
-          communication_id: voteData.communicationId,
-          intervention_libre_id: voteData.interventionLibreId,
+          communication_id: voteData.communicationId || null,
+          intervention_libre_id: voteData.interventionLibreId || null,
           statut: 'brouillon',
-          anonymous_vote: voteData.anonymous_vote || false
+          anonymous_vote: voteData.anonymous_vote || false,
+          results_visible: false
         }])
         .select()
         .single();
@@ -166,7 +202,9 @@ export const useVotes = (context: {
       
       await fetchVotes();
       return data;
+      
     } catch (err) {
+      console.error('Erreur createVote:', err);
       setError(getErrorMessage(err));
       throw err;
     }
