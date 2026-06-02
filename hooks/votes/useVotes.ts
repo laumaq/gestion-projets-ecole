@@ -209,13 +209,36 @@ export const useVotes = (context: {
       throw err;
     }
   };
-
-  
+   
   // Mettre à jour un vote
   const updateVote = async (voteId: string, updates: Partial<Vote>) => {
     if (!user) throw new Error('Utilisateur non authentifié');
 
     try {
+      // Vérifier si le vote a déjà des bulletins
+      const { count, error: countError } = await supabase
+        .from('vote_ballots')
+        .select('id', { count: 'exact', head: true })
+        .eq('vote_id', voteId);
+
+      if (countError) throw countError;
+
+      // Si des votes existent, avertir avant de changer le type
+      if (count && count > 0 && updates.type_scrutin) {
+        const originalVote = votes.find(v => v.id === voteId);
+        if (originalVote && originalVote.type_scrutin !== updates.type_scrutin) {
+          const confirmChange = confirm(
+            `Attention ! ${count} vote${count > 1 ? 's' : ''} ont déjà été enregistrés.\n` +
+            `Changer le type de scrutin de "${originalVote.type_scrutin}" vers "${updates.type_scrutin}" ` +
+            `peut rendre les votes existants incompatibles.\n\n` +
+            `Continuer ?`
+          );
+          if (!confirmChange) {
+            throw new Error('Modification annulée');
+          }
+        }
+      }
+
       const { error } = await supabase
         .from('votes')
         .update({

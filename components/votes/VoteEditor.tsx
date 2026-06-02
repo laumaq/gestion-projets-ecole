@@ -154,26 +154,33 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
             />
           </div>
 
-          {/* Type de scrutin */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Type de scrutin
             </label>
             <select
               value={formData.type_scrutin}
-              onChange={e => setFormData(prev => ({ 
-                ...prev, 
-                type_scrutin: e.target.value as ScrutinType
-              }))}
+              onChange={e => {
+                const newType = e.target.value as ScrutinType;
+                setFormData(prev => ({ ...prev, type_scrutin: newType }));
+                
+                // Adapter les options si nécessaire
+                if (newType === 'jugement') {
+                  // Pour le jugement, on garde les options telles quelles
+                } else if (newType === 'rang') {
+                  // Pour le classement, on garde les options
+                }
+              }}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              disabled={true} // On ne peut pas changer le type après création
             >
               <option value="uninominal">Uninominal (un seul choix)</option>
               <option value="plurinominal">Plurinominal (plusieurs choix)</option>
               <option value="jugement">Jugement majoritaire (mentions)</option>
               <option value="rang">Classement (ordre de préférence)</option>
             </select>
-            <p className="text-xs text-gray-400 mt-1">Le type de scrutin ne peut pas être modifié après création</p>
+            <p className="text-xs text-amber-600 mt-1">
+              ⚠️ Changer le type de scrutin peut affecter les votes existants
+            </p>
           </div>
 
           {/* Options */}
