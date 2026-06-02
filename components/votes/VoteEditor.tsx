@@ -35,6 +35,24 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
   
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasExistingVotes, setHasExistingVotes] = useState(false);
+
+  useEffect(() => {
+    const checkExistingVotes = async () => {
+      // Interroge la base de données pour compter les bulletins
+      const { count, error } = await supabase
+        .from('vote_ballots')      // Table des bulletins de vote
+        .select('id', { count: 'exact', head: true })  // On veut juste le nombre, pas les données
+        .eq('vote_id', vote.id);   // On filtre pour le vote actuel
+
+      if (!error && count !== null) {
+        // Si count > 0, il y a déjà des votes
+        setHasExistingVotes(count > 0);
+      }
+    };
+    
+    checkExistingVotes();
+  }, [vote.id]);  // Se relance si l'ID du vote change
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +66,9 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
     setError(null);
     
     try {
-      // Mettre à jour les options
+      // Vérifier si le type a changé
+      const typeHasChanged = formData.type_scrutin !== vote.type_scrutin;
+      
       const updatedOptions = formData.options.map((texte, index) => ({
         id: vote.options[index]?.id || crypto.randomUUID(),
         texte,
@@ -60,7 +80,7 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
         description: formData.description,
         question: formData.question,
         options: updatedOptions,
-        type_scrutin: formData.type_scrutin,
+        ...(typeHasChanged && { type_scrutin: formData.type_scrutin }), // Ne passer que si changement
         parametres: {
           anonymous: formData.anonymous,
           max_choices: 1,
@@ -153,34 +173,38 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </div>
-
+          
+          {/* Type de scrutin */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Type de scrutin
             </label>
             <select
               value={formData.type_scrutin}
-              onChange={e => {
-                const newType = e.target.value as ScrutinType;
-                setFormData(prev => ({ ...prev, type_scrutin: newType }));
-                
-                // Adapter les options si nécessaire
-                if (newType === 'jugement') {
-                  // Pour le jugement, on garde les options telles quelles
-                } else if (newType === 'rang') {
-                  // Pour le classement, on garde les options
-                }
-              }}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              onChange={e => setFormData(prev => ({ 
+                ...prev, 
+                type_scrutin: e.target.value as ScrutinType
+              }))}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                hasExistingVotes ? 'bg-gray-100 cursor-not-allowed' : ''
+              }`}
+              disabled={hasExistingVotes}
             >
               <option value="uninominal">Uninominal (un seul choix)</option>
               <option value="plurinominal">Plurinominal (plusieurs choix)</option>
               <option value="jugement">Jugement majoritaire (mentions)</option>
               <option value="rang">Classement (ordre de préférence)</option>
             </select>
-            <p className="text-xs text-amber-600 mt-1">
-              ⚠️ Changer le type de scrutin peut affecter les votes existants
-            </p>
+            
+            {hasExistingVotes ? (
+              <p className="text-xs text-red-600 mt-1">
+                ❌ Le type de scrutin ne peut plus être modifié car des votes ont déjà été enregistrés.
+              </p>
+            ) : (
+              <p className="text-xs text-green-600 mt-1">
+                ✓ Aucun vote enregistré pour le moment. Vous pouvez modifier le type de scrutin.
+              </p>
+            )}
           </div>
 
           {/* Options */}
