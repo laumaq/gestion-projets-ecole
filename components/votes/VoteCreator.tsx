@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/errors';
 
 type ShowResultsType = 'always' | 'after_vote' | 'after_close';
-type ScrutinType = 'uninominal' | 'plurinominal' | 'jugement' | 'rang';
+type ScrutinType = 'uninominal' | 'plurinominal' | 'jugement' | 'rang' | 'approbation';
 type CandidatesSource = 'custom' | 'employees';
 
 interface VoteCreatorProps {
