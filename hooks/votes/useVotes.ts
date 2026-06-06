@@ -128,41 +128,30 @@ export const useVotes = (context: {
     if (!context.id) throw new Error('ID de contexte manquant');
 
     try {
-      // 🔍 VÉRIFIER LES DOUBLONS POUR LES INTERVENTIONS LIBRES
+      // 1. Vérifier les doublons AVANT d'insérer
       if (voteData.interventionLibreId) {
         const { data: existing, error: checkError } = await supabase
           .from('votes')
-          .select('id, titre')
+          .select('id')
           .eq('intervention_libre_id', voteData.interventionLibreId)
-          .eq('module_contexte', context.module)
-          .eq('module_id', context.id)
-          .maybeSingle();
+          .maybeSingle();  // ← Utiliser maybeSingle() au lieu de single()
 
-        if (checkError) throw checkError;
-
-        if (existing) {
-          throw new Error(`Un vote existe déjà pour cette intervention libre : "${existing.titre}"`);
-        }
+        if (checkError && checkError.code !== 'PGRST116') throw checkError;
+        if (existing) throw new Error('Un vote existe déjà pour cette intervention');
       }
 
-      // 🔍 VÉRIFIER LES DOUBLONS POUR LES COMMUNICATIONS GT
       if (voteData.communicationId) {
         const { data: existing, error: checkError } = await supabase
           .from('votes')
-          .select('id, titre')
+          .select('id')
           .eq('communication_id', voteData.communicationId)
-          .eq('module_contexte', context.module)
-          .eq('module_id', context.id)
           .maybeSingle();
 
-        if (checkError) throw checkError;
-
-        if (existing) {
-          throw new Error(`Un vote existe déjà pour cette communication GT : "${existing.titre}"`);
-        }
+        if (checkError && checkError.code !== 'PGRST116') throw checkError;
+        if (existing) throw new Error('Un vote existe déjà pour cette communication');
       }
 
-      // Générer les options avec leurs IDs
+      // 2. Générer les options
       const options = voteData.options.map((texte, index) => ({
         id: crypto.randomUUID(),
         texte,
@@ -178,7 +167,8 @@ export const useVotes = (context: {
         show_results: 'after_vote'
       };
 
-      const { data, error } = await supabase
+      // 3. Insérer SANS .single() d'abord
+      const { error: insertError } = await supabase
         .from('votes')
         .insert([{
           created_by: user.id,
@@ -195,16 +185,14 @@ export const useVotes = (context: {
           intervention_libre_id: voteData.interventionLibreId || null,
           statut: 'brouillon',
           anonymous_vote: voteData.anonymous_vote || false,
-          candidates_source: voteData.candidates_source || 'custom', 
-          results_visible: false
-        }])
-        .select()
-        .single();
+          candidates_source: voteData.candidates_source || 'custom'
+        }]);
 
-      if (error) throw error;
+      if (insertError) throw insertError;
       
+      // 4. Récupérer le vote créé (optionnel)
       await fetchVotes();
-      return data;
+      return { success: true };
       
     } catch (err) {
       console.error('Erreur createVote:', err);

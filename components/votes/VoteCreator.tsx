@@ -46,8 +46,12 @@ export function VoteCreator({
       const { count, error } = await supabase
         .from('employees')
         .select('id', { count: 'exact', head: true });
+      
       if (!error && count !== null) {
         setEmployeesCount(count);
+      } else {
+        console.error('Erreur comptage employés:', error);
+        setEmployeesCount(0);
       }
     };
     fetchEmployeesCount();
