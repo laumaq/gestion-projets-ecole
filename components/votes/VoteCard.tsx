@@ -7,7 +7,7 @@ import { useUser } from '@/hooks/useUser';
 import { useVotes } from '@/hooks/votes/useVotes';
 import { supabase } from '@/lib/supabase';
 import { VoteEditor } from './VoteEditor';
-import { ResultsViewer } from '@/components/votes/ResultsViewer';
+import { ResultsViewer } from './ResultsViewer';  // ← Chemin corrigé
 import {
   ClockIcon,
   CheckCircleIcon,
@@ -71,7 +71,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
         setHasVoted(true);
         
         if (vote.type_scrutin === 'jugement') {
-          // Pour le jugement, on stocke les mentions
           const jugements: Record<string, number> = {};
           data.choix.forEach((c: any) => {
             jugements[c.optionId] = c.valeur;
@@ -79,7 +78,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
           setSelectedJugements(jugements);
           setUserPreviousVote(jugements);
         } else if (vote.type_scrutin === 'rang') {
-          // Pour le classement, on stocke les rangs
           const ranksData: Record<string, number> = {};
           data.choix.forEach((c: any) => {
             ranksData[c.optionId] = c.rang;
@@ -87,7 +85,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
           setRanks(ranksData);
           setUserPreviousVote(ranksData);
         } else {
-          // Pour les autres types, on stocke les options
           const previousChoices = data.choix.map((c: any) => c.optionId);
           setSelectedOptions(previousChoices);
           setUserPreviousVote(previousChoices);
@@ -98,20 +95,15 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
     }
   };
 
-  // Fonction pour gérer le changement de rang pour vote classement
   const handleRankChange = (optionId: string, rang: number) => {
-    // Vérifier si ce rang est déjà pris
     const existingOption = Object.entries(ranks).find(([_, r]) => r === rang);
     
     if (existingOption && existingOption[0] !== optionId) {
-      // Si le rang est déjà pris par une autre option, on échange ou on avertit
       const newRanks = { ...ranks };
-      // Échanger les rangs
       newRanks[optionId] = rang;
       newRanks[existingOption[0]] = ranks[optionId] || 0;
       setRanks(newRanks);
     } else {
-      // Sinon, on assigne simplement
       setRanks(prev => ({
         ...prev,
         [optionId]: rang
@@ -136,6 +128,8 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
       case 'plurinominal': return '📋 Plurinominal';
       case 'jugement': return '⭐ Jugement majoritaire';
       case 'rang': return '📊 Classement';
+      case 'approbation': return '👍 Approbation (OUI/NON)';
+      default: return vote.type_scrutin;
     }
   };
 
@@ -191,14 +185,12 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   };
 
   const handleVote = async () => {
-    // Vérification selon le type
     if (vote.type_scrutin === 'jugement') {
       if (Object.keys(selectedJugements).length !== vote.options.length) {
         setError('Veuillez évaluer toutes les options');
         return;
       }
     } else if (vote.type_scrutin === 'rang') {
-      // Vérification pour le classement
       if (!isRanksValid()) {
         setError('Veuillez assigner un rang unique à chaque option');
         return;
@@ -208,7 +200,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
       return;
     }
 
-    // Si l'utilisateur a déjà voté, demander confirmation pour modifier
     if (hasVoted) {
       const confirmModify = confirm('Vous avez déjà voté. Voulez-vous modifier votre vote ?');
       if (!confirmModify) return;
@@ -246,14 +237,11 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
       const result = await submitVote(vote.id, choix);
       setHasVoted(true);
       
-      // Afficher le reçu avec le hash
       if (result.ballotHash) {
         alert(`✓ Vote enregistré !\n\n🔑 Votre identifiant de vote : ${result.ballotHash}\n\n📝 Notez ce code. Vous pourrez l'utiliser pour vérifier que votre vote a bien été compté.`);
       } else {
         alert(hasVoted ? 'Votre vote a été modifié' : 'Votre vote a été enregistré');
       }
-
-      await submitVote(vote.id, choix);
       
       if (vote.type_scrutin === 'jugement') {
         setUserPreviousVote(selectedJugements);
@@ -265,7 +253,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
       
       if (onUpdate) onUpdate();
       
-      alert(hasVoted ? 'Votre vote a été modifié' : 'Votre vote a été enregistré');
     } catch (error: any) {
       console.error('Erreur vote:', error);
       setError(error.message || 'Erreur lors du vote');
@@ -315,13 +302,11 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
         return;
       }
 
-      // Compter combien de votes au total
       const { count } = await supabase
         .from('vote_ballots')
         .select('id', { count: 'exact', head: true })
         .eq('vote_id', vote.id);
 
-      // Vérifier que le hash est bien dans la liste publique
       const { data: ballot } = await supabase
         .from('vote_ballots')
         .select('vote_hash')
@@ -352,9 +337,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
 
   const isRanksValid = () => {
     const assignedRanks = Object.values(ranks);
-    // Vérifier que toutes les options ont un rang
     if (assignedRanks.length !== vote.options.length) return false;
-    // Vérifier que les rangs sont uniques (pas de doublons)
     const uniqueRanks = new Set(assignedRanks);
     return uniqueRanks.size === vote.options.length;
   };
@@ -362,14 +345,12 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   const isCreator = user.id === vote.created_by;
   const showVoteButton = vote.statut === 'actif';
   
-  // Déterminer si le vote peut être soumis
-  const canSubmit = vote.type_scrutin === 'jugement' 
+  const canSubmitVote = vote.type_scrutin === 'jugement' 
     ? isJugementValid()
     : vote.type_scrutin === 'rang'
-      ? isRanksValid()  // ← Ajoute cette condition
+      ? isRanksValid()
       : selectedOptions.length > 0;
 
-  // Vérifier si le vote a changé
   const hasVotedAndDifferent = hasVoted && (
     vote.type_scrutin === 'jugement'
       ? JSON.stringify(selectedJugements) !== JSON.stringify(userPreviousVote)
@@ -478,7 +459,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
         {vote.statut === 'actif' && (
           <div className="mb-4">
             {vote.type_scrutin === 'rang' ? (
-              // Interface pour le classement
               <div className="space-y-3">
                 <p className="text-sm text-gray-600 mb-2">
                   Classez les options par ordre de préférence (1 = premier choix)
@@ -503,7 +483,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                 ))}
               </div>
             ) : vote.type_scrutin === 'jugement' ? (
-              // Interface pour le jugement majoritaire
               <div className="space-y-4">
                 {vote.options.map(opt => (
                   <div key={opt.id} className="border rounded-lg p-3">
@@ -528,7 +507,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                 ))}
               </div>
             ) : (
-              // Interface pour uninominal/plurinominal
               <div className="space-y-2">
                 {vote.options.map(opt => (
                   <label key={opt.id} className={`flex items-center gap-3 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer ${
@@ -560,6 +538,9 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
           {vote.parametres.anonymous && (
             <span className="bg-gray-100 px-2 py-1 rounded-full">🕵️ Vote anonyme</span>
           )}
+          {vote.candidates_source === 'employees' && (
+            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">👥 Sans candidat</span>
+          )}
           {loading && <span className="text-blue-600">Chargement...</span>}
           {hasVoted && (
             <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
@@ -573,7 +554,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
           {showVoteButton && (
             <button
               onClick={handleVote}
-              disabled={submitting || !canSubmit}
+              disabled={submitting || !canSubmitVote}
               className={`flex-1 py-2 rounded-lg ${
                 hasVoted 
                   ? hasVotedAndDifferent
@@ -600,12 +581,14 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
               Voir les résultats
             </button>
           )}
+          
           {hasVoted && vote.anonymous_vote && (
             <button
-              onClick={() => verifyMyVote()}
+              onClick={verifyMyVote}
               className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 text-sm"
+              disabled={loading}
             >
-              🔍 Vérifier mon vote
+              🔍 Vérifier
             </button>
           )}
         </div>
@@ -616,10 +599,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-3xl p-6 max-h-[80vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4">Résultats - {vote.titre}</h3>
-
-            {/* Calculer les résultats à la volée */}
             <ResultsViewer vote={vote} user={user} />
-            
             <div className="flex justify-end mt-6">
               <button
                 onClick={() => setShowResultsModal(false)}
@@ -628,8 +608,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                 Fermer
               </button>
             </div>
-
-
             {canShowResults() && (
               <div className="mt-4 text-center">
                 <a 
@@ -641,7 +619,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                 </a>
               </div>
             )}
-
           </div>
         </div>
       )}

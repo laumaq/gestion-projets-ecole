@@ -28,7 +28,7 @@ export interface Vote {
     ordre: number;
     couleur?: string;
   }>;
-  type_scrutin: 'uninominal' | 'plurinominal' | 'jugement' | 'rang';
+  type_scrutin: 'uninominal' | 'plurinominal' | 'jugement' | 'rang' | 'approbation';
   parametres: {
     anonymous: boolean;
     max_choices: number;
@@ -46,7 +46,8 @@ export interface Vote {
   intervention_libre_id?: string | null;
   electorate_type: string;
   results: any;
-  anonymous_vote:boolean;
+  anonymous_vote: boolean;
+  candidates_source?: 'custom' | 'employees';  // ← NOUVEAU
 }
 
 export const useVotes = (context: { 
@@ -121,6 +122,7 @@ export const useVotes = (context: {
     interventionLibreId?: string;
     electorate_type?: string; 
     anonymous_vote?: boolean;
+    candidates_source?: 'custom' | 'employees';
   }) => {
     if (!user) throw new Error('Utilisateur non authentifié');
     if (!context.id) throw new Error('ID de contexte manquant');
@@ -193,6 +195,7 @@ export const useVotes = (context: {
           intervention_libre_id: voteData.interventionLibreId || null,
           statut: 'brouillon',
           anonymous_vote: voteData.anonymous_vote || false,
+          candidates_source: voteData.candidates_source || 'custom', 
           results_visible: false
         }])
         .select()

@@ -22,6 +22,7 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
     id: vote.module_id 
   });
   
+  const [hasExistingVotes, setHasExistingVotes] = useState(false);
   const [formData, setFormData] = useState({
     titre: vote.titre,
     description: vote.description || '',
@@ -35,24 +36,21 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
   
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasExistingVotes, setHasExistingVotes] = useState(false);
 
   useEffect(() => {
     const checkExistingVotes = async () => {
-      // Interroge la base de données pour compter les bulletins
       const { count, error } = await supabase
-        .from('vote_ballots')      // Table des bulletins de vote
-        .select('id', { count: 'exact', head: true })  // On veut juste le nombre, pas les données
-        .eq('vote_id', vote.id);   // On filtre pour le vote actuel
+        .from('vote_ballots')
+        .select('id', { count: 'exact', head: true })
+        .eq('vote_id', vote.id);
 
       if (!error && count !== null) {
-        // Si count > 0, il y a déjà des votes
         setHasExistingVotes(count > 0);
       }
     };
     
     checkExistingVotes();
-  }, [vote.id]);  // Se relance si l'ID du vote change
+  }, [vote.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +78,7 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
         description: formData.description,
         question: formData.question,
         options: updatedOptions,
-        ...(typeHasChanged && { type_scrutin: formData.type_scrutin }), // Ne passer que si changement
+        ...(typeHasChanged && { type_scrutin: formData.type_scrutin }),
         parametres: {
           anonymous: formData.anonymous,
           max_choices: 1,
@@ -173,7 +171,7 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
+
           {/* Type de scrutin */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -190,8 +188,8 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
               }`}
               disabled={hasExistingVotes}
             >
+              <option value="plurinominal">Plurinominal (choix multiples)</option>
               <option value="uninominal">Uninominal (un seul choix)</option>
-              <option value="plurinominal">Plurinominal (plusieurs choix)</option>
               <option value="jugement">Jugement majoritaire (mentions)</option>
               <option value="rang">Classement (ordre de préférence)</option>
             </select>
@@ -202,7 +200,7 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
               </p>
             ) : (
               <p className="text-xs text-green-600 mt-1">
-                ✓ Aucun vote enregistré pour le moment. Vous pouvez modifier le type de scrutin.
+                ✓ Aucun vote enregistré. Vous pouvez modifier le type de scrutin.
               </p>
             )}
           </div>

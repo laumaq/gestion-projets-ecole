@@ -1,12 +1,14 @@
 // components/votes/VoteCreator.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useVotes } from '@/hooks/votes/useVotes';
+import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/errors';
 
 type ShowResultsType = 'always' | 'after_vote' | 'after_close';
 type ScrutinType = 'uninominal' | 'plurinominal' | 'jugement' | 'rang';
+type CandidatesSource = 'custom' | 'employees';
 
 interface VoteCreatorProps {
   context: { module: string; id: string };
@@ -24,38 +26,77 @@ export function VoteCreator({
   onSuccess 
 }: VoteCreatorProps) {
   const { createVote } = useVotes(context);
+  const [candidatesSource, setCandidatesSource] = useState<CandidatesSource>('custom');
+  const [employeesCount, setEmployeesCount] = useState(0);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  
   const [formData, setFormData] = useState({
     titre: '',
     description: '',
     question: '',
     options: ['', ''],
-    type_scrutin: 'uninominal' as ScrutinType,
+    type_scrutin: 'plurinominal' as ScrutinType,  // Changé à plurinominal par défaut
     anonymous: true,
-    anonymous_vote: false, 
-    show_results: 'after_vote' as ShowResultsType
+    anonymous_vote: false,
+    show_results: 'after_close' as ShowResultsType  // Changé à after_close par défaut
   });
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchEmployeesCount = async () => {
+      const { count, error } = await supabase
+        .from('employees')
+        .select('id', { count: 'exact', head: true });
+      if (!error && count !== null) {
+        setEmployeesCount(count);
+      }
+    };
+    fetchEmployeesCount();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (isSubmitting) return;
     
-    setIsSubmitting(true);
+    let finalOptions: string[] = [];
+    
+    if (candidatesSource === 'employees') {
+      setLoadingEmployees(true);
+      const { data: employees, error } = await supabase
+        .from('employees')
+        .select('nom, prenom, job')
+        .order('nom');
+      
+      if (error) {
+        console.error('Erreur chargement employés:', error);
+        setLoadingEmployees(false);
+        return;
+      }
+      
+      finalOptions = employees.map(emp => 
+        `${emp.prenom} ${emp.nom}${emp.job ? ` (${emp.job})` : ''}`
+      );
+      setLoadingEmployees(false);
+    } else {
+      finalOptions = formData.options.filter(opt => opt.trim() !== '');
+    }
+    
+    if (finalOptions.length < 2) {
+      alert('Veuillez ajouter au moins 2 options');
+      return;
+    }
 
     try {
       const voteData: any = {
         titre: formData.titre,
         description: formData.description,
         question: formData.question,
-        options: formData.options.filter(opt => opt.trim() !== ''),
+        options: finalOptions,
         type_scrutin: formData.type_scrutin,
         parametres: {
           anonymous: formData.anonymous,
           show_results: formData.show_results
         },
-        anonymous_vote: formData.anonymous_vote,  // ← NOUVEAU
+        anonymous_vote: formData.anonymous_vote,
+        candidates_source: candidatesSource,
         communicationId,
         interventionLibreId
       };
@@ -65,8 +106,6 @@ export function VoteCreator({
     } catch (error) {
       console.error('Erreur création vote:', getErrorMessage(error));
       alert(`Erreur: ${getErrorMessage(error)}`);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -96,6 +135,41 @@ export function VoteCreator({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* 1. SOURCE DES CANDIDATS */}
+          <div className="border-b pb-4">
+            <h3 className="text-md font-medium text-gray-900 mb-3">Source des candidats</h3>
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  value="custom"
+                  checked={candidatesSource === 'custom'}
+                  onChange={() => setCandidatesSource('custom')}
+                  className="h-4 w-4 text-blue-600"
+                />
+                <div>
+                  <p className="font-medium text-gray-900">Options personnalisées</p>
+                  <p className="text-xs text-gray-500">Je définis moi-même les options du vote</p>
+                </div>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  value="employees"
+                  checked={candidatesSource === 'employees'}
+                  onChange={() => setCandidatesSource('employees')}
+                  className="h-4 w-4 text-blue-600"
+                />
+                <div>
+                  <p className="font-medium text-gray-900">Sans candidat</p>
+                  <p className="text-xs text-gray-500">
+                    Les options seront les employés de l'école ({employeesCount} personnes)
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
+
           {/* Titre */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -107,7 +181,7 @@ export function VoteCreator({
               value={formData.titre}
               onChange={e => setFormData(prev => ({ ...prev, titre: e.target.value }))}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="Ex: Faut-il acheter ce matériel ?"
+              placeholder="Ex: Élection des délégués"
             />
           </div>
 
@@ -136,7 +210,7 @@ export function VoteCreator({
               value={formData.question}
               onChange={e => setFormData(prev => ({ ...prev, question: e.target.value }))}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="Ex: Êtes-vous pour l'achat de ce matériel ?"
+              placeholder="Ex: Qui souhaitez-vous comme délégué·e ?"
             />
           </div>
 
@@ -153,58 +227,80 @@ export function VoteCreator({
               }))}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             >
+              <option value="plurinominal">Plurinominal (choix multiples)</option>
               <option value="uninominal">Uninominal (un seul choix)</option>
-              <option value="plurinominal">Plurinominal (plusieurs choix)</option>
+              <option value="approbation">Approbation (OUI/NON/Neutre)</option>
               <option value="jugement">Jugement majoritaire (mentions)</option>
               <option value="rang">Classement (ordre de préférence)</option>
             </select>
+            <p className="text-xs text-gray-500 mt-1">
+              {formData.type_scrutin === 'approbation' && "Chaque votant peut répondre OUI, NON ou NEUTRE à chaque option"}
+              {formData.type_scrutin === 'plurinominal' && "Les votants peuvent sélectionner plusieurs options"}
+              {formData.type_scrutin === 'uninominal' && "Les votants ne peuvent sélectionner qu'une seule option"}
+              {formData.type_scrutin === 'jugement' && "Les votants attribuent une mention (Très bien à À rejeter) à chaque option"}
+              {formData.type_scrutin === 'rang' && "Les votants classent les options par ordre de préférence"}
+            </p>
           </div>
 
-          {/* Options */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Options de réponse
-            </label>
-            <div className="space-y-3">
-              {formData.options.map((option, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    required
-                    value={option}
-                    onChange={e => {
-                      const newOptions = [...formData.options];
-                      newOptions[index] = e.target.value;
-                      setFormData(prev => ({ ...prev, options: newOptions }));
-                    }}
-                    className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder={`Option ${index + 1}`}
-                  />
-                  {formData.options.length > 2 && (
-                    <button
-                      type="button"
-                      onClick={() => removeOption(index)}
-                      className="px-3 py-2 text-red-600 hover:text-red-800"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              ))}
-              
-              <button
-                type="button"
-                onClick={addOption}
-                className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
-              >
-                <span className="text-xl">+</span>
-                Ajouter une option
-              </button>
+          {/* Options personnalisées (uniquement si source = custom) */}
+          {candidatesSource === 'custom' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Options de réponse
+              </label>
+              <div className="space-y-3">
+                {formData.options.map((option, index) => (
+                  <div key={index} className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={option}
+                      onChange={e => {
+                        const newOptions = [...formData.options];
+                        newOptions[index] = e.target.value;
+                        setFormData(prev => ({ ...prev, options: newOptions }));
+                      }}
+                      className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      placeholder={`Option ${index + 1}`}
+                    />
+                    {formData.options.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => removeOption(index)}
+                        className="px-3 py-2 text-red-600 hover:text-red-800"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+                
+                <button
+                  type="button"
+                  onClick={addOption}
+                  className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                >
+                  <span className="text-xl">+</span>
+                  Ajouter une option
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Indicateur pour source employees */}
+          {candidatesSource === 'employees' && (
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-700">
+                📋 Ce vote utilisera automatiquement la liste des {employeesCount} employés comme options.
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                Les options seront : prénom nom (fonction) pour chaque employé.
+              </p>
+            </div>
+          )}
 
           {/* Paramètres */}
-          <div className="space-y-4">
+          <div className="space-y-4 border-t pt-4">
             <h3 className="font-medium">Paramètres du vote</h3>
             
             <label className="flex items-center gap-2">
@@ -217,7 +313,6 @@ export function VoteCreator({
               <span className="text-sm">Afficher comme vote anonyme (icône)</span>
             </label>
 
-            {/* NOUVEAU : Vote anonyme avec vérification par hash */}
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -275,9 +370,10 @@ export function VoteCreator({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              disabled={loadingEmployees}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              Créer le vote
+              {loadingEmployees ? 'Chargement des employés...' : 'Créer le vote'}
             </button>
           </div>
         </form>
