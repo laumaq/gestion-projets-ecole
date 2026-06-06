@@ -128,30 +128,7 @@ export const useVotes = (context: {
     if (!context.id) throw new Error('ID de contexte manquant');
 
     try {
-      // 1. Vérifier les doublons AVANT d'insérer
-      if (voteData.interventionLibreId) {
-        const { data: existing, error: checkError } = await supabase
-          .from('votes')
-          .select('id')
-          .eq('intervention_libre_id', voteData.interventionLibreId)
-          .maybeSingle();  // ← Utiliser maybeSingle() au lieu de single()
-
-        if (checkError && checkError.code !== 'PGRST116') throw checkError;
-        if (existing) throw new Error('Un vote existe déjà pour cette intervention');
-      }
-
-      if (voteData.communicationId) {
-        const { data: existing, error: checkError } = await supabase
-          .from('votes')
-          .select('id')
-          .eq('communication_id', voteData.communicationId)
-          .maybeSingle();
-
-        if (checkError && checkError.code !== 'PGRST116') throw checkError;
-        if (existing) throw new Error('Un vote existe déjà pour cette communication');
-      }
-
-      // 2. Générer les options
+      // Générer les options
       const options = voteData.options.map((texte, index) => ({
         id: crypto.randomUUID(),
         texte,
@@ -167,7 +144,7 @@ export const useVotes = (context: {
         show_results: 'after_vote'
       };
 
-      // 3. Insérer SANS .single() d'abord
+      // Insertion
       const { error: insertError } = await supabase
         .from('votes')
         .insert([{
@@ -190,7 +167,6 @@ export const useVotes = (context: {
 
       if (insertError) throw insertError;
       
-      // 4. Récupérer le vote créé (optionnel)
       await fetchVotes();
       return { success: true };
       
