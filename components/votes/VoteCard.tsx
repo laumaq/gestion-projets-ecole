@@ -536,33 +536,46 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
           )}
         </div>
 
-        {/* Version repliée : bouton adapté au contexte */}
+        {/* Version repliée : boutons adaptés au contexte */}
         {!isExpanded && (
-          <div className="mt-2">
-            {vote.statut === 'cloture' ? (
+          <div className="mt-2 flex gap-2">
+            {/* Bouton principal selon le contexte */}
+            <div className="flex-1">
+              {vote.statut === 'cloture' ? (
+                <button
+                  onClick={() => setShowResultsModal(true)}
+                  className="w-full py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-sm font-medium transition-colors"
+                >
+                  📊 Voir les résultats
+                </button>
+              ) : hasVoted && vote.anonymous_vote ? (
+                <div className="w-full py-2 bg-gray-100 text-gray-500 text-center rounded-lg text-sm">
+                  ✅ Vous avez déjà voté (anonyme, non modifiable)
+                </div>
+              ) : hasVoted ? (
+                <button
+                  onClick={() => setIsExpanded(true)}
+                  className="w-full py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg text-sm font-medium transition-colors"
+                >
+                  ✏️ Modifier ma participation
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsExpanded(true)}
+                  className="w-full py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+                >
+                  🗳️ Participer à la votation
+                </button>
+              )}
+            </div>
+
+            {/* Bouton "Voir les résultats" si accessible */}
+            {canShowResults() && vote.statut !== 'cloture' && (
               <button
                 onClick={() => setShowResultsModal(true)}
-                className="w-full py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-sm font-medium transition-colors"
+                className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm font-medium transition-colors"
               >
-                📊 Voir les résultats
-              </button>
-            ) : hasVoted && vote.anonymous_vote ? (
-              <div className="w-full py-2 bg-gray-100 text-gray-500 text-center rounded-lg text-sm">
-                ✅ Vous avez déjà voté (anonyme, non modifiable)
-              </div>
-            ) : hasVoted ? (
-              <button
-                onClick={() => setIsExpanded(true)}
-                className="w-full py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg text-sm font-medium transition-colors"
-              >
-                ✏️ Modifier ma participation
-              </button>
-            ) : (
-              <button
-                onClick={() => setIsExpanded(true)}
-                className="w-full py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
-              >
-                🗳️ Participer à la votation
+                📊 Résultats
               </button>
             )}
           </div>
