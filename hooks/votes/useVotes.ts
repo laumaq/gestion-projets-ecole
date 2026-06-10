@@ -420,45 +420,52 @@ export const useVotes = (context: {
     options.forEach(opt => compteurs[opt.id] = 0);
     
     ballots.forEach(ballot => {
-      if (ballot.choix[0]?.selected) {
-        compteurs[ballot.choix[0].option_id]++;
+      // La clé est "optionId" (camelCase), pas "option_id"
+      if (ballot.choix && Array.isArray(ballot.choix) && ballot.choix[0]?.optionId) {
+        const optionId = ballot.choix[0].optionId;
+        if (compteurs[optionId] !== undefined) {
+          compteurs[optionId]++;
+        }
       }
     });
-
-    const total = ballots.length;
-    const gagnant = Object.entries(compteurs)
-      .reduce((a, b) => (a[1] > b[1] ? a : b));
-
+    
+    console.log('🔍 Compteurs uninominal:', compteurs);
+    
+    // Trouver le gagnant
+    let gagnant = null;
+    let maxVoix = 0;
+    Object.entries(compteurs).forEach(([id, count]) => {
+      if (count > maxVoix) {
+        maxVoix = count;
+        gagnant = id;
+      }
+    });
+    
     return {
       type: 'uninominal',
       compteurs,
-      gagnant: gagnant[0],
-      totalVotants: total,
-      participation: total
+      gagnant,
+      totalVotants: ballots.length
     };
   };
 
   // Remplacer calculatePlurinominal par ceci
   const calculatePlurinominal = (ballots: any[], options: any[]) => {
-    console.log('🔍 CALCUL PLURINOMINAL - Ballots reçus:', ballots.length);
-    
     const compteurs: Record<string, number> = {};
-    options.forEach((opt: any) => compteurs[opt.id] = 0);
+    options.forEach(opt => compteurs[opt.id] = 0);
     
-    ballots.forEach((ballot: any, index: number) => {
-      console.log(`🔍 Ballot ${index}:`, ballot.choix);
-      
+    ballots.forEach(ballot => {
       if (Array.isArray(ballot.choix)) {
         ballot.choix.forEach((choix: any) => {
-          console.log('  → Choix:', choix);
+          // Clé "optionId", pas "option_id"
           if (choix && choix.optionId && choix.selected === true) {
-            compteurs[choix.optionId] = (compteurs[choix.optionId] || 0) + 1;
+            if (compteurs[choix.optionId] !== undefined) {
+              compteurs[choix.optionId]++;
+            }
           }
         });
       }
     });
-    
-    console.log('🔍 COMPTEURS FINAUX:', compteurs);
     
     return {
       type: 'plurinominal',
