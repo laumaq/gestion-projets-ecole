@@ -12,7 +12,7 @@ interface AGVotesViewProps {
 
 export default function AGVotesView({ agId }: AGVotesViewProps) {
   const { votes, loading, refresh } = useVotes({ module: 'ag', id: agId });  
-  const [filter, setFilter] = useState<'all' | 'actif' | 'cloture'>('all');
+  const [filter, setFilter] = useState<'all' | 'actif' | 'cloture'>('actif');
 
   // Regrouper les votes par intervention
   const votesParIntervention = votes.reduce((acc, vote) => {

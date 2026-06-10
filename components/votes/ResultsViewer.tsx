@@ -27,6 +27,9 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
 
     // Dans ResultsViewer, remplace le useEffect par :
     useEffect(() => {
+
+    console.log('📊 ResultsViewer - vote.id:', vote.id);
+    console.log('📊 ResultsViewer - vote.type_scrutin:', vote.type_scrutin);
     const fetchResults = async () => {
         if (!user) {
         console.log('❌ Pas d\'utilisateur');
@@ -72,8 +75,9 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
             break;
         }
         
-        console.log('✅ Résultats calculés:', calculatedResults);
-        setResults(calculatedResults);
+            console.log('📊 Ballots reçus dans ResultsViewer:', ballots);
+            console.log('📊 Résultats calculés dans ResultsViewer:', calculatedResults);
+            setResults(calculatedResults);
         } catch (error) {
         console.error('❌ Erreur complète:', error);
         } finally {
@@ -90,11 +94,17 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
     options.forEach(opt => compteurs[opt.id] = 0);
     
     ballots.forEach(ballot => {
-      if (ballot.choix[0]?.selected) {
-        compteurs[ballot.choix[0].option_id]++;
+      // Correction : utiliser optionId (camelCase), pas option_id
+      if (ballot.choix && Array.isArray(ballot.choix) && ballot.choix[0]?.selected) {
+        const optionId = ballot.choix[0].optionId;  // ← optionId, pas option_id
+        if (optionId && compteurs[optionId] !== undefined) {
+          compteurs[optionId]++;
+        }
       }
     });
-
+    
+    console.log('🔍 Compteurs uninominal:', compteurs);  // Pour debug
+    
     return {
       compteurs,
       totalVotants: ballots.length
@@ -342,7 +352,7 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
         </div>
       )}
 
-      {/* UNINOMINAL / PLURINOMINAL */}
+      {/* Uninomial et plurinominal */}
       {(vote.type_scrutin === 'uninominal' || vote.type_scrutin === 'plurinominal') && (
         <div className="space-y-4">
           {vote.options

@@ -17,6 +17,7 @@ export default function PublicVoteList() {
   const [totalVotes, setTotalVotes] = useState(0);
 
   useEffect(() => {
+    console.log('🔍 PublicVoteList - voteId from params:', voteId);
     const fetchPublicList = async () => {
       try {
         // Récupérer les infos du vote
@@ -34,10 +35,10 @@ export default function PublicVoteList() {
         // Récupérer tous les hashs publics
         const { data: ballots, error: ballotsError } = await supabase
           .from('vote_ballots')
-          .select('vote_hash, created_at')
+          .select('vote_hash, vote_timestamp')
           .eq('vote_id', voteId)
           .not('vote_hash', 'is', null)
-          .order('created_at', { ascending: true });
+          .order('vote_timestamp', { ascending: true });
 
         if (ballotsError) throw ballotsError;
 
@@ -70,6 +71,7 @@ export default function PublicVoteList() {
   }
 
   return (
+    
     <div className="max-w-2xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-2">📋 Liste publique des votes</h1>
       <h2 className="text-lg text-gray-600 mb-1">{voteTitle}</h2>

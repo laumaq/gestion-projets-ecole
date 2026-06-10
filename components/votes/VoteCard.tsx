@@ -7,14 +7,16 @@ import { useUser } from '@/hooks/useUser';
 import { useVotes } from '@/hooks/votes/useVotes';
 import { supabase } from '@/lib/supabase';
 import { VoteEditor } from './VoteEditor';
-import { ResultsViewer } from './ResultsViewer';  // ← Chemin corrigé
+import { ResultsViewer } from './ResultsViewer';
 import {
   ClockIcon,
   CheckCircleIcon,
   TrashIcon,
   PlayIcon,
   StopIcon,
-  PencilIcon
+  PencilIcon,
+  ChevronDownIcon,
+  ChevronUpIcon
 } from '@heroicons/react/24/outline';
 
 interface VoteCardProps {
@@ -48,6 +50,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   const [error, setError] = useState<string | null>(null);
   const [ranks, setRanks] = useState<Record<string, number>>({});
   const [showEditor, setShowEditor] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -55,11 +58,66 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
     }
   }, [vote.id, user]);
 
+  // Initialiser les valeurs par défaut
+  useEffect(() => {
+    if (isExpanded && vote.candidates_source === 'employees' && Object.keys(selectedJugements).length === 0) {
+      const defaultValue = vote.type_scrutin === 'jugement' ? 3 : 0; // 0 = NEUTRE pour approbation
+      const defaultJugements: Record<string, number> = {};
+      vote.options.forEach(opt => {
+        defaultJugements[opt.id] = defaultValue;
+      });
+      setSelectedJugements(defaultJugements);
+    }
+  }, [isExpanded, vote.candidates_source, vote.type_scrutin, vote.options, selectedJugements]);
+
   const checkIfVoted = async () => {
     if (!user) return;
     
     try {
-      const { data } = await supabase
+      // 1. D'abord, vérifier si l'utilisateur a voté via la table vote_voters
+      const { data: voter, error: voterError } = await supabase
+        .from('vote_voters')
+        .select('ballot_hash')
+        .eq('vote_id', vote.id)
+        .eq('voter_id', user.id)
+        .maybeSingle();
+
+      if (voter) {
+        setHasVoted(true);
+        
+        // Récupérer le bulletin associé à ce hash
+        const { data: ballot } = await supabase
+          .from('vote_ballots')
+          .select('choix')
+          .eq('vote_hash', voter.ballot_hash)
+          .maybeSingle();
+
+        if (ballot) {
+          if (vote.type_scrutin === 'jugement') {
+            const jugements: Record<string, number> = {};
+            ballot.choix.forEach((c: any) => {
+              jugements[c.optionId] = c.valeur;
+            });
+            setSelectedJugements(jugements);
+            setUserPreviousVote(jugements);
+          } else if (vote.type_scrutin === 'rang') {
+            const ranksData: Record<string, number> = {};
+            ballot.choix.forEach((c: any) => {
+              ranksData[c.optionId] = c.rang;
+            });
+            setRanks(ranksData);
+            setUserPreviousVote(ranksData);
+          } else {
+            const previousChoices = ballot.choix.map((c: any) => c.optionId);
+            setSelectedOptions(previousChoices);
+            setUserPreviousVote(previousChoices);
+          }
+        }
+        return;
+      }
+
+      // 2. Si pas dans vote_voters, vérifier dans vote_ballots pour les votes non anonymes
+      const { data: ballot } = await supabase
         .from('vote_ballots')
         .select('choix')
         .eq('vote_id', vote.id)
@@ -67,25 +125,25 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
         .eq('voter_type', user.type)
         .maybeSingle();
       
-      if (data) {
+      if (ballot) {
         setHasVoted(true);
         
         if (vote.type_scrutin === 'jugement') {
           const jugements: Record<string, number> = {};
-          data.choix.forEach((c: any) => {
+          ballot.choix.forEach((c: any) => {
             jugements[c.optionId] = c.valeur;
           });
           setSelectedJugements(jugements);
           setUserPreviousVote(jugements);
         } else if (vote.type_scrutin === 'rang') {
           const ranksData: Record<string, number> = {};
-          data.choix.forEach((c: any) => {
+          ballot.choix.forEach((c: any) => {
             ranksData[c.optionId] = c.rang;
           });
           setRanks(ranksData);
           setUserPreviousVote(ranksData);
         } else {
-          const previousChoices = data.choix.map((c: any) => c.optionId);
+          const previousChoices = ballot.choix.map((c: any) => c.optionId);
           setSelectedOptions(previousChoices);
           setUserPreviousVote(previousChoices);
         }
@@ -185,6 +243,11 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   };
 
   const handleVote = async () => {
+    console.log('🔍 handleVote appelé');
+    console.log('🔍 type_scrutin:', vote.type_scrutin);
+    console.log('🔍 selectedJugements:', selectedJugements);
+    console.log('🔍 selectedOptions:', selectedOptions);
+    
     if (vote.type_scrutin === 'jugement') {
       if (Object.keys(selectedJugements).length !== vote.options.length) {
         setError('Veuillez évaluer toutes les options');
@@ -195,14 +258,23 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
         setError('Veuillez assigner un rang unique à chaque option');
         return;
       }
+    } else if (vote.type_scrutin === 'approbation') {
+      // Pour l'approbation, on vérifie que toutes les options ont une valeur
+      if (Object.keys(selectedJugements).length !== vote.options.length) {
+        setError('Configuration en cours...');
+        return;
+      }
     } else if (selectedOptions.length === 0) {
       setError('Veuillez sélectionner une option');
       return;
     }
 
-    if (hasVoted) {
+    if (hasVoted && !vote.anonymous_vote) {
       const confirmModify = confirm('Vous avez déjà voté. Voulez-vous modifier votre vote ?');
       if (!confirmModify) return;
+    } else if (hasVoted && vote.anonymous_vote) {
+      setError('Les votes anonymes ne peuvent pas être modifiés');
+      return;
     }
 
     setSubmitting(true);
@@ -224,6 +296,13 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
             valeur
           }));
           break;
+        case 'approbation':
+          choix = Object.entries(selectedJugements).map(([optionId, valeur]) => ({
+            optionId,
+            valeur
+          }));
+          console.log('🔍 choix pour approbation:', choix);
+          break;
         case 'rang':
           choix = Object.entries(ranks).map(([optionId, rang]) => ({
             optionId,
@@ -234,7 +313,10 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
           choix = [{ optionId: selectedOptions[0], selected: true }];
       }
 
+      console.log('🔍 appel de submitVote avec:', { voteId: vote.id, choix });
       const result = await submitVote(vote.id, choix);
+      console.log('🔍 résultat submitVote:', result);
+      
       setHasVoted(true);
       
       if (result.ballotHash) {
@@ -243,7 +325,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
         alert(hasVoted ? 'Votre vote a été modifié' : 'Votre vote a été enregistré');
       }
       
-      if (vote.type_scrutin === 'jugement') {
+      if (vote.type_scrutin === 'jugement' || vote.type_scrutin === 'approbation') {
         setUserPreviousVote(selectedJugements);
       } else if (vote.type_scrutin === 'rang') {
         setUserPreviousVote(ranks);
@@ -254,7 +336,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
       if (onUpdate) onUpdate();
       
     } catch (error: any) {
-      console.error('Erreur vote:', error);
+      console.error('❌ Erreur vote:', error);
       setError(error.message || 'Erreur lors du vote');
     } finally {
       setSubmitting(false);
@@ -349,7 +431,9 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
     ? isJugementValid()
     : vote.type_scrutin === 'rang'
       ? isRanksValid()
-      : selectedOptions.length > 0;
+      : vote.type_scrutin === 'approbation'
+        ? true  // Toujours possible de voter, même avec des neutres
+        : selectedOptions.length > 0;
 
   const hasVotedAndDifferent = hasVoted && (
     vote.type_scrutin === 'jugement'
@@ -369,6 +453,16 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
               <h3 className="font-semibold text-lg">{vote.titre}</h3>
               {getStatusBadge()}
               <span className="text-xs text-gray-500">{getTypeLabel()}</span>
+              {vote.anonymous_vote && (
+                <span className="px-2 py-1 bg-gray-200 text-gray-700 rounded-full text-xs">
+                  🔒 Anonyme
+                </span>
+              )}
+              {!vote.anonymous_vote && (
+                <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs">
+                  👤 Nominatif
+                </span>
+              )}
             </div>
             <p className="text-sm text-gray-600">{vote.description}</p>
           </div>
@@ -442,156 +536,270 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
           )}
         </div>
 
-        {/* Question */}
-        <div className="mb-3 p-3 bg-gray-50 rounded-lg">
-          <p className="text-sm font-medium text-gray-700">Question :</p>
-          <p className="text-gray-900">{vote.question}</p>
-        </div>
-
-        {/* Message d'erreur */}
-        {error && (
-          <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-xs text-red-600">{error}</p>
-          </div>
-        )}
-
-        {/* Options de vote */}
-        {vote.statut === 'actif' && (
-          <div className="mb-4">
-            {vote.type_scrutin === 'rang' ? (
-              <div className="space-y-3">
-                <p className="text-sm text-gray-600 mb-2">
-                  Classez les options par ordre de préférence (1 = premier choix)
-                </p>
-                {vote.options.map(opt => (
-                  <div key={opt.id} className="flex items-center gap-3 p-2 border rounded-lg">
-                    <span className="text-sm text-gray-700 flex-1">{opt.texte}</span>
-                    <select
-                      value={ranks[opt.id] || ''}
-                      onChange={(e) => handleRankChange(opt.id, parseInt(e.target.value))}
-                      className="px-2 py-1 border rounded text-sm"
-                      disabled={submitting}
-                    >
-                      <option value="">—</option>
-                      {vote.options.map((_, idx) => (
-                        <option key={idx + 1} value={idx + 1}>
-                          {idx + 1}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
+        {/* Version repliée : bouton adapté au contexte */}
+        {!isExpanded && (
+          <div className="mt-2">
+            {vote.statut === 'cloture' ? (
+              <button
+                onClick={() => setShowResultsModal(true)}
+                className="w-full py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                📊 Voir les résultats
+              </button>
+            ) : hasVoted && vote.anonymous_vote ? (
+              <div className="w-full py-2 bg-gray-100 text-gray-500 text-center rounded-lg text-sm">
+                ✅ Vous avez déjà voté (anonyme, non modifiable)
               </div>
-            ) : vote.type_scrutin === 'jugement' ? (
-              <div className="space-y-4">
-                {vote.options.map(opt => (
-                  <div key={opt.id} className="border rounded-lg p-3">
-                    <p className="font-medium mb-2">{opt.texte}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {MENTIONS.map(mention => (
-                        <button
-                          key={mention.value}
-                          onClick={() => handleJugementChange(opt.id, mention.value)}
-                          className={`px-3 py-1 rounded-full text-sm ${
-                            selectedJugements[opt.id] === mention.value
-                              ? `${mention.color} text-white`
-                              : 'bg-gray-100 hover:bg-gray-200'
-                          }`}
-                          disabled={submitting}
-                        >
-                          {mention.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+            ) : hasVoted ? (
+              <button
+                onClick={() => setIsExpanded(true)}
+                className="w-full py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                ✏️ Modifier ma participation
+              </button>
             ) : (
-              <div className="space-y-2">
-                {vote.options.map(opt => (
-                  <label key={opt.id} className={`flex items-center gap-3 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer ${
-                    hasVoted && userPreviousVote.includes(opt.id) ? 'bg-blue-50 border-blue-200' : ''
-                  }`}>
-                    <input
-                      type={vote.type_scrutin === 'uninominal' ? 'radio' : 'checkbox'}
-                      name={vote.type_scrutin === 'uninominal' ? `vote-${vote.id}` : undefined}
-                      value={opt.id}
-                      checked={selectedOptions.includes(opt.id)}
-                      onChange={() => handleOptionChange(opt.id)}
-                      className="h-4 w-4 text-blue-600"
-                      disabled={submitting}
-                    />
-                    <span className="text-sm text-gray-700 flex-1">{opt.texte}</span>
-                  </label>
-                ))}
-              </div>
+              <button
+                onClick={() => setIsExpanded(true)}
+                className="w-full py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+              >
+                🗳️ Participer à la votation
+              </button>
             )}
           </div>
         )}
 
-        {/* Infos supplémentaires */}
-        <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
-          <span className="flex items-center gap-1">
-            <ClockIcon className="h-4 w-4" />
-            Créé le {new Date(vote.created_at).toLocaleDateString()}
-          </span>
-          {vote.parametres.anonymous && (
-            <span className="bg-gray-100 px-2 py-1 rounded-full">🕵️ Vote anonyme</span>
-          )}
-          {vote.candidates_source === 'employees' && (
-            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">👥 Sans candidat</span>
-          )}
-          {loading && <span className="text-blue-600">Chargement...</span>}
-          {hasVoted && (
-            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
-              Vous avez voté
-            </span>
-          )}
-        </div>
+        {/* Version dépliée : tout le contenu */}
+        {isExpanded && (
+          <>
+            {/* Question */}
+            <div className="mb-3 p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm font-medium text-gray-700">Question :</p>
+              <p className="text-gray-900">{vote.question}</p>
+            </div>
 
-        {/* Boutons d'action */}
-        <div className="flex gap-2">
-          {showVoteButton && (
-            <button
-              onClick={handleVote}
-              disabled={submitting || !canSubmitVote}
-              className={`flex-1 py-2 rounded-lg ${
-                hasVoted 
-                  ? hasVotedAndDifferent
-                    ? 'bg-orange-600 hover:bg-orange-700 text-white' 
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-              } disabled:opacity-50`}
-            >
-              {submitting 
-                ? 'Vote en cours...' 
-                : hasVoted 
-                  ? hasVotedAndDifferent ? 'Modifier mon vote' : 'Vote enregistré'
-                  : 'Voter'
-              }
-            </button>
-          )}
+            {/* Indicateur pour jugement majoritaire sans candidat */}
+            {vote.type_scrutin === 'jugement' && vote.candidates_source === 'employees' && !hasVoted && (
+              <p className="text-xs text-gray-400 mb-2">
+                ℹ️ Par défaut, chaque option reçoit la mention "Passable". Modifiez selon votre avis.
+              </p>
+            )}
 
-          {canShowResults() && (
-            <button
-              onClick={() => setShowResultsModal(true)}
-              className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-              disabled={loading}
-            >
-              Voir les résultats
-            </button>
-          )}
-          
-          {hasVoted && vote.anonymous_vote && (
-            <button
-              onClick={verifyMyVote}
-              className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 text-sm"
-              disabled={loading}
-            >
-              🔍 Vérifier
-            </button>
-          )}
-        </div>
+            {/* Message d'erreur */}
+            {error && (
+              <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-xs text-red-600">{error}</p>
+              </div>
+            )}
+
+            {/* Options de vote */}
+            {vote.statut === 'actif' && (
+              <div className="mb-4">
+                {vote.type_scrutin === 'approbation' ? (
+                  // Interface pour l'approbation (OUI / NEUTRE / NON)
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Pour chaque option, indiquez votre position :
+                    </p>
+                    {vote.options.map(opt => {
+                      const currentValue = selectedJugements[opt.id] || 0; // 1 = OUI, 0 = NEUTRE, -1 = NON
+                      return (
+                        <div key={opt.id} className="border rounded-lg p-3">
+                          <p className="font-medium mb-2">{opt.texte}</p>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => handleJugementChange(opt.id, 1)}
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                currentValue === 1
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-gray-100 hover:bg-green-100 text-gray-700'
+                              }`}
+                            >
+                              👍 OUI
+                            </button>
+                            <button
+                              onClick={() => handleJugementChange(opt.id, 0)}
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                currentValue === 0
+                                  ? 'bg-gray-400 text-white'
+                                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                              }`}
+                            >
+                              ➖ NEUTRE
+                            </button>
+                            <button
+                              onClick={() => handleJugementChange(opt.id, -1)}
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                currentValue === -1
+                                  ? 'bg-red-600 text-white'
+                                  : 'bg-gray-100 hover:bg-red-100 text-gray-700'
+                              }`}
+                            >
+                              👎 NON
+                            </button>
+                          </div>
+                          {hasVoted && userPreviousVote[opt.id] !== undefined && (
+                            <p className="text-xs text-blue-600 mt-2">
+                              Votre choix: {userPreviousVote[opt.id] === 1 ? 'OUI' : userPreviousVote[opt.id] === -1 ? 'NON' : 'NEUTRE'}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : vote.type_scrutin === 'rang' ? (
+                  // Interface pour le classement (inchangé)
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Classez les options par ordre de préférence (1 = premier choix)
+                    </p>
+                    {vote.options.map(opt => (
+                      <div key={opt.id} className="flex items-center gap-3 p-2 border rounded-lg">
+                        <span className="text-sm text-gray-700 flex-1">{opt.texte}</span>
+                        <select
+                          value={ranks[opt.id] || ''}
+                          onChange={(e) => handleRankChange(opt.id, parseInt(e.target.value))}
+                          className="px-2 py-1 border rounded text-sm"
+                          disabled={submitting}
+                        >
+                          <option value="">—</option>
+                          {vote.options.map((_, idx) => (
+                            <option key={idx + 1} value={idx + 1}>
+                              {idx + 1}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                ) : vote.type_scrutin === 'jugement' ? (
+                  // Interface pour le jugement majoritaire (inchangé)
+                  <div className="space-y-4">
+                    {vote.options.map(opt => (
+                      <div key={opt.id} className="border rounded-lg p-3">
+                        <p className="font-medium mb-2">{opt.texte}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {MENTIONS.map(mention => (
+                            <button
+                              key={mention.value}
+                              onClick={() => handleJugementChange(opt.id, mention.value)}
+                              className={`px-3 py-1 rounded-full text-sm ${
+                                selectedJugements[opt.id] === mention.value
+                                  ? `${mention.color} text-white`
+                                  : 'bg-gray-100 hover:bg-gray-200'
+                              }`}
+                              disabled={submitting}
+                            >
+                              {mention.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  // Interface pour uninominal/plurinominal (inchangé)
+                  <div className="space-y-2">
+                    {vote.options.map(opt => (
+                      <label key={opt.id} className={`flex items-center gap-3 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer ${
+                        hasVoted && userPreviousVote.includes(opt.id) ? 'bg-blue-50 border-blue-200' : ''
+                      }`}>
+                        <input
+                          type={vote.type_scrutin === 'uninominal' ? 'radio' : 'checkbox'}
+                          name={vote.type_scrutin === 'uninominal' ? `vote-${vote.id}` : undefined}
+                          value={opt.id}
+                          checked={selectedOptions.includes(opt.id)}
+                          onChange={() => handleOptionChange(opt.id)}
+                          className="h-4 w-4 text-blue-600"
+                          disabled={submitting}
+                        />
+                        <span className="text-sm text-gray-700 flex-1">{opt.texte}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Infos supplémentaires */}
+            <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+              <span className="flex items-center gap-1">
+                <ClockIcon className="h-4 w-4" />
+                Créé le {new Date(vote.created_at).toLocaleDateString()}
+              </span>
+              {vote.parametres.anonymous && (
+                <span className="bg-gray-100 px-2 py-1 rounded-full">🕵️ Vote anonyme</span>
+              )}
+              {vote.candidates_source === 'employees' && (
+                <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">👥 Sans candidat</span>
+              )}
+              {loading && <span className="text-blue-600">Chargement...</span>}
+              {hasVoted && (
+                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                  Vous avez voté
+                </span>
+              )}
+            </div>
+
+            {/* Boutons d'action */}
+            <div className="flex gap-2">
+              {showVoteButton && !hasVoted && (
+                <button
+                  onClick={handleVote}
+                  disabled={submitting || !canSubmitVote}
+                  className="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+                >
+                  {submitting ? 'Vote en cours...' : 'Voter'}
+                </button>
+              )}
+
+              {showVoteButton && hasVoted && !vote.anonymous_vote && (
+                <button
+                  onClick={handleVote}
+                  disabled={submitting || !canSubmitVote}
+                  className="flex-1 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50"
+                >
+                  {submitting ? 'Vote en cours...' : 'Modifier mon vote'}
+                </button>
+              )}
+
+              {showVoteButton && hasVoted && vote.anonymous_vote && (
+                <div className="flex-1 py-2 rounded-lg bg-gray-100 text-gray-500 text-center cursor-not-allowed">
+                  ✓ Vote soumis et non-modifiable
+                </div>
+              )}
+
+              {canShowResults() && (
+                <button
+                  onClick={() => setShowResultsModal(true)}
+                  className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  disabled={loading}
+                >
+                  Voir les résultats
+                </button>
+              )}
+              
+              {hasVoted && vote.anonymous_vote && (
+                <button
+                  onClick={verifyMyVote}
+                  className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 text-sm"
+                  disabled={loading}
+                >
+                  🔍 Vérifier
+                </button>
+              )}
+            </div>
+
+            {/* Bouton pour replier */}
+            <div className="mt-3 text-center">
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="text-xs text-gray-400 hover:text-gray-600"
+              >
+                ▲ Réduire
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Modal des résultats */}

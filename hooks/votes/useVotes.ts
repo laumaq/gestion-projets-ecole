@@ -110,6 +110,32 @@ export const useVotes = (context: {
     }
   }, [user, context.id, fetchVotes]);
 
+  // Souscription temps réel pour les changements de votes
+  useEffect(() => {
+    if (!user) return;
+
+    const subscription = supabase
+      .channel('votes_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'votes',
+          filter: `module_contexte=eq.${context.module} AND module_id=eq.${context.id}`
+        },
+        (payload) => {
+          console.log('🔄 Changement détecté dans les votes:', payload.eventType);
+          fetchVotes(); // Recharger automatiquement
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user, context.module, context.id, fetchVotes]);
+
   // Créer un nouveau vote
   const createVote = async (voteData: {
     titre: string;
@@ -393,44 +419,55 @@ export const useVotes = (context: {
 
       if (error) throw error;
 
+
       const vote = votes.find(v => v.id === voteId);
       if (!vote) throw new Error('Vote non trouvé');
 
+      let results;
       switch (vote.type_scrutin) {
         case 'uninominal':
-          return calculateUninominal(ballots, vote.options);
+          results = calculateUninominal(ballots, vote.options);
+          break;
         case 'plurinominal':
-          return calculatePlurinominal(ballots, vote.options);
+          results = calculatePlurinominal(ballots, vote.options);
+          break;
         case 'jugement':
-          return calculateJugement(ballots, vote.options);
+          results = calculateJugement(ballots, vote.options);
+          break;
         case 'rang':
-          return calculateRang(ballots, vote.options);
-        default:
-          return null;
+          results = calculateRang(ballots, vote.options);
+          break;
       }
+
+      return results;
     } catch (err) {
-      console.error('Erreur calculateResults:', getErrorMessage(err));
+      console.error('Erreur calculateResults:', err);
       return null;
     }
   };
 
   // Fonctions de calcul spécifiques
   const calculateUninominal = (ballots: any[], options: any[]) => {
-    const compteurs: Record<string, number> = {};
-    options.forEach(opt => compteurs[opt.id] = 0);
     
-    ballots.forEach(ballot => {
-      // La clé est "optionId" (camelCase), pas "option_id"
+    const compteurs: Record<string, number> = {};
+    options.forEach(opt => {
+      compteurs[opt.id] = 0;
+    });
+    
+    ballots.forEach((ballot, idx) => {
       if (ballot.choix && Array.isArray(ballot.choix) && ballot.choix[0]?.optionId) {
         const optionId = ballot.choix[0].optionId;
         if (compteurs[optionId] !== undefined) {
           compteurs[optionId]++;
+        } else {
+          console.log(`  → OptionId ${optionId} non trouvée dans compteurs!`);
         }
+      } else {
+        console.log(`  → Structure ballot inattendue:`, ballot.choix);
       }
     });
     
-    console.log('🔍 Compteurs uninominal:', compteurs);
-    
+   
     // Trouver le gagnant
     let gagnant = null;
     let maxVoix = 0;
@@ -490,7 +527,6 @@ export const useVotes = (context: {
       }
     });
 
-    console.log('🔍 CALCUL JUGEMENT - Ballots:', ballots.length);
     ballots.forEach((b, i) => console.log(`Ballot ${i}:`, b.choix));
 
     // 2. Pour chaque option, trier les mentions et trouver la médiane
