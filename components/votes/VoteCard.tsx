@@ -192,10 +192,18 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   };
 
   const canShowResults = () => {
-    if (vote.statut === 'cloture') return true;
-    if (vote.parametres.show_results === 'always') return true;
-    if (vote.parametres.show_results === 'after_vote' && hasVoted) return true;
-    return false;
+    const result = vote.statut === 'cloture' 
+      || vote.parametres.show_results === 'always' 
+      || (vote.parametres.show_results === 'after_vote' && hasVoted);
+    
+    console.log('🔍 canShowResults details:', {
+      statut_cloture: vote.statut === 'cloture',
+      show_results_always: vote.parametres.show_results === 'always',
+      show_results_after_vote_and_hasVoted: vote.parametres.show_results === 'after_vote' && hasVoted,
+      final: result
+    });
+    
+    return result;
   };
 
   const handleOpen = async () => {
@@ -443,6 +451,15 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
         : JSON.stringify(selectedOptions) !== JSON.stringify(userPreviousVote)
   );
 
+  console.log('🔍 DEBUG canShowResults:', {
+    statut: vote.statut,
+    show_results: vote.parametres?.show_results,
+    hasVoted: hasVoted,
+    result: canShowResults()
+  });
+
+  console.log('🔍 DEBUG vote.parametres complet:', vote.parametres);
+
   return (
     <>
       <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -568,6 +585,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                 </button>
               )}
             </div>
+
 
             {/* Bouton "Voir les résultats" si accessible */}
             {canShowResults() && vote.statut !== 'cloture' && (
