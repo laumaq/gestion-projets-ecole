@@ -67,43 +67,57 @@ export default function DashboardPage() {
     }
   }, [router]);
 
+
   const chargerClassesConseil = async (type: 'employee' | 'student', id: string, job: string) => {
     const annee = '2024-2025';
+    console.log('🔍 chargerClassesConseil appelé avec:', { type, id, job, annee });
     
     if (type === 'student') {
       const userClass = localStorage.getItem('userClass');
+      console.log('🎓 Élève, userClass:', userClass);
       if (userClass) {
         setClassesConseil([userClass]);
+        console.log('✅ Classes conseil pour élève:', [userClass]);
       }
     } else if (type === 'employee') {
       const classesTrouvees: string[] = [];
       
       // Récupérer les classes où l'employé est titulaire ou co-titulaire
+      console.log('👨‍🏫 Employé, recherche des classes pour:', id);
       const { data: roles, error } = await supabase
         .from('conseil_classes_roles')
-        .select('classe_nom')
+        .select('classe_nom, titulaire_id, co_titulaire_id')
         .eq('annee_scolaire', annee)
         .or(`titulaire_id.eq.${id},co_titulaire_id.eq.${id}`);
       
+      console.log('📊 Résultat requête roles:', { roles, error });
+      
       if (!error && roles && roles.length > 0) {
         classesTrouvees.push(...roles.map(r => r.classe_nom));
+        console.log('✅ Classes trouvées via rôles:', classesTrouvees);
       }
       
       // Si direction, ajouter toutes les classes
       if (job === 'direction') {
-        const { data: classes } = await supabase
+        console.log('👔 Direction - chargement de toutes les classes');
+        const { data: classes, error: classesError } = await supabase
           .from('students')
           .select('classe')
           .not('classe', 'is', null)
           .not('classe', 'eq', '');
         
+        console.log('📊 Résultat requête classes:', { classes, classesError });
+        
         if (classes) {
           const classesUniques = [...new Set(classes.map(c => c.classe))];
           classesTrouvees.push(...classesUniques);
+          console.log('✅ Classes uniques ajoutées:', classesUniques);
         }
       }
       
-      setClassesConseil([...new Set(classesTrouvees)]);
+      const classesFinales = [...new Set(classesTrouvees)];
+      setClassesConseil(classesFinales);
+      console.log('🎯 Classes conseil finales:', classesFinales);
     }
   };
 
