@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import AGStatusBadge from '@/components/ag/AGStatusBadge';
 import { getTfhDashboardType, TfhDashboardType } from '@/lib/tfh/permissions';
+import { ConseilLaClasseCard } from '@/components/conseilLaClasse/ConseilLaClasseCard';
 
 interface Voyage {
   id: string;
@@ -40,6 +41,7 @@ export default function DashboardPage() {
   const [agStatut, setAgStatut] = useState<'pas_ag' | 'preparation' | 'planning_etabli'>('pas_ag');
   const [groupeTravail, setGroupeTravail] = useState<GroupeTravail | null>(null);
   const [tfhDashboardType, setTfhDashboardType] = useState<TfhDashboardType>(null);
+  const [classesConseil, setClassesConseil] = useState<string[]>([]);
 
   useEffect(() => {
     const type = localStorage.getItem('userType') as 'employee' | 'student';
@@ -56,11 +58,48 @@ export default function DashboardPage() {
     chargerMesVoyages(type, id);
     chargerStatutAG();
     chargerTfhDashboardType(type, id, job || '');
+    chargerClassesConseil();
 
     if (type === 'student') {
       chargerMesProjets(parseInt(id));
     }
   }, [router]);
+
+  const chargerClassesConseil = async () => {
+    const annee = '2024-2025';
+    
+    if (userType === 'student') {
+      const userClass = localStorage.getItem('userClass');
+      if (userClass) {
+        setClassesConseil([userClass]);
+      }
+    } else if (userType === 'employee') {
+      // Récupérer les classes où l'employé est titulaire ou co-titulaire
+      const { data: roles, error } = await supabase
+        .from('conseil_classes_roles')
+        .select('classe_nom')
+        .eq('annee_scolaire', annee)
+        .or(`titulaire_id.eq.${userId},co_titulaire_id.eq.${userId}`);
+      
+      if (!error && roles && roles.length > 0) {
+        setClassesConseil(roles.map(r => r.classe_nom));
+      }
+      
+      // Si direction, ajouter toutes les classes
+      if (userJob === 'direction') {
+        const { data: classes } = await supabase
+          .from('students')
+          .select('classe')
+          .not('classe', 'is', null)
+          .not('classe', 'eq', '');
+        
+        if (classes) {
+          const classesUniques = [...new Set(classes.map(c => c.classe))];
+          setClassesConseil(prev => [...new Set([...prev, ...classesUniques])]);
+        }
+      }
+    }
+  };
 
   const chargerInfosUtilisateur = async (id: string) => {
     try {
@@ -261,45 +300,6 @@ export default function DashboardPage() {
         <h2 className="text-lg font-semibold text-gray-700 mb-4">Outils disponibles</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
-          {/* Sciences */}
-          <Link href="/dashboard/sciences" className="block h-full">
-            <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-green-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900">Sciences</h3>
-                </div>
-                <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
-                  Expériences collaboratives, simulations, fiches-outils
-                </p>
-              </div>
-            </div>
-          </Link>
-
-          {/* Lancement de projets */}
-          {userType === 'employee' && (
-            <Link href="/tools/projets" className="block h-full">
-              <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-indigo-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900">Lancement de projets</h3>
-                  </div>
-                  <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
-                    Planification de projets pédagogiques
-                  </p>
-                </div>
-              </div>
-            </Link>
-          )}
 
           {/* Assemblée Générale */}
           {userType === 'employee' && (agStatut !== 'pas_ag' || userJob === 'direction') && (
@@ -347,6 +347,58 @@ export default function DashboardPage() {
               </div>
             </Link>
           )}
+
+          {/* Conseils de la classe */}
+          {classesConseil.map(classe => (
+            <ConseilLaClasseCard
+              key={classe}
+              classeNom={classe}
+              userType={userType}
+              userId={userId}
+              userJob={userJob}
+            />
+          ))}
+
+          {/* Sciences */}
+          <Link href="/dashboard/sciences" className="block h-full">
+            <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-green-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900">Sciences</h3>
+                </div>
+                <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
+                  Expériences collaboratives, simulations, fiches-outils
+                </p>
+              </div>
+            </div>
+          </Link>
+
+          {/* Lancement de projets */}
+          {userType === 'employee' && (
+            <Link href="/tools/projets" className="block h-full">
+              <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-indigo-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">Lancement de projets</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
+                    Planification de projets pédagogiques
+                  </p>
+                </div>
+              </div>
+            </Link>
+          )}
+
 
           {/* TFH (pour direction, guide, ou élève) - uniquement si différent du groupe de travail */}
           {tfhCardInfo && !(groupeTravailCardInfo && tfhDashboardType === 'coordination') && (
