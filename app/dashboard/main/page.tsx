@@ -58,35 +58,39 @@ export default function DashboardPage() {
     chargerMesVoyages(type, id);
     chargerStatutAG();
     chargerTfhDashboardType(type, id, job || '');
-    chargerClassesConseil();
+    
+    // Passer les valeurs directement, pas via le state
+    chargerClassesConseil(type, id, job || '');
 
     if (type === 'student') {
       chargerMesProjets(parseInt(id));
     }
   }, [router]);
 
-  const chargerClassesConseil = async () => {
+  const chargerClassesConseil = async (type: 'employee' | 'student', id: string, job: string) => {
     const annee = '2024-2025';
     
-    if (userType === 'student') {
+    if (type === 'student') {
       const userClass = localStorage.getItem('userClass');
       if (userClass) {
         setClassesConseil([userClass]);
       }
-    } else if (userType === 'employee') {
+    } else if (type === 'employee') {
+      const classesTrouvees: string[] = [];
+      
       // Récupérer les classes où l'employé est titulaire ou co-titulaire
       const { data: roles, error } = await supabase
         .from('conseil_classes_roles')
         .select('classe_nom')
         .eq('annee_scolaire', annee)
-        .or(`titulaire_id.eq.${userId},co_titulaire_id.eq.${userId}`);
+        .or(`titulaire_id.eq.${id},co_titulaire_id.eq.${id}`);
       
       if (!error && roles && roles.length > 0) {
-        setClassesConseil(roles.map(r => r.classe_nom));
+        classesTrouvees.push(...roles.map(r => r.classe_nom));
       }
       
       // Si direction, ajouter toutes les classes
-      if (userJob === 'direction') {
+      if (job === 'direction') {
         const { data: classes } = await supabase
           .from('students')
           .select('classe')
@@ -95,9 +99,11 @@ export default function DashboardPage() {
         
         if (classes) {
           const classesUniques = [...new Set(classes.map(c => c.classe))];
-          setClassesConseil(prev => [...new Set([...prev, ...classesUniques])]);
+          classesTrouvees.push(...classesUniques);
         }
       }
+      
+      setClassesConseil([...new Set(classesTrouvees)]);
     }
   };
 
