@@ -1,54 +1,93 @@
-// components/conseilLaClasse/ConseilLaClasseCard.tsx
+// components/conseilLaClasse/ConseilDeLaClasseCard.tsx
 'use client';
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
-interface ConseilLaClasseCardProps {
+interface ConseilDeLaClasseCardProps {
   classeNom: string;
   userType: 'employee' | 'student';
   userId: string;
   userJob?: string | null;
 }
 
-export function ConseilLaClasseCard({ classeNom, userType, userId, userJob }: ConseilLaClasseCardProps) {
+export function ConseilDeLaClasseCard({ classeNom, userType, userId, userJob }: ConseilDeLaClasseCardProps) {
   const [hasAccess, setHasAccess] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [annee, setAnnee] = useState<string>('');
   const [role, setRole] = useState('');
 
   useEffect(() => {
-    verifierAcces();
-  }, [classeNom, userType, userId, userJob]);
+    const getAnneeScolaire = async () => {
+      const { data } = await supabase
+        .from('conseil_classes_config')
+        .select('annee_scolaire')
+        .order('annee_scolaire', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (data) {
+        setAnnee(data.annee_scolaire);
+      } else {
+        // Fallback si aucune config n'existe
+        setAnnee('2025-2026');
+        setLoading(false);
+      }
+    };
+    
+    getAnneeScolaire();
+  }, []);
+
+  useEffect(() => {
+    if (annee) {
+      verifierAcces();
+    }
+  }, [classeNom, userType, userId, userJob, annee]);
+
 
   const verifierAcces = async () => {
     try {
-      const annee = '2024-2025';
-      
       if (userType === 'student') {
         const userClass = localStorage.getItem('userClass');
         if (userClass === classeNom) {
           setHasAccess(true);
           setRole('élève');
         }
+        setLoading(false);
       } else {
         const { data: roles, error } = await supabase
           .from('conseil_classes_roles')
           .select('titulaire_id, co_titulaire_id')
           .eq('annee_scolaire', annee)
           .eq('classe_nom', classeNom)
-          .single();
+          .maybeSingle();
 
-        if (!error && roles) {
-          if (roles.titulaire_id === userId) {
-            setHasAccess(true);
-            setRole('titulaire');
-          } else if (roles.co_titulaire_id === userId) {
-            setHasAccess(true);
-            setRole('co-titulaire');
-          } else if (userJob === 'direction') {
-            setHasAccess(true);
-            setRole('direction');
+        if (roles?.titulaire_id === userId) {
+          setHasAccess(true);
+          setRole('titulaire');
+        } else if (roles?.co_titulaire_id === userId) {
+          setHasAccess(true);
+          setRole('co-titulaire');
+        } else if (userJob === 'direction') {
+          setHasAccess(true);
+          setRole('direction');
+        } else if (userJob === 'educ') {
+          // Vérifier si l'éducateur est responsable du niveau de cette classe
+          const niveau = classeNom.match(/^(\d+)/)?.[1];
+          if (niveau) {
+            const { data: educNiveau } = await supabase
+              .from('conseil_annee_educateurs')
+              .select('id')
+              .eq('annee_scolaire', annee)
+              .eq('niveau', niveau)
+              .eq('educateur_id', userId)
+              .maybeSingle();
+            
+            if (educNiveau) {
+              setHasAccess(true);
+              setRole('éducateur');
+            }
           }
         }
       }
@@ -62,7 +101,7 @@ export function ConseilLaClasseCard({ classeNom, userType, userId, userJob }: Co
   if (loading || !hasAccess) return null;
 
   return (
-    <Link href={`/dashboard/conseil-classe/${encodeURIComponent(classeNom)}`} className="block h-full">
+    <Link href={`/dashboard/conseil-de-la-classe/${encodeURIComponent(classeNom)}`} className="block h-full">
       <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-amber-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -80,12 +119,6 @@ export function ConseilLaClasseCard({ classeNom, userType, userId, userJob }: Co
             {(role === 'titulaire' || role === 'co-titulaire') && "Animation et gestion du conseil"}
             {role === 'élève' && "Participation à la vie démocratique de la classe"}
           </p>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
-            {role === 'direction' ? 'Supervision' : (role === 'titulaire' || role === 'co-titulaire') ? 'Animation' : 'Participation'}
-          </span>
-          <span className="text-amber-600 text-sm group-hover:translate-x-1 transition-transform">→</span>
         </div>
       </div>
     </Link>

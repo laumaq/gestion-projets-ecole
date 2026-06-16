@@ -53,6 +53,7 @@ export interface Vote {
 export const useVotes = (context: { 
   module: string; 
   id: string; 
+  idField?: string;  
   communicationId?: string;  
   interventionLibreId?: string;
 }) => {
@@ -75,11 +76,14 @@ export const useVotes = (context: {
     
     try {
       setLoading(true);
+
+      const idField = context.idField || 'module_id';
+
       let query = supabase
         .from('votes')
         .select('*')
         .eq('module_contexte', context.module)
-        .eq('module_id', context.id);
+        .eq(idField, context.id);
 
       // Filtrer par communication_id si fourni
       if (context.communicationId) {
@@ -100,7 +104,7 @@ export const useVotes = (context: {
     } finally {
       setLoading(false);
     }
-  }, [context.module, context.id, context.communicationId, context.interventionLibreId, user]);
+  }, [context.module, context.id, context.idField, context.communicationId, context.interventionLibreId, user]);
 
 
   // Effet pour charger les votes quand l'utilisateur est prêt

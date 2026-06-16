@@ -1,4 +1,4 @@
-// app/dashboard/conseil-classe/[classe]/page.tsx
+// app/dashboard/conseil-de-la-classe/[classe]/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -20,30 +20,51 @@ interface RolesData {
   president?: { nom: string; prenom: string };
   secretaire?: { nom: string; prenom: string };
   delegue_voyage?: { nom: string; prenom: string };
+  niveau?: string;
 }
 
 export default function ConseilClassePage() {
   const params = useParams();
   const router = useRouter();
   const classeNom = decodeURIComponent(params.classe as string);
-  const anneeScolaire = '2024-2025';
+  const [anneeScolaire, setAnneeScolaire] = useState<string>('');
   
   const [roles, setRoles] = useState<RolesData | null>(null);
   const [eleves, setEleves] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showVoteCreator, setShowVoteCreator] = useState(false);
-  const [userRole, setUserRole] = useState<'titulaire' | 'co_titulaire' | 'eleve' | 'direction' | 'none'>('none');
+  const [userRole, setUserRole] = useState<'titulaire' | 'co_titulaire' | 'eleve' | 'educateur' | 'none'>('none');
 
   const { votes, loading: votesLoading } = useVotes({
     module: 'conseil_classe',
-    id: classeNom
+    id: classeNom,
+    idField: 'conseil_classe_classe_nom'
   });
 
+  // Récupérer l'année scolaire courante
+  useEffect(() => {
+    const getAnnee = async () => {
+      const { data } = await supabase
+        .from('conseil_classes_config')
+        .select('annee_scolaire')
+        .order('annee_scolaire', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        setAnneeScolaire(data.annee_scolaire);
+      } else {
+        setAnneeScolaire('2025-2026');
+      }
+    };
+    getAnnee();
+  }, []);
+
   const loadData = async () => {
+    if (!anneeScolaire) return;
+    
     try {
       setLoading(true);
 
-      // Dans la requête, modifier les sélections pour inclure id et job :
       const { data: rolesData, error: rolesError } = await supabase
         .from('conseil_classes_roles')
         .select(`
@@ -67,21 +88,52 @@ export default function ConseilClassePage() {
         .maybeSingle();
 
       if (rolesData) {
-        const titulaire = Array.isArray(rolesData.titulaire) && rolesData.titulaire.length > 0 
-          ? { nom: rolesData.titulaire[0].nom, prenom: rolesData.titulaire[0].prenom }
-          : undefined;
-        const coTitulaire = Array.isArray(rolesData.co_titulaire) && rolesData.co_titulaire.length > 0
-          ? { nom: rolesData.co_titulaire[0].nom, prenom: rolesData.co_titulaire[0].prenom }
-          : undefined;
-        const president = Array.isArray(rolesData.president) && rolesData.president.length > 0
-          ? { nom: rolesData.president[0].nom, prenom: rolesData.president[0].prenom }
-          : undefined;
-        const secretaire = Array.isArray(rolesData.secretaire) && rolesData.secretaire.length > 0
-          ? { nom: rolesData.secretaire[0].nom, prenom: rolesData.secretaire[0].prenom }
-          : undefined;
-        const delegueVoyage = Array.isArray(rolesData.delegue_voyage) && rolesData.delegue_voyage.length > 0
-          ? { nom: rolesData.delegue_voyage[0].nom, prenom: rolesData.delegue_voyage[0].prenom }
-          : undefined;
+        let titulaire = undefined;
+        let coTitulaire = undefined;
+        let president = undefined;
+        let secretaire = undefined;
+        let delegueVoyage = undefined;
+        
+        // Traitement robuste pour titulaire (peut être un objet ou un tableau)
+        if (rolesData.titulaire) {
+          const titulaireData = Array.isArray(rolesData.titulaire) ? rolesData.titulaire[0] : rolesData.titulaire;
+          titulaire = {
+            nom: titulaireData.nom,
+            prenom: titulaireData.prenom
+          };
+        }
+        
+        if (rolesData.co_titulaire) {
+          const coTitulaireData = Array.isArray(rolesData.co_titulaire) ? rolesData.co_titulaire[0] : rolesData.co_titulaire;
+          coTitulaire = {
+            nom: coTitulaireData.nom,
+            prenom: coTitulaireData.prenom
+          };
+        }
+        
+        if (rolesData.president) {
+          const presidentData = Array.isArray(rolesData.president) ? rolesData.president[0] : rolesData.president;
+          president = {
+            nom: presidentData.nom,
+            prenom: presidentData.prenom
+          };
+        }
+        
+        if (rolesData.secretaire) {
+          const secretaireData = Array.isArray(rolesData.secretaire) ? rolesData.secretaire[0] : rolesData.secretaire;
+          secretaire = {
+            nom: secretaireData.nom,
+            prenom: secretaireData.prenom
+          };
+        }
+        
+        if (rolesData.delegue_voyage) {
+          const delegueData = Array.isArray(rolesData.delegue_voyage) ? rolesData.delegue_voyage[0] : rolesData.delegue_voyage;
+          delegueVoyage = {
+            nom: delegueData.nom,
+            prenom: delegueData.prenom
+          };
+        }
 
         setRoles({
           titulaire_id: rolesData.titulaire_id,
@@ -95,44 +147,63 @@ export default function ConseilClassePage() {
           secretaire: secretaire,
           delegue_voyage: delegueVoyage
         });
+
+        console.log('🎯 roles après setState:', { titulaire, coTitulaire });
       }
 
-      // 2. Charger les élèves de la classe
-      const { data: elevesData, error: elevesError } = await supabase
+      // Charger les élèves
+      const { data: elevesData } = await supabase
         .from('students')
         .select('matricule, nom, prenom, niveau')
         .eq('classe', classeNom)
         .order('nom');
 
-      if (!elevesError) {
-        setEleves(elevesData || []);
-      }
+      setEleves(elevesData || []);
 
-      // 3. Déterminer le rôle de l'utilisateur
+      // Déterminer le rôle
       const userId = localStorage.getItem('userId');
       const userJob = localStorage.getItem('userJob');
       const userType = localStorage.getItem('userType');
 
       if (userType === 'employee') {
-        if (userJob === 'direction') {
-          setUserRole('direction');
-        } else if (rolesData?.titulaire_id === userId) {
+        if (rolesData?.titulaire_id === userId) {
           setUserRole('titulaire');
         } else if (rolesData?.co_titulaire_id === userId) {
           setUserRole('co_titulaire');
+        } else if (userJob === 'educ') {
+          // Vérifier si l'éducateur est responsable du niveau de cette classe
+          const niveau = classeNom.match(/^(\d+)/)?.[1];
+          if (niveau) {
+            const { data: educNiveau } = await supabase
+              .from('conseil_annee_educateurs')
+              .select('id')
+              .eq('annee_scolaire', anneeScolaire)
+              .eq('niveau', niveau)
+              .eq('educateur_id', userId)
+              .maybeSingle();
+            
+            if (educNiveau) {
+              setUserRole('educateur');
+            } else {
+              setUserRole('none');
+            }
+          } else {
+            setUserRole('none');
+          }
         } else {
           setUserRole('none');
         }
       } else if (userType === 'student') {
         const userIdNum = parseInt(userId || '0');
         if (rolesData?.president_matricule === userIdNum ||
-            rolesData?.secretaire_matricule === userIdNum ||
-            rolesData?.delegue_voyage_matricule === userIdNum) {
+            rolesData?.secretaire_matricule === userIdNum) {
           setUserRole('eleve');
         } else {
           setUserRole('none');
         }
       }
+
+      console.log('👤 Rôle utilisateur:', { userRole: userType === 'employee' ? 'employee' : 'student', userId, titulaire_id: rolesData?.titulaire_id });
 
     } catch (error) {
       console.error('Erreur chargement:', error);
@@ -141,18 +212,22 @@ export default function ConseilClassePage() {
     }
   };
 
+  useEffect(() => {
+    if (anneeScolaire) {
+      loadData();
+    }
+  }, [classeNom, anneeScolaire]);
+
+
   const peutCreerVote = (): boolean => {
-    if (userRole === 'direction') return true;
-    if (userRole === 'titulaire' || userRole === 'co_titulaire') return true;
-    if (userRole === 'eleve' && (roles?.president_matricule || roles?.secretaire_matricule)) return true;
+    // Titulaire, co-titulaire et éducateur
+    if (userRole === 'titulaire' || userRole === 'co_titulaire' || userRole === 'educateur') return true;
+    // Élève ayant un rôle
+    if (userRole === 'eleve' && (roles?.president_matricule || roles?.secretaire_matricule || roles?.delegue_voyage_matricule)) return true;
     return false;
   };
 
-  useEffect(() => {
-    loadData();
-  }, [classeNom]);
-
-  if (loading) {
+  if (loading || !anneeScolaire) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -167,13 +242,6 @@ export default function ConseilClassePage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* En-tête */}
       <div className="mb-8">
-        <button
-          onClick={() => router.back()}
-          className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900"
-        >
-          <ChevronLeft className="w-5 h-5" />
-          Retour
-        </button>
         
         <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg p-6 text-white">
           <h1 className="text-2xl font-bold mb-2">
@@ -182,76 +250,39 @@ export default function ConseilClassePage() {
           <p className="text-amber-100">
             Espace de vie démocratique et de décisions collectives
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-              {userRole === 'direction' && '📋 Direction'}
-              {userRole === 'titulaire' && '👩‍🏫 Titulaire'}
-              {userRole === 'co_titulaire' && '👨‍🏫 Co-titulaire'}
-              {userRole === 'eleve' && '🎓 Élève'}
-            </span>
-            {roles?.president && (
-              <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-                👑 Président: {roles.president.prenom} {roles.president.nom}
-              </span>
-            )}
-            {roles?.secretaire && (
-              <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-                📝 Secrétaire: {roles.secretaire.prenom} {roles.secretaire.nom}
-              </span>
-            )}
-          </div>
         </div>
       </div>
 
-      {/* Onglets pour la direction */}
-      {userRole === 'direction' && (
-        <div className="mb-6 border-b border-gray-200">
-          <nav className="flex gap-4">
-            <button
-              onClick={() => router.push(`/dashboard/conseil-classe/${encodeURIComponent(classeNom)}`)}
-              className="px-4 py-2 text-sm font-medium text-amber-600 border-b-2 border-amber-600"
-            >
-              <Vote className="w-4 h-4 inline mr-2" />
-              Conseil
-            </button>
-            <button
-              onClick={() => router.push(`/dashboard/conseil-classe/${encodeURIComponent(classeNom)}/titulariat`)}
-              className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700"
-            >
-              <Shield className="w-4 h-4 inline mr-2" />
-              Titulariat
-            </button>
-            <button
-              disabled
-              className="px-4 py-2 text-sm font-medium text-gray-300 cursor-not-allowed"
-            >
-              Ordre du jour (bientôt)
-            </button>
-          </nav>
-        </div>
-      )}
-
       {/* Grille principale */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Colonne de gauche - Infos */}
+        {/* Colonne de gauche */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Carte des titulaires */}
+          {/* Équipe pédagogique */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-2 mb-4">
               <Shield className="w-5 h-5 text-amber-600" />
               <h2 className="text-lg font-semibold">Équipe pédagogique</h2>
             </div>
             <div className="space-y-3">
-              {roles?.titulaire && (
+              {/* Titulaire - affichage direct depuis rolesData si nécessaire */}
+              {roles?.titulaire_id ? (
                 <div className="p-3 bg-amber-50 rounded-lg">
                   <p className="text-sm text-gray-500">Titulaire</p>
-                  <p className="font-medium">{roles.titulaire.prenom} {roles.titulaire.nom}</p>
+                  <p className="font-medium">
+                    {roles.titulaire?.prenom} {roles.titulaire?.nom}
+                  </p>
                 </div>
+              ) : (
+                <p className="text-sm text-gray-500 italic">Titulaire non désigné</p>
               )}
-              {roles?.co_titulaire ? (
+              
+              {/* Co-titulaire */}
+              {roles?.co_titulaire_id ? (
                 <div className="p-3 bg-amber-50 rounded-lg">
                   <p className="text-sm text-gray-500">Co-titulaire</p>
-                  <p className="font-medium">{roles.co_titulaire.prenom} {roles.co_titulaire.nom}</p>
+                  <p className="font-medium">
+                    {roles.co_titulaire?.prenom} {roles.co_titulaire?.nom}
+                  </p>
                 </div>
               ) : (
                 <p className="text-sm text-gray-500 italic">Co-titulaire non désigné</p>
@@ -259,9 +290,8 @@ export default function ConseilClassePage() {
             </div>
           </div>
 
-          {/* Carte des élèves (pour direction et titulaires) */}
-          {(userRole === 'direction' || userRole === 'titulaire' || userRole === 'co_titulaire') && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          {/* Élèves */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Users className="w-5 h-5 text-amber-600" />
                 <h2 className="text-lg font-semibold">Élèves ({eleves.length})</h2>
@@ -271,25 +301,25 @@ export default function ConseilClassePage() {
                   <div key={eleve.matricule} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg">
                     <div>
                       <p className="font-medium">{eleve.prenom} {eleve.nom}</p>
-                      <p className="text-xs text-gray-500">Niveau {eleve.niveau}</p>
                     </div>
-                    {roles?.president_matricule === eleve.matricule && (
-                      <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">Président</span>
-                    )}
-                    {roles?.secretaire_matricule === eleve.matricule && (
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Secrétaire</span>
-                    )}
-                    {roles?.delegue_voyage_matricule === eleve.matricule && (
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Voyages</span>
-                    )}
+                    <div className="flex gap-1">
+                      {roles?.president_matricule === eleve.matricule && (
+                        <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">Président</span>
+                      )}
+                      {roles?.secretaire_matricule === eleve.matricule && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Secrétaire</span>
+                      )}
+                      {roles?.delegue_voyage_matricule === eleve.matricule && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Voyages</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+          </div>
         </div>
 
-        {/* Colonne de droite - Votes */}
+        {/* Votes */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex justify-between items-center mb-6">
@@ -329,10 +359,7 @@ export default function ConseilClassePage() {
             ) : (
               <div className="space-y-4">
                 {votes.map(vote => (
-                  <VoteCard
-                    key={vote.id}
-                    vote={vote}
-                  />  
+                  <VoteCard key={vote.id} vote={vote} />
                 ))}
               </div>
             )}
@@ -348,7 +375,6 @@ export default function ConseilClassePage() {
           onSuccess={() => {
             setShowVoteCreator(false);
             loadData();
-            window.location.reload();
           }}
         />
       )}

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import AGStatusBadge from '@/components/ag/AGStatusBadge';
 import { getTfhDashboardType, TfhDashboardType } from '@/lib/tfh/permissions';
-import { ConseilLaClasseCard } from '@/components/conseilLaClasse/ConseilLaClasseCard';
+import { ConseilDeLaClasseCard } from '@/components/conseilLaClasse/ConseilDeLaClasseCard';
 
 interface Voyage {
   id: string;
@@ -42,7 +42,7 @@ export default function DashboardPage() {
   const [groupeTravail, setGroupeTravail] = useState<GroupeTravail | null>(null);
   const [tfhDashboardType, setTfhDashboardType] = useState<TfhDashboardType>(null);
   const [classesConseil, setClassesConseil] = useState<string[]>([]);
-
+  
   useEffect(() => {
     const type = localStorage.getItem('userType') as 'employee' | 'student';
     const id = localStorage.getItem('userId');
@@ -69,55 +69,75 @@ export default function DashboardPage() {
 
 
   const chargerClassesConseil = async (type: 'employee' | 'student', id: string, job: string) => {
-    const annee = '2024-2025';
-    console.log('🔍 chargerClassesConseil appelé avec:', { type, id, job, annee });
+    // Récupérer l'année scolaire courante
+    const { data: anneeData } = await supabase
+      .from('conseil_classes_config')
+      .select('annee_scolaire')
+      .order('annee_scolaire', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const annee = anneeData?.annee_scolaire || '2025-2026';
     
     if (type === 'student') {
       const userClass = localStorage.getItem('userClass');
-      console.log('🎓 Élève, userClass:', userClass);
       if (userClass) {
         setClassesConseil([userClass]);
-        console.log('✅ Classes conseil pour élève:', [userClass]);
       }
     } else if (type === 'employee') {
       const classesTrouvees: string[] = [];
       
-      // Récupérer les classes où l'employé est titulaire ou co-titulaire
-      console.log('👨‍🏫 Employé, recherche des classes pour:', id);
+      // 1. Classes où l'employé est titulaire ou co-titulaire
       const { data: roles, error } = await supabase
         .from('conseil_classes_roles')
-        .select('classe_nom, titulaire_id, co_titulaire_id')
+        .select('classe_nom')
         .eq('annee_scolaire', annee)
         .or(`titulaire_id.eq.${id},co_titulaire_id.eq.${id}`);
       
-      console.log('📊 Résultat requête roles:', { roles, error });
-      
       if (!error && roles && roles.length > 0) {
         classesTrouvees.push(...roles.map(r => r.classe_nom));
-        console.log('✅ Classes trouvées via rôles:', classesTrouvees);
       }
       
-      // Si direction, ajouter toutes les classes
+      // 2. Si c'est un éducateur, récupérer les classes de ses niveaux
+      if (job === 'educ') {
+        // Récupérer les niveaux dont l'éducateur est responsable
+        const { data: niveaux } = await supabase
+          .from('conseil_annee_educateurs')
+          .select('niveau')
+          .eq('annee_scolaire', annee)
+          .eq('educateur_id', id);
+        
+        if (niveaux && niveaux.length > 0) {
+          const niveauxListe = niveaux.map(n => n.niveau);
+          // Récupérer les classes correspondant à ces niveaux
+          for (const niveau of niveauxListe) {
+            const { data: classesData } = await supabase
+              .from('students')
+              .select('classe')
+              .like('classe', `${niveau}%`);
+            
+            if (classesData) {
+              classesTrouvees.push(...classesData.map(c => c.classe));
+            }
+          }
+        }
+      }
+      
+      // 3. Si direction, ajouter toutes les classes
       if (job === 'direction') {
-        console.log('👔 Direction - chargement de toutes les classes');
-        const { data: classes, error: classesError } = await supabase
+        const { data: classes } = await supabase
           .from('students')
           .select('classe')
           .not('classe', 'is', null)
           .not('classe', 'eq', '');
         
-        console.log('📊 Résultat requête classes:', { classes, classesError });
-        
         if (classes) {
           const classesUniques = [...new Set(classes.map(c => c.classe))];
           classesTrouvees.push(...classesUniques);
-          console.log('✅ Classes uniques ajoutées:', classesUniques);
         }
       }
       
-      const classesFinales = [...new Set(classesTrouvees)];
-      setClassesConseil(classesFinales);
-      console.log('🎯 Classes conseil finales:', classesFinales);
+      setClassesConseil([...new Set(classesTrouvees)]);
     }
   };
 
@@ -368,9 +388,69 @@ export default function DashboardPage() {
             </Link>
           )}
 
-          {/* Conseils de la classe */}
-          {classesConseil.map(classe => (
-            <ConseilLaClasseCard
+
+          {/* Conseil de la classe - UNE SEULE CARTE pour la direction */}
+          {userType === 'employee' && userJob === 'direction' && (
+            <Link href="/dashboard/conseil-de-la-classe" className="block h-full">
+              <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-amber-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">Conseil de la classe</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
+                    Supervision des conseils de la classe : gestion des titulariats et ordres du jour
+                  </p>
+                </div>
+              </div>
+            </Link>
+          )}
+
+          {/* Conseils de la classe - pour titulaires et co-titulaires (UNIQUEMENT, PAS pour éducateurs) */}
+          {userType === 'employee' && userJob !== 'direction' && userJob !== 'educ' && classesConseil.map(classe => (
+            <ConseilDeLaClasseCard
+              key={classe}
+              classeNom={classe}
+              userType={userType}
+              userId={userId}
+              userJob={userJob}
+            />
+          ))}
+
+          {/* Conseil de la classe - UNE SEULE CARTE pour les éducateurs */}
+          {userType === 'employee' && userJob === 'educ' && (
+            <Link href="/dashboard/conseils-de-la-classe-multiples" className="block h-full">
+              <div className="h-40 bg-white rounded-lg shadow-sm border-2 border-amber-400 p-6 hover:shadow-md transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">Conseils de classe</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 line-clamp-2 group-hover:line-clamp-none transition-all">
+                    Gestion multi-classes : votations communes et accès à tous vos conseils
+                  </p>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
+                    {classesConseil.length} classe(s)
+                  </span>
+                  <span className="text-amber-600 text-sm group-hover:translate-x-1 transition-transform">→</span>
+                </div>
+              </div>
+            </Link>
+          )}
+
+          {/* Pour les élèves, une carte par classe */}
+          {userType === 'student' && classesConseil.map(classe => (
+            <ConseilDeLaClasseCard
               key={classe}
               classeNom={classe}
               userType={userType}
