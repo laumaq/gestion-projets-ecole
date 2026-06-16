@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Vote } from '@/hooks/votes/useVotes';
 import { useUser } from '@/hooks/useUser';
-import { useVotes } from '@/hooks/votes/useVotes';
+import { useVoteContext } from '@/hooks/votes/useVoteContext';
 import { supabase } from '@/lib/supabase';
 import { VoteEditor } from './VoteEditor';
 import { ResultsViewer } from './ResultsViewer';
@@ -35,7 +35,7 @@ const MENTIONS = [
 
 export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   const { user } = useUser();
-  const { openVote, closeVote, deleteVote, submitVote } = useVotes({ 
+  const { openVote, closeVote, deleteVote, submitVote, refresh } = useVoteContext({ 
     module: vote.module_contexte, 
     id: vote.module_id 
   });
@@ -60,15 +60,22 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
 
   // Initialiser les valeurs par défaut
   useEffect(() => {
-    if (isExpanded && vote.candidates_source === 'employees' && Object.keys(selectedJugements).length === 0) {
-      const defaultValue = vote.type_scrutin === 'jugement' ? 3 : 0; // 0 = NEUTRE pour approbation
+    if (isExpanded && vote.type_scrutin === 'jugement') {
       const defaultJugements: Record<string, number> = {};
-      vote.options.forEach(opt => {
-        defaultJugements[opt.id] = defaultValue;
+      vote.options.forEach((opt: any) => {
+        // Initialiser UNIQUEMENT si pas déjà défini
+        if (selectedJugements[opt.id] === undefined) {
+          defaultJugements[opt.id] = 3;
+        }
       });
-      setSelectedJugements(defaultJugements);
+      if (Object.keys(defaultJugements).length > 0) {
+        setSelectedJugements(prev => {
+          console.log('🔧 Initialisation:', { prev, defaultJugements });
+          return { ...prev, ...defaultJugements };
+        });
+      }
     }
-  }, [isExpanded, vote.candidates_source, vote.type_scrutin, vote.options, selectedJugements]);
+  }, [isExpanded, vote.type_scrutin, vote.options]);
 
   const checkIfVoted = async () => {
     if (!user) return;
@@ -368,10 +375,15 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   };
 
   const handleJugementChange = (optionId: string, valeur: number) => {
-    setSelectedJugements(prev => ({
-      ...prev,
-      [optionId]: valeur
-    }));
+    console.log('🔍 handleJugementChange:', { optionId, valeur });
+    setSelectedJugements(prev => {
+      const newState = {
+        ...prev,
+        [optionId]: valeur
+      };
+      console.log('🔍 Nouvel état selectedJugements:', newState);
+      return newState;
+    });
   };
 
   const isJugementValid = () => {
@@ -703,29 +715,49 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                     ))}
                   </div>
                 ) : vote.type_scrutin === 'jugement' ? (
-                  // Interface pour le jugement majoritaire (inchangé)
+                  // Interface pour le jugement majoritaire
                   <div className="space-y-4">
-                    {vote.options.map(opt => (
-                      <div key={opt.id} className="border rounded-lg p-3">
-                        <p className="font-medium mb-2">{opt.texte}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {MENTIONS.map(mention => (
-                            <button
-                              key={mention.value}
-                              onClick={() => handleJugementChange(opt.id, mention.value)}
-                              className={`px-3 py-1 rounded-full text-sm ${
-                                selectedJugements[opt.id] === mention.value
-                                  ? `${mention.color} text-white`
-                                  : 'bg-gray-100 hover:bg-gray-200'
-                              }`}
-                              disabled={submitting}
-                            >
-                              {mention.label}
-                            </button>
-                          ))}
+                    {vote.options.map((option) => {
+                      console.log('🔍 Option ID:', option.id, 'Texte:', option.texte);
+                      // Récupérer la valeur UNIQUEMENT pour cette option
+                      const currentValue = selectedJugements[option.id];
+                      console.log(`🔍 Option ${option.id} (${option.texte}): valeur = ${currentValue}`);
+                      
+                      return (
+                        <div key={option.id} className="border rounded-lg p-4">
+                          <p className="font-medium mb-2">{option.texte}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {MENTIONS.map((mention) => {
+                              const isSelected = currentValue === mention.value;
+                              return (
+                                <button
+                                  key={mention.value}
+                                  onClick={() => {
+                                    console.log(`🖱️ Clic sur ${mention.label} pour ${option.id}`);
+                                    setSelectedJugements(prev => {
+                                      const newState = {
+                                        ...prev,
+                                        [option.id]: mention.value
+                                      };
+                                      console.log('📦 Nouvel état:', newState);
+                                      return newState;
+                                    });
+                                  }}
+                                  className={`px-3 py-1 rounded-full text-sm text-white transition ${
+                                    isSelected ? mention.color : 'bg-gray-300 hover:opacity-80'
+                                  }`}
+                                >
+                                  {mention.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Actuel: {MENTIONS.find(m => m.value === currentValue)?.label || 'Non défini'}
+                          </p>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   // Interface pour uninominal/plurinominal (inchangé)

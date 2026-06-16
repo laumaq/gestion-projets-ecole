@@ -53,7 +53,7 @@ export interface Vote {
 export const useVotes = (context: { 
   module: string; 
   id: string; 
-  idField?: string;  
+  idField?: 'module_id' | 'conseil_classe_classe_nom' | 'conseil_classe_id' | 'custom';
   communicationId?: string;  
   interventionLibreId?: string;
 }) => {
@@ -76,21 +76,18 @@ export const useVotes = (context: {
     
     try {
       setLoading(true);
-
       const idField = context.idField || 'module_id';
-
+      
       let query = supabase
         .from('votes')
         .select('*')
         .eq('module_contexte', context.module)
         .eq(idField, context.id);
 
-      // Filtrer par communication_id si fourni
       if (context.communicationId) {
         query = query.eq('communication_id', context.communicationId);
       }
       
-      // Filtrer par intervention_libre_id si fourni
       if (context.interventionLibreId) {
         query = query.eq('intervention_libre_id', context.interventionLibreId);
       }
@@ -98,14 +95,45 @@ export const useVotes = (context: {
       const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
-      setVotes(data || []);
+      
+      // 🔥 FORMATER LES OPTIONS POUR CHAQUE VOTE
+      const formattedData = (data || []).map((vote: any) => {
+        let options = vote.options;
+        
+        // Si options est un tableau de strings, le convertir en objets avec id et texte
+        if (Array.isArray(options) && options.length > 0 && typeof options[0] === 'string') {
+          options = options.map((texte: string, index: number) => ({
+            id: `opt-${vote.id}-${index}`,
+            texte: texte,
+            ordre: index
+          }));
+        }
+        // Si options est un tableau d'objets mais sans id
+        else if (Array.isArray(options) && options.length > 0 && typeof options[0] === 'object' && !options[0].id) {
+          options = options.map((opt: any, index: number) => ({
+            id: `opt-${vote.id}-${index}`,
+            texte: opt.texte || opt.label || `Option ${index + 1}`,
+            ordre: opt.ordre || index
+          }));
+        }
+        // Si options n'est pas un tableau
+        else if (!Array.isArray(options)) {
+          options = [];
+        }
+        
+        return {
+          ...vote,
+          options: options
+        };
+      });
+      
+      setVotes(formattedData);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
   }, [context.module, context.id, context.idField, context.communicationId, context.interventionLibreId, user]);
-
 
   // Effet pour charger les votes quand l'utilisateur est prêt
   useEffect(() => {

@@ -11,7 +11,11 @@ type ScrutinType = 'uninominal' | 'plurinominal' | 'jugement' | 'rang' | 'approb
 type CandidatesSource = 'custom' | 'employees';
 
 interface VoteCreatorProps {
-  context: { module: string; id: string };
+  context: { 
+    module: string; 
+    id: string;
+    idField?: 'module_id' | 'conseil_classe_classe_nom' | 'conseil_classe_id' | 'custom';
+  };
   communicationId?: string;
   interventionLibreId?: string;
   onClose: () => void;

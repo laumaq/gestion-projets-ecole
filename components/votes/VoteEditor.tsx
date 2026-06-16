@@ -2,13 +2,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Vote } from '@/hooks/votes/useVotes';
-import { useVotes } from '@/hooks/votes/useVotes';
+import { Vote } from '@/hooks/votes/useVoteContext';
+import { useVoteContext } from '@/hooks/votes/useVoteContext';
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/errors';
 
 type ShowResultsType = 'always' | 'after_vote' | 'after_close';
-type ScrutinType = 'uninominal' | 'plurinominal' | 'jugement' | 'rang';
+type ScrutinType = 'uninominal' | 'plurinominal' | 'jugement' | 'rang' | 'approbation';
 
 interface VoteEditorProps {
   vote: Vote;
@@ -17,9 +17,10 @@ interface VoteEditorProps {
 }
 
 export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
-  const { updateVote } = useVotes({ 
+  const { updateVote } = useVoteContext({ 
     module: vote.module_contexte, 
-    id: vote.module_id 
+    id: vote.module_id || vote.conseil_classe_classe_nom || '',
+    idField: vote.conseil_classe_classe_nom ? 'conseil_classe_classe_nom' : 'module_id'
   });
   
   const [hasExistingVotes, setHasExistingVotes] = useState(false);
@@ -64,7 +65,6 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
     setError(null);
     
     try {
-      // Vérifier si le type a changé
       const typeHasChanged = formData.type_scrutin !== vote.type_scrutin;
       
       const updatedOptions = formData.options.map((texte, index) => ({
@@ -131,7 +131,6 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
             </div>
           )}
 
-          {/* Titre */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Titre du vote
@@ -145,7 +144,6 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
             />
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Description (optionnelle)
@@ -158,7 +156,6 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
             />
           </div>
 
-          {/* Question */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Question posée aux votants
@@ -172,7 +169,6 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
             />
           </div>
 
-          {/* Type de scrutin */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Type de scrutin
@@ -190,6 +186,7 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
             >
               <option value="plurinominal">Plurinominal (choix multiples)</option>
               <option value="uninominal">Uninominal (un seul choix)</option>
+              <option value="approbation">Approbation (OUI/NON/Neutre)</option>
               <option value="jugement">Jugement majoritaire (mentions)</option>
               <option value="rang">Classement (ordre de préférence)</option>
             </select>
@@ -205,7 +202,6 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
             )}
           </div>
 
-          {/* Options */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Options de réponse
@@ -248,7 +244,6 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
             </div>
           </div>
 
-          {/* Paramètres */}
           <div className="space-y-4">
             <h3 className="font-medium">Paramètres du vote</h3>
             
@@ -291,7 +286,6 @@ export function VoteEditor({ vote, onClose, onSuccess }: VoteEditorProps) {
             </div>
           </div>
 
-          {/* Boutons */}
           <div className="flex justify-end gap-3 pt-4 border-t">
             <button
               type="button"

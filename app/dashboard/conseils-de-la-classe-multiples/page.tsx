@@ -212,7 +212,7 @@ export default function ConseilsMultiplesPage() {
             // ⚠️ NE PAS inclure 'module_id' - c'est un UUID !
             conseil_classe_classe_nom: classeNom,  // ← Stocker le nom de la classe ici
             conseil_classe_annee: annee,
-            statut: 'actif',
+            statut: 'brouillon',
             created_by: localStorage.getItem('userId'),
             created_at: new Date().toISOString()
           });
@@ -344,7 +344,7 @@ export default function ConseilsMultiplesPage() {
             // ⚠️ NE PAS inclure 'module_id' - c'est un UUID !
             conseil_classe_classe_nom: classeNom,  // ← Stocker le nom de la classe ici
             conseil_classe_annee: annee,
-            statut: 'actif',
+            statut: 'brouillon',
             created_by: localStorage.getItem('userId'),
             created_at: new Date().toISOString()
           });
