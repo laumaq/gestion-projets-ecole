@@ -6,15 +6,24 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, User, LogOut, Home, Calendar, Users, Vote, HelpCircle, Shield } from 'lucide-react';
+import { 
+  Menu, X, User, LogOut, Home, Calendar, Users, Vote, 
+  HelpCircle, Shield, UsersRound, School, Briefcase, 
+  GraduationCap, UserCog, BookOpen
+} from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function Header() {
   const [userName, setUserName] = useState('');
   const [userType, setUserType] = useState<'employee' | 'student'>('employee');
   const [userJob, setUserJob] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
+  const [userClass, setUserClass] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [groupeTravail, setGroupeTravail] = useState<string | null>(null);
+  const [classeConseil, setClasseConseil] = useState<string | null>(null);
+  const [loadingLinks, setLoadingLinks] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -23,12 +32,79 @@ export default function Header() {
     const type = localStorage.getItem('userType') as 'employee' | 'student';
     const job = localStorage.getItem('userJob');
     const id = localStorage.getItem('userId');
+    const userClassFromStorage = localStorage.getItem('userClass');
         
     if (name) setUserName(name);
     if (type) setUserType(type);
     if (job) setUserJob(job);
     if (id) setUserId(id);
+    if (userClassFromStorage) setUserClass(userClassFromStorage);
+
+    // Récupérer les informations supplémentaires
+    if (id && type) {
+      fetchUserLinks(id, type);
+    }
   }, [pathname]);
+
+  const fetchUserLinks = async (id: string, type: 'employee' | 'student') => {
+    try {
+      // Récupérer l'année scolaire en cours
+      const { data: configData } = await supabase
+        .from('conseil_classes_config')
+        .select('annee_scolaire')
+        .order('annee_scolaire', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const annee = configData?.annee_scolaire || '2025-2026';
+
+      if (type === 'employee') {
+        // Récupérer le groupe de travail de l'employé
+        const { data: employeeData } = await supabase
+          .from('employees')
+          .select('groupe_id')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (employeeData?.groupe_id) {
+          const { data: groupeData } = await supabase
+            .from('ag_groupes')
+            .select('nom')
+            .eq('id', employeeData.groupe_id)
+            .maybeSingle();
+          
+          if (groupeData) {
+            setGroupeTravail(groupeData.nom);
+          }
+        }
+
+        // Récupérer la classe du conseil pour les non-direction et non-educ
+        if (userJob !== 'direction' && userJob !== 'educ') {
+          const { data: roleData } = await supabase
+            .from('conseil_classes_roles')
+            .select('classe_nom')
+            .eq('annee_scolaire', annee)
+            .or(`titulaire_id.eq.${id},co_titulaire_id.eq.${id}`)
+            .maybeSingle();
+
+          if (roleData?.classe_nom) {
+            setClasseConseil(roleData.classe_nom);
+          }
+        }
+      } else if (type === 'student') {
+        // Pour les élèves, utiliser leur classe
+        const studentClass = localStorage.getItem('userClass');
+        if (studentClass) {
+          setClasseConseil(studentClass);
+        }
+      }
+
+      setLoadingLinks(false);
+    } catch (error) {
+      console.error('Erreur chargement liens:', error);
+      setLoadingLinks(false);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -38,7 +114,7 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // ✅ RETOURNE NULL SUR LA PAGE DE CONNEXION
+  // NE PAS AFFICHER LE HEADER SUR LA PAGE DE CONNEXION
   if (pathname === '/') return null;
 
   const handleLogout = () => {
@@ -49,16 +125,66 @@ export default function Header() {
   const adminUUIDs = ['52793bea-994a-4b50-b768-75427df4747b', 'a06b22ec-11f6-49a7-ab8a-13607ff2ac87'];
   const isAdmin = userType === 'employee' && userId && adminUUIDs.includes(userId);
 
-  const navItems = userType === 'employee' ? [
-    { href: '/dashboard/main', label: 'Tableau de bord', icon: Home },
-    { href: '/voyages', label: 'Voyages', icon: Calendar },
-    { href: '/ag', label: 'AG', icon: Users },
-    { href: '/votes', label: 'Votes', icon: Vote },
-  ] : [
-    { href: '/dashboard/main', label: 'Tableau de bord', icon: Home },
-    { href: '/voyages/mes-voyages', label: 'Mes voyages', icon: Calendar },
-    { href: '/votes', label: 'Votes', icon: Vote },
-  ];
+
+  // Liens supplémentaires dynamiques
+  const getDynamicLinks = () => {
+    const links = [];
+
+    // 1. Assemblée générale - tools/ag
+    links.push({
+      href: '/tools/ag',
+      label: 'Assemblée générale',
+      icon: UsersRound,
+      condition: true
+    });
+
+    // 2. Groupe de travail
+    if (groupeTravail && userType === 'employee') {
+      links.push({
+        href: `/tools/groupes-travail/${encodeURIComponent(groupeTravail)}`,
+        label: `${groupeTravail}`,
+        icon: Briefcase,
+        condition: true
+      });
+    }
+
+    // 3. Conseil de classe
+    if (classeConseil) {
+      // Pour les élèves et employees non-direction/non-educ
+      if (userType === 'student' || (userType === 'employee' && userJob !== 'direction' && userJob !== 'educ')) {
+        links.push({
+          href: `/dashboard/conseil-de-la-classe/${encodeURIComponent(classeConseil)}`,
+          label: `Conseil ${classeConseil}`,
+          icon: School,
+          condition: true
+        });
+      }
+    }
+
+    // 4. Panneau de gestion des conseils - Direction
+    if (userType === 'employee' && userJob === 'direction') {
+      links.push({
+        href: '/dashboard/administration/conseils',
+        label: 'Gestion conseils',
+        icon: UserCog,
+        condition: true
+      });
+    }
+
+    // 5. Panneau de gestion des conseils multiples - Éducateur
+    if (userType === 'employee' && userJob === 'educ') {
+      links.push({
+        href: '/dashboard/administration/conseils-multiples',
+        label: 'Gestion conseils (multi)',
+        icon: Users,
+        condition: true
+      });
+    }
+
+    return links;
+  };
+
+  const dynamicLinks = getDynamicLinks();
 
   const getRoleDisplay = () => {
     if (userType === 'employee') {
@@ -82,7 +208,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo et nom */}
-          <Link href="/dashboard/main" className="flex items-center gap-3 group">
+          <Link href="/dashboard/main" className="flex items-center gap-3 group flex-shrink-0">
             <div className="relative w-10 h-10 md:w-12 md:h-12 flex-shrink-0">
               <Image
                 src="/images/logo/logotype-tampon-forme-courte-vert.png"
@@ -106,26 +232,33 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* Navigation Desktop */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {navItems.map((item) => (
+          {/* Navigation Desktop - avec liens dynamiques */}
+          <nav className="hidden lg:flex items-center gap-1 overflow-x-auto max-w-2xl">
+
+            {/* Séparateur pour les liens dynamiques */}
+            {dynamicLinks.length > 0 && (
+              <span className={`w-px h-8 ${isScrolled ? 'bg-gray-200' : 'bg-white/20'}`}></span>
+            )}
+
+            {/* Liens dynamiques */}
+            {dynamicLinks.map((link) => (
               <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm font-medium ${
+                key={link.href}
+                href={link.href}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm font-medium whitespace-nowrap ${
                   isScrolled
                     ? 'text-gray-700 hover:text-school-green-600 hover:bg-school-green-50'
                     : 'text-white hover:text-green-100 hover:bg-white/10'
                 }`}
               >
-                <item.icon className="w-4 h-4" />
-                <span>{item.label}</span>
+                <link.icon className="w-4 h-4" />
+                <span>{link.label}</span>
               </Link>
             ))}
           </nav>
 
           {/* Droite : Admin, Aide, Profil */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3 flex-shrink-0">
             {isAdmin && (
               <Link
                 href="/admin"
@@ -152,7 +285,6 @@ export default function Header() {
               <span>Aide</span>
             </Link>
 
-            {/* Profil utilisateur */}
             <div className="flex items-center gap-3">
               <div className={`flex items-center gap-3 px-4 py-2 rounded-lg ${
                 isScrolled ? 'bg-school-green-50' : 'bg-white/10 backdrop-blur-sm'
@@ -203,12 +335,19 @@ export default function Header() {
 
         {/* Menu mobile */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-white/20">
+          <div className="md:hidden py-4 border-t border-white/20 max-h-[80vh] overflow-y-auto">
             <nav className="flex flex-col gap-1">
-              {navItems.map((item) => (
+
+              {/* Séparateur */}
+              {dynamicLinks.length > 0 && (
+                <div className={`my-2 border-t ${isScrolled ? 'border-gray-200' : 'border-white/20'}`}></div>
+              )}
+
+              {/* Liens dynamiques */}
+              {dynamicLinks.map((link) => (
                 <Link
-                  key={item.href}
-                  href={item.href}
+                  key={link.href}
+                  href={link.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                     isScrolled
                       ? 'text-gray-700 hover:bg-school-green-50'
@@ -216,11 +355,12 @@ export default function Header() {
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <link.icon className="w-5 h-5" />
+                  <span className="font-medium">{link.label}</span>
                 </Link>
               ))}
 
+              {/* Admin dans menu mobile */}
               {isAdmin && (
                 <Link
                   href="/admin"
@@ -236,6 +376,7 @@ export default function Header() {
                 </Link>
               )}
 
+              {/* Aide dans menu mobile */}
               <Link
                 href="/help"
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
@@ -249,7 +390,8 @@ export default function Header() {
                 <span className="font-medium">Aide</span>
               </Link>
 
-              <div className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
+              {/* Profil dans menu mobile */}
+              <div className={`flex items-center gap-3 px-4 py-3 rounded-lg mt-2 ${
                 isScrolled ? 'bg-school-green-50' : 'bg-white/10'
               }`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -271,6 +413,7 @@ export default function Header() {
                 </div>
               </div>
 
+              {/* Déconnexion dans menu mobile */}
               <button
                 onClick={() => {
                   setIsMenuOpen(false);

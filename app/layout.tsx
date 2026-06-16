@@ -1,5 +1,3 @@
-// /app/layout.tsx
-
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -24,7 +22,9 @@ export default function RootLayout({
     <html lang="fr">
       <body className={inter.className}>
         <Header />
-        {children}  {/* ← SUPPRIMEZ le <main> avec le padding */}
+        <main className="min-h-screen bg-gray-50 pt-16 md:pt-20">
+          {children}
+        </main>
       </body>
     </html>
   );
