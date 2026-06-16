@@ -1,3 +1,4 @@
+/* stylelint-disable */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,102 +7,100 @@
 
 @layer base {
   :root {
-    --foreground-rgb: 0, 0, 0;
-    --background-rgb: 248, 250, 252;
+    --school-green: #4CAF50;
+    --school-green-light: #66BB6A;
+    --school-green-dark: #388E3C;
+  }
+
+  * {
+    @apply transition-colors duration-200;
   }
 
   body {
-    color: rgb(var(--foreground-rgb));
-    background: rgb(var(--background-rgb));
+    @apply bg-gray-50 text-gray-900 antialiased;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-school-green-600 text-white px-4 py-2 rounded-lg hover:bg-school-green-700 transition-colors;
   }
-
+  
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg hover:bg-gray-300 transition;
+    @apply bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors;
   }
 
-  .card {
-    @apply bg-white rounded-xl shadow p-6;
-  }
-
-  .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
   }
 }
 
-/* Animations */
-@keyframes fadeIn {
+/* Animations personnalisées */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes spin-slow {
   from {
-    opacity: 0;
-    transform: translateY(10px);
+    transform: rotate(0deg);
   }
   to {
-    opacity: 1;
-    transform: translateY(0);
+    transform: rotate(360deg);
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
+@keyframes spin-slower {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
 }
 
-/* Scrollbar personnalisée */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+.animate-spin-slower {
+  animation: spin-slower 12s linear infinite;
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 4s ease-in-out infinite;
+}
+
+/* Amélioration du scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  @apply bg-gray-100;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+  @apply bg-school-green-400 rounded-full hover:bg-school-green-500 transition-colors;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
 
-/* Focus styles */
-:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-/* Transition par défaut */
-* {
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-/* Styles pour l'affichage de l'alignement Quill */
-.ql-editor {
-  text-align: left;
-}
-
-.ql-editor[align="center"],
-.ql-editor .ql-align-center {
-  text-align: center;
-}
-
-.ql-editor[align="right"],
-.ql-editor .ql-align-right {
-  text-align: right;
-}
-
-.ql-editor[align="justify"],
-.ql-editor .ql-align-justify {
-  text-align: justify;
-}
-
-input[type="radio"]:not(:disabled) {
-  cursor: pointer;
-  opacity: 1 !important;
-}
+/* stylelint-enable */

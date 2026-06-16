@@ -1,14 +1,18 @@
-// app/layout.tsx
+// /app/layout.tsx
+
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import Header from '@/components/Header'; // Import du Header
+import Header from '@/components/Header';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Portail Waha - Outils Scolaires',
   description: 'Portail des outils pédagogiques',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
@@ -19,10 +23,8 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={inter.className}>
-        <Header /> {/* Header global */}
-        <main className="min-h-screen bg-gray-50">
-          {children}
-        </main>
+        <Header />
+        {children}  {/* ← SUPPRIMEZ le <main> avec le padding */}
       </body>
     </html>
   );
