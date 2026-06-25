@@ -39,6 +39,34 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
     module: vote.module_contexte, 
     id: vote.module_id 
   });
+
+
+  const renderWithLinks = (text: string) => {
+    if (!text) return null;
+    
+    // Regex pour détecter les URLs
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, index) => {
+      // Si la partie correspond à une URL, la rendre cliquable
+      if (part.match(/^https?:\/\//)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline break-all"
+            onClick={(e) => e.stopPropagation()} // Empêcher de déplier/replier la carte
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
   
   const [hasVoted, setHasVoted] = useState(false);
   const [showResultsModal, setShowResultsModal] = useState(false);
@@ -493,7 +521,9 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-600">{vote.description}</p>
+            <p className="text-sm text-gray-600">
+              {renderWithLinks(vote.description)}
+            </p>
           </div>
 
           {/* Actions pour le créateur */}
