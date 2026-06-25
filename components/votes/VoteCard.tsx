@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Vote } from '@/hooks/votes/useVotes';
 import { useUser } from '@/hooks/useUser';
-import { useVoteContext } from '@/hooks/votes/useVoteContext';
+import { useVotes } from '@/hooks/votes/useVotes';
 import { supabase } from '@/lib/supabase';
 import { VoteEditor } from './VoteEditor';
 import { ResultsViewer } from './ResultsViewer';
@@ -35,38 +35,10 @@ const MENTIONS = [
 
 export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   const { user } = useUser();
-  const { openVote, closeVote, deleteVote, submitVote, refresh } = useVoteContext({ 
+  const { openVote, closeVote, deleteVote, submitVote } = useVotes({ 
     module: vote.module_contexte, 
     id: vote.module_id 
   });
-
-
-  const renderWithLinks = (text: string) => {
-    if (!text) return null;
-    
-    // Regex pour détecter les URLs
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = text.split(urlRegex);
-    
-    return parts.map((part, index) => {
-      // Si la partie correspond à une URL, la rendre cliquable
-      if (part.match(/^https?:\/\//)) {
-        return (
-          <a
-            key={index}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 underline break-all"
-            onClick={(e) => e.stopPropagation()} // Empêcher de déplier/replier la carte
-          >
-            {part}
-          </a>
-        );
-      }
-      return <span key={index}>{part}</span>;
-    });
-  };
   
   const [hasVoted, setHasVoted] = useState(false);
   const [showResultsModal, setShowResultsModal] = useState(false);
@@ -80,6 +52,32 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   const [showEditor, setShowEditor] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Fonction pour rendre les liens cliquables dans la description
+  const renderWithLinks = (text: string) => {
+    if (!text) return null;
+    
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, index) => {
+      if (part.match(/^https?:\/\//)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline break-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
   useEffect(() => {
     if (user) {
       checkIfVoted();
@@ -88,28 +86,19 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
 
   // Initialiser les valeurs par défaut
   useEffect(() => {
-    if (isExpanded && vote.type_scrutin === 'jugement') {
+    if (isExpanded && vote.type_scrutin === 'jugement' && Object.keys(selectedJugements).length === 0) {
       const defaultJugements: Record<string, number> = {};
       vote.options.forEach((opt: any) => {
-        // Initialiser UNIQUEMENT si pas déjà défini
-        if (selectedJugements[opt.id] === undefined) {
-          defaultJugements[opt.id] = 3;
-        }
+        defaultJugements[opt.id] = 3;
       });
-      if (Object.keys(defaultJugements).length > 0) {
-        setSelectedJugements(prev => {
-          console.log('🔧 Initialisation:', { prev, defaultJugements });
-          return { ...prev, ...defaultJugements };
-        });
-      }
+      setSelectedJugements(defaultJugements);
     }
-  }, [isExpanded, vote.type_scrutin, vote.options]);
+  }, [isExpanded, vote.type_scrutin, vote.options, selectedJugements]);
 
   const checkIfVoted = async () => {
     if (!user) return;
     
     try {
-      // 1. D'abord, vérifier si l'utilisateur a voté via la table vote_voters
       const { data: voter, error: voterError } = await supabase
         .from('vote_voters')
         .select('ballot_hash')
@@ -120,7 +109,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
       if (voter) {
         setHasVoted(true);
         
-        // Récupérer le bulletin associé à ce hash
         const { data: ballot } = await supabase
           .from('vote_ballots')
           .select('choix')
@@ -151,7 +139,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
         return;
       }
 
-      // 2. Si pas dans vote_voters, vérifier dans vote_ballots pour les votes non anonymes
       const { data: ballot } = await supabase
         .from('vote_ballots')
         .select('choix')
@@ -207,11 +194,11 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   const getStatusBadge = () => {
     switch (vote.statut) {
       case 'brouillon':
-        return <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">📝 Brouillon</span>;
+        return <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs whitespace-nowrap">📝 Brouillon</span>;
       case 'actif':
-        return <span className="px-2 py-1 bg-green-100 text-green-600 rounded-full text-xs">✅ En cours</span>;
+        return <span className="px-2 py-0.5 bg-green-100 text-green-600 rounded-full text-xs whitespace-nowrap">✅ En cours</span>;
       case 'cloture':
-        return <span className="px-2 py-1 bg-purple-100 text-purple-600 rounded-full text-xs">🏁 Clôturé</span>;
+        return <span className="px-2 py-0.5 bg-purple-100 text-purple-600 rounded-full text-xs whitespace-nowrap">🏁 Clôturé</span>;
     }
   };
 
@@ -227,18 +214,9 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   };
 
   const canShowResults = () => {
-    const result = vote.statut === 'cloture' 
+    return vote.statut === 'cloture' 
       || vote.parametres.show_results === 'always' 
       || (vote.parametres.show_results === 'after_vote' && hasVoted);
-    
-    console.log('🔍 canShowResults details:', {
-      statut_cloture: vote.statut === 'cloture',
-      show_results_always: vote.parametres.show_results === 'always',
-      show_results_after_vote_and_hasVoted: vote.parametres.show_results === 'after_vote' && hasVoted,
-      final: result
-    });
-    
-    return result;
   };
 
   const handleOpen = async () => {
@@ -286,11 +264,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   };
 
   const handleVote = async () => {
-    console.log('🔍 handleVote appelé');
-    console.log('🔍 type_scrutin:', vote.type_scrutin);
-    console.log('🔍 selectedJugements:', selectedJugements);
-    console.log('🔍 selectedOptions:', selectedOptions);
-    
     if (vote.type_scrutin === 'jugement') {
       if (Object.keys(selectedJugements).length !== vote.options.length) {
         setError('Veuillez évaluer toutes les options');
@@ -302,7 +275,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
         return;
       }
     } else if (vote.type_scrutin === 'approbation') {
-      // Pour l'approbation, on vérifie que toutes les options ont une valeur
       if (Object.keys(selectedJugements).length !== vote.options.length) {
         setError('Configuration en cours...');
         return;
@@ -344,7 +316,6 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
             optionId,
             valeur
           }));
-          console.log('🔍 choix pour approbation:', choix);
           break;
         case 'rang':
           choix = Object.entries(ranks).map(([optionId, rang]) => ({
@@ -356,9 +327,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
           choix = [{ optionId: selectedOptions[0], selected: true }];
       }
 
-      console.log('🔍 appel de submitVote avec:', { voteId: vote.id, choix });
       const result = await submitVote(vote.id, choix);
-      console.log('🔍 résultat submitVote:', result);
       
       setHasVoted(true);
       
@@ -403,15 +372,10 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   };
 
   const handleJugementChange = (optionId: string, valeur: number) => {
-    console.log('🔍 handleJugementChange:', { optionId, valeur });
-    setSelectedJugements(prev => {
-      const newState = {
-        ...prev,
-        [optionId]: valeur
-      };
-      console.log('🔍 Nouvel état selectedJugements:', newState);
-      return newState;
-    });
+    setSelectedJugements(prev => ({
+      ...prev,
+      [optionId]: valeur
+    }));
   };
 
   const isJugementValid = () => {
@@ -480,126 +444,108 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
     : vote.type_scrutin === 'rang'
       ? isRanksValid()
       : vote.type_scrutin === 'approbation'
-        ? true  // Toujours possible de voter, même avec des neutres
+        ? true
         : selectedOptions.length > 0;
-
-  const hasVotedAndDifferent = hasVoted && (
-    vote.type_scrutin === 'jugement'
-      ? JSON.stringify(selectedJugements) !== JSON.stringify(userPreviousVote)
-      : vote.type_scrutin === 'rang'
-        ? JSON.stringify(ranks) !== JSON.stringify(userPreviousVote)
-        : JSON.stringify(selectedOptions) !== JSON.stringify(userPreviousVote)
-  );
-
-  console.log('🔍 DEBUG canShowResults:', {
-    statut: vote.statut,
-    show_results: vote.parametres?.show_results,
-    hasVoted: hasVoted,
-    result: canShowResults()
-  });
-
-  console.log('🔍 DEBUG vote.parametres complet:', vote.parametres);
 
   return (
     <>
-      <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-        {/* En-tête */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="font-semibold text-lg">{vote.titre}</h3>
+      <div className="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow w-full max-w-full overflow-hidden">
+        {/* En-tête - responsive */}
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <h3 className="font-semibold text-base sm:text-lg truncate">{vote.titre}</h3>
               {getStatusBadge()}
-              <span className="text-xs text-gray-500">{getTypeLabel()}</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-xs">
+              <span className="text-gray-500 whitespace-nowrap">{getTypeLabel()}</span>
               {vote.anonymous_vote && (
-                <span className="px-2 py-1 bg-gray-200 text-gray-700 rounded-full text-xs">
+                <span className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded-full text-xs whitespace-nowrap">
                   🔒 Anonyme
                 </span>
               )}
               {!vote.anonymous_vote && (
-                <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs">
+                <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs whitespace-nowrap">
                   👤 Nominatif
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 mt-1 break-words">
               {renderWithLinks(vote.description)}
-            </p>
+            </div>
           </div>
 
           {/* Actions pour le créateur */}
           {isCreator && (
-            <>
+            <div className="flex flex-wrap gap-0.5 flex-shrink-0 self-start">
               {vote.statut === 'brouillon' && (
-                <div className="flex gap-1">
+                <>
                   <button 
                     onClick={handleEdit} 
-                    className="p-2 text-gray-600 hover:text-blue-600 disabled:opacity-50" 
+                    className="p-1.5 text-gray-600 hover:text-blue-600 disabled:opacity-50" 
                     title="Modifier"
                     disabled={loading}
                   >
-                    <PencilIcon className="h-5 w-5" />
+                    <PencilIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                   <button 
                     onClick={handleDelete} 
-                    className="p-2 text-gray-600 hover:text-red-600 disabled:opacity-50" 
+                    className="p-1.5 text-gray-600 hover:text-red-600 disabled:opacity-50" 
                     title="Supprimer"
                     disabled={loading}
                   >
-                    <TrashIcon className="h-5 w-5" />
+                    <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                   <button 
                     onClick={handleOpen} 
-                    className="p-2 text-gray-600 hover:text-green-600 disabled:opacity-50" 
+                    className="p-1.5 text-gray-600 hover:text-green-600 disabled:opacity-50" 
                     title="Ouvrir le vote"
                     disabled={loading}
                   >
-                    <PlayIcon className="h-5 w-5" />
+                    <PlayIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
-                </div>
+                </>
               )}
 
               {vote.statut === 'actif' && (
-                <div className="flex gap-1">
-                  <button 
-                    onClick={handleClose} 
-                    className="p-2 text-gray-600 hover:text-red-600 disabled:opacity-50" 
-                    title="Clôturer"
-                    disabled={loading}
-                  >
-                    <StopIcon className="h-5 w-5" />
-                  </button>
-                </div>
+                <button 
+                  onClick={handleClose} 
+                  className="p-1.5 text-gray-600 hover:text-red-600 disabled:opacity-50" 
+                  title="Clôturer"
+                  disabled={loading}
+                >
+                  <StopIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
               )}
 
               {vote.statut === 'cloture' && (
-                <div className="flex gap-1">
+                <>
                   <button 
                     onClick={handleOpen} 
-                    className="p-2 text-gray-600 hover:text-green-600 disabled:opacity-50" 
+                    className="p-1.5 text-gray-600 hover:text-green-600 disabled:opacity-50" 
                     title="Rouvrir le vote"
                     disabled={loading}
                   >
-                    <PlayIcon className="h-5 w-5" />
+                    <PlayIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                   <button 
                     onClick={handleDelete} 
-                    className="p-2 text-gray-600 hover:text-red-600 disabled:opacity-50" 
+                    className="p-1.5 text-gray-600 hover:text-red-600 disabled:opacity-50" 
                     title="Supprimer"
                     disabled={loading}
                   >
-                    <TrashIcon className="h-5 w-5" />
+                    <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
-                </div>
+                </>
               )}
-            </>
+            </div>
           )}
         </div>
 
-        {/* Version repliée : boutons adaptés au contexte */}
+        {/* Version repliée */}
         {!isExpanded && (
-          <div className="mt-2 flex gap-2">
-            {/* Bouton principal selon le contexte */}
-            <div className="flex-1">
+          <div className="mt-2 flex flex-wrap gap-2">
+            <div className="w-full sm:flex-1">
               {vote.statut === 'cloture' ? (
                 <button
                   onClick={() => setShowResultsModal(true)}
@@ -628,12 +574,10 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
               )}
             </div>
 
-
-            {/* Bouton "Voir les résultats" si accessible */}
             {canShowResults() && vote.statut !== 'cloture' && (
               <button
                 onClick={() => setShowResultsModal(true)}
-                className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm font-medium transition-colors"
+                className="flex-1 sm:flex-none px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm font-medium transition-colors"
               >
                 📊 Résultats
               </button>
@@ -641,13 +585,13 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
           </div>
         )}
 
-        {/* Version dépliée : tout le contenu */}
+        {/* Version dépliée */}
         {isExpanded && (
           <>
             {/* Question */}
             <div className="mb-3 p-3 bg-gray-50 rounded-lg">
               <p className="text-sm font-medium text-gray-700">Question :</p>
-              <p className="text-gray-900">{vote.question}</p>
+              <p className="text-gray-900 break-words">{vote.question}</p>
             </div>
 
             {/* Indicateur pour jugement majoritaire sans candidat */}
@@ -660,7 +604,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
             {/* Message d'erreur */}
             {error && (
               <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-xs text-red-600">{error}</p>
+                <p className="text-xs text-red-600 break-words">{error}</p>
               </div>
             )}
 
@@ -668,20 +612,19 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
             {vote.statut === 'actif' && (
               <div className="mb-4">
                 {vote.type_scrutin === 'approbation' ? (
-                  // Interface pour l'approbation (OUI / NEUTRE / NON)
                   <div className="space-y-4">
                     <p className="text-sm text-gray-600 mb-2">
                       Pour chaque option, indiquez votre position :
                     </p>
                     {vote.options.map(opt => {
-                      const currentValue = selectedJugements[opt.id] || 0; // 1 = OUI, 0 = NEUTRE, -1 = NON
+                      const currentValue = selectedJugements[opt.id] || 0;
                       return (
                         <div key={opt.id} className="border rounded-lg p-3">
-                          <p className="font-medium mb-2">{opt.texte}</p>
-                          <div className="flex gap-3">
+                          <p className="font-medium mb-2 break-words">{opt.texte}</p>
+                          <div className="flex flex-wrap gap-2">
                             <button
                               onClick={() => handleJugementChange(opt.id, 1)}
-                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                                 currentValue === 1
                                   ? 'bg-green-600 text-white'
                                   : 'bg-gray-100 hover:bg-green-100 text-gray-700'
@@ -691,7 +634,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                             </button>
                             <button
                               onClick={() => handleJugementChange(opt.id, 0)}
-                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                                 currentValue === 0
                                   ? 'bg-gray-400 text-white'
                                   : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
@@ -701,7 +644,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                             </button>
                             <button
                               onClick={() => handleJugementChange(opt.id, -1)}
-                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                                 currentValue === -1
                                   ? 'bg-red-600 text-white'
                                   : 'bg-gray-100 hover:bg-red-100 text-gray-700'
@@ -720,18 +663,17 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                     })}
                   </div>
                 ) : vote.type_scrutin === 'rang' ? (
-                  // Interface pour le classement (inchangé)
                   <div className="space-y-3">
                     <p className="text-sm text-gray-600 mb-2">
                       Classez les options par ordre de préférence (1 = premier choix)
                     </p>
                     {vote.options.map(opt => (
-                      <div key={opt.id} className="flex items-center gap-3 p-2 border rounded-lg">
-                        <span className="text-sm text-gray-700 flex-1">{opt.texte}</span>
+                      <div key={opt.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2 border rounded-lg">
+                        <span className="text-sm text-gray-700 flex-1 break-words">{opt.texte}</span>
                         <select
                           value={ranks[opt.id] || ''}
                           onChange={(e) => handleRankChange(opt.id, parseInt(e.target.value))}
-                          className="px-2 py-1 border rounded text-sm"
+                          className="px-2 py-1 border rounded text-sm w-full sm:w-auto"
                           disabled={submitting}
                         >
                           <option value="">—</option>
@@ -745,52 +687,30 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                     ))}
                   </div>
                 ) : vote.type_scrutin === 'jugement' ? (
-                  // Interface pour le jugement majoritaire
                   <div className="space-y-4">
                     {vote.options.map((option) => {
-                      console.log('🔍 Option ID:', option.id, 'Texte:', option.texte);
-                      // Récupérer la valeur UNIQUEMENT pour cette option
-                      const currentValue = selectedJugements[option.id];
-                      console.log(`🔍 Option ${option.id} (${option.texte}): valeur = ${currentValue}`);
-                      
+                      const currentValue = selectedJugements[option.id] || 3;
                       return (
-                        <div key={option.id} className="border rounded-lg p-4">
-                          <p className="font-medium mb-2">{option.texte}</p>
-                          <div className="flex flex-wrap gap-2">
-                            {MENTIONS.map((mention) => {
-                              const isSelected = currentValue === mention.value;
-                              return (
-                                <button
-                                  key={mention.value}
-                                  onClick={() => {
-                                    console.log(`🖱️ Clic sur ${mention.label} pour ${option.id}`);
-                                    setSelectedJugements(prev => {
-                                      const newState = {
-                                        ...prev,
-                                        [option.id]: mention.value
-                                      };
-                                      console.log('📦 Nouvel état:', newState);
-                                      return newState;
-                                    });
-                                  }}
-                                  className={`px-3 py-1 rounded-full text-sm text-white transition ${
-                                    isSelected ? mention.color : 'bg-gray-300 hover:opacity-80'
-                                  }`}
-                                >
-                                  {mention.label}
-                                </button>
-                              );
-                            })}
+                        <div key={option.id} className="border rounded-lg p-3">
+                          <p className="font-medium mb-2 break-words">{option.texte}</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {MENTIONS.map((mention) => (
+                              <button
+                                key={mention.value}
+                                onClick={() => handleJugementChange(option.id, mention.value)}
+                                className={`px-2 py-1 rounded-full text-xs sm:text-sm text-white transition ${
+                                  currentValue === mention.value ? mention.color : 'bg-gray-300 hover:opacity-80'
+                                }`}
+                              >
+                                {mention.label}
+                              </button>
+                            ))}
                           </div>
-                          <p className="text-xs text-gray-400 mt-1">
-                            Actuel: {MENTIONS.find(m => m.value === currentValue)?.label || 'Non défini'}
-                          </p>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  // Interface pour uninominal/plurinominal (inchangé)
                   <div className="space-y-2">
                     {vote.options.map(opt => (
                       <label key={opt.id} className={`flex items-center gap-3 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer ${
@@ -802,10 +722,10 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                           value={opt.id}
                           checked={selectedOptions.includes(opt.id)}
                           onChange={() => handleOptionChange(opt.id)}
-                          className="h-4 w-4 text-blue-600"
+                          className="h-4 w-4 text-blue-600 flex-shrink-0"
                           disabled={submitting}
                         />
-                        <span className="text-sm text-gray-700 flex-1">{opt.texte}</span>
+                        <span className="text-sm text-gray-700 flex-1 break-words">{opt.texte}</span>
                       </label>
                     ))}
                   </div>
@@ -814,32 +734,32 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
             )}
 
             {/* Infos supplémentaires */}
-            <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-3">
               <span className="flex items-center gap-1">
-                <ClockIcon className="h-4 w-4" />
+                <ClockIcon className="h-3 w-3" />
                 Créé le {new Date(vote.created_at).toLocaleDateString()}
               </span>
               {vote.parametres.anonymous && (
-                <span className="bg-gray-100 px-2 py-1 rounded-full">🕵️ Vote anonyme</span>
+                <span className="bg-gray-100 px-2 py-0.5 rounded-full">🕵️ Anonyme</span>
               )}
               {vote.candidates_source === 'employees' && (
-                <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">👥 Sans candidat</span>
+                <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">👥 Sans candidat</span>
               )}
               {loading && <span className="text-blue-600">Chargement...</span>}
               {hasVoted && (
-                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs">
                   Vous avez voté
                 </span>
               )}
             </div>
 
             {/* Boutons d'action */}
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               {showVoteButton && !hasVoted && (
                 <button
                   onClick={handleVote}
                   disabled={submitting || !canSubmitVote}
-                  className="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+                  className="w-full sm:flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 text-sm sm:text-base"
                 >
                   {submitting ? 'Vote en cours...' : 'Voter'}
                 </button>
@@ -849,14 +769,14 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                 <button
                   onClick={handleVote}
                   disabled={submitting || !canSubmitVote}
-                  className="flex-1 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50"
+                  className="w-full sm:flex-1 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50 text-sm sm:text-base"
                 >
                   {submitting ? 'Vote en cours...' : 'Modifier mon vote'}
                 </button>
               )}
 
               {showVoteButton && hasVoted && vote.anonymous_vote && (
-                <div className="flex-1 py-2 rounded-lg bg-gray-100 text-gray-500 text-center cursor-not-allowed">
+                <div className="w-full sm:flex-1 py-2 rounded-lg bg-gray-100 text-gray-500 text-center cursor-not-allowed text-sm sm:text-base">
                   ✓ Vote soumis et non-modifiable
                 </div>
               )}
@@ -864,7 +784,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
               {canShowResults() && (
                 <button
                   onClick={() => setShowResultsModal(true)}
-                  className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  className="w-full sm:flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm sm:text-base"
                   disabled={loading}
                 >
                   Voir les résultats
@@ -874,7 +794,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
               {hasVoted && vote.anonymous_vote && (
                 <button
                   onClick={verifyMyVote}
-                  className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 text-sm"
+                  className="w-full sm:flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 text-sm sm:text-base"
                   disabled={loading}
                 >
                   🔍 Vérifier
@@ -897,9 +817,9 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
 
       {/* Modal des résultats */}
       {showResultsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-3xl p-6 max-h-[80vh] overflow-y-auto">
-            <h3 className="text-xl font-bold mb-4">Résultats - {vote.titre}</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-3xl p-4 sm:p-6 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4 break-words">Résultats - {vote.titre}</h3>
             <ResultsViewer vote={vote} user={user} />
             <div className="flex justify-end mt-6">
               <button
@@ -914,7 +834,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
                 <a 
                   href={`/votes/public-list/${vote.id}`}
                   target="_blank"
-                  className="text-xs text-blue-600 hover:underline"
+                  className="text-xs text-blue-600 hover:underline break-words"
                 >
                   📋 Voir la liste publique des votes
                 </a>
