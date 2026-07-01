@@ -24,6 +24,7 @@ interface ResultsViewerProps {
 export function ResultsViewer({ vote, user }: ResultsViewerProps) {
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showCumulativeDetails, setShowCumulativeDetails] = useState(false);
 
     // Dans ResultsViewer, remplace le useEffect par :
     useEffect(() => {
@@ -230,43 +231,60 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
   return (
     <div className="space-y-8">
     
-    {/* Jugement majoritaire */}
-    {vote.type_scrutin === 'jugement' && results.resultats && (
-      <div className="space-y-1">
-        {results.resultats
-          .sort((a: any, b: any) => b.mentionMajoritaire - a.mentionMajoritaire) // 6 d'abord (meilleurs)
-          .map((result: any) => {
-            const mention = MENTIONS.find(m => m.value === result.mentionMajoritaire);
-            
-            // Calculer la position de la médiane
-            const total = result.totalVotes;
-            let cumulative = 0;
-            let medianPosition = 0;
-            
-            for (let i = 0; i < MENTIONS.length; i++) {
-              const m = MENTIONS[i];
-              const rep = result.repartition?.find((r: any) => r.mention === m.label);
-              const count = rep?.count || 0;
-              const prevCumulative = cumulative;
-              cumulative += count;
+      {/* Jugement majoritaire */}
+      {vote.type_scrutin === 'jugement' && results.resultats && (
+        <div className="space-y-4">
+          {results.resultats
+            .sort((a: any, b: any) => b.mentionMajoritaire - a.mentionMajoritaire) // 6 d'abord (meilleurs)
+            .map((result: any) => {
+              const mention = MENTIONS.find(m => m.value === result.mentionMajoritaire);
               
-              if (cumulative > total / 2) {
-                const positionInMention = (total / 2 - prevCumulative) / count;
-                medianPosition = (prevCumulative / total + positionInMention * (count / total)) * 100;
-                break;
-              }
-            }
-
-            return (
-              <div key={result.optionId} className="flex items-center gap-2 py-1">
-                {/* Nom - largeur fixe */}
-                <span className="w-24 text-sm font-medium truncate" title={result.texte}>
-                  {result.texte}
-                </span>
+              // Calculer la position de la médiane
+              const total = result.totalVotes;
+              let cumulative = 0;
+              let medianPosition = 0;
+              
+              for (let i = 0; i < MENTIONS.length; i++) {
+                const m = MENTIONS[i];
+                const rep = result.repartition?.find((r: any) => r.mention === m.label);
+                const count = rep?.count || 0;
+                const prevCumulative = cumulative;
+                cumulative += count;
                 
-                {/* Barre de progression */}
-                <div className="flex-1 relative h-5 bg-gray-100 rounded overflow-hidden">
-                  <div className="absolute inset-0 flex">
+                if (cumulative > total / 2) {
+                  const positionInMention = (total / 2 - prevCumulative) / count;
+                  medianPosition = (prevCumulative / total + positionInMention * (count / total)) * 100;
+                  break;
+                }
+              }
+              
+              // Calcul des cumulés pour les détails
+              let cumul = 0;
+              const cumulativeData = MENTIONS.map((m) => {
+                const rep = result.repartition?.find((r: any) => r.mention === m.label);
+                const count = rep?.count || 0;
+                cumul += count;
+                const percentage = total > 0 ? (cumul / total) * 100 : 0;
+                return {
+                  mention: m.label,
+                  count,
+                  cumul,
+                  percentage,
+                  color: m.color
+                };
+              });
+
+              return (
+                <div key={result.optionId} className="border rounded-lg p-4 bg-white shadow-sm">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="text-lg font-semibold">{result.texte}</h4>
+                    <div className={`px-3 py-1 rounded-full text-sm font-medium text-white ${mention?.color || 'bg-gray-500'}`}>
+                      {mention?.label || 'Inconnu'}
+                    </div>
+                  </div>
+                  
+                  {/* Barre de progression */}
+                  <div className="relative h-8 w-full bg-gray-100 rounded-lg overflow-hidden flex">
                     {MENTIONS.map((m, idx) => {
                       const rep = result.repartition?.find((r: any) => r.mention === m.label);
                       const percentage = rep?.percentage || 0;
@@ -287,28 +305,70 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
                           key={idx}
                           className={`h-full ${gradientColors[idx]}`}
                           style={{ width: `${percentage}%` }}
-                          title={`${m.label}: ${rep?.count || 0}`}
+                          title={`${m.label}: ${rep?.count || 0} voix (${Math.round(percentage)}%)`}
                         />
+                      );
+                    })}
+                    
+                    {/* Marqueur médiane */}
+                    <div 
+                      className="absolute top-0 bottom-0 w-0.5 bg-black z-10"
+                      style={{ left: `${medianPosition}%` }}
+                    />
+                  </div>
+                  
+                  {/* Légende des mentions */}
+                  <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
+                    {MENTIONS.map((m, idx) => {
+                      const rep = result.repartition?.find((r: any) => r.mention === m.label);
+                      const count = rep?.count || 0;
+                      if (count === 0) return null;
+                      return (
+                        <div key={idx} className="flex items-center gap-1">
+                          <div className={`w-3 h-3 rounded-full ${m.color}`} />
+                          <span>{m.label}: {count}</span>
+                        </div>
                       );
                     })}
                   </div>
                   
-                  {/* Marqueur médiane */}
-                  <div 
-                    className="absolute top-0 bottom-0 w-0.5 bg-white shadow-md"
-                    style={{ left: `${medianPosition}%` }}
-                  />
+                  {/* Bouton pour dérouler les cumulées */}
+                  <button
+                    onClick={() => setShowCumulativeDetails(!showCumulativeDetails)}
+                    className="mt-3 text-xs text-blue-600 hover:underline flex items-center gap-1"
+                  >
+                    {showCumulativeDetails ? '▲ Masquer les détails cumulés' : '▼ Voir les détails cumulés'}
+                  </button>
+                  
+                  {showCumulativeDetails && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <p className="text-xs text-gray-500 mb-2">Progression cumulée (du meilleur au pire) :</p>
+                      <div className="space-y-1">
+                        {cumulativeData.map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-xs">
+                            <div className={`w-3 h-3 rounded-full ${item.color}`} />
+                            <span className="flex-1">{item.mention}</span>
+                            <span className="font-mono">{item.count} voix</span>
+                            <span className="font-mono font-bold text-blue-600 w-12 text-right">
+                              {Math.round(item.percentage)}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">
+                        Cumul des mentions de « {cumulativeData[0]?.mention} » jusqu'à « {cumulativeData[cumulativeData.length - 1]?.mention} »
+                      </p>
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-gray-500 mt-3">
+                    Total: {result.totalVotes} votant{result.totalVotes > 1 ? 's' : ''}
+                  </p>
                 </div>
-                
-                {/* Mention - largeur fixe */}
-                <span className="w-16 text-xs text-right" style={{ color: mention?.color.replace('bg-', 'text-') }}>
-                  {mention?.label}
-                </span>
-              </div>
-            );
-          })}
-      </div>
-    )}
+              );
+            })}
+        </div>
+      )}
     
       {/* CLASSEMENT */}
       {vote.type_scrutin === 'rang' && results.resultats && (
@@ -352,7 +412,6 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
         </div>
       )}
 
-      {/* Uninomial et plurinominal */}
       {(vote.type_scrutin === 'uninominal' || vote.type_scrutin === 'plurinominal') && (
         <div className="space-y-4">
           {vote.options
@@ -385,6 +444,47 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
+                  
+                  {/* Bouton pour dérouler les détails cumulés */}
+                  <button
+                    onClick={() => setShowCumulativeDetails(!showCumulativeDetails)}
+                    className="mt-2 text-xs text-blue-600 hover:underline flex items-center gap-1"
+                  >
+                    {showCumulativeDetails ? '▲ Masquer les détails' : '▼ Voir les détails cumulés'}
+                  </button>
+                  
+                  {showCumulativeDetails && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <p className="text-xs text-gray-500 mb-2">Répartition cumulée :</p>
+                      <div className="space-y-1">
+                        {(() => {
+                          // Calculer les pourcentages cumulés
+                          const sortedOptions = vote.options
+                            .map(o => ({
+                              ...o,
+                              count: results.compteurs?.[o.id] || 0
+                            }))
+                            .sort((a, b) => b.count - a.count);
+                          
+                          let cumulative = 0;
+                          return sortedOptions.map((o, idx) => {
+                            cumulative += o.count;
+                            const cumulPercent = Math.round((cumulative / total) * 100);
+                            const isCurrent = o.id === opt.id;
+                            return (
+                              <div key={o.id} className={`flex justify-between text-xs ${isCurrent ? 'font-bold text-blue-600' : 'text-gray-600'}`}>
+                                <span>
+                                  {isCurrent ? '▶ ' : ''}
+                                  Top {idx + 1} : {o.texte}
+                                </span>
+                                <span>{cumulPercent}%</span>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -393,6 +493,7 @@ export function ResultsViewer({ vote, user }: ResultsViewerProps) {
           </p>
         </div>
       )}
+
     </div>
   );
 }

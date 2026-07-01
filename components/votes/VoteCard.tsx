@@ -51,6 +51,8 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   const [ranks, setRanks] = useState<Record<string, number>>({});
   const [showEditor, setShowEditor] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingVoteData, setPendingVoteData] = useState<any>(null);
 
   // Fonction pour rendre les liens cliquables dans la description
   const renderWithLinks = (text: string) => {
@@ -264,6 +266,12 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
   };
 
   const handleVote = async () => {
+    console.log('🔍 handleVote appelé');
+    console.log('🔍 type_scrutin:', vote.type_scrutin);
+    console.log('🔍 selectedJugements:', selectedJugements);
+    console.log('🔍 selectedOptions:', selectedOptions);
+    
+    // 1. Vérifications selon le type de scrutin
     if (vote.type_scrutin === 'jugement') {
       if (Object.keys(selectedJugements).length !== vote.options.length) {
         setError('Veuillez évaluer toutes les options');
@@ -284,6 +292,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
       return;
     }
 
+    // 2. Vérification modification pour votes non anonymes
     if (hasVoted && !vote.anonymous_vote) {
       const confirmModify = confirm('Vous avez déjà voté. Voulez-vous modifier votre vote ?');
       if (!confirmModify) return;
@@ -292,43 +301,49 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
       return;
     }
 
+    // 3. Préparer les données du vote
+    let choix;
+    switch (vote.type_scrutin) {
+      case 'uninominal':
+        choix = [{ optionId: selectedOptions[0], selected: true }];
+        break;
+      case 'plurinominal':
+        choix = selectedOptions.map(optId => ({ optionId: optId, selected: true }));
+        break;
+      case 'jugement':
+        choix = Object.entries(selectedJugements).map(([optionId, valeur]) => ({
+          optionId,
+          valeur
+        }));
+        break;
+      case 'approbation':
+        choix = Object.entries(selectedJugements).map(([optionId, valeur]) => ({
+          optionId,
+          valeur
+        }));
+        break;
+      case 'rang':
+        choix = Object.entries(ranks).map(([optionId, rang]) => ({
+          optionId,
+          rang
+        }));
+        break;
+      default:
+        choix = [{ optionId: selectedOptions[0], selected: true }];
+    }
+
+    // 4. Stocker les données et ouvrir le modal de confirmation
+    setPendingVoteData(choix);
+    setShowConfirmModal(true);
+  };
+
+  const confirmVote = async () => {
+    setShowConfirmModal(false);
     setSubmitting(true);
     setError(null);
     
     try {
-      let choix;
-      
-      switch (vote.type_scrutin) {
-        case 'uninominal':
-          choix = [{ optionId: selectedOptions[0], selected: true }];
-          break;
-        case 'plurinominal':
-          choix = selectedOptions.map(optId => ({ optionId: optId, selected: true }));
-          break;
-        case 'jugement':
-          choix = Object.entries(selectedJugements).map(([optionId, valeur]) => ({
-            optionId,
-            valeur
-          }));
-          break;
-        case 'approbation':
-          choix = Object.entries(selectedJugements).map(([optionId, valeur]) => ({
-            optionId,
-            valeur
-          }));
-          break;
-        case 'rang':
-          choix = Object.entries(ranks).map(([optionId, rang]) => ({
-            optionId,
-            rang
-          }));
-          break;
-        default:
-          choix = [{ optionId: selectedOptions[0], selected: true }];
-      }
-
-      const result = await submitVote(vote.id, choix);
-      
+      const result = await submitVote(vote.id, pendingVoteData);
       setHasVoted(true);
       
       if (result.ballotHash) {
@@ -352,6 +367,7 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
       setError(error.message || 'Erreur lors du vote');
     } finally {
       setSubmitting(false);
+      setPendingVoteData(null);
     }
   };
 
@@ -855,6 +871,97 @@ export function VoteCard({ vote, onUpdate }: VoteCardProps) {
           }}
         />
       )}
+
+      {/* Modal de confirmation du vote */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-lg w-full max-w-2xl p-6 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4">Confirmer votre vote</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Veuillez vérifier vos choix avant de confirmer :
+            </p>
+            
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <p className="text-sm font-medium text-gray-700 mb-2">Question :</p>
+              <p className="text-gray-900 mb-4">{vote.question}</p>
+              
+              <p className="text-sm font-medium text-gray-700 mb-2">Vos choix :</p>
+              {vote.type_scrutin === 'jugement' ? (
+                <div className="space-y-2">
+                  {Object.entries(selectedJugements).map(([optionId, valeur]) => {
+                    const option = vote.options.find(o => o.id === optionId);
+                    const mention = MENTIONS.find(m => m.value === valeur);
+                    return (
+                      <div key={optionId} className="flex justify-between text-sm border-b py-1">
+                        <span>{option?.texte}</span>
+                        <span className="font-medium">{mention?.label || 'Inconnu'}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : vote.type_scrutin === 'rang' ? (
+                <div className="space-y-2">
+                  {Object.entries(ranks)
+                    .sort((a, b) => a[1] - b[1])
+                    .map(([optionId, rang]) => {
+                      const option = vote.options.find(o => o.id === optionId);
+                      return (
+                        <div key={optionId} className="flex justify-between text-sm border-b py-1">
+                          <span>{option?.texte}</span>
+                          <span className="font-medium">Rang {rang}</span>
+                        </div>
+                      );
+                    })}
+                </div>
+              ) : vote.type_scrutin === 'approbation' ? (
+                <div className="space-y-2">
+                  {Object.entries(selectedJugements).map(([optionId, valeur]) => {
+                    const option = vote.options.find(o => o.id === optionId);
+                    const label = valeur === 1 ? 'OUI' : valeur === -1 ? 'NON' : 'NEUTRE';
+                    const color = valeur === 1 ? 'text-green-600' : valeur === -1 ? 'text-red-600' : 'text-gray-500';
+                    return (
+                      <div key={optionId} className="flex justify-between text-sm border-b py-1">
+                        <span>{option?.texte}</span>
+                        <span className={`font-medium ${color}`}>{label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {selectedOptions.map(optionId => {
+                    const option = vote.options.find(o => o.id === optionId);
+                    return (
+                      <div key={optionId} className="text-sm border-b py-1">
+                        ✓ {option?.texte}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setPendingVoteData(null);
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+              >
+                Retourner au vote
+              </button>
+              <button
+                onClick={confirmVote}
+                disabled={submitting}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              >
+                {submitting ? 'Vote en cours...' : 'Confirmer mon vote'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}      
     </>
   );
 }
