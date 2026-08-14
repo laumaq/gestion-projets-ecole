@@ -19,10 +19,10 @@ export default function ToolsLayout({
     }
   }, [router]);
 
-  // Si on est dans tfh/coordination, ne pas appliquer le wrapper
-  const isTfhCoordination = pathname?.startsWith('/tools/tfh/coordination');
+  // Si on est dans une section TFH, ne pas appliquer le wrapper (pleine largeur)
+  const isTfh = pathname?.startsWith('/tools/tfh');
 
-  if (isTfhCoordination) {
+  if (isTfh) {
     return <>{children}</>;
   }
 

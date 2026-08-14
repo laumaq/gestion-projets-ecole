@@ -4,7 +4,6 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-// Fonction utilitaire pour cycler les états de présence
 const cyclePresenceState = (current: boolean | null): boolean | null => {
   if (current === null) return true;
   if (current === true) return false;
@@ -16,7 +15,7 @@ export function useElevesOperations(onRefresh?: () => void) {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleUpdate = async (
-    studentMatricule: number,  // Changé: plus d'UUID mais matricule
+    studentMatricule: number, 
     field: string, 
     value: string,
     onSuccess?: () => void
@@ -26,7 +25,6 @@ export function useElevesOperations(onRefresh?: () => void) {
       
       const updateData: any = {};
       
-      // Gérer spécialement les valeurs null/boolean
       if (value === 'null' || value === 'undefined') {
         updateData[field] = null;
       } else if (value === 'true' || value === 'false') {
@@ -38,12 +36,18 @@ export function useElevesOperations(onRefresh?: () => void) {
       const { error } = await supabase
         .from('tfh_eleves')
         .update(updateData)
-        .eq('student_matricule', studentMatricule);  // Changé: plus .eq('id')
+        .eq('student_matricule', studentMatricule);
 
       if (error) throw error;
       
+      // Appeler onSuccess d'abord
       onSuccess?.();
-      onRefresh?.();
+      
+      // NE PAS APPELER onRefresh() ici pour éviter le rechargement complet
+      // Mais on va notifier le parent qu'il y a eu un changement
+      if (onRefresh) {
+        onRefresh();
+      }
       
     } catch (err) {
       console.error('❌ Erreur mise à jour:', err);
@@ -54,7 +58,7 @@ export function useElevesOperations(onRefresh?: () => void) {
   };
 
   const handleSelectUpdate = async (
-    studentMatricule: number,  // Changé
+    studentMatricule: number, 
     field: string, 
     value: string,
     onSuccess?: () => void
@@ -63,14 +67,13 @@ export function useElevesOperations(onRefresh?: () => void) {
   };
 
   const handlePresenceUpdate = async (
-    studentMatricule: number,  // Changé
+    studentMatricule: number, 
     field: string, 
     currentValue: boolean | null,
     onSuccess?: (newValue: boolean | null) => void
   ): Promise<void> => {
     const newValue = cyclePresenceState(currentValue);
     
-    // Convertir en string pour Supabase
     let valueString: string;
     if (newValue === null) {
       valueString = 'null';

@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getJourneesFromSupabase, detecterSessions } from '../utils/sessionUtils';
 import { 
   Users, BookOpen, CheckCircle, XCircle, 
   AlertCircle, Filter, RefreshCw,
@@ -42,30 +43,6 @@ interface FilterConfig {
   minConvocations: number;
 }
 
-// Sessions par défaut (à adapter selon vos besoins)
-const DEFAULT_SESSIONS = [
-  { id: 1, nom: 'Session 1' },
-  { id: 2, nom: 'Session 2' },
-  { id: 3, nom: 'Session 3' },
-  { id: 4, nom: 'Session 4' },
-  { id: 5, nom: 'Session 5' },
-  { id: 6, nom: 'Session 6' },
-  { id: 7, nom: 'Session 7' },
-  { id: 8, nom: 'Session 8' },
-  { id: 9, nom: 'Session 9' },
-  { id: 10, nom: 'Session 10' },
-  { id: 11, nom: 'Session 11' },
-  { id: 12, nom: 'Session 12' },
-  { id: 13, nom: 'Session 13' },
-  { id: 14, nom: 'Session 14' },
-  { id: 15, nom: 'Session 15' },
-  { id: 16, nom: 'Session 16' },
-  { id: 17, nom: 'Session 17' },
-  { id: 18, nom: 'Session 18' },
-  { id: 19, nom: 'Session 19' },
-  { id: 20, nom: 'Session 20' }
-];
-
 export default function ControleTab({ eleves, onRefresh }: ControleTabProps) {
   const [guideStats, setGuideStats] = useState<GuideStats[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,79 +70,47 @@ export default function ControleTab({ eleves, onRefresh }: ControleTabProps) {
       
       if (guidesError) throw guidesError;
   
-      // Charger les élèves TFH avec leurs relations
-      const { data: eleves, error: elevesError } = await supabase
-        .from('tfh_eleves')
-        .select(`
-          student_matricule,
-          guide_id,
-          lecteur_interne_id,
-          session_1_convoque,
-          session_2_convoque,
-          session_3_convoque,
-          session_4_convoque,
-          session_5_convoque,
-          session_6_convoque,
-          session_7_convoque,
-          session_8_convoque,
-          session_9_convoque,
-          session_10_convoque,
-          session_11_convoque,
-          session_12_convoque,
-          session_13_convoque,
-          session_14_convoque,
-          session_15_convoque,
-          session_16_convoque,
-          session_17_convoque,
-          session_18_convoque,
-          session_19_convoque,
-          session_20_convoque,
-          students!inner (nom, prenom, classe, niveau)
-        `);
-      
-      if (elevesError) throw elevesError;
+      // Charger les sessions depuis tfh_system_settings
+      const journeesData = await getJourneesFromSupabase();
+      const sessions = detecterSessions(journeesData);
   
-      // Formater les élèves
-      const formattedEleves = (eleves || []).map(e => ({
-        id: e.student_matricule,
-        student_matricule: e.student_matricule,
-        nom: (e.students as any)?.nom || '',
-        prenom: (e.students as any)?.prenom || '',
-        classe: (e.students as any)?.classe || '',
-        niveau: (e.students as any)?.niveau || '',
-        guide_id: e.guide_id,
-        lecteur_interne_id: e.lecteur_interne_id,
-        session_1_convoque: e.session_1_convoque,
-        session_2_convoque: e.session_2_convoque,
-        session_3_convoque: e.session_3_convoque,
-        session_4_convoque: e.session_4_convoque,
-        session_5_convoque: e.session_5_convoque,
-        session_6_convoque: e.session_6_convoque,
-        session_7_convoque: e.session_7_convoque,
-        session_8_convoque: e.session_8_convoque,
-        session_9_convoque: e.session_9_convoque,
-        session_10_convoque: e.session_10_convoque,
-        session_11_convoque: e.session_11_convoque,
-        session_12_convoque: e.session_12_convoque,
-        session_13_convoque: e.session_13_convoque,
-        session_14_convoque: e.session_14_convoque,
-        session_15_convoque: e.session_15_convoque,
-        session_16_convoque: e.session_16_convoque,
-        session_17_convoque: e.session_17_convoque,
-        session_18_convoque: e.session_18_convoque,
-        session_19_convoque: e.session_19_convoque,
-        session_20_convoque: e.session_20_convoque
+      // Formater les élèves existants (ils sont déjà dans le state)
+      const formattedEleves = eleves.map(e => ({
+        ...e,
+        session_1_convoque: e.session_1_convoque || '',
+        session_2_convoque: e.session_2_convoque || '',
+        session_3_convoque: e.session_3_convoque || '',
+        session_4_convoque: e.session_4_convoque || '',
+        session_5_convoque: e.session_5_convoque || '',
+        session_6_convoque: e.session_6_convoque || '',
+        session_7_convoque: e.session_7_convoque || '',
+        session_8_convoque: e.session_8_convoque || '',
+        session_9_convoque: e.session_9_convoque || '',
+        session_10_convoque: e.session_10_convoque || '',
+        session_11_convoque: e.session_11_convoque || '',
+        session_12_convoque: e.session_12_convoque || '',
+        session_13_convoque: e.session_13_convoque || '',
+        session_14_convoque: e.session_14_convoque || '',
+        session_15_convoque: e.session_15_convoque || '',
+        session_16_convoque: e.session_16_convoque || '',
+        session_17_convoque: e.session_17_convoque || '',
+        session_18_convoque: e.session_18_convoque || '',
+        session_19_convoque: e.session_19_convoque || '',
+        session_20_convoque: e.session_20_convoque || '',
       }));
   
       const stats = (guides || []).map(guide => {
         const elevesDuGuide = formattedEleves.filter(e => e.guide_id === guide.id);
         const elevesLecteurInterne = formattedEleves.filter(e => e.lecteur_interne_id === guide.id);
         
-        const sessionsStats = DEFAULT_SESSIONS.map(session => {
+        const sessionsStats = sessions.map(session => {
+          const match = session.id.match(/session_(\d+)/);
+          const sessionId = match ? parseInt(match[1]) : 0;
+          
           const convocationsRendues = elevesDuGuide.filter(eleve => {
-            const columnName = `session_${session.id}_convoque` as keyof typeof eleve;
-            const valeur = eleve[columnName];
-            return valeur && typeof valeur === 'string' && valeur.trim() !== '';
+            const columnName = `session_${sessionId}_convoque` as keyof Eleve;
+            const valeur = eleve[columnName] as string | undefined;
+            return valeur && valeur.trim() !== '';
           }).length;
         
           const pourcentage = elevesDuGuide.length === 0 ? 
@@ -173,14 +118,13 @@ export default function ControleTab({ eleves, onRefresh }: ControleTabProps) {
             (convocationsRendues / elevesDuGuide.length) * 100;
         
           return {
-            id: session.id,
+            id: sessionId,
             nom: session.nom,
             convocationsRendues,
             pourcentage
           };
         });
   
-        // Créer un objet avec les propriétés dynamiques pour le tri
         const guideStatsObj: any = {
           id: guide.id,
           nom: guide.nom,
@@ -192,7 +136,6 @@ export default function ControleTab({ eleves, onRefresh }: ControleTabProps) {
           elevesDetails: []
         };
   
-        // Ajouter les propriétés de pourcentage pour chaque session
         sessionsStats.forEach(session => {
           guideStatsObj[`session_${session.id}_percentage`] = session.pourcentage;
         });
@@ -210,90 +153,14 @@ export default function ControleTab({ eleves, onRefresh }: ControleTabProps) {
 
   const loadGuideDetails = async (guideId: string) => {
     try {
-      const { data: eleves, error } = await supabase
-        .from('tfh_eleves')
-        .select(`
-          student_matricule,
-          guide_id,
-          lecteur_interne_id,
-          categorie,
-          classe,
-          session_1_convoque,
-          session_2_convoque,
-          session_3_convoque,
-          session_4_convoque,
-          session_5_convoque,
-          session_6_convoque,
-          session_7_convoque,
-          session_8_convoque,
-          session_9_convoque,
-          session_10_convoque,
-          session_11_convoque,
-          session_12_convoque,
-          session_13_convoque,
-          session_14_convoque,
-          session_15_convoque,
-          session_16_convoque,
-          session_17_convoque,
-          session_18_convoque,
-          session_19_convoque,
-          session_20_convoque,
-          students!inner (nom, prenom, classe)
-        `)
-        .eq('guide_id', guideId)
-        .order('students(nom)', { ascending: true });
+      // Utiliser les élèves déjà chargés
+      const elevesDuGuide = eleves.filter(e => e.guide_id === guideId);
       
-      if (error) throw error;
-
-      const formattedEleves: Eleve[] = (eleves || []).map(e => ({
-        id: e.student_matricule,
-        student_matricule: e.student_matricule,
-        nom: (e.students as any)?.nom || '',
-        prenom: (e.students as any)?.prenom || '',
-        classe: (e.students as any)?.classe || '',
-        categorie: e.categorie || '',
-        guide_id: e.guide_id,
-        lecteur_interne_id: e.lecteur_interne_id,
-        session_1_convoque: e.session_1_convoque,
-        session_2_convoque: e.session_2_convoque,
-        session_3_convoque: e.session_3_convoque,
-        session_4_convoque: e.session_4_convoque,
-        session_5_convoque: e.session_5_convoque,
-        session_6_convoque: e.session_6_convoque,
-        session_7_convoque: e.session_7_convoque,
-        session_8_convoque: e.session_8_convoque,
-        session_9_convoque: e.session_9_convoque,
-        session_10_convoque: e.session_10_convoque,
-        session_11_convoque: e.session_11_convoque,
-        session_12_convoque: e.session_12_convoque,
-        session_13_convoque: e.session_13_convoque,
-        session_14_convoque: e.session_14_convoque,
-        session_15_convoque: e.session_15_convoque,
-        session_16_convoque: e.session_16_convoque,
-        session_17_convoque: e.session_17_convoque,
-        session_18_convoque: e.session_18_convoque,
-        session_19_convoque: e.session_19_convoque,
-        session_20_convoque: e.session_20_convoque,
-        problematique: '',
-        thematique: '',
-        convocation_mars: '',
-        convocation_avril: '',
-        presence_9_mars: null,
-        presence_10_mars: null,
-        presence_16_avril: null,
-        presence_17_avril: null,
-        date_defense: null,
-        heure_defense: null,
-        localisation_defense: null,
-        mediateur_id: null,
-        lecteur_externe_id: null
-      }));
-
       const guide = guideStats.find(g => g.id === guideId);
       if (guide) {
         setSelectedGuide({
           ...guide,
-          elevesDetails: formattedEleves
+          elevesDetails: elevesDuGuide
         });
         setGuideDetailsOpen(true);
       }
@@ -304,7 +171,7 @@ export default function ControleTab({ eleves, onRefresh }: ControleTabProps) {
 
   useEffect(() => {
     loadGuideStats();
-  }, []);
+  }, [eleves]);
 
   const handleSort = (key: keyof GuideStats) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -467,7 +334,7 @@ export default function ControleTab({ eleves, onRefresh }: ControleTabProps) {
             </div>
           </div>
           <button
-            onClick={loadGuideStats}
+            onClick={() => { loadGuideStats(); onRefresh(); }}
             className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
           >
             <RefreshCw className="w-4 h-4" />
@@ -662,7 +529,7 @@ export default function ControleTab({ eleves, onRefresh }: ControleTabProps) {
                         </div>
                       </div>
                     </div>
-                   </td>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-center">
                       <div className="text-xl font-bold text-gray-900">{guide.elevesGuides}</div>
@@ -675,7 +542,7 @@ export default function ControleTab({ eleves, onRefresh }: ControleTabProps) {
                          guide.elevesGuides > 0 ? 'Charge normale' : 'Charge insuffisante'}
                       </div>
                     </div>
-                   </td>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-center">
                       <div className="text-xl font-bold text-gray-900">{guide.elevesLecteurInterne}</div>
@@ -688,7 +555,7 @@ export default function ControleTab({ eleves, onRefresh }: ControleTabProps) {
                          guide.elevesLecteurInterne > 0 ? 'Charge normale' : 'Charge insuffisante'}
                       </div>
                     </div>
-                   </td>
+                  </td>
                   {guide.sessionsStats.map((session) => (
                     <td key={session.id} className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center justify-center">
@@ -703,12 +570,12 @@ export default function ControleTab({ eleves, onRefresh }: ControleTabProps) {
                           </div>
                         )}
                       </div>
-                     </td>
+                    </td>
                   ))}
-                 </tr>
+                </tr>
               ))}
             </tbody>
-           </table>
+          </table>
         </div>
       </div>
 
@@ -818,9 +685,9 @@ export default function ControleTab({ eleves, onRefresh }: ControleTabProps) {
                             <div className="text-sm text-gray-600">Convocations par session</div>
                             <div className="flex items-center gap-2">
                               {selectedGuide.sessionsStats.slice(0, 3).map((session) => {
-                                const columnName = `session_${session.id}_convoque` as keyof typeof eleve;
-                                const statut = eleve[columnName];
-                                const estRendu = statut && typeof statut === 'string' && statut.trim() !== '';
+                                const columnName = `session_${session.id}_convoque` as keyof Eleve;
+                                const statut = eleve[columnName] as string | undefined;
+                                const estRendu = statut && statut.trim() !== '';
                                 
                                 return (
                                   <span 

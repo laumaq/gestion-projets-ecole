@@ -4,58 +4,49 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import * as XLSX from 'xlsx';
-import { Plus, Upload, Trash2, UserPlus, AlertTriangle, Check, CheckCircle, XCircle } from 'lucide-react';
-import { Eleve, Guide, LecteurExterne, Mediateur } from '../types';
+import { Plus, Upload, UserPlus, CheckCircle, XCircle } from 'lucide-react';
+import { Eleve, Guide, Externe, UserType } from '../types';
 
 interface GestionUtilisateursTabProps {
   eleves: Eleve[];
   guides: Guide[];
-  lecteursExternes: LecteurExterne[];
-  mediateurs: Mediateur[];
+  externes: Externe[];
   onRefresh: () => void;
+  selectedUserType: UserType;
+  onSelectedUserTypeChange: (type: UserType) => void;
 }
-
-type UserType = 'eleves' | 'guides' | 'lecteurs-externes' | 'mediateurs' | 'direction';
 
 interface NewUser {
   nom: string;
   prenom: string;
   classe: string;
   email: string;
+  telephone: string;
   initiale: string;
   categorie: string;
-}
-
-interface DeletePasswordModalState {
-  isOpen: boolean;
-  userId: string | null;
-  userName: string;
-  userType: UserType | null;
 }
 
 export default function GestionUtilisateursTab({
   eleves,
   guides,
-  lecteursExternes,
-  mediateurs,
-  onRefresh
+  externes,
+  onRefresh,
+  selectedUserType,
+  onSelectedUserTypeChange
 }: GestionUtilisateursTabProps) {
-  const [selectedUserType, setSelectedUserType] = useState<UserType>('eleves');
   const [newUser, setNewUser] = useState<NewUser>({
     nom: '',
     prenom: '',
     classe: '',
     email: '',
+    telephone: '',
     initiale: '',
     categorie: ''
   });
   const [showMassImport, setShowMassImport] = useState(false);
   const [massImportData, setMassImportData] = useState<string>('');
-  const [showClearConfirmations, setShowClearConfirmations] = useState(false);
-  const [clearConfirmations, setClearConfirmations] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [directionMembers, setDirectionMembers] = useState<any[]>([]);
-  const [directionGuides, setDirectionGuides] = useState<any[]>([]);
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
   
@@ -74,21 +65,16 @@ export default function GestionUtilisateursTab({
         return eleves;
       case 'guides':
         return guides;
-      case 'lecteurs-externes':
-        return lecteursExternes;
-      case 'mediateurs':
-        return mediateurs;
       case 'direction':
-        return directionGuides;
+        return directionMembers;
+      case 'externes':
+        return externes;
       default:
         return [];
     }
   };
 
   const getCurrentUserCount = () => {
-    if (selectedUserType === 'direction') {
-      return directionMembers.length;
-    }
     return getCurrentUsers().length;
   };
 
@@ -96,18 +82,16 @@ export default function GestionUtilisateursTab({
     try {
       const { data: employeesData, error: employeesError } = await supabase
         .from('employees')
-        .select('id, nom, prenom, initiale, email, job, mot_de_passe')
+        .select('id, nom, prenom, initiale, email, telephone, job, mot_de_passe')
         .eq('job', 'direction')
         .order('nom', { ascending: true });
       
       if (employeesError) throw employeesError;
       
-      setDirectionGuides(employeesData || []);
-      setDirectionMembers((employeesData || []).map(e => e.id));
+      setDirectionMembers(employeesData || []);
       
     } catch (err) {
       console.error('Erreur chargement direction:', err);
-      setDirectionGuides([]);
       setDirectionMembers([]);
     }
   }, []);
@@ -131,7 +115,7 @@ export default function GestionUtilisateursTab({
         return;
       }
 
-      if (!newUser.prenom.trim() && selectedUserType !== 'guides') {
+      if (!newUser.prenom.trim() && selectedUserType !== 'direction') {
         setErrorMessage('Le prénom est requis');
         clearMessages();
         setLoading(false);
@@ -182,6 +166,7 @@ export default function GestionUtilisateursTab({
               prenom: newUser.prenom,
               initiale: initialeGuide,
               email: newUser.email || null,
+              telephone: newUser.telephone || null,
               job: 'prof',
               mot_de_passe: null
             }]);
@@ -189,44 +174,75 @@ export default function GestionUtilisateursTab({
           if (guideError) throw guideError;
           break;
 
-        case 'lecteurs-externes':
+        case 'direction':
           if (!newUser.prenom.trim()) {
-            setErrorMessage('Le prénom est requis pour un lecteur externe');
+            setErrorMessage('Le prénom est requis pour un membre de la direction');
             clearMessages();
             setLoading(false);
             return;
           }
           
-          const { error: lecteurError } = await supabase
-            .from('tfh_lecteurs_externes')
-            .insert([{
-              nom: newUser.nom,
-              prenom: newUser.prenom,
-              email: newUser.email || null,
-              mot_de_passe: null
-            }]);
+          const initialeDirection = newUser.prenom.trim().charAt(0).toUpperCase();
+          
+          // Vérifier si l'utilisateur existe déjà
+          const { data: existingUser } = await supabase
+            .from('employees')
+            .select('id')
+            .eq('nom', newUser.nom)
+            .eq('prenom', newUser.prenom)
+            .maybeSingle();
 
-          if (lecteurError) throw lecteurError;
+          if (existingUser) {
+            // Mettre à jour le job vers direction
+            const { error: updateError } = await supabase
+              .from('employees')
+              .update({ 
+                job: 'direction',
+                email: newUser.email || null,
+                telephone: newUser.telephone || null
+              })
+              .eq('id', existingUser.id);
+            
+            if (updateError) throw updateError;
+          } else {
+            // Créer un nouvel utilisateur
+            const { error: insertError } = await supabase
+              .from('employees')
+              .insert([{
+                nom: newUser.nom,
+                prenom: newUser.prenom,
+                initiale: initialeDirection,
+                email: newUser.email || null,
+                telephone: newUser.telephone || null,
+                job: 'direction',
+                mot_de_passe: null
+              }]);
+
+            if (insertError) throw insertError;
+          }
           break;
 
-        case 'mediateurs':
+        case 'externes':
           if (!newUser.prenom.trim()) {
-            setErrorMessage('Le prénom est requis pour un médiateur');
+            setErrorMessage('Le prénom est requis pour un externe');
             clearMessages();
             setLoading(false);
             return;
           }
           
-          const { error: mediateurError } = await supabase
-            .from('tfh_mediateurs')
+          const { error: externeError } = await supabase
+            .from('tfh_externes')
             .insert([{
               nom: newUser.nom,
               prenom: newUser.prenom,
               email: newUser.email || null,
+              telephone: newUser.telephone || null,
+              lecteur_externe_id: crypto.randomUUID(),
+              mediateur_id: crypto.randomUUID(),
               mot_de_passe: null
             }]);
 
-          if (mediateurError) throw mediateurError;
+          if (externeError) throw externeError;
           break;
       }
 
@@ -238,6 +254,7 @@ export default function GestionUtilisateursTab({
         prenom: '',
         classe: '',
         email: '',
+        telephone: '',
         initiale: '',
         categorie: ''
       });
@@ -252,45 +269,6 @@ export default function GestionUtilisateursTab({
       clearMessages();
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDeleteUser = async (id: string, nom: string, prenom?: string) => {
-    const fullName = prenom ? `${prenom} ${nom}` : nom;
-    
-    if (confirm(`Supprimer ${fullName} ?`)) {
-      try {
-        switch (selectedUserType) {
-          case 'eleves':
-            await supabase.from('tfh_eleves').delete().eq('student_matricule', parseInt(id));
-            break;
-          case 'guides':
-            await supabase.from('employees').delete().eq('id', id);
-            break;
-          case 'lecteurs-externes':
-            await supabase.from('tfh_lecteurs_externes').delete().eq('id', id);
-            break;
-          case 'mediateurs':
-            await supabase.from('tfh_mediateurs').delete().eq('id', id);
-            break;
-          case 'direction':
-            // Pour la direction, on ne supprime pas, on change juste le job
-            await supabase.from('employees').update({ job: 'prof' }).eq('id', id);
-            await loadDirectionData();
-            break;
-        }
-
-        setSuccessMessage('Utilisateur supprimé avec succès!');
-        clearMessages();
-        onRefresh();
-        if (selectedUserType === 'direction') {
-          loadDirectionData();
-        }
-      } catch (err) {
-        console.error('Erreur suppression utilisateur:', err);
-        setErrorMessage('Erreur lors de la suppression de l\'utilisateur');
-        clearMessages();
-      }
     }
   };
 
@@ -392,6 +370,8 @@ export default function GestionUtilisateursTab({
               nom: values[0] || '',
               prenom: values[1] || '',
               initiale: (values[1] || '').charAt(0).toUpperCase(),
+              email: values[2] || null,
+              telephone: values[3] || null,
               job: 'prof',
               mot_de_passe: null
             };
@@ -405,40 +385,46 @@ export default function GestionUtilisateursTab({
           }
           break;
 
-        case 'lecteurs-externes':
-          const lecteursToInsert = dataRows.map(row => {
+        case 'direction':
+          const directionToInsert = dataRows.map(row => {
             const values = row.split(',').map(v => v.trim());
             return {
               nom: values[0] || '',
               prenom: values[1] || '',
+              initiale: (values[1] || '').charAt(0).toUpperCase(),
               email: values[2] || null,
+              telephone: values[3] || null,
+              job: 'direction',
               mot_de_passe: null
             };
-          }).filter(l => l.nom && l.prenom);
+          }).filter(d => d.nom && d.prenom);
 
-          if (lecteursToInsert.length > 0) {
+          if (directionToInsert.length > 0) {
             const { error } = await supabase
-              .from('tfh_lecteurs_externes')
-              .insert(lecteursToInsert);
+              .from('employees')
+              .insert(directionToInsert);
             if (error) throw error;
           }
           break;
 
-        case 'mediateurs':
-          const mediateursToInsert = dataRows.map(row => {
+        case 'externes':
+          const externesToInsert = dataRows.map(row => {
             const values = row.split(',').map(v => v.trim());
             return {
               nom: values[0] || '',
               prenom: values[1] || '',
               email: values[2] || null,
+              telephone: values[3] || null,
+              lecteur_externe_id: crypto.randomUUID(),
+              mediateur_id: crypto.randomUUID(),
               mot_de_passe: null
             };
-          }).filter(m => m.nom && m.prenom);
+          }).filter(e => e.nom && e.prenom);
 
-          if (mediateursToInsert.length > 0) {
+          if (externesToInsert.length > 0) {
             const { error } = await supabase
-              .from('tfh_mediateurs')
-              .insert(mediateursToInsert);
+              .from('tfh_externes')
+              .insert(externesToInsert);
             if (error) throw error;
           }
           break;
@@ -449,6 +435,9 @@ export default function GestionUtilisateursTab({
       setShowMassImport(false);
       setMassImportData('');
       onRefresh();
+      if (selectedUserType === 'direction') {
+        loadDirectionData();
+      }
     } catch (err) {
       console.error('Erreur import massif:', err);
       setErrorMessage('Erreur lors de l\'importation: ' + (err as Error).message);
@@ -462,9 +451,8 @@ export default function GestionUtilisateursTab({
     switch (selectedUserType) {
       case 'eleves': return 'Élèves';
       case 'guides': return 'Guides';
-      case 'lecteurs-externes': return 'Lecteurs externes';
-      case 'mediateurs': return 'Médiateurs';
-      case 'direction': return 'Membres direction';
+      case 'direction': return 'Direction';
+      case 'externes': return 'Externes';
       default: return '';
     }
   };
@@ -477,7 +465,7 @@ export default function GestionUtilisateursTab({
         {successMessage && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-2 shadow-lg">
             <div className="flex items-center gap-2">
-              <Check className="w-5 h-5 text-green-600" />
+              <CheckCircle className="w-5 h-5 text-green-600" />
               <span className="text-green-700 font-medium">{successMessage}</span>
             </div>
           </div>
@@ -485,7 +473,7 @@ export default function GestionUtilisateursTab({
         {errorMessage && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <XCircle className="w-5 h-5 text-red-600" />
               <span className="text-red-700 font-medium">{errorMessage}</span>
             </div>
           </div>
@@ -505,7 +493,7 @@ export default function GestionUtilisateursTab({
               Gestion des utilisateurs
             </h2>
             <p className="text-gray-600">
-              Ajout, modification et suppression des utilisateurs du système
+              Ajout et gestion des utilisateurs du système
             </p>
           </div>
           <div className="text-sm text-gray-500">
@@ -523,18 +511,17 @@ export default function GestionUtilisateursTab({
             <select
               value={selectedUserType}
               onChange={(e) => {
-                setSelectedUserType(e.target.value as UserType);
+                onSelectedUserTypeChange(e.target.value as UserType);
                 if (e.target.value === 'direction') {
                   loadDirectionData();
                 }
               }}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="eleves">Élève</option>
-              <option value="guides">Guide</option>
-              <option value="lecteurs-externes">Lecteur externe</option>
-              <option value="mediateurs">Médiateur</option>
+              <option value="eleves">Élèves</option>
+              <option value="guides">Guides</option>
               <option value="direction">Direction</option>
+              <option value="externes">Externes</option>
             </select>
           </div>
           
@@ -542,159 +529,189 @@ export default function GestionUtilisateursTab({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Import
             </label>
-            {selectedUserType !== 'direction' && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowMassImport(true)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm transition-colors"
-                >
-                  <Upload className="w-4 h-4" />
-                  Importer CSV
-                </button>
-              </div>
-            )}
+            <button
+              onClick={() => setShowMassImport(true)}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm transition-colors"
+            >
+              <Upload className="w-4 h-4" />
+              Importer CSV/Excel
+            </button>
           </div>
         </div>
         
-        {selectedUserType !== 'direction' && (
-          <div className="border rounded-lg p-4 bg-gray-50">
-            <h3 className="text-sm font-medium text-gray-700 mb-4 flex items-center gap-2">
-              <UserPlus className="w-4 h-4" />
-              Ajouter un {getUserTypeLabel().toLowerCase()}
-            </h3>
+        <div className="border rounded-lg p-4 bg-gray-50">
+          <h3 className="text-sm font-medium text-gray-700 mb-4 flex items-center gap-2">
+            <UserPlus className="w-4 h-4" />
+            Ajouter un {getUserTypeLabel().toLowerCase()}
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+            {selectedUserType === 'eleves' && (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Nom *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nom"
+                    value={newUser.nom}
+                    onChange={(e) => setNewUser({...newUser, nom: e.target.value})}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Prénom *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Prénom"
+                    value={newUser.prenom}
+                    onChange={(e) => setNewUser({...newUser, prenom: e.target.value})}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Classe *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Classe"
+                    value={newUser.classe}
+                    onChange={(e) => setNewUser({...newUser, classe: e.target.value})}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </>
+            )}
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-              {selectedUserType === 'eleves' && (
-                <>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Nom *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Nom"
-                      value={newUser.nom}
-                      onChange={(e) => setNewUser({...newUser, nom: e.target.value})}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Prénom *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Prénom"
-                      value={newUser.prenom}
-                      onChange={(e) => setNewUser({...newUser, prenom: e.target.value})}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Classe *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Classe"
-                      value={newUser.classe}
-                      onChange={(e) => setNewUser({...newUser, classe: e.target.value})}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-                </>
-              )}
-              
-              {(selectedUserType === 'lecteurs-externes' || selectedUserType === 'mediateurs') && (
-                <>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Nom *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Nom"
-                      value={newUser.nom}
-                      onChange={(e) => setNewUser({...newUser, nom: e.target.value})}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Prénom *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Prénom"
-                      value={newUser.prenom}
-                      onChange={(e) => setNewUser({...newUser, prenom: e.target.value})}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      value={newUser.email}
-                      onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-                </>
-              )}
-              
-              {selectedUserType === 'guides' && (
-                <>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Nom *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Nom"
-                      value={newUser.nom}
-                      onChange={(e) => setNewUser({...newUser, nom: e.target.value})}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Prénom *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Prénom"
-                      value={newUser.prenom}
-                      onChange={(e) => setNewUser({...newUser, prenom: e.target.value})}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-  
-            <button
-              onClick={handleAddUser}
-              disabled={loading}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Ajout en cours...
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" />
-                  Ajouter
-                </>
-              )}
-            </button>
+            {(selectedUserType === 'guides' || selectedUserType === 'direction') && (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Nom *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nom"
+                    value={newUser.nom}
+                    onChange={(e) => setNewUser({...newUser, nom: e.target.value})}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Prénom *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Prénom"
+                    value={newUser.prenom}
+                    onChange={(e) => setNewUser({...newUser, prenom: e.target.value})}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Téléphone
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Téléphone"
+                    value={newUser.telephone}
+                    onChange={(e) => setNewUser({...newUser, telephone: e.target.value})}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </>
+            )}
+
+            {selectedUserType === 'externes' && (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Nom *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nom"
+                    value={newUser.nom}
+                    onChange={(e) => setNewUser({...newUser, nom: e.target.value})}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Prénom *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Prénom"
+                    value={newUser.prenom}
+                    onChange={(e) => setNewUser({...newUser, prenom: e.target.value})}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Téléphone
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Téléphone"
+                    value={newUser.telephone}
+                    onChange={(e) => setNewUser({...newUser, telephone: e.target.value})}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </>
+            )}
           </div>
-        )}
+
+          <button
+            onClick={handleAddUser}
+            disabled={loading}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Ajout en cours...
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" />
+                Ajouter
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -728,28 +745,9 @@ export default function GestionUtilisateursTab({
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Connecté
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Actions
-                    </th>
                   </>
                 )}
-                {selectedUserType === 'guides' && (
-                  <>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Nom
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Prénom
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Connecté
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </>
-                )}
-                {(selectedUserType === 'lecteurs-externes' || selectedUserType === 'mediateurs') && (
+                {(selectedUserType === 'guides' || selectedUserType === 'direction') && (
                   <>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Nom
@@ -761,14 +759,14 @@ export default function GestionUtilisateursTab({
                       Email
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Connecté
+                      Téléphone
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Actions
+                      Connecté
                     </th>
                   </>
                 )}
-                {selectedUserType === 'direction' && (
+                {selectedUserType === 'externes' && (
                   <>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Nom
@@ -777,10 +775,13 @@ export default function GestionUtilisateursTab({
                       Prénom
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Connecté
+                      Email
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Actions
+                      Téléphone
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Connecté
                     </th>
                   </>
                 )}
@@ -803,18 +804,9 @@ export default function GestionUtilisateursTab({
                       <td className="px-4 py-3">
                         {renderConnectionStatus(user)}
                       </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleDeleteUser(String(user.student_matricule), user.nom, user.prenom)}
-                          className="px-3 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded text-sm transition-colors flex items-center gap-1"
-                          title="Supprimer l'utilisateur"
-                        >
-                          ✕
-                        </button>
-                      </td>
                     </>
                   )}
-                  {selectedUserType === 'guides' && (
+                  {(selectedUserType === 'guides' || selectedUserType === 'direction') && (
                     <>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
                         {user.nom}
@@ -822,21 +814,38 @@ export default function GestionUtilisateursTab({
                       <td className="px-4 py-3 text-sm text-gray-900">
                         {user.prenom}
                       </td>
+                      <td className="px-4 py-3 text-sm">
+                        {user.email ? (
+                          <a 
+                            href={`mailto:${user.email}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {user.email}
+                          </a>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {user.telephone ? (
+                          <a 
+                            href={`tel:${user.telephone.replace(/\s/g, '')}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                          >
+                            {user.telephone}
+                          </a>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         {renderConnectionStatus(user)}
                       </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleDeleteUser(user.id, user.nom, user.prenom)}
-                          className="px-3 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded text-sm transition-colors flex items-center gap-1"
-                          title="Supprimer l'utilisateur"
-                        >
-                          ✕
-                        </button>
-                      </td>
                     </>
                   )}
-                  {selectedUserType === 'lecteurs-externes' && (
+                  {selectedUserType === 'externes' && (
                     <>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
                         {user.nom}
@@ -844,76 +853,34 @@ export default function GestionUtilisateursTab({
                       <td className="px-4 py-3 text-sm text-gray-900">
                         {user.prenom}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
-                        {user.email || '-'}
+                      <td className="px-4 py-3 text-sm">
+                        {user.email ? (
+                          <a 
+                            href={`mailto:${user.email}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {user.email}
+                          </a>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {user.telephone ? (
+                          <a 
+                            href={`tel:${user.telephone.replace(/\s/g, '')}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                          >
+                            {user.telephone}
+                          </a>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         {renderConnectionStatus(user)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleDeleteUser(user.id, user.nom, user.prenom)}
-                          className="px-3 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded text-sm transition-colors flex items-center gap-1"
-                          title="Supprimer l'utilisateur"
-                        >
-                          ✕
-                        </button>
-                      </td>
-                    </>
-                  )}
-                  {selectedUserType === 'mediateurs' && (
-                    <>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                        {user.nom}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {user.prenom}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
-                        {user.email || '-'}
-                      </td>
-                      <td className="px-4 py-3">
-                        {renderConnectionStatus(user)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleDeleteUser(user.id, user.nom, user.prenom)}
-                          className="px-3 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded text-sm transition-colors flex items-center gap-1"
-                          title="Supprimer l'utilisateur"
-                        >
-                          ✕
-                        </button>
-                      </td>
-                    </>
-                  )}
-                  {selectedUserType === 'direction' && (
-                    <>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                        {user.nom}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {user.prenom}
-                      </td>
-                      <td className="px-4 py-3">
-                        {renderConnectionStatus(user)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => {
-                            if (confirm(`Retirer ${user.prenom} ${user.nom} de la direction ?`)) {
-                              supabase.from('employees').update({ job: 'prof' }).eq('id', user.id).then(() => {
-                                loadDirectionData();
-                                onRefresh();
-                                setSuccessMessage(`${user.prenom} ${user.nom} retiré de la direction`);
-                                clearMessages();
-                              });
-                            }
-                          }}
-                          className="px-3 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded text-sm transition-colors flex items-center gap-1"
-                          title="Retirer de la direction"
-                        >
-                          ✕
-                        </button>
                       </td>
                     </>
                   )}
@@ -939,8 +906,9 @@ export default function GestionUtilisateursTab({
                 </label>
                 <div className="text-sm text-gray-600 mb-3">
                   {selectedUserType === 'eleves' && 'Colonnes: nom, prenom, classe, categorie (optionnel)'}
-                  {selectedUserType === 'guides' && 'Colonnes: nom, prenom'}
-                  {(selectedUserType === 'lecteurs-externes' || selectedUserType === 'mediateurs') && 'Colonnes: nom, prenom, email'}
+                  {selectedUserType === 'guides' && 'Colonnes: nom, prenom, email, telephone (optionnels)'}
+                  {selectedUserType === 'direction' && 'Colonnes: nom, prenom, email, telephone (optionnels)'}
+                  {selectedUserType === 'externes' && 'Colonnes: nom, prenom, email, telephone (optionnels)'}
                 </div>
                 
                 <input

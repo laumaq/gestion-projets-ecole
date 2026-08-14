@@ -29,7 +29,7 @@ export default function Header({ activeTab, userName, onLogout }: HeaderProps) {
 
   const getTabDescription = (tab: TabType): string => {
     const descriptions: Record<TabType, string> = {
-      dashboard: 'Vue d\'ensemble du système',      
+      dashboard: 'Vue d\'ensemble des TFH',      
       'liste-tfh': 'Liste complète des travaux par classe',
       convocations: 'Gestion des convocations mars/avril',
       presences: 'Présences lors des journées TFH',

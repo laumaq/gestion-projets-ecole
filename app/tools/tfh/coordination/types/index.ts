@@ -1,8 +1,8 @@
 // app/tools/tfh/coordination/types/index.ts
 
-// Élève - maintenant avec student_matricule comme clé primaire
+// Élève - avec student_matricule comme clé primaire
 export interface Eleve {
-  id: number; // Changé: student_matricule (integer) au lieu de UUID string
+  id: number; // student_matricule
   student_matricule: number;
   nom: string;      // Vient de students
   prenom: string;   // Vient de students
@@ -12,8 +12,8 @@ export interface Eleve {
   // Références vers employees (UUID strings)
   guide_id: string | null;
   lecteur_interne_id: string | null;
-  mediateur_id: string | null;  // UUID vers tfh_mediateurs
-  lecteur_externe_id: string | null; // UUID vers tfh_lecteurs_externes
+  mediateur_id: string | null;  // UUID vers tfh_externes (via mediateur_id)
+  lecteur_externe_id: string | null; // UUID vers tfh_externes (via lecteur_externe_id)
   
   // Contenu du TFH
   problematique: string;
@@ -28,7 +28,7 @@ export interface Eleve {
   source_4?: string;
   source_5?: string;
   
-  // Convocations (strings)
+  // Convocations
   convocation_mars: string;
   convocation_avril: string;
   
@@ -100,6 +100,10 @@ export interface Eleve {
   // Métadonnées
   created_at?: string;
   updated_at?: string;
+  
+  // Nouvelles colonnes
+  tfh_non_rendu?: boolean;
+  url_tfh?: string;
 }
 
 // Guide = Employee (sauf direction et coordination)
@@ -111,30 +115,44 @@ export interface Guide {
   email?: string;
   job?: string;
   mot_de_passe?: string | null;
+  telephone?: string;
+  tfh_accepte_numerique?: boolean;
 }
 
-// Lecteur externe (table tfh_lecteurs_externes)
+// Externe (fusion de lecteurs_externes et mediateurs)
+export interface Externe {
+  id: string;  // UUID
+  nom: string;
+  prenom: string;
+  email?: string;
+  telephone?: string;
+  mot_de_passe?: string | null;
+  lecteur_externe_id?: string;  // UUID pour son rôle de lecteur externe
+  mediateur_id?: string;        // UUID pour son rôle de médiateur
+  tfh_accepte_numerique?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Lecteur externe (pour rétrocompatibilité - déprécié, utiliser Externe)
 export interface LecteurExterne {
-  id: string;  // UUID
+  id: string;
   nom: string;
   prenom: string;
   email: string;
-  telephone?: string;
   mot_de_passe?: string | null;
 }
 
-// Médiateur (table tfh_mediateurs)
+// Médiateur (pour rétrocompatibilité - déprécié, utiliser Externe)
 export interface Mediateur {
-  id: string;  // UUID
+  id: string;
   nom: string;
   prenom: string;
   email: string;
-  telephone?: string;
   mot_de_passe?: string | null;
 }
 
-// Coordinateur n'existe plus comme table - ce sont des employees dans le groupe de travail
-// On garde l'interface pour compatibilité mais elle n'est plus utilisée directement
+// Coordinateur (déprécié - les coordinateurs sont des employees avec groupe_id TFH)
 export interface Coordinateur {
   id: string;
   nom: string;
@@ -143,7 +161,7 @@ export interface Coordinateur {
   mot_de_passe?: string | null;
 }
 
-// Événement de défense (inchangé)
+// Événement de défense
 export interface DefenseEvent {
   id: string;  // student_matricule en string pour compatibilité
   eleveId: string;
@@ -179,7 +197,6 @@ export interface Conflict {
   message: string;
 }
 
-// Stats (inchangé)
 export interface StatsData {
   totalEleves: number;
   avecThematique: number;
@@ -196,7 +213,6 @@ export interface StatsData {
   pourcentageLecteurExterne: number;
 }
 
-// Stats par guide (inchangé)
 export interface GuideStats {
   id: string;
   nom: string;
@@ -210,14 +226,12 @@ export interface GuideStats {
   pourcentageConvocationsAvril: number;
 }
 
-// Journées TFH (inchangé)
 export interface JourneeTFH {
   id: number;
   date: string;
   libelle: string;
 }
 
-// Paramètres d'affichage (inchangé)
 export interface DisplaySettings {
   lecteur_externe_voir_eleves: boolean;
   lecteur_externe_voir_guides: boolean;
@@ -233,8 +247,30 @@ export interface DisplaySettings {
   mediateur_voir_lecteurs_externes: boolean;
 }
 
-// Types d'onglets
+// Type pour les demandes de changement de rôle
+export interface DemandeChangementRole {
+  id: string;
+  demandeur_id: string;
+  demandeur_type: 'guide' | 'externe';
+  demandeur_nom: string;
+  demandeur_prenom: string;
+  demandeur_email: string;
+  student_matricule: number;
+  eleve_nom: string;
+  eleve_prenom: string;
+  eleve_classe: string;
+  role_type: 'guide' | 'lecteur_interne' | 'lecteur_externe' | 'mediateur';  // ← Ajouter 'guide'
+  defense_date: string;
+  defense_horaire: string;
+  defense_localisation: string;
+  statut: 'en_attente' | 'approuvee' | 'rejetee' | 'annulee';
+  commentaire_demandeur: string | null;
+  commentaire_coordinateur: string | null;
+  created_at: string;
+  traitee_le: string | null;
+  traitee_par: string | null;
+}
+
 export type TabType = 'dashboard' | 'convocations' | 'presences' | 'defenses' | 'calendrier' | 'gestion-utilisateurs' | 'parametres' | 'stats' | 'controle' | 'liste-tfh';
 
-// Types d'utilisateurs
-export type UserType = 'eleves' | 'guides' | 'lecteurs-externes' | 'mediateurs' | 'coordinateurs';
+export type UserType = 'eleves' | 'guides' | 'externes' | 'coordinateurs' | 'direction';

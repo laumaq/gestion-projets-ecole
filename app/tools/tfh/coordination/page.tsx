@@ -20,7 +20,7 @@ import ListeTFHTab from './tabs/ListeTFHTab';
 import GestionUtilisateursTab from './tabs/GestionUtilisateursTab';
 import { useCoordinateurData } from './hooks/useCoordinateurData';
 import { useElevesOperations } from './hooks/useElevesOperations';
-import { TabType, Eleve } from './types';
+import { TabType, UserType } from './types';
 
 export default function CoordinateurDashboard() {
   const router = useRouter();
@@ -30,10 +30,10 @@ export default function CoordinateurDashboard() {
   const [userId, setUserId] = useState('');
   const [editingModeConvocations, setEditingModeConvocations] = useState(false);
   const [editingModeDefenses, setEditingModeDefenses] = useState(false);
+  const [selectedUserType, setSelectedUserType] = useState<UserType>('eleves');
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   // Vérifier que l'utilisateur est bien dans le groupe de coordination TFH
-
   useEffect(() => {
     const checkAuthorization = async () => {
       const userType = localStorage.getItem('userType');
@@ -53,14 +53,13 @@ export default function CoordinateurDashboard() {
         .single();
 
       if (error || !employee) {
-        router.push('/dashboard');
+        router.push('/dashboard/main');
         return;
       }
 
       // Vérifier si le groupe_id correspond à l'ID du groupe TFH dans ag_groupes
-      // L'ID du groupe TFH est '0092b3db-1f7e-40e1-8f6b-70219d6a50f2'
       if (employee.groupe_id !== '0092b3db-1f7e-40e1-8f6b-70219d6a50f2') {
-        router.push('/dashboard');
+        router.push('/dashboard/main');
         return;
       }
 
@@ -72,16 +71,19 @@ export default function CoordinateurDashboard() {
     checkAuthorization();
   }, [router]);
 
-  // Hooks personnalisés (à adapter)
+  // Hooks personnalisés
   const { 
     eleves, 
     guides, 
-    lecteursExternes, 
-    mediateurs, 
+    externes,
     currentCoordinateur,
     categories,
     loading, 
-    refreshData 
+    refreshData,
+    demandesEnAttente,
+    demandesTraitees,
+    approuverDemande,
+    refuserDemande
   } = useCoordinateurData();
   
   const {
@@ -107,10 +109,16 @@ export default function CoordinateurDashboard() {
           <DashboardTab 
             eleves={eleves}
             guides={guides}
+            externes={externes}
             onTabChange={setActiveTab}
             userName={userName}
             coordinateurNom={currentCoordinateur?.nom || ''}
             coordinateurPrenom={currentCoordinateur?.prenom || ''}
+            demandesEnAttente={demandesEnAttente}
+            demandesTraitees={demandesTraitees}
+            onApprouverDemande={approuverDemande}
+            onRefuserDemande={refuserDemande}
+            onRefresh={refreshData}
           />
         );
         
@@ -154,8 +162,7 @@ export default function CoordinateurDashboard() {
           <DefensesTab
             eleves={eleves}
             guides={guides}
-            lecteursExternes={lecteursExternes}
-            mediateurs={mediateurs}
+            externes={externes}
             editingMode={editingModeDefenses}
             onUpdate={handleUpdate}
             onSelectUpdate={handleSelectUpdate}
@@ -168,8 +175,11 @@ export default function CoordinateurDashboard() {
         return (
           <CalendrierTab
             eleves={eleves}
+            guides={guides}
+            externes={externes}
             categories={categories}
             onRefresh={refreshData}
+            onUpdate={handleUpdate}
           />
         );
 
@@ -178,9 +188,10 @@ export default function CoordinateurDashboard() {
           <GestionUtilisateursTab
             eleves={eleves}
             guides={guides}
-            lecteursExternes={lecteursExternes}
-            mediateurs={mediateurs}
+            externes={externes}
             onRefresh={refreshData}
+            selectedUserType={selectedUserType}
+            onSelectedUserTypeChange={setSelectedUserType}
           />
         );
 

@@ -1,8 +1,9 @@
 // app/tools/tfh/coordination/tabs/ConvocationsTab.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import React from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Eleve, Guide } from '../types';
 import { CONVOCATION_OPTIONS } from '../constants';
 import { 
@@ -14,6 +15,8 @@ import {
   detecterSessions,
   type Session
 } from '../utils/sessionUtils';
+
+const STORAGE_KEY = 'convocations_local_data';
 
 interface ConvocationsTabProps {
   eleves: Eleve[];
@@ -40,11 +43,48 @@ export default function ConvocationsTab({
 }: ConvocationsTabProps) {
   const [showConvoques, setShowConvoques] = useState(false);
   const [selectedSession, setSelectedSession] = useState<string>('all');
-  const [localEleves, setLocalEleves] = useState<Eleve[]>(eleves);
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
+  const [localEleves, setLocalEleves] = useState<Eleve[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Trier les élèves par classe → nom → prénom
+  const sortEleves = (elevesList: Eleve[]): Eleve[] => {
+    return [...elevesList].sort((a, b) => {
+      if (a.classe !== b.classe) {
+        return (a.classe || '').localeCompare(b.classe || '');
+      }
+      if (a.nom !== b.nom) {
+        return (a.nom || '').localeCompare(b.nom || '');
+      }
+      return (a.prenom || '').localeCompare(b.prenom || '');
+    });
+  };
+
+  // Sauvegarder les données dans sessionStorage
+  const saveToStorage = (data: Eleve[]) => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.warn('Impossible de sauvegarder dans sessionStorage:', e);
+    }
+  };
+
+  // Charger les données depuis sessionStorage
+  const loadFromStorage = (): Eleve[] | null => {
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.warn('Impossible de charger depuis sessionStorage:', e);
+    }
+    return null;
+  };
+
+  // Charger les sessions
   useEffect(() => {
     const chargerSessions = async () => {
       setLoadingSessions(true);
@@ -62,47 +102,77 @@ export default function ConvocationsTab({
     chargerSessions();
   }, []);
 
+  // Initialiser les données locales
   useEffect(() => {
-    setLocalEleves(eleves);
-  }, [eleves]);
+    if (isInitialized) return;
 
+    // 1. Essayer de charger depuis sessionStorage
+    const storedData = loadFromStorage();
+    if (storedData && storedData.length > 0) {
+      setLocalEleves(storedData);
+      setIsInitialized(true);
+      return;
+    }
+
+    // 2. Sinon, initialiser depuis les props
+    if (eleves.length > 0) {
+      const sorted = sortEleves(eleves);
+      setLocalEleves(sorted);
+      saveToStorage(sorted);
+      setIsInitialized(true);
+    }
+  }, [eleves, isInitialized]);
+
+  // Mettre à jour les données locales et les sauvegarder
+  const updateLocalEleves = (newEleves: Eleve[]) => {
+    const sorted = sortEleves(newEleves);
+    setLocalEleves(sorted);
+    saveToStorage(sorted);
+  };
+
+  // Fonction pour sauvegarder une convocation
   const handleSaveConvocation = async (eleve: Eleve, sessionNum: number, value: string) => {
     setIsProcessing(true);
     try {
       const columnName = `session_${sessionNum}_convoque`;
+      const updateData = { [columnName]: value };
       
       const { error } = await supabase
         .from('tfh_eleves')
-        .update({ [columnName]: value })
+        .update(updateData)
         .eq('student_matricule', eleve.student_matricule);
   
       if (error) throw error;
       
-      setLocalEleves(prev => prev.map(e => 
+      // Mise à jour locale
+      const updated = localEleves.map(e => 
         e.student_matricule === eleve.student_matricule 
           ? { ...e, [columnName]: value } as Eleve
           : e
-      ));
+      );
+      updateLocalEleves(updated);
       
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       alert('Erreur lors de la sauvegarde');
       onRefresh();
     } finally {
-      setIsProcessing(false);
+      setIsProcessing(false); 
     }
   };
 
+  // Fonction pour mettre à jour le guide
   const handleGuideUpdate = async (eleve: Eleve, guideId: string) => {
     setIsProcessing(true);
     try {
       await onSelectUpdate(eleve.student_matricule, 'guide_id', guideId);
       
-      setLocalEleves(prev => prev.map(e => 
+      const updated = localEleves.map(e => 
         e.student_matricule === eleve.student_matricule 
           ? { ...e, guide_id: guideId || null } as Eleve
           : e
-      ));
+      );
+      updateLocalEleves(updated);
     } catch (error) {
       console.error('Erreur lors de la mise à jour du guide:', error);
       onRefresh();
@@ -111,6 +181,7 @@ export default function ConvocationsTab({
     }
   };
 
+  // Fonction pour vérifier si un élève est convoqué à une session
   const estConvoquePourSession = (eleve: Eleve, session: Session): boolean => {
     const sessionNum = parseInt(session.id.split('_')[1]);
     const columnName = `session_${sessionNum}_convoque` as keyof Eleve;
@@ -118,21 +189,34 @@ export default function ConvocationsTab({
     return valeur?.startsWith('Oui') === true;
   };
 
-  const filteredEleves = localEleves.filter(eleve => {
+  // Filtrer les élèves selon les filtres
+  const filteredEleves = useMemo(() => {
+    let result = localEleves;
+    
     if (showConvoques) {
       if (selectedSession !== 'all') {
         const session = sessions.find(s => s.id === `session_${parseInt(selectedSession)}`);
-        return session ? estConvoquePourSession(eleve, session) : false;
+        if (session) {
+          result = result.filter(eleve => estConvoquePourSession(eleve, session));
+        } else {
+          result = [];
+        }
+      } else {
+        result = result.filter(eleve => 
+          sessions.some(session => estConvoquePourSession(eleve, session))
+        );
       }
-      return sessions.some(session => estConvoquePourSession(eleve, session));
     }
-    return true;
-  });
+    
+    return result;
+  }, [localEleves, showConvoques, selectedSession, sessions]);
 
+  // Fonction pour obtenir le nom d'affichage d'une session
   const getSessionDisplayName = (session: Session) => {
     return session.nom.replace('Session ', '');
   };
 
+  // Obtenir les sessions à afficher selon le filtre
   const getSessionsToDisplay = () => {
     if (selectedSession === 'all') {
       return sessions;
@@ -234,8 +318,9 @@ export default function ConvocationsTab({
                 <th className="px-3 py-3 text-left text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">
                   Guide
                 </th>
+                
                 {loadingSessions ? (
-                  <th className="px-3 py-3 text-center">
+                  <th colSpan={displayedSessions.length || 1} className="px-3 py-3 text-center">
                     <div className="animate-pulse">Chargement des sessions...</div>
                   </th>
                 ) : (
@@ -256,73 +341,82 @@ export default function ConvocationsTab({
               </tr>
             </thead>
             <tbody>
-              {filteredEleves.map((eleve) => (
-                <tr key={eleve.student_matricule} className="border-b hover:bg-gray-50">
-                  <td className="px-3 py-3 text-xs md:text-sm whitespace-nowrap">
-                    {eleve.classe}
-                  </td>
-                  <td className="px-3 py-3 text-xs md:text-sm font-medium whitespace-nowrap">
-                    {eleve.nom} {eleve.prenom}
-                  </td>
-                  <td className="px-3 py-3 text-xs md:text-sm whitespace-nowrap">
-                    {editingMode ? (
-                      <select
-                        value={eleve.guide_id || ''}
-                        onChange={(e) => handleGuideUpdate(eleve, e.target.value)}
-                        className="w-full border rounded px-2 py-1 text-xs md:text-sm"
-                        disabled={isProcessing}
-                      >
-                        <option value="">-</option>
-                        {guides.map(guide => (
-                          <option key={guide.id} value={guide.id}>
-                            {guide.nom} {guide.prenom}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span>
-                        {eleve.guide_nom} {eleve.guide_prenom}
-                      </span>
-                    )}
-                  </td>
-                  {loadingSessions ? (
-                    <td className="px-3 py-3 text-center">
-                      <div className="animate-pulse">Chargement...</div>
+              {filteredEleves.map((eleve) => {
+                const sessionNumForSession = (session: Session) => {
+                  return parseInt(session.id.split('_')[1]);
+                };
+                
+                return (
+                  <tr key={eleve.student_matricule} className="border-b hover:bg-gray-50">
+                    <td className="px-3 py-3 text-xs md:text-sm whitespace-nowrap">
+                      {eleve.classe}
                     </td>
-                  ) : (
-                    displayedSessions.map((session) => {
-                      const sessionNum = parseInt(session.id.split('_')[1]);
-                      const columnName = `session_${sessionNum}_convoque` as keyof Eleve;
-                      const convocationValeur = eleve[columnName] as string | undefined;
-                      
-                      return (
-                        <td key={`${eleve.student_matricule}-${session.id}`} className="px-3 py-3 border-l">
-                          {editingMode ? (
-                            <select
-                              value={convocationValeur || ''}
-                              onChange={(e) => {
-                                handleSaveConvocation(eleve, sessionNum, e.target.value);
-                              }}
-                              className={`w-full border rounded px-2 py-1 text-xs md:text-sm text-center ${getConvocationColor(convocationValeur || '')}`}
-                              disabled={isProcessing}
-                            >
-                              {CONVOCATION_OPTIONS.map(opt => (
-                                <option key={opt.value} value={opt.value} className={opt.color}>
-                                  {opt.label}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <div className={`px-2 py-1 rounded text-center font-medium ${getConvocationColor(convocationValeur || '')}`}>
-                              {getConvocationLabelShort(convocationValeur || '')}
-                            </div>
-                          )}
-                        </td>
-                      );
-                    })
-                  )}
-                </tr>
-              ))}
+                    
+                    <td className="px-3 py-3 text-xs md:text-sm font-medium whitespace-nowrap">
+                      {eleve.nom} {eleve.prenom}
+                    </td>
+                    
+                    <td className="px-3 py-3 text-xs md:text-sm whitespace-nowrap">
+                      {editingMode ? (
+                        <select
+                          value={eleve.guide_id || ''}
+                          onChange={(e) => handleGuideUpdate(eleve, e.target.value)}
+                          className="w-full border rounded px-2 py-1 text-xs md:text-sm"
+                          disabled={isProcessing}
+                        >
+                          <option value="">-</option>
+                          {guides.map(guide => (
+                            <option key={guide.id} value={guide.id}>
+                              {guide.nom} {guide.prenom}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span>
+                          {eleve.guide_nom} {eleve.guide_prenom}
+                        </span>
+                      )}
+                    </td>
+                    
+                    {loadingSessions ? (
+                      <td colSpan={displayedSessions.length || 1} className="px-3 py-3 text-center">
+                        <div className="animate-pulse">Chargement...</div>
+                      </td>
+                    ) : (
+                      displayedSessions.map((session) => {
+                        const sessionNum = sessionNumForSession(session);
+                        const columnName = `session_${sessionNum}_convoque` as keyof Eleve;
+                        const convocationValeur = eleve[columnName] as string | undefined;
+                        
+                        return (
+                          <td key={`${eleve.student_matricule}-${session.id}`} className="px-3 py-3 border-l">
+                            {editingMode ? (
+                              <select
+                                value={convocationValeur || ''}
+                                onChange={(e) => {
+                                  handleSaveConvocation(eleve, sessionNum, e.target.value);
+                                }}
+                                className={`w-full border rounded px-2 py-1 text-xs md:text-sm text-center ${getConvocationColor(convocationValeur || '')}`}
+                                disabled={isProcessing}
+                              >
+                                {CONVOCATION_OPTIONS.map(opt => (
+                                  <option key={opt.value} value={opt.value} className={opt.color}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <div className={`px-2 py-1 rounded text-center font-medium ${getConvocationColor(convocationValeur || '')}`}>
+                                {getConvocationLabelShort(convocationValeur || '')}
+                              </div>
+                            )}
+                          </td>
+                        );
+                      })
+                    )}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

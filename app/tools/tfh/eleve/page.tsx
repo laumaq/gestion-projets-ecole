@@ -5,6 +5,25 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getJourneesFromSupabase, detecterSessions } from '../coordination/utils/sessionUtils';
+import { 
+  User, 
+  GraduationCap, 
+  BookOpen, 
+  Target, 
+  Sparkles,
+  Link2,
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
+  Printer,
+  LogOut,
+  FileText,
+  Search,
+  ChevronRight,
+  ExternalLink,
+  AlertCircle
+} from 'lucide-react';
 
 interface EleveInfo {
   student_matricule: number;
@@ -22,6 +41,7 @@ interface EleveInfo {
   guide_nom: string;
   guide_prenom: string;
   guide_initiale: string;
+  guide_accepte_numerique?: boolean;
   sessions?: Array<{
     index: number;
     nom: string;
@@ -34,15 +54,19 @@ interface EleveInfo {
     localisation: string;
     mediateur_nom?: string;
     mediateur_prenom?: string;
+    mediateur_accepte_numerique?: boolean;
     lecteur_interne_nom?: string;
     lecteur_interne_initiale?: string;
+    lecteur_interne_accepte_numerique?: boolean;
     lecteur_externe_nom?: string;
     lecteur_externe_prenom?: string;
+    lecteur_externe_accepte_numerique?: boolean;
   };
   displaySettings?: {
     eleves_voir_guides: boolean;
     eleves_voir_defenses: boolean;
   };
+  url_tfh?: string;
 }
 
 export default function EleveDashboard() {
@@ -50,15 +74,12 @@ export default function EleveDashboard() {
   const [loading, setLoading] = useState(true);
   const [phasePreparatoire, setPhasePreparatoire] = useState(false);
   
-  // États pour la problématique
   const [editingProblematique, setEditingProblematique] = useState(false);
   const [newProblematique, setNewProblematique] = useState('');
   
-  // États pour la thématique
   const [editingThematique, setEditingThematique] = useState(false);
   const [newThematique, setNewThematique] = useState('');
   
-  // États pour les sources
   const [editingSource1, setEditingSource1] = useState(false);
   const [newSource1, setNewSource1] = useState('');
   const [editingSource2, setEditingSource2] = useState(false);
@@ -70,7 +91,9 @@ export default function EleveDashboard() {
   const [editingSource5, setEditingSource5] = useState(false);
   const [newSource5, setNewSource5] = useState('');
   
-  // Objectifs
+  const [editingUrl, setEditingUrl] = useState(false);
+  const [newUrl, setNewUrl] = useState('');
+  
   const [objectifGeneral, setObjectifGeneral] = useState('');
   const [objectifParticulier, setObjectifParticulier] = useState('');
   const [autorisationModification, setAutorisationModification] = useState(true);
@@ -110,7 +133,6 @@ export default function EleveDashboard() {
 
   const loadEleve = async (matricule: number) => {
     try {
-      // Charger les données TFH de l'élève avec les relations
       const { data, error } = await supabase
         .from('tfh_eleves')
         .select(`
@@ -131,6 +153,7 @@ export default function EleveDashboard() {
           mediateur_id,
           lecteur_interne_id,
           lecteur_externe_id,
+          url_tfh,
           session_1_convoque,
           session_2_convoque,
           session_3_convoque,
@@ -165,77 +188,92 @@ export default function EleveDashboard() {
 
       const studentInfo = (data as any).students;
       
-      // Charger les infos du guide
-      let guide_nom = null;
-      let guide_prenom = null;
-      let guide_initiale = null;
+      const { data: settingsData } = await supabase
+        .from('tfh_system_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', ['eleves_voir_guides', 'eleves_voir_defenses']);
+      
+      const displaySettings: any = {};
+      if (settingsData) {
+        settingsData.forEach(setting => {
+          displaySettings[setting.setting_key] = setting.setting_value === 'true';
+        });
+      }
+      
+      let guide_nom = '';
+      let guide_prenom = '';
+      let guide_initiale = '';
+      let guide_accepte_numerique = false;
       
       if (data.guide_id) {
         const { data: guide } = await supabase
           .from('employees')
-          .select('nom, prenom, initiale')
+          .select('nom, prenom, initiale, tfh_accepte_numerique')
           .eq('id', data.guide_id)
           .single();
         
         if (guide) {
-          guide_nom = guide.nom;
-          guide_prenom = guide.prenom;
-          guide_initiale = guide.initiale;
+          guide_nom = guide.nom || '';
+          guide_prenom = guide.prenom || '';
+          guide_initiale = guide.initiale || '';
+          guide_accepte_numerique = guide.tfh_accepte_numerique || false;
         }
       }
       
-      // Charger les infos du médiateur
-      let mediateur_nom = null;
-      let mediateur_prenom = null;
+      let mediateur_nom = '';
+      let mediateur_prenom = '';
+      let mediateur_accepte_numerique = false;
       
       if (data.mediateur_id) {
         const { data: mediateur } = await supabase
-          .from('tfh_mediateurs')
-          .select('nom, prenom')
-          .eq('id', data.mediateur_id)
+          .from('tfh_externes')
+          .select('nom, prenom, tfh_accepte_numerique')
+          .eq('mediateur_id', data.mediateur_id)
           .single();
         
         if (mediateur) {
-          mediateur_nom = mediateur.nom;
-          mediateur_prenom = mediateur.prenom;
+          mediateur_nom = mediateur.nom || '';
+          mediateur_prenom = mediateur.prenom || '';
+          mediateur_accepte_numerique = mediateur.tfh_accepte_numerique || false;
         }
       }
       
-      // Charger les infos du lecteur interne
-      let lecteur_interne_nom = null;
-      let lecteur_interne_initiale = null;
+      let lecteur_interne_nom = '';
+      let lecteur_interne_initiale = '';
+      let lecteur_interne_accepte_numerique = false;
       
       if (data.lecteur_interne_id) {
         const { data: lecteurInterne } = await supabase
           .from('employees')
-          .select('nom, initiale')
+          .select('nom, initiale, tfh_accepte_numerique')
           .eq('id', data.lecteur_interne_id)
           .single();
         
         if (lecteurInterne) {
-          lecteur_interne_nom = lecteurInterne.nom;
-          lecteur_interne_initiale = lecteurInterne.initiale;
+          lecteur_interne_nom = lecteurInterne.nom || '';
+          lecteur_interne_initiale = lecteurInterne.initiale || '';
+          lecteur_interne_accepte_numerique = lecteurInterne.tfh_accepte_numerique || false;
         }
       }
       
-      // Charger les infos du lecteur externe
-      let lecteur_externe_nom = null;
-      let lecteur_externe_prenom = null;
+      let lecteur_externe_nom = '';
+      let lecteur_externe_prenom = '';
+      let lecteur_externe_accepte_numerique = false;
       
       if (data.lecteur_externe_id) {
         const { data: lecteurExterne } = await supabase
-          .from('tfh_lecteurs_externes')
-          .select('nom, prenom')
-          .eq('id', data.lecteur_externe_id)
+          .from('tfh_externes')
+          .select('nom, prenom, tfh_accepte_numerique')
+          .eq('lecteur_externe_id', data.lecteur_externe_id)
           .single();
         
         if (lecteurExterne) {
-          lecteur_externe_nom = lecteurExterne.nom;
-          lecteur_externe_prenom = lecteurExterne.prenom;
+          lecteur_externe_nom = lecteurExterne.nom || '';
+          lecteur_externe_prenom = lecteurExterne.prenom || '';
+          lecteur_externe_accepte_numerique = lecteurExterne.tfh_accepte_numerique || false;
         }
       }
       
-      // Charger les sessions
       const journeesData = await getJourneesFromSupabase();
       const sessionsDetectees = detecterSessions(journeesData);
       
@@ -264,20 +302,6 @@ export default function EleveDashboard() {
         session.date_debut >= aujourdhui
       );
       
-      // Charger les paramètres d'affichage
-      const { data: settingsData } = await supabase
-        .from('tfh_system_settings')
-        .select('setting_key, setting_value')
-        .in('setting_key', ['eleves_voir_guides', 'eleves_voir_defenses']);
-      
-      const displaySettings: any = {};
-      if (settingsData) {
-        settingsData.forEach(setting => {
-          displaySettings[setting.setting_key] = setting.setting_value === 'true';
-        });
-      }
-      
-      // Formater l'heure
       const formatHeure = (heure: string): string => {
         if (!heure) return '';
         const match = heure.match(/^(\d{1,2}):(\d{2})/);
@@ -293,12 +317,15 @@ export default function EleveDashboard() {
         date: data.date_defense || '',
         heure: data.heure_defense ? formatHeure(data.heure_defense) : '',
         localisation: data.localisation_defense || '',
-        mediateur_nom: mediateur_nom || '',
-        mediateur_prenom: mediateur_prenom || '',
-        lecteur_interne_nom: lecteur_interne_nom || '',
-        lecteur_interne_initiale: lecteur_interne_initiale || '',
-        lecteur_externe_nom: lecteur_externe_nom || '',
-        lecteur_externe_prenom: lecteur_externe_prenom || ''
+        mediateur_nom: mediateur_nom,
+        mediateur_prenom: mediateur_prenom,
+        mediateur_accepte_numerique: mediateur_accepte_numerique,
+        lecteur_interne_nom: lecteur_interne_nom,
+        lecteur_interne_initiale: lecteur_interne_initiale,
+        lecteur_interne_accepte_numerique: lecteur_interne_accepte_numerique,
+        lecteur_externe_nom: lecteur_externe_nom,
+        lecteur_externe_prenom: lecteur_externe_prenom,
+        lecteur_externe_accepte_numerique: lecteur_externe_accepte_numerique
       };
       
       const eleveFormate: EleveInfo = {
@@ -314,12 +341,14 @@ export default function EleveDashboard() {
         source_4: data.source_4 || '',
         source_5: data.source_5 || '',
         categorie: data.categorie || '',
-        guide_nom: guide_nom || '-',
-        guide_prenom: guide_prenom || '',
-        guide_initiale: guide_initiale || '-',
+        guide_nom: guide_nom,
+        guide_prenom: guide_prenom,
+        guide_initiale: guide_initiale,
+        guide_accepte_numerique: guide_accepte_numerique,
         sessions: sessionsAVenir,
         defense: defenseData,
-        displaySettings: displaySettings
+        displaySettings: displaySettings,
+        url_tfh: data.url_tfh || ''
       };
       
       setEleve(eleveFormate);
@@ -330,8 +359,8 @@ export default function EleveDashboard() {
       setNewSource3(data.source_3 || '');
       setNewSource4(data.source_4 || '');
       setNewSource5(data.source_5 || '');
+      setNewUrl(data.url_tfh || '');
       
-      // Charger l'objectif général
       const { data: objectifGeneralData } = await supabase
         .from('tfh_system_settings')
         .select('setting_value')
@@ -342,7 +371,6 @@ export default function EleveDashboard() {
         setObjectifGeneral(objectifGeneralData.setting_value || '');
       }
       
-      // Charger l'autorisation de modification
       const { data: autorisationData } = await supabase
         .from('tfh_system_settings')
         .select('setting_value')
@@ -417,10 +445,25 @@ export default function EleveDashboard() {
     }
   };
 
+  const handleSaveUrl = async () => {
+    if (!eleve) return;
+
+    try {
+      await supabase
+        .from('tfh_eleves')
+        .update({ url_tfh: newUrl || null })
+        .eq('student_matricule', eleve.student_matricule);
+
+      setEleve({ ...eleve, url_tfh: newUrl });
+      setEditingUrl(false);
+    } catch (err) {
+      console.error('Erreur sauvegarde URL:', err);
+    }
+  };
+
   const getMessagePourEleve = (statut: string): string => {
-    // Gérer les cas NULL, undefined ou chaîne vide
     if (!statut || statut === '' || statut === 'null' || statut === 'undefined') {
-      return 'Ton guide n\'a pas encore rendu d\'info sur ta convocation. Nous considérons donc actuellement que tu n\'es pas convoqué·e.';
+      return 'Ton guide n\'a pas encore rendu d\'info sur ta convocation.';
     }
     
     switch (statut) {
@@ -437,6 +480,30 @@ export default function EleveDashboard() {
     }
   };
 
+  const calculerNombreImpressions = () => {
+    if (!eleve?.defense) return 0;
+    
+    let count = 0;
+    
+    if (eleve.guide_accepte_numerique !== true) {
+      count++;
+    }
+    
+    if (eleve.defense.lecteur_interne_nom && eleve.defense.lecteur_interne_accepte_numerique !== true) {
+      count++;
+    }
+    
+    if (eleve.defense.lecteur_externe_nom && eleve.defense.lecteur_externe_accepte_numerique !== true) {
+      count++;
+    }
+    
+    if (eleve.defense.mediateur_nom && eleve.defense.mediateur_accepte_numerique !== true) {
+      count++;
+    }
+    
+    return count;
+  };
+
   const DefenseSection = ({ eleve }: { eleve: EleveInfo }) => {
     if (!eleve.displaySettings?.eleves_voir_defenses) {
       return null;
@@ -446,89 +513,197 @@ export default function EleveDashboard() {
       return null;
     }
   
+    const nbImpressions = calculerNombreImpressions();
+  
     return (
-      <div className="border-t pt-6">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-2xl">⚖️</span>
-          <h3 className="text-lg font-semibold text-gray-700">Ma défense TFH</h3>
+      <div className="bg-gradient-to-r from-indigo-50/80 to-violet-50/80 rounded-xl p-6 border border-indigo-100">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="p-2 bg-indigo-100 rounded-lg">
+            <Calendar className="w-5 h-5 text-indigo-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800">Ma défense TFH</h3>
+          <span className="ml-auto px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
+            À venir
+          </span>
+        </div>
+  
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {eleve.defense.date && (
-            <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
-              À venir
-            </span>
+            <div className="flex items-start gap-3 bg-white/60 rounded-lg p-3">
+              <Calendar className="w-5 h-5 text-indigo-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-indigo-600 font-medium">Date</p>
+                <p className="text-sm text-gray-700 font-medium">
+                  {new Date(eleve.defense.date).toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                </p>
+              </div>
+            </div>
+          )}
+  
+          {eleve.defense.heure && (
+            <div className="flex items-start gap-3 bg-white/60 rounded-lg p-3">
+              <Clock className="w-5 h-5 text-indigo-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-indigo-600 font-medium">Heure</p>
+                <p className="text-sm text-gray-700 font-medium">{eleve.defense.heure}</p>
+              </div>
+            </div>
+          )}
+  
+          {eleve.defense.localisation && (
+            <div className="flex items-start gap-3 bg-white/60 rounded-lg p-3 md:col-span-2">
+              <MapPin className="w-5 h-5 text-indigo-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-indigo-600 font-medium">Lieu</p>
+                <p className="text-sm text-gray-700">{eleve.defense.localisation}</p>
+              </div>
+            </div>
           )}
         </div>
   
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-100">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {eleve.defense.date && (
-              <div className="flex items-start gap-3">
-                <div className="mt-1"><span className="text-purple-500 text-xl">📅</span></div>
+        <div className="mt-4 pt-4 border-t border-indigo-200">
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="w-4 h-4 text-indigo-600" />
+            <h4 className="text-sm font-semibold text-indigo-800">Composition du jury</h4>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between py-2 px-3 bg-white rounded-lg shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">👨‍🏫</span>
                 <div>
-                  <p className="text-sm text-purple-600 font-medium">Date et heure</p>
-                  <p className="text-gray-800">
-                    {new Date(eleve.defense.date).toLocaleDateString('fr-FR', {
-                      weekday: 'long',
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
-                    {eleve.defense.heure && ` à ${eleve.defense.heure}`}
-                  </p>
+                  <p className="text-sm font-medium text-gray-800">Guide</p>
+                  <p className="text-xs text-gray-500">{eleve.guide_prenom} {eleve.guide_nom} {eleve.guide_initiale}.</p>
                 </div>
               </div>
-            )}
-  
-            {eleve.defense.localisation && (
-              <div className="flex items-start gap-3">
-                <div className="mt-1"><span className="text-purple-500 text-xl">📍</span></div>
-                <div>
-                  <p className="text-sm text-purple-600 font-medium">Lieu</p>
-                  <p className="text-gray-800">{eleve.defense.localisation}</p>
-                </div>
+              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                eleve.guide_accepte_numerique 
+                  ? 'bg-green-100 text-green-700' 
+                  : 'bg-amber-100 text-amber-700'
+              }`}>
+                {eleve.guide_accepte_numerique ? (
+                  <>
+                    <span>💻</span>
+                    <span>Numérique</span>
+                  </>
+                ) : (
+                  <>
+                    <span>📄</span>
+                    <span>Papier</span>
+                  </>
+                )}
               </div>
-            )}
-  
-            {eleve.displaySettings?.eleves_voir_guides && eleve.defense.mediateur_nom && (
-              <div className="flex items-start gap-3">
-                <div className="mt-1"><span className="text-purple-500 text-xl">⚖️</span></div>
-                <div>
-                  <p className="text-sm text-purple-600 font-medium">Médiateur·trice</p>
-                  <p className="text-gray-800">
-                    {eleve.defense.mediateur_prenom} {eleve.defense.mediateur_nom}
-                  </p>
-                </div>
-              </div>
-            )}
+            </div>
   
             {eleve.defense.lecteur_interne_nom && (
-              <div className="flex items-start gap-3">
-                <div className="mt-1"><span className="text-purple-500 text-xl">📖</span></div>
-                <div>
-                  <p className="text-sm text-purple-600 font-medium">Lecteur·rice interne</p>
-                  <p className="text-gray-800">
-                    {eleve.defense.lecteur_interne_nom} {eleve.defense.lecteur_interne_initiale}.
-                  </p>
+              <div className="flex items-center justify-between py-2 px-3 bg-white rounded-lg shadow-sm">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">📖</span>
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">Lecteur·rice interne</p>
+                    <p className="text-xs text-gray-500">{eleve.defense.lecteur_interne_nom} {eleve.defense.lecteur_interne_initiale}.</p>
+                  </div>
+                </div>
+                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                  eleve.defense.lecteur_interne_accepte_numerique 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-amber-100 text-amber-700'
+                }`}>
+                  {eleve.defense.lecteur_interne_accepte_numerique ? (
+                    <>
+                      <span>💻</span>
+                      <span>Numérique</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>📄</span>
+                      <span>Papier</span>
+                    </>
+                  )}
                 </div>
               </div>
             )}
   
             {eleve.defense.lecteur_externe_nom && (
-              <div className="flex items-start gap-3">
-                <div className="mt-1"><span className="text-purple-500 text-xl">👁️</span></div>
-                <div>
-                  <p className="text-sm text-purple-600 font-medium">Lecteur·rice externe</p>
-                  <p className="text-gray-800">
-                    {eleve.defense.lecteur_externe_prenom} {eleve.defense.lecteur_externe_nom}
-                  </p>
+              <div className="flex items-center justify-between py-2 px-3 bg-white rounded-lg shadow-sm">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">👁️</span>
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">Lecteur·rice externe</p>
+                    <p className="text-xs text-gray-500">{eleve.defense.lecteur_externe_prenom} {eleve.defense.lecteur_externe_nom}</p>
+                  </div>
+                </div>
+                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                  eleve.defense.lecteur_externe_accepte_numerique 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-amber-100 text-amber-700'
+                }`}>
+                  {eleve.defense.lecteur_externe_accepte_numerique ? (
+                    <>
+                      <span>💻</span>
+                      <span>Numérique</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>📄</span>
+                      <span>Papier</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+  
+            {eleve.defense.mediateur_nom && (
+              <div className="flex items-center justify-between py-2 px-3 bg-white rounded-lg shadow-sm">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">⚖️</span>
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">Médiateur·trice</p>
+                    <p className="text-xs text-gray-500">{eleve.defense.mediateur_prenom} {eleve.defense.mediateur_nom}</p>
+                  </div>
+                </div>
+                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                  eleve.defense.mediateur_accepte_numerique 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-amber-100 text-amber-700'
+                }`}>
+                  {eleve.defense.mediateur_accepte_numerique ? (
+                    <>
+                      <span>💻</span>
+                      <span>Numérique</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>📄</span>
+                      <span>Papier</span>
+                    </>
+                  )}
                 </div>
               </div>
             )}
           </div>
         </div>
+  
+        {nbImpressions > 0 && (
+          <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Printer className="w-5 h-5 text-amber-600" />
+              <div>
+                <p className="text-sm font-medium text-amber-800">Exemplaires papier à fournir</p>
+                <p className="text-xs text-amber-600">Membres du jury qui préfèrent le papier</p>
+              </div>
+            </div>
+            <span className="text-2xl font-bold text-amber-700">{nbImpressions}</span>
+          </div>
+        )}
       </div>
     );
   };
-  
+
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.clear();
@@ -537,55 +712,101 @@ export default function EleveDashboard() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-violet-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement de votre espace TFH...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!eleve) {
-    return <div className="min-h-screen flex items-center justify-center">Élève non trouvé</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-violet-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">Élève non trouvé</p>
+          <p className="text-gray-400 text-sm">Veuillez contacter votre coordinateur TFH.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Mon TFH</h1>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-violet-50 to-purple-50">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl shadow-lg">
+              <FileText className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Mon TFH</h1>
+            {phasePreparatoire && (
+              <span className="ml-2 px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-medium">
+                🚧 Phase préparatoire
+              </span>
+            )}
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm text-red-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 shadow-sm border border-red-100"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="text-sm font-medium hidden sm:inline">Déconnexion</span>
+          </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              {eleve.prenom} {eleve.nom}
-            </h2>
-            <div className="space-y-2 text-gray-600">
-              <p><span className="font-medium">Classe:</span> {eleve.classe}</p>
-              
-              {eleve.displaySettings?.eleves_voir_guides && (
-                <p><span className="font-medium">Guide:</span> {eleve.guide_prenom} {eleve.guide_nom} {eleve.guide_initiale}.</p>
-              )}
-              
-              {eleve.categorie && (
-                <p><span className="font-medium">Catégorie:</span> {eleve.categorie}</p>
-              )}
-              {phasePreparatoire && (
-                <div className="mt-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    🚧 Phase préparatoire
+        {/* Carte principale */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 md:p-8 space-y-6 border border-white/50">
+          {/* En-tête élève */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-gray-100">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-gradient-to-br from-indigo-100 to-violet-100 rounded-xl">
+                <User className="w-6 h-6 text-indigo-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">
+                  {eleve.prenom} {eleve.nom}
+                </h2>
+                <div className="flex flex-wrap items-center gap-3 mt-1">
+                  <span className="flex items-center gap-1.5 text-sm text-gray-600">
+                    <GraduationCap className="w-4 h-4" />
+                    {eleve.classe}
                   </span>
+                  {eleve.displaySettings?.eleves_voir_guides && eleve.guide_nom && (
+                    <span className="flex items-center gap-1.5 text-sm text-gray-600">
+                      <Users className="w-4 h-4" />
+                      Guide: {eleve.guide_prenom} {eleve.guide_nom} {eleve.guide_initiale}.
+                    </span>
+                  )}
+                  {eleve.categorie && (
+                    <span className="px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                      {eleve.categorie}
+                    </span>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
+          {/* Thématique */}
           {phasePreparatoire && (
-            <div className="border-t pt-6">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-lg font-semibold text-gray-700">Thématique</h3>
+            <div className="bg-gradient-to-r from-teal-50/80 to-emerald-50/80 rounded-xl p-5 border border-teal-100">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Target className="w-5 h-5 text-teal-600" />
+                  <h3 className="text-base font-semibold text-gray-800">Thématique</h3>
+                </div>
                 {!editingThematique && autorisationModification && (
                   <button
                     onClick={() => setEditingThematique(true)}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
                   >
                     {eleve.thematique ? 'Modifier' : 'Ajouter'}
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -596,13 +817,13 @@ export default function EleveDashboard() {
                     type="text"
                     value={newThematique}
                     onChange={(e) => setNewThematique(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ex: Transition écologique, Intelligence artificielle, Inégalités sociales..."
+                    className="w-full border border-teal-200 rounded-lg p-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white"
+                    placeholder="Ex: Transition écologique, Intelligence artificielle..."
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={handleSaveThematique}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
                     >
                       Enregistrer
                     </button>
@@ -611,37 +832,43 @@ export default function EleveDashboard() {
                         setEditingThematique(false);
                         setNewThematique(eleve.thematique || '');
                       }}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                     >
                       Annuler
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-white/60 rounded-lg p-3 text-gray-700">
                   {eleve.thematique || <span className="text-gray-400 italic">Aucune thématique définie</span>}
                 </div>
               )}
             </div>
           )}
 
+          {/* Défense */}
           <DefenseSection eleve={eleve} />
 
-          <div className={`${phasePreparatoire ? '' : 'border-t'} pt-6`}>
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold text-gray-700">Problématique</h3>
+          {/* Problématique */}
+          <div className="bg-gradient-to-r from-indigo-50/80 to-violet-50/80 rounded-xl p-5 border border-indigo-100">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Search className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-base font-semibold text-gray-800">Problématique</h3>
+              </div>
               {!editingProblematique && (
                 autorisationModification ? (
                   <button
                     onClick={() => setEditingProblematique(true)}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
                   >
                     {eleve.problematique ? 'Modifier' : 'Ajouter'}
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 ) : (
-                  <span className="text-sm text-gray-400 italic flex items-center gap-1">
+                  <span className="text-xs text-gray-400 flex items-center gap-1">
                     <span className="text-xs">🔒</span>
-                    Demandez à un coordinateur pour modifier
+                    Modifications bloquées
                   </span>
                 )
               )}
@@ -652,13 +879,13 @@ export default function EleveDashboard() {
                 <textarea
                   value={newProblematique}
                   onChange={(e) => setNewProblematique(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-3 min-h-[150px] focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-indigo-200 rounded-lg p-3 min-h-[120px] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                   placeholder="Décrivez votre problématique..."
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={handleSaveProblematique}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                   >
                     Enregistrer
                   </button>
@@ -667,22 +894,90 @@ export default function EleveDashboard() {
                       setEditingProblematique(false);
                       setNewProblematique(eleve.problematique || '');
                     }}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                   >
                     Annuler
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-50 rounded-lg p-4 whitespace-pre-wrap">
-                {eleve.problematique || 'Aucune problématique définie'}
+              <div className="bg-white/60 rounded-lg p-3 text-gray-700 whitespace-pre-wrap">
+                {eleve.problematique || <span className="text-gray-400 italic">Aucune problématique définie</span>}
               </div>
             )}
           </div>
 
+          {/* URL du TFH */}
+          <div className="bg-gradient-to-r from-violet-50/80 to-purple-50/80 rounded-xl p-5 border border-violet-100">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Link2 className="w-5 h-5 text-violet-600" />
+                <h3 className="text-base font-semibold text-gray-800">Lien vers mon TFH</h3>
+              </div>
+              {!editingUrl && (
+                <button
+                  onClick={() => setEditingUrl(true)}
+                  className="text-sm text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1"
+                >
+                  {eleve.url_tfh ? 'Modifier' : 'Ajouter'}
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          
+            {editingUrl ? (
+              <div className="space-y-3">
+                <input
+                  type="url"
+                  value={newUrl}
+                  onChange={(e) => setNewUrl(e.target.value)}
+                  className="w-full border border-violet-200 rounded-lg p-3 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white"
+                  placeholder="https://..."
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveUrl}
+                    className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
+                  >
+                    Enregistrer
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingUrl(false);
+                      setNewUrl(eleve.url_tfh || '');
+                    }}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white/60 rounded-lg p-3">
+                {eleve.url_tfh ? (
+                  <a
+                    href={eleve.url_tfh}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-violet-600 hover:text-violet-700 hover:underline flex items-center gap-2 break-all"
+                  >
+                    <ExternalLink className="w-4 h-4 flex-shrink-0" />
+                    {eleve.url_tfh}
+                  </a>
+                ) : (
+                  <span className="text-gray-400 italic">Aucun lien déposé</span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Sources */}
           {phasePreparatoire && (
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">Sources documentaires</h3>
+            <div className="bg-gradient-to-r from-amber-50/80 to-orange-50/80 rounded-xl p-5 border border-amber-100">
+              <div className="flex items-center gap-2 mb-4">
+                <BookOpen className="w-5 h-5 text-amber-600" />
+                <h3 className="text-base font-semibold text-gray-800">Sources documentaires</h3>
+              </div>
               <div className="space-y-4">
                 {[1, 2, 3, 4, 5].map((num) => {
                   const sourceField = `source_${num}` as keyof EleveInfo;
@@ -693,13 +988,13 @@ export default function EleveDashboard() {
                   const currentValue = eleve[sourceField] as string || '';
                   
                   return (
-                    <div key={num}>
-                      <div className="flex justify-between items-center mb-2">
+                    <div key={num} className="bg-white/60 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-medium text-gray-600">Source {num}</label>
                         {!editingState && autorisationModification && (
                           <button
                             onClick={() => setEditing(true)}
-                            className="text-xs text-blue-600 hover:text-blue-700"
+                            className="text-xs text-amber-600 hover:text-amber-700"
                           >
                             {currentValue ? 'Modifier' : 'Ajouter'}
                           </button>
@@ -711,13 +1006,13 @@ export default function EleveDashboard() {
                             type="text"
                             value={newValue}
                             onChange={(e) => setNewValue(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500"
+                            className="w-full border border-amber-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
                             placeholder="Titre de la source, lien, référence..."
                           />
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleSaveSource(sourceField, newValue)}
-                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                              className="px-3 py-1 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 transition-colors"
                             >
                               Enregistrer
                             </button>
@@ -726,14 +1021,14 @@ export default function EleveDashboard() {
                                 setEditing(false);
                                 setNewValue(currentValue);
                               }}
-                              className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
+                              className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors"
                             >
                               Annuler
                             </button>
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                        <div className="text-sm text-gray-700">
                           {currentValue || <span className="text-gray-400 italic">Aucune source</span>}
                         </div>
                       )}
@@ -744,109 +1039,95 @@ export default function EleveDashboard() {
             </div>
           )}
 
-          {!phasePreparatoire && (
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-3">Convocations à venir</h3>
-              <div className="space-y-4">
-                {eleve.sessions && eleve.sessions.length > 0 ? (
-                  eleve.sessions.map(session => {
-                    const statut = session.statut || '';
-                    const estConvoque = statut.startsWith('Oui');
-                    const message = getMessagePourEleve(statut);
-                    
-                    return (
-                      <div key={session.index} className="border rounded-lg overflow-hidden">
-                        <div className={`flex justify-between items-center p-3 ${estConvoque ? 'bg-orange-50' : 'bg-gray-50'}`}>
-                          <div>
-                            <span className="font-medium">{session.nom}</span>
-                            <span className="text-sm text-gray-500 ml-2">
-                              ({session.date_debut.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })})
-                            </span>
-                          </div>
-                        <span className={
-                          estConvoque ? 'text-orange-600 font-medium' : 
-                          (!statut || statut === '' || statut.startsWith('Non')) ? 'text-green-600 font-medium' : 
-                          'text-gray-500'
-                        }>
-                          {estConvoque ? 'Convoqué·e' : 
-                          (!statut || statut === '') ? 'Non convoqué·e' :
-                          statut.startsWith('Non') ? 'Non convoqué·e' : '—'}
-                        </span>
+          {/* Convocations */}
+          {!phasePreparatoire && eleve.sessions && eleve.sessions.length > 0 && (
+            <div className="bg-gradient-to-r from-rose-50/80 to-pink-50/80 rounded-xl p-5 border border-rose-100">
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="w-5 h-5 text-rose-600" />
+                <h3 className="text-base font-semibold text-gray-800">Convocations à venir</h3>
+              </div>
+              <div className="space-y-3">
+                {eleve.sessions.map(session => {
+                  const statut = session.statut || '';
+                  const estConvoque = statut.startsWith('Oui');
+                  const message = getMessagePourEleve(statut);
+                  
+                  return (
+                    <div key={session.index} className={`bg-white/60 rounded-lg p-4 border ${estConvoque ? 'border-rose-200' : 'border-gray-200'}`}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-gray-800">{session.nom}</p>
+                          <p className="text-xs text-gray-500">
+                            {session.date_debut.toLocaleDateString('fr-FR', { 
+                              day: 'numeric', 
+                              month: 'long', 
+                              year: 'numeric' 
+                            })}
+                          </p>
                         </div>
-                        
-                      {(!statut || statut === '' || (statut && !statut.startsWith('Non'))) && (
-                        <div className="p-3 border-t bg-white">
-                          <p className="text-sm text-gray-700">{message}</p>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          estConvoque 
+                            ? 'bg-rose-100 text-rose-700' 
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {estConvoque ? 'Convoqué·e' : 'Non convoqué·e'}
+                        </span>
+                      </div>
+                      {(estConvoque || !statut) && (
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <p className="text-sm text-gray-600">{message}</p>
                         </div>
                       )}
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center text-gray-500 py-6">
-                    <p className="mb-2">Aucune session à venir planifiée.</p>
-                    <p className="text-sm">Tes prochaines convocations apparaîtront ici.</p>
-                  </div>
-                )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
+          {/* Objectifs */}
           {objectifGeneral && (
-            <div className="border-t pt-6">
+            <div className="bg-gradient-to-r from-sky-50/80 to-blue-50/80 rounded-xl p-5 border border-sky-100">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-lg">🎯</span>
-                <h3 className="text-lg font-semibold text-gray-700">Objectif général du TFH</h3>
+                <Target className="w-5 h-5 text-sky-600" />
+                <h3 className="text-base font-semibold text-gray-800">Objectif général du TFH</h3>
               </div>
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-5 border border-blue-100">
-                <div className="flex items-start gap-3">
-                  <div className="mt-1"><span className="text-blue-500 text-xl">📋</span></div>
-                  <div className="flex-1">
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{objectifGeneral}</p>
-                    <p className="text-sm text-blue-600 mt-3 font-medium">Cet objectif s'applique à tous les élèves.</p>
-                  </div>
-                </div>
+              <div className="bg-white/60 rounded-lg p-3 text-gray-700">
+                <p className="whitespace-pre-wrap leading-relaxed">{objectifGeneral}</p>
+                <p className="text-xs text-sky-600 mt-2 font-medium">Cet objectif s'applique à tous les élèves.</p>
               </div>
             </div>
           )}
           
           {objectifParticulier && (
-            <div className="border-t pt-6">
+            <div className="bg-gradient-to-r from-emerald-50/80 to-green-50/80 rounded-xl p-5 border border-emerald-100">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-lg">⭐</span>
-                <h3 className="text-lg font-semibold text-gray-700">Objectif particulier pour vous</h3>
+                <Sparkles className="w-5 h-5 text-emerald-600" />
+                <h3 className="text-base font-semibold text-gray-800">Objectif particulier</h3>
               </div>
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-5 border border-green-100">
-                <div className="flex items-start gap-3">
-                  <div className="mt-1"><span className="text-green-500 text-xl">✨</span></div>
-                  <div className="flex-1">
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{objectifParticulier}</p>
-                    <div className="flex items-center gap-2 mt-3">
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                        Défini par ton/ta guide
-                      </span>
-                      <span className="text-xs text-green-600">
-                        {eleve.guide_prenom} {eleve.guide_nom} {eleve.guide_initiale}.
-                      </span>
-                    </div>
-                  </div>
+              <div className="bg-white/60 rounded-lg p-3 text-gray-700">
+                <p className="whitespace-pre-wrap leading-relaxed">{objectifParticulier}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                    Défini par ton/ta guide
+                  </span>
+                  <span className="text-xs text-emerald-600">
+                    {eleve.guide_prenom} {eleve.guide_nom} {eleve.guide_initiale}.
+                  </span>
                 </div>
               </div>
             </div>
           )}
           
           {!objectifParticulier && (
-            <div className="border-t pt-6">
+            <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-5 border border-gray-100">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-lg">⭐</span>
-                <h3 className="text-lg font-semibold text-gray-700">Objectif particulier</h3>
+                <Sparkles className="w-5 h-5 text-gray-400" />
+                <h3 className="text-base font-semibold text-gray-700">Objectif particulier</h3>
               </div>
-              <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-5 border border-gray-100">
-                <div className="text-center py-4">
-                  <span className="text-3xl mb-3 block">🤔</span>
-                  <p className="text-gray-600 mb-2">Ton/ta guide n'a pas encore défini d'objectif particulier pour toi.</p>
-                  <p className="text-sm text-gray-500">Cet objectif sera personnalisé selon tes besoins spécifiques.</p>
-                </div>
+              <div className="text-center py-4">
+                <p className="text-gray-500 mb-1">Ton/ta guide n'a pas encore défini d'objectif particulier pour toi.</p>
+                <p className="text-sm text-gray-400">Cet objectif sera personnalisé selon tes besoins spécifiques.</p>
               </div>
             </div>
           )}
