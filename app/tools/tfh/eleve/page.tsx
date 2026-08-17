@@ -750,13 +750,7 @@ export default function EleveDashboard() {
               </span>
             )}
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm text-red-600 rounded-xl hover:bg-red-50 hover:text-red-700 transition-all duration-200 shadow-sm border border-red-100"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="text-sm font-medium hidden sm:inline">Déconnexion</span>
-          </button>
+
         </div>
 
         {/* Carte principale */}
