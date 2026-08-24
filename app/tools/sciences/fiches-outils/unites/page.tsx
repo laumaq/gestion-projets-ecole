@@ -242,7 +242,6 @@ export default function FicheUnitesPage() {
             {/* Hint saisie */}
             <p style={st.hint}>
               Saisir le nombre uniquement. Virgule ou point acceptés.
-              Pour la notation scientifique : écrire ex. <code>4,2e-3</code> ou <code>4,2×10⁻³</code>.
               Plusieurs préfixes peuvent être acceptés pour la colonne préfixe.
             </p>
 
@@ -284,6 +283,18 @@ function TheoryPanel({
   onNext: () => void;
   onPrev: () => void;
 }) {
+  const [animCompleted, setAnimCompleted] = useState(false);
+
+  // Réinitialiser l'état quand on change de slide
+  useEffect(() => {
+    if (slideId !== 'conversion_anim') {
+      setAnimCompleted(false);
+    }
+  }, [slideId]);
+
+  const isConversionSlide = slideId === 'conversion_anim';
+  const canProceed = !isConversionSlide || animCompleted;
+
   return (
     <div style={st.card}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
@@ -297,17 +308,41 @@ function TheoryPanel({
       {slideId === 'si' && <SlideSI />}
       {slideId === 'prefixes_why' && <SlidePrefixesWhy />}
       {slideId === 'prefixes_table' && <SlidePrefixesTable />}
-      {slideId === 'conversion_anim' && <SlideConversionAnim />}
+      {slideId === 'conversion_anim' && (
+        <SlideConversionAnim onComplete={setAnimCompleted} />
+      )}
       {slideId === 'notes' && <SlideNotes />}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
         <button style={st.btn} onClick={onPrev} disabled={slideIdx === 0}>
           ← Précédent
         </button>
-        <button style={{ ...st.btn, ...st.btnPrimary }} onClick={onNext}>
+        <button 
+          style={{ 
+            ...st.btn, 
+            ...st.btnPrimary,
+            opacity: canProceed ? 1 : 0.5,
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+          }} 
+          onClick={canProceed ? onNext : undefined}
+          disabled={!canProceed}
+          title={!canProceed ? 'Terminez l\'animation pour continuer' : ''}
+        >
           {slideIdx < totalSlides - 1 ? 'Suivant →' : 'Commencer les exercices →'}
         </button>
       </div>
+      
+      {!canProceed && (
+        <p style={{ 
+          fontSize: '12px', 
+          color: 'var(--color-text-secondary)', 
+          textAlign: 'center',
+          marginTop: '8px',
+          fontStyle: 'italic',
+        }}>
+          Terminez les deux animations de conversion pour pouvoir continuer
+        </p>
+      )}
     </div>
   );
 }
@@ -328,6 +363,7 @@ function TB({ children, style }: { children: React.ReactNode; style?: React.CSSP
     </div>
   );
 }
+
 function M({ children }: { children: React.ReactNode }) {
   return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', background: 'var(--color-background-secondary)',
     padding: '1px 5px', borderRadius: '4px' }}>{children}</span>;
@@ -407,58 +443,324 @@ function SlidePrefixesTable() {
           ))}
         </tbody>
       </table>
-      <TB>⚠️ La casse compte ! <M>m</M> = milli (10⁻³) ≠ <M>M</M> = Méga (10⁶). <M>k</M> = kilo, <M>G</M> = Giga.</TB>
+      <TB>⚠️ La casse (les majuscules) compte ! Par exemple, <M>m</M> = milli (10⁻³) ≠ <M>M</M> = Méga (10⁶).</TB>
     </>
   );
 }
 
 // Animation de conversion
-function SlideConversionAnim() {
-  const [step, setStep] = useState(0);
-  const steps = [
+function SlideConversionAnim({ onComplete }: { onComplete: (completed: boolean) => void }) {
+  const [phase, setPhase] = useState<'kilo' | 'milli'>('kilo');
+  const [kiloStep, setKiloStep] = useState(0);
+  const [milliStep, setMilliStep] = useState(0);
+  const [kiloCompleted, setKiloCompleted] = useState(false);
+  const [milliCompleted, setMilliCompleted] = useState(false);
+  
+  const kiloSteps = [
     { label: 'Valeur de départ', top: '12 km', bottom: null, highlight: 'prefix' },
-    { label: 'Identifier le préfixe', top: '12 k·m', bottom: 'k = 10³', highlight: 'k' },
-    { label: 'Remplacer le préfixe', top: '12 × 10³ m', bottom: null, highlight: 'exp' },
-    { label: 'Calculer', top: '12 000 m', bottom: '= 12 × 1000', highlight: 'result' },
+    { label: 'Identifier le préfixe', top: '12 k x m', bottom: 'k = 1000', highlight: 'k' },
+    { label: 'Remplacer le préfixe', top: '12 x 1000 m', bottom: null, highlight: 'exp' },
+    { label: 'Calculer', top: '12 000 m', bottom: '= 12 x 1000', highlight: 'result' },
   ];
-  const cur = steps[step];
+
+  const milliSteps = [
+    { label: 'Valeur de départ', top: '5 mm', bottom: null, highlight: 'prefix' },
+    { label: 'Identifier le préfixe', top: '5 m x m', bottom: null, highlight: 'm' },
+    { label: 'Remplacer le préfixe', top: '5 x', bottom: null, highlight: 'exp' },
+    { label: 'Calculer', top: '0,005 m', bottom: '= 5 ÷ 1000', highlight: 'result' },
+  ];
+
+  const currentSteps = phase === 'kilo' ? kiloSteps : milliSteps;
+  const currentStep = phase === 'kilo' ? kiloStep : milliStep;
+  const currentCompleted = phase === 'kilo' ? kiloCompleted : milliCompleted;
+  const cur = currentSteps[currentStep];
+
+  const handleNext = () => {
+    if (phase === 'kilo') {
+      if (kiloStep < kiloSteps.length - 1) {
+        setKiloStep(kiloStep + 1);
+        if (kiloStep + 1 === kiloSteps.length - 1) {
+          setKiloCompleted(true);
+        }
+      } else {
+        // Passer à la phase milli
+        setPhase('milli');
+        setMilliStep(0);
+      }
+    } else {
+      if (milliStep < milliSteps.length - 1) {
+        setMilliStep(milliStep + 1);
+        if (milliStep + 1 === milliSteps.length - 1) {
+          setMilliCompleted(true);
+          onComplete(true);
+        }
+      }
+    }
+  };
+
+  const handlePrev = () => {
+    if (phase === 'kilo') {
+      if (kiloStep > 0) {
+        setKiloStep(kiloStep - 1);
+        if (kiloCompleted) {
+          setKiloCompleted(false);
+          onComplete(false);
+        }
+      }
+    } else {
+      if (milliStep > 0) {
+        setMilliStep(milliStep - 1);
+        if (milliCompleted) {
+          setMilliCompleted(false);
+          onComplete(false);
+        }
+      } else {
+        // Revenir à la phase kilo
+        setPhase('kilo');
+        setKiloStep(kiloSteps.length - 1);
+      }
+    }
+  };
+
+  const handleStepClick = (index: number) => {
+    if (phase === 'kilo') {
+      setKiloStep(index);
+      if (index === kiloSteps.length - 1) {
+        setKiloCompleted(true);
+      } else if (kiloCompleted) {
+        setKiloCompleted(false);
+        onComplete(false);
+      }
+    } else {
+      setMilliStep(index);
+      if (index === milliSteps.length - 1) {
+        setMilliCompleted(true);
+        onComplete(true);
+      } else if (milliCompleted) {
+        setMilliCompleted(false);
+        onComplete(false);
+      }
+    }
+  };
+
+  // Helper pour afficher une fraction propre
+  const Fraction = ({ numerator, denominator }: { numerator: string; denominator: string }) => (
+    <span style={{
+      display: 'inline-flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      verticalAlign: 'middle',
+      margin: '0 4px',
+    }}>
+      <span style={{
+        display: 'block',
+        padding: '0 8px',
+        fontSize: '28px',
+      }}>
+        {numerator}
+      </span>
+      <span style={{
+        display: 'block',
+        width: '100%',
+        height: '2px',
+        background: 'currentColor',
+        margin: '2px 0',
+      }} />
+      <span style={{
+        display: 'block',
+        padding: '0 8px',
+        fontSize: '28px',
+      }}>
+        {denominator}
+      </span>
+    </span>
+  );
 
   return (
     <>
       <TB>Pour convertir une unité préfixée vers l'unité SI, on remplace le préfixe par sa valeur numérique et on calcule.</TB>
-      <div style={{ border: '0.5px solid var(--color-border-tertiary)', borderRadius: '10px',
-        padding: '1.5rem', textAlign: 'center', margin: '1rem 0' }}>
-        <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
-          {cur.label}
+      
+      {/* Indicateur de phase */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '8px',
+        marginBottom: '1rem',
+      }}>
+        <span style={{
+          padding: '4px 12px',
+          borderRadius: '20px',
+          fontSize: '12px',
+          fontWeight: 500,
+          background: phase === 'kilo' ? '#EAF3DE' : 'var(--color-background-secondary)',
+          color: phase === 'kilo' ? '#3B6D11' : 'var(--color-text-secondary)',
+        }}>
+          Kilo (x 1000)
+        </span>
+        <span style={{
+          padding: '4px 12px',
+          borderRadius: '20px',
+          fontSize: '12px',
+          fontWeight: 500,
+          background: phase === 'milli' ? '#EAF3DE' : 'var(--color-background-secondary)',
+          color: phase === 'milli' ? '#3B6D11' : 'var(--color-text-secondary)',
+          opacity: kiloCompleted ? 1 : 0.5,
+        }}>
+          Milli (÷ 1000)
+        </span>
+      </div>
+      
+      <div style={{ 
+        border: '2px solid #639922', 
+        borderRadius: '12px',
+        padding: '1.5rem', 
+        textAlign: 'center', 
+        margin: '1rem 0',
+        background: 'var(--color-background-primary)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+      }}>
+        <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginBottom: '1rem', fontWeight: 500 }}>
+          {phase === 'kilo' ? 'Conversion kilo → mètre' : 'Conversion milli → mètre'} — 
+          Étape {currentStep + 1} sur {currentSteps.length}
         </p>
-        <div style={{ fontSize: '28px', fontFamily: 'var(--font-mono)', fontWeight: 500,
+        
+        <div style={{ 
+          fontSize: '32px', 
+          fontFamily: 'var(--font-mono)', 
+          fontWeight: 600,
           color: cur.highlight === 'result' ? '#3B6D11' : 'var(--color-text-primary)',
-          transition: 'all 0.3s', marginBottom: '8px' }}>
+          transition: 'all 0.3s',
+          marginBottom: '8px',
+          minHeight: '50px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '4px',
+        }}>
           {cur.top}
+          {cur.label === 'Remplacer le préfixe' && phase === 'milli' && (
+            <Fraction numerator="1" denominator="1000" />
+          )}
+          {cur.label === 'Remplacer le préfixe' && phase === 'milli' && 'm'}
         </div>
-        {cur.bottom && (
-          <div style={{ fontSize: '14px', fontFamily: 'var(--font-mono)',
-            color: '#854F0B', marginTop: '4px' }}>
+        
+        {cur.bottom && phase === 'milli' && cur.label === 'Identifier le préfixe' && (
+          <div style={{ 
+            fontSize: '16px', 
+            fontFamily: 'var(--font-mono)',
+            color: '#854F0B', 
+            marginTop: '8px',
+            background: '#FFF8ED',
+            padding: '8px 12px',
+            borderRadius: '4px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}>
+            m = <Fraction numerator="1" denominator="1000" />
+          </div>
+        )}
+        
+        {cur.bottom && (phase === 'kilo' || cur.label === 'Calculer') && (
+          <div style={{ 
+            fontSize: '16px', 
+            fontFamily: 'var(--font-mono)',
+            color: '#854F0B', 
+            marginTop: '8px',
+            background: '#FFF8ED',
+            padding: '8px 12px',
+            borderRadius: '4px',
+            display: 'inline-block',
+          }}>
             {cur.bottom}
           </div>
         )}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '1.25rem' }}>
-          {steps.map((_, i) => (
-            <div key={i} onClick={() => setStep(i)} style={{
-              width: '8px', height: '8px', borderRadius: '50%', cursor: 'pointer',
-              background: i === step ? '#639922' : 'var(--color-border-secondary)',
-              transition: 'background 0.2s',
-            }} />
+        
+        {/* Barre de progression de l'animation */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '12px', 
+          marginTop: '1.5rem',
+          marginBottom: '1rem',
+        }}>
+          {currentSteps.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => handleStepClick(i)}
+              style={{
+                width: i === currentStep ? '32px' : '12px',
+                height: '12px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                background: i === currentStep ? '#639922' : i < currentStep ? '#97C459' : 'var(--color-border-secondary)',
+                transition: 'all 0.3s',
+                border: 'none',
+                padding: 0,
+              }}
+              aria-label={`Étape ${i + 1}`}
+            />
           ))}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '10px' }}>
-          <button style={{ ...st.btn, fontSize: '12px', padding: '4px 12px' }}
-            onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>←</button>
-          <button style={{ ...st.btn, fontSize: '12px', padding: '4px 12px' }}
-            onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))} disabled={step === steps.length - 1}>→</button>
+        
+        {/* Boutons de navigation */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '12px', 
+          marginTop: '10px',
+        }}>
+          <button 
+            style={{ 
+              ...st.btn, 
+              fontSize: '14px', 
+              padding: '8px 16px',
+              background: (phase === 'kilo' && kiloStep === 0) ? 'var(--color-background-secondary)' : 'var(--color-background-primary)',
+              minWidth: '100px',
+            }}
+            onClick={handlePrev} 
+            disabled={phase === 'kilo' && kiloStep === 0}
+          >
+            ← Précédent
+          </button>
+          <button 
+            style={{ 
+              ...st.btn, 
+              ...st.btnPrimary, 
+              fontSize: '14px', 
+              padding: '8px 16px',
+              minWidth: '100px',
+              opacity: currentCompleted && currentStep === currentSteps.length - 1 ? 0.7 : 1,
+            }}
+            onClick={handleNext} 
+            disabled={currentCompleted && currentStep === currentSteps.length - 1 && phase === 'milli'}
+          >
+            {phase === 'kilo' && kiloStep === kiloSteps.length - 1 
+              ? 'Voir avec milli →' 
+              : phase === 'milli' && milliStep === milliSteps.length - 1 
+                ? '✓ Terminé' 
+                : 'Suivant →'}
+          </button>
         </div>
+        
+        {currentCompleted && currentStep === currentSteps.length - 1 && (
+          <div style={{
+            marginTop: '12px',
+            padding: '8px',
+            background: '#EAF3DE',
+            color: '#3B6D11',
+            borderRadius: '6px',
+            fontSize: '13px',
+            fontWeight: 500,
+          }}>
+            {phase === 'kilo' 
+              ? '✓ Conversion kilo terminée ! Cliquez sur "Voir avec milli" pour continuer.' 
+              : '✓ Animation terminée ! Vous pouvez continuer.'}
+          </div>
+        )}
       </div>
-      <TB>Dans l'autre sens : <M>12 000 m → 12 km</M>. On cherche le préfixe qui donne un nombre "lisible" (entre 0,1 et 999). Ici, diviser par 10³ donne 12 — c'est le kilo.</TB>
+      
+      <TB>Dans l'autre sens : <M>12 000 m → 12 km</M> ou <M>0,005 m → 5 mm</M>. On cherche le préfixe qui donne un nombre "lisible" (entre 0,1 et 999).</TB>
     </>
   );
 }
