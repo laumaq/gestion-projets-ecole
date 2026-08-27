@@ -471,11 +471,42 @@ function ProgressionPanel() {
 function PageHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div style={{ marginBottom: '1.5rem' }}>
-      <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>
-        Sciences · Fiches-outils
-      </p>
-      <h1 style={{ fontSize: '22px', fontWeight: 500, marginBottom: '4px' }}>{title}</h1>
-      <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>{subtitle}</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+        <div>
+          <h1 style={{ fontSize: '22px', fontWeight: 500, marginBottom: '4px' }}>{title}</h1>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>{subtitle}</p>
+        </div>
+        <Link
+          href="/dashboard/sciences"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '8px 16px',
+            background: 'var(--color-background-primary)',
+            color: 'var(--color-text-primary)',
+            borderRadius: '8px',
+            border: '0.5px solid var(--color-border-secondary)',
+            fontSize: '13px',
+            fontWeight: 500,
+            textDecoration: 'none',
+            cursor: 'pointer',
+            transition: 'background 0.15s',
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => {
+            (e.target as HTMLElement).style.background = 'var(--color-background-secondary)';
+          }}
+          onMouseLeave={(e) => {
+            (e.target as HTMLElement).style.background = 'var(--color-background-primary)';
+          }}
+        >
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Portail Sciences
+        </Link>
+      </div>
     </div>
   );
 }

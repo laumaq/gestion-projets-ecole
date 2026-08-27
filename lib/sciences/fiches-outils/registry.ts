@@ -18,7 +18,7 @@ export const FICHES_OUTILS: FicheOutil[] = [
   {
     key: 'unites',
     title: 'Contrat — Unités',
-    description: 'Préfixes SI, conversions et notation scientifique',
+    description: 'Préfixes SI et conversions',
     subject: 'physique',
     niveaux: ['1', '2', '3', '4', '5', '6'],
     href: '/tools/sciences/fiches-outils/unites',

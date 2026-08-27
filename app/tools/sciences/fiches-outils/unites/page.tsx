@@ -112,7 +112,6 @@ export default function FicheUnitesPage() {
     const labels: Record<string, string> = {
       prefix: 'Unité avec préfixe',
       si:     'Unité SI',
-      sci:    'Notation scientifique',
     };
     return sec.columns.map(k => ({ key: k, label: labels[k] }));
   }, [step, sections]);
@@ -771,7 +770,6 @@ function SlideNotes() {
       <TB>⚠️ <strong>La casse compte</strong> : <M>m</M> = milli (10⁻³) mais <M>M</M> = Méga (10⁶). Une erreur de majuscule change le résultat d'un facteur 10⁹.</TB>
       <TB>⚠️ <strong>La masse</strong> en SI s'exprime en <M>kg</M>. Quand on préfixe le gramme, on écrit <M>mg</M>, <M>μg</M>… mais l'unité SI reste <M>kg</M>.</TB>
       <TB><strong>Unités composées</strong> : les unités se multiplient et divisent comme des variables. <M>cN · dm = 10⁻² N · 10⁻¹ m = 10⁻³ N·m</M></TB>
-      <TB><strong>Notation scientifique</strong> : un seul chiffre non nul avant la virgule. <M>3475 = 3,475 × 10³</M>. La mantisse est toujours entre 1 et 9,999…</TB>
     </>
   );
 }
