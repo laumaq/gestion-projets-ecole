@@ -196,7 +196,7 @@ export default function CoordinateurDashboard() {
         );
 
       case 'parametres':
-        return <ParametresTab />;
+        return <ParametresTab onRefresh={refreshData} />;
 
       case 'stats':
         return <StatsTab eleves={eleves} />;
