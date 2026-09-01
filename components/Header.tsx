@@ -126,6 +126,7 @@ export default function Header() {
   const isAdmin = userType === 'employee' && userId && adminUUIDs.includes(userId);
 
 
+
   // Liens supplémentaires dynamiques
   const getDynamicLinks = () => {
     const links = [];
@@ -138,11 +139,17 @@ export default function Header() {
       condition: true
     });
 
-    // 2. Groupe de travail
+    // 2. Groupe de travail - avec cas spécial pour TFH
     if (groupeTravail && userType === 'employee') {
+      // 🔥 CAS SPÉCIAL : Si le groupe est "TFH", rediriger vers /tools/tfh/coordination
+      const isTFH = groupeTravail.toUpperCase() === 'TFH';
+      const href = isTFH 
+        ? '/tools/tfh/coordination' 
+        : `/tools/groupes-travail/${encodeURIComponent(groupeTravail)}`;
+      
       links.push({
-        href: `/tools/groupes-travail/${encodeURIComponent(groupeTravail)}`,
-        label: `${groupeTravail}`,
+        href: href,
+        label: groupeTravail,  // On affiche "TFH" ou le nom du groupe
         icon: Briefcase,
         condition: true
       });
@@ -185,6 +192,7 @@ export default function Header() {
   };
 
   const dynamicLinks = getDynamicLinks();
+
 
   const getRoleDisplay = () => {
     if (userType === 'employee') {

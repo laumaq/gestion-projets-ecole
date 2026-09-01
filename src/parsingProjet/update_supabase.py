@@ -25,7 +25,7 @@ ANNEE_SCOLAIRE = 2026
 PREFIXE_MATRICULE = str(ANNEE_SCOLAIRE)[-2:]
 
 # MODE TEST : limite à 100 élèves et 100 cours (False pour tout importer)
-MODE_TEST = True
+MODE_TEST = False
 LIMITE_ELEVES = 100
 LIMITE_COURS = 100
 
