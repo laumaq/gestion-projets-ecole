@@ -105,6 +105,7 @@ export function useCoordinateurData() {
         .from('tfh_eleves')
         .select(`
           student_matricule,
+          type,
           guide_id,
           mediateur_id,
           lecteur_interne_id,

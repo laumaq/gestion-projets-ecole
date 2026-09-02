@@ -16,6 +16,7 @@ export interface Eleve {
   lecteur_externe_id: string | null; // UUID vers tfh_externes (via lecteur_externe_id)
   
   // Contenu du TFH
+  type: string;
   problematique: string;
   categorie: string;
   thematique?: string;

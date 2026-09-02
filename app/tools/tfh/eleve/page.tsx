@@ -22,7 +22,11 @@ import {
   Search,
   ChevronRight,
   ExternalLink,
-  AlertCircle
+  AlertCircle,
+  BookOpen as BookIcon,
+  Users as UsersIcon,
+  Palette,
+  Hammer
 } from 'lucide-react';
 
 interface EleveInfo {
@@ -30,6 +34,7 @@ interface EleveInfo {
   nom: string;
   prenom: string;
   classe: string;
+  type: string;
   problematique: string;
   thematique: string;
   source_1: string;
@@ -69,10 +74,19 @@ interface EleveInfo {
   url_tfh?: string;
 }
 
+// Types de TFH avec leurs icônes et couleurs
+const TFH_TYPES = {
+  mémoire: { icon: BookIcon, color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Mémoire' },
+  associatif: { icon: UsersIcon, color: 'bg-green-100 text-green-800 border-green-200', label: 'Associatif' },
+  artistique: { icon: Palette, color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Artistique' },
+  atelier: { icon: Hammer, color: 'bg-orange-100 text-orange-800 border-orange-200', label: 'Atelier' },
+};
+
 export default function EleveDashboard() {
   const [eleve, setEleve] = useState<EleveInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [phasePreparatoire, setPhasePreparatoire] = useState(false);
+  const [savingType, setSavingType] = useState(false);
   
   const [editingProblematique, setEditingProblematique] = useState(false);
   const [newProblematique, setNewProblematique] = useState('');
@@ -137,6 +151,7 @@ export default function EleveDashboard() {
         .from('tfh_eleves')
         .select(`
           student_matricule,
+          type,
           problematique,
           thematique,
           categorie,
@@ -333,6 +348,7 @@ export default function EleveDashboard() {
         nom: studentInfo?.nom || '',
         prenom: studentInfo?.prenom || '',
         classe: studentInfo?.classe || '',
+        type: data.type || '',
         problematique: data.problematique || '',
         thematique: data.thematique || '',
         source_1: data.source_1 || '',
@@ -419,6 +435,24 @@ export default function EleveDashboard() {
       setEditingThematique(false);
     } catch (err) {
       console.error('Erreur sauvegarde:', err);
+    }
+  };
+
+  const handleSaveType = async (newType: string) => {
+    if (!eleve || savingType) return;
+
+    setSavingType(true);
+    try {
+      await supabase
+        .from('tfh_eleves')
+        .update({ type: newType || null })
+        .eq('student_matricule', eleve.student_matricule);
+
+      setEleve({ ...eleve, type: newType });
+    } catch (err) {
+      console.error('Erreur sauvegarde type:', err);
+    } finally {
+      setSavingType(false);
     }
   };
 
@@ -750,7 +784,6 @@ export default function EleveDashboard() {
               </span>
             )}
           </div>
-
         </div>
 
         {/* Carte principale */}
@@ -785,6 +818,56 @@ export default function EleveDashboard() {
               </div>
             </div>
           </div>
+
+          {/* Type de TFH - Visible en phase préparatoire */}
+          {phasePreparatoire && (
+            <div className="bg-gradient-to-r from-indigo-50/80 to-violet-50/80 rounded-xl p-5 border border-indigo-100">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-indigo-600" />
+                  <h3 className="text-base font-semibold text-gray-800">Type de TFH</h3>
+                </div>
+                <span className="text-xs text-gray-500">
+                  {savingType && <span className="text-indigo-600">💾 Sauvegarde...</span>}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {Object.entries(TFH_TYPES).map(([key, { icon: Icon, color, label }]) => {
+                  const isSelected = eleve.type === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => handleSaveType(key)}
+                      disabled={savingType}
+                      className={`
+                        flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
+                        ${isSelected 
+                          ? `${color} border-current shadow-md scale-[1.02]` 
+                          : 'bg-white/60 border-gray-200 hover:border-indigo-300 hover:bg-white/80'}
+                        ${savingType ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                      `}
+                    >
+                      <Icon className={`w-6 h-6 ${isSelected ? 'text-current' : 'text-gray-400'}`} />
+                      <span className={`text-sm font-medium ${isSelected ? 'text-current' : 'text-gray-600'}`}>
+                        {label}
+                      </span>
+                      {isSelected && (
+                        <span className="text-xs text-green-600">✅</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {eleve.type && (
+                <div className="mt-3 text-xs text-gray-500 text-center">
+                  Type actuel : <span className="font-medium text-gray-700">
+                    {TFH_TYPES[eleve.type as keyof typeof TFH_TYPES]?.label || eleve.type}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Thématique */}
           {phasePreparatoire && (

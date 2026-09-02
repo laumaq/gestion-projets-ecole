@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Eleve } from '../types';
-import { ExternalLink, Edit, ChevronDown, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ExternalLink, Edit, ChevronDown, Trash2, ArrowUpDown, ArrowUp, ArrowDown, BookOpen, Users, Palette, Hammer } from 'lucide-react';
 
 interface ListeTFHTabProps {
   eleves: Eleve[];
@@ -11,9 +11,10 @@ interface ListeTFHTabProps {
   onRefresh: () => void;
 }
 
-type SortField = 'classe' | 'eleve' | 'thematique' | 'problematique' | 'categorie';
+type SortField = 'classe' | 'eleve' | 'type' | 'thematique' | 'problematique' | 'categorie';
 type RenduFilter = 'all' | 'rendu' | 'non_rendu';
 type LienFilter = 'all' | 'avec_lien' | 'sans_lien';
+type TypeFilter = 'all' | 'mémoire' | 'associatif' | 'artistique' | 'atelier';
 
 interface SortRule {
   field: SortField;
@@ -23,6 +24,7 @@ interface SortRule {
 export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTabProps) {
   const [editingMode, setEditingMode] = useState(false);
   const [filteredClass, setFilteredClass] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [localEleves, setLocalEleves] = useState<Eleve[]>([]);
   const [renduFilter, setRenduFilter] = useState<RenduFilter>('all');
   const [lienFilter, setLienFilter] = useState<LienFilter>('all');
@@ -32,7 +34,19 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
     { field: 'eleve', direction: 'asc' }
   ]);
 
-  // Simplement un état pour savoir si une sauvegarde est en cours (pas d'affichage intrusif)
+  // Types de TFH avec leurs icônes et couleurs
+  const TFH_TYPES: Record<Exclude<TypeFilter, 'all'>, { icon: React.ReactNode; color: string; label: string }> = {
+    mémoire: { icon: <BookOpen className="w-3 h-3" />, color: 'bg-blue-100 text-blue-800', label: 'Mémoire' },
+    associatif: { icon: <Users className="w-3 h-3" />, color: 'bg-green-100 text-green-800', label: 'Associatif' },
+    artistique: { icon: <Palette className="w-3 h-3" />, color: 'bg-purple-100 text-purple-800', label: 'Artistique' },
+    atelier: { icon: <Hammer className="w-3 h-3" />, color: 'bg-orange-100 text-orange-800', label: 'Atelier' },
+  };
+
+  const getTypeInfo = (type: string | null | undefined) => {
+    if (!type) return { icon: null, color: 'bg-gray-100 text-gray-600', label: '—' };
+    return TFH_TYPES[type as Exclude<TypeFilter, 'all'>] || { icon: null, color: 'bg-gray-100 text-gray-600', label: type };
+  };
+
   const [savingFields, setSavingFields] = useState<Set<string>>(new Set());
   const saveTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
 
@@ -51,6 +65,8 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
         return cleanString(eleve.classe || '');
       case 'eleve':
         return cleanString(`${eleve.nom} ${eleve.prenom}`).toLowerCase();
+      case 'type':
+        return cleanString(eleve.type || '').toLowerCase();
       case 'thematique':
         return cleanString(eleve.thematique || '');
       case 'problematique':
@@ -132,6 +148,10 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
     if (filteredClass !== 'all') {
       result = result.filter(e => e.classe === filteredClass);
     }
+
+    if (typeFilter !== 'all') {
+      result = result.filter(e => e.type === typeFilter);
+    }
     
     if (renduFilter === 'rendu') {
       result = result.filter(e => e.tfh_non_rendu !== true);
@@ -146,15 +166,13 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
     }
     
     return sortData(result, sortRules);
-  }, [localEleves, filteredClass, renduFilter, lienFilter, searchQuery, sortRules]);
+  }, [localEleves, filteredClass, typeFilter, renduFilter, lienFilter, searchQuery, sortRules]);
 
   const formatNomComplet = (eleve: Eleve) => {
     return `${eleve.nom.toUpperCase()} ${eleve.prenom}`;
   };
 
   const saveField = (eleveId: number, field: string, value: string) => {
-    console.log('🔍 saveField appelé:', { eleveId, field, value });
-    
     const key = `${eleveId}-${field}`;
     
     if (saveTimeouts.current[key]) {
@@ -170,12 +188,10 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
     ));
     
     saveTimeouts.current[key] = setTimeout(async () => {
-      console.log('💾 Sauvegarde en base...', { eleveId, field, value });
       try {
         await onUpdate(eleveId, field, value === '' ? '' : value);
-        console.log('✅ Sauvegarde réussie!');
       } catch (err) {
-        console.error('❌ Erreur lors de la sauvegarde:', err);
+        console.error('Erreur lors de la sauvegarde:', err);
         const originalEleve = eleves.find(e => e.student_matricule === eleveId);
         if (originalEleve) {
           setLocalEleves(prev => prev.map(e => 
@@ -202,14 +218,12 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
       delete saveTimeouts.current[key];
     }
     
-    // Mettre à jour localement
     setLocalEleves(prev => prev.map(e => 
       e.student_matricule === eleveId 
         ? { ...e, [field]: null }
         : e
     ));
     
-    // Sauvegarder immédiatement
     try {
       await onUpdate(eleveId, field, '');
     } catch (err) {
@@ -350,7 +364,6 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
       );
     }
     
-    // Pour les autres champs (input simple)
     return (
       <div className="relative group">
         <input
@@ -362,7 +375,8 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
           placeholder={
             field === 'classe' ? 'Classe...' : 
             field === 'thematique' ? 'Thématique...' : 
-            field === 'categorie' ? 'Catégorie...' : ''
+            field === 'categorie' ? 'Catégorie...' : 
+            field === 'type' ? 'Type...' : ''
           }
           title={displayValue}
         />
@@ -389,21 +403,14 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">Liste des TFH</h2>
-            <p className="text-gray-600 mt-1">
-              Vue d'ensemble des TFH
-            </p>
-          </div>
-          
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-3 w-full">
+            <div className="relative flex-1 min-w-[200px]">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="🔍 Rechercher un élève..."
-                className="w-48 md:w-64 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
               />
               {searchQuery && (
                 <button
@@ -415,60 +422,6 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <label htmlFor="classFilter" className="text-sm font-medium text-gray-700">
-                Classe:
-              </label>
-              <div className="relative">
-                <select
-                  id="classFilter"
-                  value={filteredClass}
-                  onChange={(e) => setFilteredClass(e.target.value)}
-                  className="pl-3 pr-8 py-1.5 text-sm border border-gray-300 rounded-lg bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-                >
-                  <option value="all">Toutes</option>
-                  {classesUniques.map((classe) => (
-                    <option key={classe} value={classe}>
-                      {classe}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">État:</label>
-              <div className="relative">
-                <select
-                  value={renduFilter}
-                  onChange={(e) => setRenduFilter(e.target.value as RenduFilter)}
-                  className="pl-3 pr-8 py-1.5 text-sm border border-gray-300 rounded-lg bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-                >
-                  <option value="all">Tous</option>
-                  <option value="rendu">Rendu</option>
-                  <option value="non_rendu">Non rendu</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Lien:</label>
-              <div className="relative">
-                <select
-                  value={lienFilter}
-                  onChange={(e) => setLienFilter(e.target.value as LienFilter)}
-                  className="pl-3 pr-8 py-1.5 text-sm border border-gray-300 rounded-lg bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-                >
-                  <option value="all">Tous</option>
-                  <option value="avec_lien">Avec lien</option>
-                  <option value="sans_lien">Sans lien</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-            
             <div className="flex items-center gap-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -484,8 +437,90 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
               </label>
             </div>
             
-            <div className="px-3 py-1.5 bg-violet-100 text-violet-800 rounded-lg font-medium text-sm">
-              {elevesFiltres.length} TFH{filteredClass !== 'all' ? ` (${filteredClass})` : ''}
+            <div className="ml-auto px-3 py-1.5 bg-violet-100 text-violet-800 rounded-lg font-medium text-sm whitespace-nowrap">
+              {elevesFiltres.length} TFH
+              {filteredClass !== 'all' && <span className="ml-1">({filteredClass})</span>}
+              {typeFilter !== 'all' && (
+                <span className="ml-1">
+                  {Object.entries(TFH_TYPES).map(([key, val]) => 
+                    key === typeFilter && <span key={key}>{val.icon} {val.label}</span>
+                  )}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 w-full mb-6">
+          <div className="flex items-center gap-2 flex-1 min-w-[180px]">
+            <label htmlFor="classFilter" className="text-sm font-medium text-gray-700 hidden sm:block">
+              Classe:
+            </label>
+            <div className="relative flex-1">
+              <select
+                id="classFilter"
+                value={filteredClass}
+                onChange={(e) => setFilteredClass(e.target.value)}
+                className="w-full pl-3 pr-8 py-1.5 text-sm border border-gray-300 rounded-lg bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+              >
+                <option value="all">Toutes les classes</option>
+                {classesUniques.map((classe) => (
+                  <option key={classe} value={classe}>
+                    {classe}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-1 min-w-[160px]">
+            <label className="text-sm font-medium text-gray-700 hidden sm:block">Type:</label>
+            <div className="relative flex-1">
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
+                className="w-full pl-3 pr-8 py-1.5 text-sm border border-gray-300 rounded-lg bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+              >
+                <option value="all">Tous les types</option>
+                <option value="mémoire">📖 Mémoire</option>
+                <option value="associatif">👥 Associatif</option>
+                <option value="artistique">🎨 Artistique</option>
+                <option value="atelier">🔨 Atelier</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-1 min-w-[160px]">
+            <label className="text-sm font-medium text-gray-700">État:</label>
+            <div className="relative flex-1">
+              <select
+                value={renduFilter}
+                onChange={(e) => setRenduFilter(e.target.value as RenduFilter)}
+                className="w-full pl-3 pr-8 py-1.5 text-sm border border-gray-300 rounded-lg bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+              >
+                <option value="all">Tous</option>
+                <option value="rendu">Rendu</option>
+                <option value="non_rendu">Non rendu</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-1 min-w-[160px]">
+            <label className="text-sm font-medium text-gray-700">Lien:</label>
+            <div className="relative flex-1">
+              <select
+                value={lienFilter}
+                onChange={(e) => setLienFilter(e.target.value as LienFilter)}
+                className="w-full pl-3 pr-8 py-1.5 text-sm border border-gray-300 rounded-lg bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+              >
+                <option value="all">Tous</option>
+                <option value="avec_lien">Avec lien</option>
+                <option value="sans_lien">Sans lien</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
           </div>
         </div>
@@ -511,6 +546,13 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
                 <th 
                   scope="col" 
                   className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => handleSort('type')}
+                >
+                  Type {getSortIcon('type')}
+                </th>
+                <th 
+                  scope="col" 
+                  className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                   onClick={() => handleSort('thematique')}
                 >
                   Thématique {getSortIcon('thematique')}
@@ -521,10 +563,10 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
                   onClick={() => handleSort('problematique')}
                 >
                   Problématique {getSortIcon('problematique')}
-                </th> 
+                </th>
                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Sources
-                </th> 
+                </th>
                 <th 
                   scope="col" 
                   className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
@@ -548,6 +590,33 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
                     <div className="text-xs text-gray-500">
                       {eleve.guide_nom && `Guide: ${eleve.guide_prenom} ${eleve.guide_nom}`}
                     </div>
+                  </td>
+
+                  <td className="px-3 py-3 whitespace-nowrap">
+                    {(() => {
+                      const typeInfo = getTypeInfo(eleve.type);
+                      if (!editingMode) {
+                        return (
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${typeInfo.color}`}>
+                            {typeInfo.icon}
+                            {typeInfo.label}
+                          </span>
+                        );
+                      }
+                      return (
+                        <select
+                          value={eleve.type || ''}
+                          onChange={(e) => saveField(eleve.student_matricule, 'type', e.target.value)}
+                          className="w-full text-xs border border-gray-300 rounded px-2 py-1 bg-white"
+                        >
+                          <option value="">—</option>
+                          <option value="mémoire">📖 Mémoire</option>
+                          <option value="associatif">👥 Associatif</option>
+                          <option value="artistique">🎨 Artistique</option>
+                          <option value="atelier">🔨 Atelier</option>
+                        </select>
+                      );
+                    })()}
                   </td>
                   
                   <td className="px-3 py-3">
@@ -601,8 +670,8 @@ export default function ListeTFHTab({ eleves, onUpdate, onRefresh }: ListeTFHTab
             <h3 className="text-sm font-medium text-blue-800">Mode d'emploi</h3>
             <div className="mt-2 text-sm text-blue-700">
               <ul className="list-disc pl-5 space-y-1">
-                <li><strong>Tri</strong> : Cliquez sur les en-têtes de colonnes pour trier</li>
-                <li><strong>Édition</strong> : Activez le mode édition, modifiez les champs</li>
+                <li><strong>Tri</strong> : Cliquez sur les en-têtes de colonnes pour trier (Classe, Élève, Type, Thématique, Problématique, Catégorie)</li>
+                <li><strong>Édition</strong> : Activez le mode édition pour modifier les champs</li>
                 <li><strong>Sauvegarde</strong> : Les modifications sont sauvegardées 500ms après la fin de la saisie</li>
                 <li><strong>Indicateur</strong> : Une icône 💾 apparaît pendant la sauvegarde</li>
                 <li><strong>Sources</strong> : Les URLs sont cliquables et s'ouvrent dans un nouvel onglet</li>
