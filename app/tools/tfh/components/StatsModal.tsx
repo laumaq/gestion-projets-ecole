@@ -30,6 +30,7 @@ export default function StatsModal({ isOpen, onClose, title, missingField }: Sta
         .from('tfh_eleves')
         .select(`
           student_matricule,
+          type,
           guide_id,
           problematique,
           thematique,
@@ -61,6 +62,7 @@ export default function StatsModal({ isOpen, onClose, title, missingField }: Sta
       const formattedEleves: Eleve[] = (data || []).map(item => ({
         student_matricule: item.student_matricule,
         id: item.student_matricule,
+        type: item.type || '',
         nom: (item.students as any)?.nom || '',
         prenom: (item.students as any)?.prenom || '',
         classe: (item.students as any)?.classe || '',
