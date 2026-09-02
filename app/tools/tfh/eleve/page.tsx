@@ -26,8 +26,10 @@ import {
   BookOpen as BookIcon,
   Users as UsersIcon,
   Palette,
-  Hammer
+  Hammer,
+  Info
 } from 'lucide-react';
+import TypeInfoModal from './components/TypeInfoModal';
 
 interface EleveInfo {
   student_matricule: number;
@@ -87,6 +89,11 @@ export default function EleveDashboard() {
   const [loading, setLoading] = useState(true);
   const [phasePreparatoire, setPhasePreparatoire] = useState(false);
   const [savingType, setSavingType] = useState(false);
+
+  // État pour le modal d'info
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
+  const [infoModalType, setInfoModalType] = useState<string>('');
+  const [infoModalLabel, setInfoModalLabel] = useState<string>('');
   
   const [editingProblematique, setEditingProblematique] = useState(false);
   const [newProblematique, setNewProblematique] = useState('');
@@ -404,6 +411,19 @@ export default function EleveDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const TFH_TYPES = {
+    mémoire: { icon: BookIcon, color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Mémoire' },
+    associatif: { icon: UsersIcon, color: 'bg-green-100 text-green-800 border-green-200', label: 'Associatif' },
+    artistique: { icon: Palette, color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Artistique' },
+    atelier: { icon: Hammer, color: 'bg-orange-100 text-orange-800 border-orange-200', label: 'Atelier' },
+  };
+
+  const openInfoModal = (type: string, label: string) => {
+    setInfoModalType(type);
+    setInfoModalLabel(label);
+    setInfoModalOpen(true);
   };
 
   const handleSaveProblematique = async () => {
@@ -826,6 +846,7 @@ export default function EleveDashboard() {
                 <div className="flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-indigo-600" />
                   <h3 className="text-base font-semibold text-gray-800">Type de TFH</h3>
+                  <span className="text-xs text-gray-400 ml-1">(choisis ton type de travail)</span>
                 </div>
                 <span className="text-xs text-gray-500">
                   {savingType && <span className="text-indigo-600">💾 Sauvegarde...</span>}
@@ -836,26 +857,37 @@ export default function EleveDashboard() {
                 {Object.entries(TFH_TYPES).map(([key, { icon: Icon, color, label }]) => {
                   const isSelected = eleve.type === key;
                   return (
-                    <button
-                      key={key}
-                      onClick={() => handleSaveType(key)}
-                      disabled={savingType}
-                      className={`
-                        flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
-                        ${isSelected 
-                          ? `${color} border-current shadow-md scale-[1.02]` 
-                          : 'bg-white/60 border-gray-200 hover:border-indigo-300 hover:bg-white/80'}
-                        ${savingType ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                      `}
-                    >
-                      <Icon className={`w-6 h-6 ${isSelected ? 'text-current' : 'text-gray-400'}`} />
-                      <span className={`text-sm font-medium ${isSelected ? 'text-current' : 'text-gray-600'}`}>
-                        {label}
-                      </span>
-                      {isSelected && (
-                        <span className="text-xs text-green-600">✅</span>
-                      )}
-                    </button>
+                    <div key={key} className="relative group">
+                      <button
+                        onClick={() => handleSaveType(key)}
+                        disabled={savingType}
+                        className={`
+                          w-full flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
+                          ${isSelected 
+                            ? `${color} border-current shadow-md scale-[1.02]` 
+                            : 'bg-white/60 border-gray-200 hover:border-indigo-300 hover:bg-white/80'}
+                          ${savingType ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                          relative
+                        `}
+                      >
+                        <Icon className={`w-6 h-6 ${isSelected ? 'text-current' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-medium ${isSelected ? 'text-current' : 'text-gray-600'}`}>
+                          {label}
+                        </span>
+                        {isSelected && (
+                          <span className="text-xs text-green-600">✅</span>
+                        )}
+                      </button>
+                      
+                      {/* Bouton d'info */}
+                      <button
+                        onClick={() => openInfoModal(key, label)}
+                        className="absolute -top-2 -right-2 p-1.5 bg-white rounded-full shadow-md border border-gray-200 hover:bg-gray-50 hover:scale-110 transition-all duration-200 group-hover:shadow-lg"
+                        title={`En savoir plus sur ${label}`}
+                      >
+                        <Info className="w-3.5 h-3.5 text-gray-500" />
+                      </button>
+                    </div>
                   );
                 })}
               </div>
@@ -864,6 +896,12 @@ export default function EleveDashboard() {
                   Type actuel : <span className="font-medium text-gray-700">
                     {TFH_TYPES[eleve.type as keyof typeof TFH_TYPES]?.label || eleve.type}
                   </span>
+                  <button
+                    onClick={() => openInfoModal(eleve.type, TFH_TYPES[eleve.type as keyof typeof TFH_TYPES]?.label || eleve.type)}
+                    className="ml-2 text-indigo-600 hover:text-indigo-800 hover:underline text-xs"
+                  >
+                    En savoir plus
+                  </button>
                 </div>
               )}
             </div>
@@ -1210,6 +1248,17 @@ export default function EleveDashboard() {
           )}
         </div>
       </div>
+
+
+      {/* Modal d'info */}
+      <TypeInfoModal
+        isOpen={infoModalOpen}
+        onClose={() => setInfoModalOpen(false)}
+        type={infoModalType}
+        label={infoModalLabel}
+        icon={null}
+        color=""
+      />
     </div>
   );
 }
