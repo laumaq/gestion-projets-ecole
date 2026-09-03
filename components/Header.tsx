@@ -171,7 +171,7 @@ export default function Header() {
     // 4. Panneau de gestion des conseils - Direction
     if (userType === 'employee' && userJob === 'direction') {
       links.push({
-        href: '/dashboard/administration/conseils',
+        href: '/dashboard/conseil-de-la-classe',
         label: 'Gestion conseils',
         icon: UserCog,
         condition: true
