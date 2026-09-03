@@ -1,7 +1,7 @@
 // app/tools/tfh/coordination/tabs/ParametresTab/sections/SectionTypesTFH.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   ChevronDown, ChevronUp, Plus, Trash2, Save, Edit2, X,
   BookOpen, Users, Palette, Hammer, Info
@@ -51,15 +51,61 @@ export default function SectionTypesTFH({ expanded, onToggle }: SectionTypesTFHP
   const [newTypeKey, setNewTypeKey] = useState('');
   const [newTypeLabel, setNewTypeLabel] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editedTypes, setEditedTypes] = useState<Record<string, TypeTFH>>({});
 
-  const handleSaveType = async (type: TypeTFH) => {
-    const success = await saveType(type);
+  // Initialiser les types édités quand les types chargent
+  useEffect(() => {
+    const initial: Record<string, TypeTFH> = {};
+    types.forEach(t => {
+      initial[t.key] = { ...t };
+    });
+    setEditedTypes(initial);
+  }, [types]);
+
+  const stopPropagation = (e: React.MouseEvent | React.ChangeEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+  };
+
+  const handleEditClick = (key: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingId(key);
+    // Initialiser les valeurs éditées
+    const type = types.find(t => t.key === key);
+    if (type) {
+      setEditedTypes(prev => ({
+        ...prev,
+        [key]: { ...type }
+      }));
+    }
+  };
+
+  const handleFieldChange = (key: string, field: keyof TypeTFH, value: any) => {
+    setEditedTypes(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSaveType = async (key: string) => {
+    const typeToSave = editedTypes[key];
+    if (!typeToSave) return;
+    
+    const success = await saveType(typeToSave);
     if (success) {
       setEditingId(null);
     }
   };
 
-  const handleDeleteType = async (typeKey: string) => {
+  const handleCancelEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingId(null);
+  };
+
+  const handleDeleteType = async (typeKey: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     if (confirm(`Supprimer le type "${typeKey}" ? Cette action est irréversible.`)) {
       await deleteType(typeKey);
     }
@@ -115,53 +161,51 @@ export default function SectionTypesTFH({ expanded, onToggle }: SectionTypesTFHP
                 {types.map((type) => {
                   const Icon = getIconComponent(type.icon);
                   const isEditing = editingId === type.key;
+                  const edited = editedTypes[type.key] || type;
 
                   return (
-                    <div key={type.key} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div 
+                      key={type.key} 
+                      className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                      onClick={stopPropagation}
+                    >
                       {isEditing ? (
-                        // Mode édition
-                        <div className="space-y-4">
+                        // Mode édition - On empêche la propagation sur TOUS les clics
+                        <div 
+                          className="space-y-4" 
+                          onClick={stopPropagation}
+                          onMouseDown={stopPropagation}
+                        >
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Clé (unique)
+                                Label *
                               </label>
                               <input
                                 type="text"
-                                value={type.key}
-                                disabled
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Label
-                              </label>
-                              <input
-                                type="text"
-                                value={type.label}
+                                value={edited.label || ''}
                                 onChange={(e) => {
-                                  const updated = { ...type, label: e.target.value };
-                                  // On sauvegarde automatiquement
+                                  stopPropagation(e);
+                                  handleFieldChange(type.key, 'label', e.target.value);
                                 }}
-                                onBlur={() => handleSaveType({ ...type, label: (document.getElementById(`label-${type.key}`) as HTMLInputElement)?.value || type.label })}
-                                id={`label-${type.key}`}
+                                onClick={stopPropagation}
+                                onMouseDown={stopPropagation}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="Ex: Mémoire"
                               />
                             </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Icône
                               </label>
                               <select
-                                value={type.icon}
+                                value={edited.icon || 'BookOpen'}
                                 onChange={(e) => {
-                                  const updated = { ...type, icon: e.target.value };
-                                  handleSaveType(updated);
+                                  stopPropagation(e);
+                                  handleFieldChange(type.key, 'icon', e.target.value);
                                 }}
+                                onClick={stopPropagation}
+                                onMouseDown={stopPropagation}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                               >
                                 {ICON_OPTIONS.map(opt => (
@@ -171,16 +215,21 @@ export default function SectionTypesTFH({ expanded, onToggle }: SectionTypesTFHP
                                 ))}
                               </select>
                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Couleur
                               </label>
                               <select
-                                value={type.color}
+                                value={edited.color || COLOR_OPTIONS[0].value}
                                 onChange={(e) => {
-                                  const updated = { ...type, color: e.target.value };
-                                  handleSaveType(updated);
+                                  stopPropagation(e);
+                                  handleFieldChange(type.key, 'color', e.target.value);
                                 }}
+                                onClick={stopPropagation}
+                                onMouseDown={stopPropagation}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                               >
                                 {COLOR_OPTIONS.map(opt => (
@@ -190,39 +239,44 @@ export default function SectionTypesTFH({ expanded, onToggle }: SectionTypesTFHP
                                 ))}
                               </select>
                             </div>
+                            <div className="flex items-end justify-end gap-2">
+                              <button
+                                onClick={handleCancelEdit}
+                                onMouseDown={stopPropagation}
+                                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                              >
+                                Annuler
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSaveType(type.key);
+                                }}
+                                onMouseDown={stopPropagation}
+                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                                disabled={saving}
+                              >
+                                <Save className="w-4 h-4" />
+                                {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                              </button>
+                            </div>
                           </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               Description
                             </label>
-                            <EditeurTexte
-                              value={type.description}
-                              onChange={(value) => {
-                                const updated = { ...type, description: value };
-                                handleSaveType(updated);
-                              }}
-                              placeholder="Description détaillée du format..."
-                              hauteur="h-96"
-                              simple={false}
-                            />
-                          </div>
-
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => setEditingId(null)}
-                              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
-                              Annuler
-                            </button>
-                            <button
-                              onClick={() => handleSaveType(type)}
-                              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                              disabled={saving}
-                            >
-                              <Save className="w-4 h-4" />
-                              {saving ? 'Sauvegarde...' : 'Sauvegarder'}
-                            </button>
+                            <div onClick={stopPropagation} onMouseDown={stopPropagation}>
+                              <EditeurTexte
+                                value={edited.description || ''}
+                                onChange={(value) => {
+                                  handleFieldChange(type.key, 'description', value);
+                                }}
+                                placeholder="Description détaillée du format..."
+                                hauteur="h-96"
+                                simple={false}
+                              />
+                            </div>
                           </div>
                         </div>
                       ) : (
@@ -233,15 +287,10 @@ export default function SectionTypesTFH({ expanded, onToggle }: SectionTypesTFHP
                               <Icon className="w-5 h-5" />
                             </div>
                             <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-medium text-gray-800">{type.label}</h4>
-                                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
-                                  {type.key}
-                                </span>
-                              </div>
+                              <h4 className="font-medium text-gray-800">{type.label}</h4>
                               <p className="text-sm text-gray-500 line-clamp-2 max-w-md">
                                 {type.description ? 
-                                  type.description.replace(/<[^>]*>/g, '').substring(0, 100) + '...' : 
+                                  type.description.replace(/<[^>]*>/g, '').substring(0, 100) + (type.description.replace(/<[^>]*>/g, '').length > 100 ? '...' : '') : 
                                   'Aucune description'
                                 }
                               </p>
@@ -249,7 +298,7 @@ export default function SectionTypesTFH({ expanded, onToggle }: SectionTypesTFHP
                           </div>
                           <div className="flex gap-2">
                             <button
-                              onClick={() => setEditingId(type.key)}
+                              onClick={(e) => handleEditClick(type.key, e)}
                               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               title="Modifier"
                             >
@@ -257,7 +306,7 @@ export default function SectionTypesTFH({ expanded, onToggle }: SectionTypesTFHP
                             </button>
                             {types.length > 1 && (
                               <button
-                                onClick={() => handleDeleteType(type.key)}
+                                onClick={(e) => handleDeleteType(type.key, e)}
                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                 title="Supprimer"
                               >
@@ -274,36 +323,50 @@ export default function SectionTypesTFH({ expanded, onToggle }: SectionTypesTFHP
 
               {/* Ajouter un nouveau type */}
               {showAddForm ? (
-                <div className="mt-4 border-2 border-dashed border-gray-300 rounded-lg p-4">
+                <div 
+                  className="mt-4 border-2 border-dashed border-gray-300 rounded-lg p-4"
+                  onClick={stopPropagation}
+                  onMouseDown={stopPropagation}
+                >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Clé (unique, sans espaces)
+                        Label *
                       </label>
                       <input
                         type="text"
-                        value={newTypeKey}
-                        onChange={(e) => setNewTypeKey(e.target.value.toLowerCase().replace(/\s+/g, '_'))}
-                        placeholder="ex: stage"
+                        value={newTypeLabel}
+                        onChange={(e) => {
+                          stopPropagation(e);
+                          setNewTypeLabel(e.target.value);
+                          // Générer automatiquement la clé à partir du label
+                          const generatedKey = e.target.value.toLowerCase().replace(/\s+/g, '_');
+                          setNewTypeKey(generatedKey);
+                        }}
+                        onClick={stopPropagation}
+                        onMouseDown={stopPropagation}
+                        placeholder="Ex: Stage"
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Label
+                        Clé (générée automatiquement)
                       </label>
                       <input
                         type="text"
-                        value={newTypeLabel}
-                        onChange={(e) => setNewTypeLabel(e.target.value)}
-                        placeholder="ex: Stage"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        value={newTypeKey}
+                        onClick={stopPropagation}
+                        onMouseDown={stopPropagation}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed"
+                        disabled
                       />
                     </div>
                   </div>
                   <div className="mt-4 flex justify-end gap-2">
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setShowAddForm(false);
                         setNewTypeKey('');
                         setNewTypeLabel('');
@@ -313,8 +376,11 @@ export default function SectionTypesTFH({ expanded, onToggle }: SectionTypesTFHP
                       Annuler
                     </button>
                     <button
-                      onClick={handleAddType}
-                      disabled={!newTypeKey.trim() || !newTypeLabel.trim() || saving}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddType();
+                      }}
+                      disabled={!newTypeLabel.trim() || saving}
                       className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Ajouter
@@ -323,7 +389,10 @@ export default function SectionTypesTFH({ expanded, onToggle }: SectionTypesTFHP
                 </div>
               ) : (
                 <button
-                  onClick={() => setShowAddForm(true)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowAddForm(true);
+                  }}
                   className="mt-4 w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
                 >
                   <Plus className="w-5 h-5" />
@@ -331,7 +400,10 @@ export default function SectionTypesTFH({ expanded, onToggle }: SectionTypesTFHP
                 </button>
               )}
 
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div 
+                className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+                onClick={stopPropagation}
+              >
                 <div className="flex items-start gap-2">
                   <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-blue-700">

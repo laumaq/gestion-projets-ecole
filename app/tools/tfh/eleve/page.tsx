@@ -31,6 +31,17 @@ import {
 } from 'lucide-react';
 import TypeInfoModal from './components/TypeInfoModal';
 
+// Mapping des noms d'icônes vers les composants Lucide
+const ICON_MAP: Record<string, any> = {
+  BookOpen: BookIcon,
+  Users: UsersIcon,
+  Palette: Palette,
+  Hammer: Hammer,
+  GraduationCap: GraduationCap,
+  Target: Target,
+  Sparkles: Sparkles,
+};
+
 interface EleveInfo {
   student_matricule: number;
   nom: string;
@@ -76,13 +87,14 @@ interface EleveInfo {
   url_tfh?: string;
 }
 
-// Types de TFH avec leurs icônes et couleurs
-const TFH_TYPES = {
-  mémoire: { icon: BookIcon, color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Mémoire' },
-  associatif: { icon: UsersIcon, color: 'bg-green-100 text-green-800 border-green-200', label: 'Associatif' },
-  artistique: { icon: Palette, color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Artistique' },
-  atelier: { icon: Hammer, color: 'bg-orange-100 text-orange-800 border-orange-200', label: 'Atelier' },
-};
+// Types de TFH chargés dynamiquement
+interface TypeTFHDisplay {
+  key: string;
+  label: string;
+  description: string;
+  icon: string;
+  color: string;
+}
 
 export default function EleveDashboard() {
   const [eleve, setEleve] = useState<EleveInfo | null>(null);
@@ -94,7 +106,8 @@ export default function EleveDashboard() {
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [infoModalType, setInfoModalType] = useState<string>('');
   const [infoModalLabel, setInfoModalLabel] = useState<string>('');
-  const [typesDisponibles, setTypesDisponibles] = useState<any[]>([]);
+  const [typesDisponibles, setTypesDisponibles] = useState<TypeTFHDisplay[]>([]);
+  const [loadingTypes, setLoadingTypes] = useState(false);
 
   const [editingProblematique, setEditingProblematique] = useState(false);
   const [newProblematique, setNewProblematique] = useState('');
@@ -137,51 +150,59 @@ export default function EleveDashboard() {
     }
   }, [router]);
 
+  // Charger les types dynamiquement quand la phase préparatoire est active
   useEffect(() => {
     const loadTypes = async () => {
-      // Récupérer toutes les clés qui commencent par 'tfh_type_'
-      const { data, error } = await supabase
-        .from('tfh_system_settings')
-        .select('setting_key, setting_value')
-        .like('setting_key', 'tfh_type_%');
+      if (!phasePreparatoire) return;
       
-      if (error) {
-        console.error('Erreur chargement types:', error);
-        return;
-      }
-
-      // Grouper par type (memoire, associatif, etc.)
-      const typesMap: Record<string, any> = {};
-      
-      data?.forEach(item => {
-        const match = item.setting_key.match(/tfh_type_([^_]+)_(.+)/);
-        if (match) {
-          const typeKey = match[1];
-          const field = match[2];
-          
-          if (!typesMap[typeKey]) {
-            typesMap[typeKey] = {
-              key: typeKey,
-              label: typeKey.charAt(0).toUpperCase() + typeKey.slice(1),
-              description: '',
-              icon: 'BookOpen',
-              color: 'bg-gray-100 text-gray-700 border-gray-200'
-            };
-          }
-          
-          if (field === 'label') typesMap[typeKey].label = item.setting_value;
-          else if (field === 'description') typesMap[typeKey].description = item.setting_value;
-          else if (field === 'icon') typesMap[typeKey].icon = item.setting_value;
-          else if (field === 'color') typesMap[typeKey].color = item.setting_value;
+      setLoadingTypes(true);
+      try {
+        // Récupérer toutes les clés qui commencent par 'tfh_type_'
+        const { data, error } = await supabase
+          .from('tfh_system_settings')
+          .select('setting_key, setting_value')
+          .like('setting_key', 'tfh_type_%');
+        
+        if (error) {
+          console.error('Erreur chargement types:', error);
+          return;
         }
-      });
 
-      setTypesDisponibles(Object.values(typesMap));
+        // Grouper par type (memoire, associatif, etc.)
+        const typesMap: Record<string, TypeTFHDisplay> = {};
+        
+        data?.forEach(item => {
+          const match = item.setting_key.match(/tfh_type_([^_]+)_(.+)/);
+          if (match) {
+            const typeKey = match[1];
+            const field = match[2];
+            
+            if (!typesMap[typeKey]) {
+              typesMap[typeKey] = {
+                key: typeKey,
+                label: typeKey.charAt(0).toUpperCase() + typeKey.slice(1),
+                description: '',
+                icon: 'BookOpen',
+                color: 'bg-gray-100 text-gray-700 border-gray-200'
+              };
+            }
+            
+            if (field === 'label') typesMap[typeKey].label = item.setting_value;
+            else if (field === 'description') typesMap[typeKey].description = item.setting_value;
+            else if (field === 'icon') typesMap[typeKey].icon = item.setting_value;
+            else if (field === 'color') typesMap[typeKey].color = item.setting_value;
+          }
+        });
+
+        setTypesDisponibles(Object.values(typesMap));
+      } catch (err) {
+        console.error('Erreur chargement types:', err);
+      } finally {
+        setLoadingTypes(false);
+      }
     };
     
-    if (phasePreparatoire) {
-      loadTypes();
-    }
+    loadTypes();
   }, [phasePreparatoire]);
 
   const loadPhasePreparatoire = async () => {
@@ -459,13 +480,6 @@ export default function EleveDashboard() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const TFH_TYPES = {
-    mémoire: { icon: BookIcon, color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Mémoire' },
-    associatif: { icon: UsersIcon, color: 'bg-green-100 text-green-800 border-green-200', label: 'Associatif' },
-    artistique: { icon: Palette, color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Artistique' },
-    atelier: { icon: Hammer, color: 'bg-orange-100 text-orange-800 border-orange-200', label: 'Atelier' },
   };
 
   const openInfoModal = (type: string, label: string) => {
@@ -813,6 +827,11 @@ export default function EleveDashboard() {
     router.push('/');
   };
 
+  // Fonction pour obtenir l'icône à partir du nom
+  const getIconComponent = (iconName: string) => {
+    return ICON_MAP[iconName] || BookIcon;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-violet-50 to-purple-50 flex items-center justify-center">
@@ -887,7 +906,7 @@ export default function EleveDashboard() {
             </div>
           </div>
 
-          {/* Type de TFH - Visible en phase préparatoire */}
+          {/* Type de TFH - Visible en phase préparatoire - DYNAMIQUE */}
           {phasePreparatoire && (
             <div className="bg-gradient-to-r from-indigo-50/80 to-violet-50/80 rounded-xl p-5 border border-indigo-100">
               <div className="flex items-center justify-between mb-3">
@@ -898,54 +917,72 @@ export default function EleveDashboard() {
                 </div>
                 <span className="text-xs text-gray-500">
                   {savingType && <span className="text-indigo-600">💾 Sauvegarde...</span>}
+                  {loadingTypes && <span className="text-gray-400">⏳ Chargement...</span>}
                 </span>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {Object.entries(TFH_TYPES).map(([key, { icon: Icon, color, label }]) => {
-                  const isSelected = eleve.type === key;
-                  return (
-                    <div key={key} className="relative group">
-                      <button
-                        onClick={() => handleSaveType(key)}
-                        disabled={savingType}
-                        className={`
-                          w-full flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
-                          ${isSelected 
-                            ? `${color} border-current shadow-md scale-[1.02]` 
-                            : 'bg-white/60 border-gray-200 hover:border-indigo-300 hover:bg-white/80'}
-                          ${savingType ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                          relative
-                        `}
-                      >
-                        <Icon className={`w-6 h-6 ${isSelected ? 'text-current' : 'text-gray-400'}`} />
-                        <span className={`text-sm font-medium ${isSelected ? 'text-current' : 'text-gray-600'}`}>
-                          {label}
-                        </span>
-                        {isSelected && (
-                          <span className="text-xs text-green-600">✅</span>
-                        )}
-                      </button>
-                      
-                      {/* Bouton d'info */}
-                      <button
-                        onClick={() => openInfoModal(key, label)}
-                        className="absolute -top-2 -right-2 p-1.5 bg-white rounded-full shadow-md border border-gray-200 hover:bg-gray-50 hover:scale-110 transition-all duration-200 group-hover:shadow-lg"
-                        title={`En savoir plus sur ${label}`}
-                      >
-                        <Info className="w-3.5 h-3.5 text-gray-500" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-              {eleve.type && (
+              {loadingTypes ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                </div>
+              ) : typesDisponibles.length === 0 ? (
+                <div className="text-center py-6 text-gray-500">
+                  <p>Aucun type de TFH n'a été configuré.</p>
+                  <p className="text-sm">Contacte ton coordinateur pour en ajouter.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {typesDisponibles.map((type) => {
+                    const Icon = getIconComponent(type.icon);
+                    const isSelected = eleve.type === type.key;
+                    
+                    return (
+                      <div key={type.key} className="relative group">
+                        <button
+                          onClick={() => handleSaveType(type.key)}
+                          disabled={savingType}
+                          className={`
+                            w-full flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
+                            ${isSelected 
+                              ? `${type.color} border-current shadow-md scale-[1.02]` 
+                              : 'bg-white/60 border-gray-200 hover:border-indigo-300 hover:bg-white/80'}
+                            ${savingType ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                            relative
+                          `}
+                        >
+                          <Icon className={`w-6 h-6 ${isSelected ? 'text-current' : 'text-gray-400'}`} />
+                          <span className={`text-sm font-medium ${isSelected ? 'text-current' : 'text-gray-600'}`}>
+                            {type.label}
+                          </span>
+                          {isSelected && (
+                            <span className="text-xs text-green-600">✅</span>
+                          )}
+                        </button>
+                        
+                        {/* Bouton d'info */}
+                        <button
+                          onClick={() => openInfoModal(type.key, type.label)}
+                          className="absolute -top-2 -right-2 p-1.5 bg-white rounded-full shadow-md border border-gray-200 hover:bg-gray-50 hover:scale-110 transition-all duration-200 group-hover:shadow-lg"
+                          title={`En savoir plus sur ${type.label}`}
+                        >
+                          <Info className="w-3.5 h-3.5 text-gray-500" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {eleve.type && !loadingTypes && typesDisponibles.length > 0 && (
                 <div className="mt-3 text-xs text-gray-500 text-center">
                   Type actuel : <span className="font-medium text-gray-700">
-                    {TFH_TYPES[eleve.type as keyof typeof TFH_TYPES]?.label || eleve.type}
+                    {typesDisponibles.find(t => t.key === eleve.type)?.label || eleve.type}
                   </span>
                   <button
-                    onClick={() => openInfoModal(eleve.type, TFH_TYPES[eleve.type as keyof typeof TFH_TYPES]?.label || eleve.type)}
+                    onClick={() => {
+                      const type = typesDisponibles.find(t => t.key === eleve.type);
+                      if (type) openInfoModal(type.key, type.label);
+                    }}
                     className="ml-2 text-indigo-600 hover:text-indigo-800 hover:underline text-xs"
                   >
                     En savoir plus
@@ -1296,7 +1333,6 @@ export default function EleveDashboard() {
           )}
         </div>
       </div>
-
 
       {/* Modal d'info */}
       <TypeInfoModal
