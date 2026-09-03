@@ -94,7 +94,8 @@ export default function EleveDashboard() {
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [infoModalType, setInfoModalType] = useState<string>('');
   const [infoModalLabel, setInfoModalLabel] = useState<string>('');
-  
+  const [typesDisponibles, setTypesDisponibles] = useState<any[]>([]);
+
   const [editingProblematique, setEditingProblematique] = useState(false);
   const [newProblematique, setNewProblematique] = useState('');
   
@@ -135,6 +136,53 @@ export default function EleveDashboard() {
       loadEleve(parseInt(userId));
     }
   }, [router]);
+
+  useEffect(() => {
+    const loadTypes = async () => {
+      // Récupérer toutes les clés qui commencent par 'tfh_type_'
+      const { data, error } = await supabase
+        .from('tfh_system_settings')
+        .select('setting_key, setting_value')
+        .like('setting_key', 'tfh_type_%');
+      
+      if (error) {
+        console.error('Erreur chargement types:', error);
+        return;
+      }
+
+      // Grouper par type (memoire, associatif, etc.)
+      const typesMap: Record<string, any> = {};
+      
+      data?.forEach(item => {
+        const match = item.setting_key.match(/tfh_type_([^_]+)_(.+)/);
+        if (match) {
+          const typeKey = match[1];
+          const field = match[2];
+          
+          if (!typesMap[typeKey]) {
+            typesMap[typeKey] = {
+              key: typeKey,
+              label: typeKey.charAt(0).toUpperCase() + typeKey.slice(1),
+              description: '',
+              icon: 'BookOpen',
+              color: 'bg-gray-100 text-gray-700 border-gray-200'
+            };
+          }
+          
+          if (field === 'label') typesMap[typeKey].label = item.setting_value;
+          else if (field === 'description') typesMap[typeKey].description = item.setting_value;
+          else if (field === 'icon') typesMap[typeKey].icon = item.setting_value;
+          else if (field === 'color') typesMap[typeKey].color = item.setting_value;
+        }
+      });
+
+      setTypesDisponibles(Object.values(typesMap));
+    };
+    
+    if (phasePreparatoire) {
+      loadTypes();
+    }
+  }, [phasePreparatoire]);
 
   const loadPhasePreparatoire = async () => {
     try {
@@ -1256,8 +1304,6 @@ export default function EleveDashboard() {
         onClose={() => setInfoModalOpen(false)}
         type={infoModalType}
         label={infoModalLabel}
-        icon={null}
-        color=""
       />
     </div>
   );
