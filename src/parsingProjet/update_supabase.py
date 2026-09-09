@@ -245,7 +245,6 @@ def determiner_type_pattern(pattern: str) -> str:
 def parser_conditions_complexes(pattern: str, cours_id: int, next_id: int) -> Tuple[List[Dict], int]:
     """
     Parse les conditions complexes d'un pattern
-    Retourne une liste de dict avec: id, cours_id, groupe_pedagogique, classe, tag_option, valeur_option
     """
     conditions = []
     current_id = next_id
@@ -253,110 +252,212 @@ def parser_conditions_complexes(pattern: str, cours_id: int, next_id: int) -> Tu
     if not pattern or '[' not in pattern:
         return conditions, current_id
     
-    # Séparer les parties par '+'
-    parts = re.split(r'\+', pattern)
+    # ÉTAPE 1 : Découper par '+' qui est entre les conditions
+    parts = []
+    current = ""
+    depth = 0
     
+    for char in pattern:
+        if char == '[':
+            depth += 1
+        elif char == ']':
+            depth -= 1
+        elif char == '+' and depth == 0:
+            parts.append(current.strip())
+            current = ""
+            continue
+        current += char
+    if current.strip():
+        parts.append(current.strip())
+    
+    # ÉTAPE 2 : Parser chaque partie
     for part in parts:
         part = part.strip()
-        if not part or '[' not in part:
+        if not part:
             continue
         
-        # Extraire le groupe pédagogique
+        # Extraire le groupe [groupe]
         match_groupe = re.search(r'\[([^\]]+)\]', part)
         if not match_groupe:
             continue
-        groupe_pedagogique = match_groupe.group(1).strip()
+        groupe = match_groupe.group(1).strip()
         
-        # Extraire la classe
+        # Extraire la classe <classe>
         match_classe = re.search(r'<([^>]+)>', part)
         if not match_classe:
             continue
         classe = match_classe.group(1).strip()
         
-        # Extraire le reste (les valeurs)
-        rest = re.sub(r'\[[^\]]+\]', '', part)
-        rest = re.sub(r'<[^>]+>', '', rest)
-        rest = rest.strip()
+        # ============================================================
+        # EXTRAIRE LE TAG ET LES VALEURS
+        # ============================================================
         
-        if not rest:
+        # Trouver la position du dernier > de la classe
+        pos_classe = part.find('>')
+        if pos_classe == -1:
             continue
         
-        # Chercher un tag entre < >
+        # Tout ce qui vient après le > de la classe
+        rest = part[pos_classe + 1:].strip()
+        
+        # Chercher un tag entre < > dans ce qui reste
         tag_match = re.search(r'<([^>]+)>', rest)
         if tag_match:
-            tag_option = tag_match.group(1).strip()
-            valeurs_str = re.sub(r'<[^>]+>', '', rest).strip()
+            tag = tag_match.group(1).strip()
+            # Tout ce qui vient après le tag
+            valeurs_str = rest[tag_match.end():].strip()
         else:
-            tag_option = ''
+            # Pas de tag explicite
+            tag = ''
             valeurs_str = rest
         
-        # Si pas de tag mais on a "Option" dans le texte
-        if not tag_option and 'Option' in rest:
-            option_match = re.search(r'Option\s+([A-Za-z0-9\-]+)', rest)
-            if option_match:
-                tag_option = 'Option'
-                valeurs_str = option_match.group(1).strip()
-            else:
-                valeurs_str = rest
-        
-        if not valeurs_str:
-            continue
-        
-        valeurs_str = valeurs_str.strip()
-        
-        # Si la valeur contient un '+', c'est un tag composé
-        if '+' in valeurs_str and 'Option' in valeurs_str:
-            if not tag_option:
-                tag_option = valeurs_str
-                continue
-        
-        # Extraire toutes les valeurs
-        if '-' in valeurs_str:
-            valeurs_list = [v.strip() for v in valeurs_str.split('-') if v.strip()]
-        else:
-            valeurs_list = [v.strip() for v in valeurs_str.split() if v.strip()]
-        
-        for valeur in valeurs_list:
-            valeur = re.sub(r'[<>+()]', '', valeur).strip()
+        # Nettoyer les valeurs
+        if valeurs_str:
+            # Enlever les éventuels tags restants
+            valeurs_str = re.sub(r'<[^>]+>', '', valeurs_str).strip()
             
-            if valeur and valeur not in ['Option', 'LM1', 'LM2', 'LM3', 'EP', 'Philo']:
-                # CONVERTIR la valeur via le dictionnaire CONVERSION
-                valeur_convertie = CONVERSION.get(valeur, valeur)
-                
-                conditions.append({
-                    'id': current_id,
-                    'cours_id': cours_id,
-                    'groupe_pedagogique': groupe_pedagogique,
-                    'classe': classe,
-                    'tag_option': tag_option,
-                    'valeur_option': valeur_convertie
-                })
-                current_id += 1
+            # Découper par '-' ou par espace
+            if '-' in valeurs_str:
+                valeurs = [v.strip() for v in valeurs_str.split('-') if v.strip()]
+            else:
+                valeurs = [v.strip() for v in valeurs_str.split() if v.strip()]
+            
+            for valeur in valeurs:
+                # Nettoyer la valeur
+                valeur = re.sub(r'[<>]', '', valeur).strip()
+                if valeur and valeur not in ['Option', 'LM1', 'LM2', 'LM3', 'EP', 'Philo']:
+                    # Convertir la valeur via le dictionnaire CONVERSION (si elle existe)
+                    valeur_convertie = CONVERSION.get(valeur, valeur)
+                    
+                    conditions.append({
+                        'id': current_id,
+                        'cours_id': cours_id,
+                        'groupe_pedagogique': groupe,
+                        'classe': classe,
+                        'tag_option': tag,
+                        'valeur_option': valeur_convertie
+                    })
+                    current_id += 1
     
     return conditions, current_id
 
 def get_or_create_professeur(nom: str, prenom: str) -> Optional[str]:
+    """
+    Récupère ou crée un professeur avec vérification interactive.
+    Le mapping est sauvegardé dans mapping_profs.json pour ne pas redemander.
+    """
     if not nom or not prenom:
         return None
     
+    # Nettoyer
     nom = nom.strip()
     prenom = prenom.strip()
     
-    result = supabase_anon.table('employees').select('id, nom, prenom').execute()
+    # Normaliser pour la recherche (minuscules, sans accents)
+    def normaliser(chaine: str) -> str:
+        chaine = chaine.lower().strip()
+        accents = {
+            'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+            'à': 'a', 'â': 'a', 'ä': 'a',
+            'ô': 'o', 'ö': 'o',
+            'ï': 'i', 'î': 'i',
+            'ç': 'c',
+            'ù': 'u', 'û': 'u', 'ü': 'u'
+        }
+        for accent, sans in accents.items():
+            chaine = chaine.replace(accent, sans)
+        return chaine
+    
+    # Clé pour le mapping
+    cle_mapping = f"{nom}|{prenom}"
+    
+    # 1. Charger le mapping existant
+    mapping_file = Path(__file__).parent / 'mapping_profs.json'
+    mapping = {}
+    if mapping_file.exists():
+        try:
+            with open(mapping_file, 'r', encoding='utf-8') as f:
+                mapping = json.load(f)
+            # Vérifier si le prof est déjà dans le mapping
+            if cle_mapping in mapping:
+                # Vérifier que l'ID existe toujours en base
+                try:
+                    result = supabase_anon.table('employees').select('id').eq('id', mapping[cle_mapping]).execute()
+                    if result.data:
+                        return mapping[cle_mapping]
+                    else:
+                        # L'ID n'existe plus, on le retire du mapping
+                        del mapping[cle_mapping]
+                except:
+                    pass
+        except:
+            pass
+    
+    nom_norm = normaliser(nom)
+    prenom_norm = normaliser(prenom)
+    
+    # 2. Récupérer tous les professeurs existants
+    result = supabase_anon.table('employees').select('id, nom, prenom, job').execute()
+    existing_profs = []
     
     for emp in result.data:
-        emp_nom = emp.get('nom', '').strip().lower()
-        emp_prenom = emp.get('prenom', '').strip().lower()
-        if emp_nom == nom.lower() and emp_prenom == prenom.lower():
+        emp_nom = emp.get('nom', '').strip()
+        emp_prenom = emp.get('prenom', '').strip()
+        emp_nom_norm = normaliser(emp_nom)
+        emp_prenom_norm = normaliser(emp_prenom)
+        
+        # Vérifier si correspondance exacte (insensible à la casse/accent)
+        if emp_nom_norm == nom_norm and emp_prenom_norm == prenom_norm:
+            # Sauvegarder dans le mapping
+            mapping[cle_mapping] = emp['id']
+            with open(mapping_file, 'w', encoding='utf-8') as f:
+                json.dump(mapping, f, indent=2, ensure_ascii=False)
             return emp['id']
+        
+        # Stocker pour les correspondances partielles
+        existing_profs.append((emp_nom, emp_prenom, emp_nom_norm, emp_prenom_norm, emp['id']))
+    
+    # 3. Pas de correspondance exacte → chercher des correspondances partielles
+    correspondances = []
+    for e_nom, e_prenom, e_nom_norm, e_prenom_norm, e_id in existing_profs:
+        # Vérifier si nom ou prénom correspond partiellement
+        if (nom_norm in e_nom_norm or e_nom_norm in nom_norm or
+            prenom_norm in e_prenom_norm or e_prenom_norm in prenom_norm):
+            correspondances.append((e_nom, e_prenom, e_id))
+    
+    # 4. Afficher les correspondances et demander
+    print(f"\n   ❓ Professeur inconnu: {prenom} {nom}")
+    
+    if correspondances:
+        print("   🔍 Correspondances possibles:")
+        for i, (e_nom, e_prenom, e_id) in enumerate(correspondances, 1):
+            print(f"      {i}. {e_prenom} {e_nom} (ID: {e_id})")
+        print("      0. Aucun - Créer un nouveau professeur")
+        
+        choix = input("   Choisissez un numéro (ou laissez vide pour créer): ").strip()
+        if choix.isdigit() and 1 <= int(choix) <= len(correspondances):
+            idx = int(choix) - 1
+            prof_id = correspondances[idx][2]
+            # Sauvegarder dans le mapping
+            mapping[cle_mapping] = prof_id
+            with open(mapping_file, 'w', encoding='utf-8') as f:
+                json.dump(mapping, f, indent=2, ensure_ascii=False)
+            return prof_id
+    else:
+        print("   Aucune correspondance trouvée.")
+    
+    # 5. Créer un nouveau professeur
+    print("   📝 Création d'un nouveau professeur")
+    nouveau_nom = input(f"   Nom (actuel: {nom}): ").strip() or nom
+    nouveau_prenom = input(f"   Prénom (actuel: {prenom}): ").strip() or prenom
     
     new_id = str(uuid.uuid4())
-    initiale = prenom[0].upper() if prenom else ''
+    initiale = nouveau_prenom[0].upper() if nouveau_prenom else ''
     
     new_prof = {
         'id': new_id,
-        'nom': nom,
-        'prenom': prenom,
+        'nom': nouveau_nom,
+        'prenom': nouveau_prenom,
         'initiale': initiale,
         'job': 'prof',
         'mot_de_passe': None,
@@ -368,11 +469,18 @@ def get_or_create_professeur(nom: str, prenom: str) -> Optional[str]:
     try:
         result = supabase_service.table('employees').insert(new_prof).execute()
         if result.data:
-            print(f"   📝 Professeur créé: {prenom} {nom}")
-            return result.data[0]['id']
+            prof_id = result.data[0]['id']
+            print(f"   ✅ Professeur créé: {nouveau_prenom} {nouveau_nom} (ID: {prof_id})")
+            # Sauvegarder dans le mapping
+            mapping[cle_mapping] = prof_id
+            with open(mapping_file, 'w', encoding='utf-8') as f:
+                json.dump(mapping, f, indent=2, ensure_ascii=False)
+            return prof_id
     except Exception as e:
-        print(f"   ❌ Erreur création professeur {prenom} {nom}: {e}")
+        print(f"   ❌ Erreur création professeur {nouveau_prenom} {nouveau_nom}: {e}")
+    
     return None
+
 
 # ============================================================================
 # IMPORT DES ÉLÈVES

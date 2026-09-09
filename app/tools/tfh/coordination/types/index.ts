@@ -21,6 +21,14 @@ export interface Eleve {
   categorie: string;
   thematique?: string;
   objectif_particulier?: string | null;
+
+  description?: string;
+  journal?: Array<{
+    type: string;
+    titre: string;
+    contenu: string;
+    date: string;
+  }>;
   
   // Sources
   source_1?: string;

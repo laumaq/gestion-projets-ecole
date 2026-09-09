@@ -17,7 +17,6 @@ import {
   MapPin,
   Users,
   Printer,
-  LogOut,
   FileText,
   Search,
   ChevronRight,
@@ -27,9 +26,11 @@ import {
   Users as UsersIcon,
   Palette,
   Hammer,
-  Info
+  Info,
+  PenSquare
 } from 'lucide-react';
 import TypeInfoModal from './components/TypeInfoModal';
+import JournalDeBord from './components/JournalDeBord';
 
 // Mapping des noms d'icônes vers les composants Lucide
 const ICON_MAP: Record<string, any> = {
@@ -50,6 +51,7 @@ interface EleveInfo {
   type: string;
   problematique: string;
   thematique: string;
+  description: string;
   source_1: string;
   source_2: string;
   source_3: string;
@@ -60,6 +62,12 @@ interface EleveInfo {
   guide_prenom: string;
   guide_initiale: string;
   guide_accepte_numerique?: boolean;
+  journal: Array<{
+    type: string;
+    titre: string;
+    contenu: string;
+    date: string;
+  }>;
   sessions?: Array<{
     index: number;
     nom: string;
@@ -114,6 +122,9 @@ export default function EleveDashboard() {
   
   const [editingThematique, setEditingThematique] = useState(false);
   const [newThematique, setNewThematique] = useState('');
+  
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [newDescription, setNewDescription] = useState('');
   
   const [editingSource1, setEditingSource1] = useState(false);
   const [newSource1, setNewSource1] = useState('');
@@ -230,6 +241,7 @@ export default function EleveDashboard() {
           type,
           problematique,
           thematique,
+          description,
           categorie,
           source_1,
           source_2,
@@ -245,6 +257,7 @@ export default function EleveDashboard() {
           lecteur_interne_id,
           lecteur_externe_id,
           url_tfh,
+          journal,
           session_1_convoque,
           session_2_convoque,
           session_3_convoque,
@@ -427,6 +440,7 @@ export default function EleveDashboard() {
         type: data.type || '',
         problematique: data.problematique || '',
         thematique: data.thematique || '',
+        description: data.description || '',
         source_1: data.source_1 || '',
         source_2: data.source_2 || '',
         source_3: data.source_3 || '',
@@ -437,6 +451,7 @@ export default function EleveDashboard() {
         guide_prenom: guide_prenom,
         guide_initiale: guide_initiale,
         guide_accepte_numerique: guide_accepte_numerique,
+        journal: data.journal || [],
         sessions: sessionsAVenir,
         defense: defenseData,
         displaySettings: displaySettings,
@@ -446,6 +461,7 @@ export default function EleveDashboard() {
       setEleve(eleveFormate);
       setNewProblematique(data.problematique || '');
       setNewThematique(data.thematique || '');
+      setNewDescription(data.description || '');
       setNewSource1(data.source_1 || '');
       setNewSource2(data.source_2 || '');
       setNewSource3(data.source_3 || '');
@@ -479,6 +495,12 @@ export default function EleveDashboard() {
       console.error('Erreur chargement élève:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshEleve = async () => {
+    if (eleve) {
+      await loadEleve(eleve.student_matricule);
     }
   };
 
@@ -517,6 +539,22 @@ export default function EleveDashboard() {
       setEditingThematique(false);
     } catch (err) {
       console.error('Erreur sauvegarde:', err);
+    }
+  };
+
+  const handleSaveDescription = async () => {
+    if (!eleve) return;
+
+    try {
+      await supabase
+        .from('tfh_eleves')
+        .update({ description: newDescription })
+        .eq('student_matricule', eleve.student_matricule);
+
+      setEleve({ ...eleve, description: newDescription });
+      setEditingDescription(false);
+    } catch (err) {
+      console.error('Erreur sauvegarde description:', err);
     }
   };
 
@@ -832,6 +870,14 @@ export default function EleveDashboard() {
     return ICON_MAP[iconName] || BookIcon;
   };
 
+  // Vérifier si le journal doit être affiché
+  const shouldShowJournal = () => {
+    if (!eleve) return false;
+    if (phasePreparatoire) return false;
+    // Afficher le journal pour tous les types sauf 'traditionnel'
+    return eleve.type !== 'traditionnel' && eleve.type !== '';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-violet-50 to-purple-50 flex items-center justify-center">
@@ -992,7 +1038,7 @@ export default function EleveDashboard() {
             </div>
           )}
 
-          {/* Thématique */}
+          {/* Thématique - Visible en phase préparatoire */}
           {phasePreparatoire && (
             <div className="bg-gradient-to-r from-teal-50/80 to-emerald-50/80 rounded-xl p-5 border border-teal-100">
               <div className="flex items-center justify-between mb-3">
@@ -1046,66 +1092,124 @@ export default function EleveDashboard() {
             </div>
           )}
 
+
+          {/* Problématique */}
+          {eleve.type === 'traditionnel' && (
+            <div className="bg-gradient-to-r from-indigo-50/80 to-violet-50/80 rounded-xl p-5 border border-indigo-100">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Search className="w-5 h-5 text-indigo-600" />
+                  <h3 className="text-base font-semibold text-gray-800">Problématique</h3>
+                </div>
+                {!editingProblematique && (
+                  autorisationModification ? (
+                    <button
+                      onClick={() => setEditingProblematique(true)}
+                      className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+                    >
+                      {eleve.problematique ? 'Modifier' : 'Ajouter'}
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <span className="text-xs">🔒</span>
+                      Modifications bloquées
+                    </span>
+                  )
+                )}
+              </div>
+              
+              {editingProblematique ? (
+                <div className="space-y-3">
+                  <textarea
+                    value={newProblematique}
+                    onChange={(e) => setNewProblematique(e.target.value)}
+                    className="w-full border border-indigo-200 rounded-lg p-3 min-h-[120px] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                    placeholder="Décrivez votre problématique..."
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveProblematique}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    >
+                      Enregistrer
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingProblematique(false);
+                        setNewProblematique(eleve.problematique || '');
+                      }}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white/60 rounded-lg p-3 text-gray-700 whitespace-pre-wrap">
+                  {eleve.problematique || <span className="text-gray-400 italic">Aucune problématique définie</span>}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Description - Visible en phase préparatoire */}
+          {phasePreparatoire && (
+            <div className="bg-gradient-to-r from-blue-50/80 to-sky-50/80 rounded-xl p-5 border border-blue-100">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <PenSquare className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-base font-semibold text-gray-800">Description de votre projet</h3>
+                </div>
+                {!editingDescription && autorisationModification && (
+                  <button
+                    onClick={() => setEditingDescription(true)}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                  >
+                    {eleve.description ? 'Modifier' : 'Ajouter'}
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              
+              {editingDescription ? (
+                <div className="space-y-3">
+                  <textarea
+                    value={newDescription}
+                    onChange={(e) => setNewDescription(e.target.value)}
+                    className="w-full border border-blue-200 rounded-lg p-3 min-h-[120px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    placeholder="Décrivez ce que vous imaginez pour votre TFH..."
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveDescription}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Enregistrer
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingDescription(false);
+                        setNewDescription(eleve.description || '');
+                      }}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white/60 rounded-lg p-3 text-gray-700 whitespace-pre-wrap">
+                  {eleve.description || <span className="text-gray-400 italic">Aucune description définie</span>}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Défense */}
           <DefenseSection eleve={eleve} />
 
-          {/* Problématique */}
-          <div className="bg-gradient-to-r from-indigo-50/80 to-violet-50/80 rounded-xl p-5 border border-indigo-100">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Search className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-base font-semibold text-gray-800">Problématique</h3>
-              </div>
-              {!editingProblematique && (
-                autorisationModification ? (
-                  <button
-                    onClick={() => setEditingProblematique(true)}
-                    className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
-                  >
-                    {eleve.problematique ? 'Modifier' : 'Ajouter'}
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <span className="text-xs text-gray-400 flex items-center gap-1">
-                    <span className="text-xs">🔒</span>
-                    Modifications bloquées
-                  </span>
-                )
-              )}
-            </div>
-            
-            {editingProblematique ? (
-              <div className="space-y-3">
-                <textarea
-                  value={newProblematique}
-                  onChange={(e) => setNewProblematique(e.target.value)}
-                  className="w-full border border-indigo-200 rounded-lg p-3 min-h-[120px] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-                  placeholder="Décrivez votre problématique..."
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSaveProblematique}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    Enregistrer
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditingProblematique(false);
-                      setNewProblematique(eleve.problematique || '');
-                    }}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                  >
-                    Annuler
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-white/60 rounded-lg p-3 text-gray-700 whitespace-pre-wrap">
-                {eleve.problematique || <span className="text-gray-400 italic">Aucune problématique définie</span>}
-              </div>
-            )}
-          </div>
+
 
           {/* URL du TFH */}
           <div className="bg-gradient-to-r from-violet-50/80 to-purple-50/80 rounded-xl p-5 border border-violet-100">
@@ -1171,7 +1275,7 @@ export default function EleveDashboard() {
             )}
           </div>
 
-          {/* Sources */}
+          {/* Sources - Visible en phase préparatoire */}
           {phasePreparatoire && (
             <div className="bg-gradient-to-r from-amber-50/80 to-orange-50/80 rounded-xl p-5 border border-amber-100">
               <div className="flex items-center gap-2 mb-4">
@@ -1237,6 +1341,14 @@ export default function EleveDashboard() {
                 })}
               </div>
             </div>
+          )}
+
+          {/* Journal de bord - UNIQUEMENT si eleve existe et que shouldShowJournal() retourne true */}
+          {shouldShowJournal() && eleve && (
+            <JournalDeBord 
+              eleve={eleve} 
+              onUpdate={refreshEleve}
+            />
           )}
 
           {/* Convocations */}

@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, BookOpen, Users, Palette, Hammer, Loader2 } from 'lucide-react';
+import { X, BookOpen, Users, Palette, Hammer, Loader2, GraduationCap, Target, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface TypeInfoModalProps {
@@ -12,23 +12,45 @@ interface TypeInfoModalProps {
   label: string;
 }
 
-// Mapping des types vers les clés de la BDD
-const TYPE_SETTING_KEYS: Record<string, string> = {
-  mémoire: 'tfh_type_memoire_description',
-  associatif: 'tfh_type_associatif_description',
-  artistique: 'tfh_type_artistique_description',
-  atelier: 'tfh_type_atelier_description',
+// Mapping des noms d'icônes vers les composants Lucide
+const ICON_MAP: Record<string, any> = {
+  BookOpen: BookOpen,
+  Users: Users,
+  Palette: Palette,
+  Hammer: Hammer,
+  GraduationCap: GraduationCap,
+  Target: Target,
+  Sparkles: Sparkles,
 };
 
-const TYPE_ICONS = {
-  mémoire: BookOpen,
-  associatif: Users,
-  artistique: Palette,
-  atelier: Hammer,
+// Fonction pour obtenir l'icône à partir du nom
+const getIconComponent = (iconName: string) => {
+  return ICON_MAP[iconName] || BookOpen;
+};
+
+// Mapping des types vers les clés de la BDD - CORRIGÉ
+const TYPE_SETTING_KEYS: Record<string, { description: string; icon: string }> = {
+  traditionnel: { 
+    description: 'tfh_type_traditionnel_description',
+    icon: 'tfh_type_traditionnel_icon'
+  },
+  stage: { 
+    description: 'tfh_type_stage_description',
+    icon: 'tfh_type_stage_icon'
+  },
+  chefdoeuvre: { 
+    description: 'tfh_type_chefdoeuvre_description',
+    icon: 'tfh_type_chefdoeuvre_icon'
+  },
+  atelier: { 
+    description: 'tfh_type_atelier_description',
+    icon: 'tfh_type_atelier_icon'
+  },
 };
 
 // Fonction pour enlever les balises HTML et garder juste le texte (fallback si nécessaire)
 const stripHtml = (html: string) => {
+  if (typeof window === 'undefined') return html;
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
   return tmp.textContent || tmp.innerText || '';
@@ -36,64 +58,108 @@ const stripHtml = (html: string) => {
 
 export default function TypeInfoModal({ isOpen, onClose, type, label }: TypeInfoModalProps) {
   const [description, setDescription] = useState<string>('');
+  const [iconName, setIconName] = useState<string>('BookOpen');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen || !type) return;
 
-    const loadDescription = async () => {
+    const loadTypeData = async () => {
       setLoading(true);
       setError(null);
       
       try {
-        const settingKey = TYPE_SETTING_KEYS[type];
-        if (!settingKey) {
+        const typeKeys = TYPE_SETTING_KEYS[type];
+        if (!typeKeys) {
           setError('Description non disponible pour ce type.');
           setLoading(false);
           return;
         }
 
-        const { data, error: supabaseError } = await supabase
-          .from('tfh_system_settings')
-          .select('setting_value')
-          .eq('setting_key', settingKey)
-          .maybeSingle();
+        // Charger la description et l'icône en parallèle
+        const [descResult, iconResult] = await Promise.all([
+          supabase
+            .from('tfh_system_settings')
+            .select('setting_value')
+            .eq('setting_key', typeKeys.description)
+            .maybeSingle(),
+          supabase
+            .from('tfh_system_settings')
+            .select('setting_value')
+            .eq('setting_key', typeKeys.icon)
+            .maybeSingle()
+        ]);
 
-        if (supabaseError) throw supabaseError;
+        if (descResult.error) throw descResult.error;
+        if (iconResult.error) throw iconResult.error;
 
-        if (data?.setting_value) {
-          setDescription(data.setting_value);
+        // Définir la description
+        if (descResult.data?.setting_value) {
+          setDescription(descResult.data.setting_value);
         } else {
           // Fallback: description par défaut en dur
           setDescription(getFallbackDescription(type));
         }
+
+        // Définir l'icône
+        if (iconResult.data?.setting_value) {
+          setIconName(iconResult.data.setting_value);
+        } else {
+          // Fallback: icône par défaut
+          setIconName(getFallbackIcon(type));
+        }
       } catch (err) {
-        console.error('Erreur chargement description:', err);
+        console.error('Erreur chargement données type:', err);
         setError('Impossible de charger la description.');
         setDescription(getFallbackDescription(type));
+        setIconName(getFallbackIcon(type));
       } finally {
         setLoading(false);
       }
     };
 
-    loadDescription();
+    loadTypeData();
   }, [isOpen, type]);
 
-  // Description de fallback au cas où la BDD n'a pas la clé
+  // Description de fallback au cas où la BDD n'a pas la clé - CORRIGÉ
   const getFallbackDescription = (typeKey: string): string => {
     const fallbacks: Record<string, string> = {
-      mémoire: '<h3>Le format traditionnel</h3><p>Tu choisis individuellement une problématique et tu la développes à l\'aide de ton corpus de sources ou de données collectées sur ton terrain de recherche.</p>',
-      associatif: '<h3>Le format stage</h3><p>Tu intègres une structure qui partage les mêmes valeurs que l\'Athénée de Waha.</p>',
-      artistique: '<h3>Le format chef-d\'œuvre</h3><p>Tu produis, en autonomie, une œuvre que tu présentes au public des portes ouvertes ainsi qu\'à un jury TFH.</p>',
-      atelier: '<h3>Le format atelier</h3><p>En binôme, vous proposez une thématique pour un atelier que vous encadrez.</p>',
+      traditionnel: `<h3>Le format traditionnel</h3>
+        <p>Tu choisis individuellement une problématique et tu la développes à l'aide de ton corpus de sources ou de données collectées sur ton terrain de recherche.</p>
+        <p>Ton évaluation consiste en un exposé oral devant un jury, structuré autour du compte rendu critique que tu auras produit.</p>`,
+
+      stage: `<h3>Le format stage</h3>
+        <p>Pour ce format, tu dois intégrer une structure qui partage les mêmes valeurs que l'Athénée de Waha. Par exemple, tu prends en charge des lectures pour l'ASBL La Lumière, tu deviens la cheville ouvrière d'une maison de jeunes dans un quartier peu favorisé, tu intègres un collectif féministe ou tu donnes de ton temps pour un centre de réfugiés. Les exemples ne manquent pas.</p>
+        <p>Outre ton implication sur place, une partie de ton travail consiste à documenter l'activité de ta structure et à conserver des traces de ton investissement.</p>
+        <p>Celles-ci te permettront de produire un compte rendu (au choix : écrit, sonore ou visuel) à la fois factuel et réflexif sur cette incroyable expérience.</p>
+        <p>Le GT TFH doit valider ton choix de structure et le volume d'heures que tu comptes prester. Ton évaluation consiste en un exposé oral devant un jury, structuré autour du compte rendu critique que tu auras produit.</p>`,
+
+      chefdoeuvre: `<h3>Le format chef-d'œuvre</h3>
+        <p>Tu produis, en autonomie, une œuvre que tu présentes au public des portes ouvertes ainsi qu'à un jury TFH.</p>
+        <p>Cette œuvre peut être de nature variée : création artistique, projet technique, production écrite, etc.</p>`,
+
+      atelier: `<h3>Le format atelier</h3>
+        <p>En binôme, vous proposez une thématique pour un atelier que vous encadrez.</p>
+        <p>Vous devez préparer et animer un atelier pour vos pairs, en lien avec votre thématique choisie.</p>`,
     };
     return fallbacks[typeKey] || '<p>Description non disponible.</p>';
   };
 
+  // Icône de fallback au cas où la BDD n'a pas la clé
+  const getFallbackIcon = (typeKey: string): string => {
+    const fallbacks: Record<string, string> = {
+      traditionnel: 'BookOpen',
+      stage: 'Users',
+      chefdoeuvre: 'Palette',
+      atelier: 'Hammer',
+    };
+    return fallbacks[typeKey] || 'BookOpen';
+  };
+
   if (!isOpen) return null;
 
-  const Icon = TYPE_ICONS[type as keyof typeof TYPE_ICONS] || BookOpen;
+  const Icon = getIconComponent(iconName);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -124,7 +190,7 @@ export default function TypeInfoModal({ isOpen, onClose, type, label }: TypeInfo
           <div className="text-red-500 text-center py-8">{error}</div>
         ) : (
           <div 
-            className="prose prose-sm max-w-none text-gray-700"
+            className="prose prose-sm max-w-none text-gray-700 space-y-3"
             dangerouslySetInnerHTML={{ __html: description }}
           />
         )}
