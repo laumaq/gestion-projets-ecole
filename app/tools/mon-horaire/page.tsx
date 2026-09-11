@@ -33,46 +33,110 @@ export default function MonHorairePage() {
   const [modalTitre, setModalTitre] = useState('');
   const [modalEleves, setModalEleves] = useState<Eleve[]>([]);
   const [modalLoading, setModalLoading] = useState(false);
-
-  // Charger les cours du prof connecté
+  
   useEffect(() => {
     async function loadCours() {
-    const userId = localStorage.getItem('userId');
-    const name = localStorage.getItem('userName') || '';
-    setUserName(name);
+      const userId = localStorage.getItem('userId');
+      const userType = localStorage.getItem('userType') as 'employee' | 'student';
+      const name = localStorage.getItem('userName') || '';
+      const userClass = localStorage.getItem('userClass') || '';
+      setUserName(name);
 
-    if (!userId) {
+      if (!userId) {
         setLoading(false);
         return;
-    }
+      }
 
-    try {
-        // Filtrer côté serveur : cours où prof contient userId
-        const { data, error } = await supabase
-        .from('courses')
-        .select('*')
-        .like('prof', `%${userId}%`);
+      try {
+        let data: any[] = [];
 
-        if (error) {
-        console.error('Erreur chargement cours:', error);
-        setLoading(false);
-        return;
+        if (userType === 'employee') {
+          // ─────────────────────────────────────────────
+          // PROF : filtrer par prof (LIKE sur TEXT)
+          // ─────────────────────────────────────────────
+          const { data: d, error } = await supabase
+            .from('courses')
+            .select('*')
+            .like('prof', `%${userId}%`);
+
+          if (error) {
+            console.error('❌ Erreur chargement cours prof:', error);
+            setLoading(false);
+            return;
+          }
+          data = d || [];
+        } else {
+          // ─────────────────────────────────────────────
+          // ÉLÈVE : ses groupes + sa classe
+          // ─────────────────────────────────────────────
+          const matricule = parseInt(userId);
+
+          const { data: sg } = await supabase
+            .from('students_groups')
+            .select('groupe_code')
+            .eq('matricule', matricule);
+
+          const groupes = new Set<string>();
+          (sg || []).forEach((g: any) => {
+            if (g.groupe_code) groupes.add(g.groupe_code);
+          });
+          if (userClass) groupes.add(userClass);
+
+          console.log('🔍 Groupes élève:', Array.from(groupes));
+
+          if (groupes.size === 0) {
+            setCours([]);
+            setLoading(false);
+            return;
+          }
+
+          // Récupérer TOUS les cours (avec pagination, car limite 1000)
+          let all: any[] = [];
+          let from = 0;
+          const pageSize = 1000;
+          while (true) {
+            const { data: d, error } = await supabase
+              .from('courses')
+              .select('*')
+              .range(from, from + pageSize - 1);
+            if (error || !d || d.length === 0) break;
+            all.push(...d);
+            if (d.length < pageSize) break;
+            from += pageSize;
+          }
+
+          console.log('🔍 Total cours chargés:', all.length);
+
+          // Filtrer en JS
+          data = all.filter((c: any) => {
+            const raw = c.raw_pattern || '';
+            // Cas 1 : raw = "groupe" (classe ou groupe simple)
+            if (groupes.has(raw)) return true;
+            // Cas 2 : raw = "[groupe]"
+            const match = raw.match(/^\[(.+)\]$/);
+            if (match && groupes.has(match[1])) return true;
+            return false;
+          });
+
+          console.log('🔍 Cours élève trouvés:', data.length);
         }
 
-        // Trier par jour puis heure
-        const sorted = (data || []).sort((a, b) => {
-        const jA = JOURS_ORDRE.indexOf((a.jour || '').toLowerCase());
-        const jB = JOURS_ORDRE.indexOf((b.jour || '').toLowerCase());
-        if (jA !== jB) return jA - jB;
-        return (a.heure_debut || '').localeCompare(b.heure_debut || '');
+        // ─────────────────────────────────────────────
+        // TRIER par jour puis heure
+        // ─────────────────────────────────────────────
+        const sorted = data.sort((a: any, b: any) => {
+          const jA = JOURS_ORDRE.indexOf((a.jour || '').toLowerCase());
+          const jB = JOURS_ORDRE.indexOf((b.jour || '').toLowerCase());
+          if (jA !== jB) return jA - jB;
+          return (a.heure_debut || '').localeCompare(b.heure_debut || '');
         });
 
         setCours(sorted);
-    } catch (e) {
+      } catch (e) {
         console.error(e);
-    } finally {
+      } finally {
         setLoading(false);
-    }
+      }
     }
 
     loadCours();
