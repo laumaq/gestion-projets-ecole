@@ -686,19 +686,27 @@ def importer_eleves(employees_cache: List):
     if matricules_presents:
         try:
             result = supabase_anon.table('students') \
-                .select('matricule') \
+                .select('matricule, nom') \
                 .filter('matricule', 'not.in', tuple(matricules_presents)) \
                 .execute()
             
-            ids_a_nettoyer = [r['matricule'] for r in result.data]
+            # Filtrer en Python pour exclure les Testeur
+            ids_a_nettoyer = [
+                r['matricule'] for r in result.data 
+                if r.get('nom', '').lower() != 'testeur'
+            ]
+            
             if ids_a_nettoyer:
                 for matricule in ids_a_nettoyer:
                     supabase_service.table('students') \
                         .update({'classe': None, 'niveau': 0}) \
                         .eq('matricule', matricule).execute()
                 print(f"   ✅ {len(ids_a_nettoyer)} élèves absents → classe=NULL, niveau=0")
+            else:
+                print("   ✅ Aucun élève absent à nettoyer")
         except Exception as e:
             print(f"      ⚠️  {e}")
+
 
 # ============================================================================
 # PHASE 3 : EXP_COURS
