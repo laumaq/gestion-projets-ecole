@@ -613,8 +613,9 @@ def importer_eleves(employees_cache: List):
                         options_data.append((next_id_options, matricule_effectif, 'Option', opt5))
                         next_id_options += 1
                         total_options += 1
+
             
-            # Groupes
+            # Groupes pédagogiques (ceux du fichier EXP_ELEVE)
             if groupes_str:
                 for groupe in groupes_str.split(','):
                     groupe_norm = normaliser_groupe(groupe)
@@ -622,6 +623,18 @@ def importer_eleves(employees_cache: List):
                         groupes_data.append((next_id_groups, matricule_effectif, groupe_norm))
                         next_id_groups += 1
                         total_groupes += 1
+            
+            # ⭐ Groupe-classe : pour matcher les cours dont raw_pattern = classe
+            if classe:
+                # Éviter les doublons (si la classe est déjà dans les groupes pédagogiques)
+                deja_present = any(
+                    g[2] == classe for g in groupes_data 
+                    if g[1] == matricule_effectif
+                )
+                if not deja_present:
+                    groupes_data.append((next_id_groups, matricule_effectif, classe))
+                    next_id_groups += 1
+                    total_groupes += 1
             
             total_eleves += 1
                     

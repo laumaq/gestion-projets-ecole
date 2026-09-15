@@ -66,9 +66,7 @@ export default function MonHorairePage() {
           }
           data = d || [];
         } else {
-          // ─────────────────────────────────────────────
-          // ÉLÈVE : ses groupes + sa classe
-          // ─────────────────────────────────────────────
+          // Élève : ses groupes (incluant sa classe désormais)
           const matricule = parseInt(userId);
 
           const { data: sg } = await supabase
@@ -80,7 +78,6 @@ export default function MonHorairePage() {
           (sg || []).forEach((g: any) => {
             if (g.groupe_code) groupes.add(g.groupe_code);
           });
-          if (userClass) groupes.add(userClass);
 
           console.log('🔍 Groupes élève:', Array.from(groupes));
 
@@ -90,7 +87,7 @@ export default function MonHorairePage() {
             return;
           }
 
-          // Récupérer TOUS les cours (avec pagination, car limite 1000)
+          // Récupérer TOUS les cours (avec pagination)
           let all: any[] = [];
           let from = 0;
           const pageSize = 1000;
@@ -105,14 +102,10 @@ export default function MonHorairePage() {
             from += pageSize;
           }
 
-          console.log('🔍 Total cours chargés:', all.length);
-
-          // Filtrer en JS
+          // Filtrer
           data = all.filter((c: any) => {
             const raw = c.raw_pattern || '';
-            // Cas 1 : raw = "groupe" (classe ou groupe simple)
             if (groupes.has(raw)) return true;
-            // Cas 2 : raw = "[groupe]"
             const match = raw.match(/^\[(.+)\]$/);
             if (match && groupes.has(match[1])) return true;
             return false;
