@@ -23,11 +23,14 @@ export const ICON_MAP: Record<string, any> = {
   Sparkles: Sparkles,
 };
 
+import { BookMarked } from 'lucide-react';
+
 export const TAB_ICONS: Record<string, any> = {
   'mes-choix': BookOpen,
   'mon-carnet-de-bord': BookOpen,
   'mes-infos': User,
   'ma-defense': Calendar,
+  'vade-mecum': BookMarked,
 };
 
 export const getIconComponent = (iconName: string) => {

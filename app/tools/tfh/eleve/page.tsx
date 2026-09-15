@@ -13,6 +13,7 @@ import MaDefenseTab from './tabs/MaDefenseTab';
 import { useEleveData } from './hooks/useEleveData';
 import { useTypesTFH } from './hooks/useTypesTFH';
 import { Tab, TabId } from './types';
+import VadeMecumTab from './tabs/VadeMecumTab';
 
 export default function EleveDashboard() {
   const [matricule, setMatricule] = useState<number | null>(null);
@@ -53,7 +54,7 @@ export default function EleveDashboard() {
 
   // Chargement des types (uniquement si phase préparatoire)
   const { typesDisponibles, loading: loadingTypes } = useTypesTFH(phasePreparatoire);
-  
+
   // Déterminer si le carnet de bord doit être affiché
   const shouldShowJournal = useMemo(() => {
     if (!eleve) return false;
@@ -87,6 +88,9 @@ export default function EleveDashboard() {
         list.push({ id: 'ma-defense', label: 'Ma défense', icon: 'ma-defense' });
       }
     }
+
+    // Vade Mecum toujours en dernier
+    list.push({ id: 'vade-mecum', label: 'Vade Mecum', icon: 'vade-mecum' });
 
     return list;
   }, [phasePreparatoire, shouldShowJournal, shouldShowDefense]);
@@ -197,39 +201,42 @@ export default function EleveDashboard() {
             </div>
           </div>
 
-          {/* Contenu de l'onglet actif */}
-          <div>
-            {activeTab === 'mes-choix' && (
-              <MesChoixTab
-                eleve={eleve}
-                typesDisponibles={typesDisponibles}
-                loadingTypes={loadingTypes}
-                savingType={savingType}
-                autorisationModification={autorisationModification}
-                onSaveType={handleSaveType}
-                onSaveField={updateField}
-                onOpenInfoModal={openInfoModal}
-              />
-            )}
+        {/* Contenu de l'onglet actif */}
+        <div>
+          {activeTab === 'mes-choix' && (
+            <MesChoixTab
+              eleve={eleve}
+              typesDisponibles={typesDisponibles}
+              loadingTypes={loadingTypes}
+              savingType={savingType}
+              autorisationModification={autorisationModification}
+              onSaveType={handleSaveType}
+              onSaveField={updateField}
+              onOpenInfoModal={openInfoModal}
+            />
+          )}
 
-            {activeTab === 'mon-carnet-de-bord' && shouldShowJournal && (
-              <MonCarnetDeBordTab eleve={eleve} onUpdate={refresh} />
-            )}
+          {activeTab === 'mon-carnet-de-bord' && shouldShowJournal && (
+            <MonCarnetDeBordTab eleve={eleve} onUpdate={refresh} />
+          )}
 
-            {activeTab === 'mes-infos' && (
-              <MesInfosTab
-                eleve={eleve}
-                objectifGeneral={objectifGeneral}
-                objectifParticulier={objectifParticulier}
-                autorisationModification={autorisationModification}
-                onSaveField={updateField}
-              />
-            )}
+          {activeTab === 'mes-infos' && (
+            <MesInfosTab
+              eleve={eleve}
+              objectifGeneral={objectifGeneral}
+              objectifParticulier={objectifParticulier}
+              autorisationModification={autorisationModification}
+              onSaveField={updateField}
+            />
+          )}
 
-            {activeTab === 'ma-defense' && shouldShowDefense && (
-              <MaDefenseTab eleve={eleve} />
-            )}
-          </div>
+          {activeTab === 'ma-defense' && shouldShowDefense && (
+            <MaDefenseTab eleve={eleve} />
+          )}
+
+          {activeTab === 'vade-mecum' && <VadeMecumTab />}
+        </div>
+
         </div>
       </div>
 
