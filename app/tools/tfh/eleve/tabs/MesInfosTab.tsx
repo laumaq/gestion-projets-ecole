@@ -1,7 +1,7 @@
 // app/tools/tfh/eleve/tabs/MesInfosTab.tsx
 'use client';
 
-import { Target, Sparkles, Calendar, BookOpen } from 'lucide-react';
+import { Target, Sparkles, Calendar, BookOpen, AlertCircle } from 'lucide-react';
 import { EleveInfo, TypeTFHDisplay } from '../types';
 import { getIconComponent } from '../utils/constants';
 
@@ -24,10 +24,13 @@ export default function MesInfosTab({
   const typeInfo = typesDisponibles.find(t => t.key === eleve.type);
   const TypeIcon = typeInfo ? getIconComponent(typeInfo.icon) : BookOpen;
 
+  // Trouver la prochaine session (la première dans le futur, déjà filtrée par le hook)
+  // On garde celle qui a un statut "Oui, ..." (convoqué·e)
+  const prochaineConvocation = (eleve.sessions || [])
+    .filter(s => s.statut.startsWith('Oui'))
+    .sort((a, b) => a.date_debut.getTime() - b.date_debut.getTime())[0];
+
   const getMessagePourEleve = (statut: string): string => {
-    if (!statut || statut === '' || statut === 'null' || statut === 'undefined') {
-      return "Ton guide n'a pas encore rendu d'info sur ta convocation.";
-    }
     switch (statut) {
       case "Oui, l'élève n'a pas communiqué":
         return "Tu es convoqué·e car tu n'as pas communiqué (ou pas assez) selon ton/ta guide.";
@@ -35,8 +38,6 @@ export default function MesInfosTab({
         return "Tu es convoqué·e car tu n'as pas avancé (ou sensiblement pas) selon ton/ta guide.";
       case "Oui, l'élève n'atteint pas les objectifs":
         return "Tu es convoqué·e car tu as avancé mais n'atteins pas les objectifs.";
-      case "Non, l'élève atteint bien les objectifs":
-        return "Tu n'es pas convoqué·e.";
       default:
         return statut;
     }
@@ -76,6 +77,43 @@ export default function MesInfosTab({
           </div>
         </div>
       </div>
+
+      {/* Prochaine convocation (affichée uniquement si convoqué·e à une prochaine session) */}
+      {prochaineConvocation && (
+        <div className="bg-gradient-to-r from-rose-50/80 to-pink-50/80 rounded-xl p-5 border border-rose-200">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-rose-100 rounded-lg flex-shrink-0">
+              <AlertCircle className="w-5 h-5 text-rose-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                <h3 className="text-base font-semibold text-rose-900">
+                  Tu es convoqué·e à la prochaine journée TFH
+                </h3>
+                <span className="px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-xs font-medium">
+                  Convocation
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-rose-800 mb-2">
+                <Calendar className="w-4 h-4 flex-shrink-0" />
+                <span className="font-medium">{prochaineConvocation.nom}</span>
+                <span className="text-rose-500">·</span>
+                <span>
+                  {prochaineConvocation.date_debut.toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </span>
+              </div>
+              <p className="text-sm text-rose-700 leading-relaxed">
+                {getMessagePourEleve(prochaineConvocation.statut)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Objectif général */}
       {objectifGeneral && (
@@ -119,52 +157,6 @@ export default function MesInfosTab({
           <div className="text-center py-4">
             <p className="text-gray-500 mb-1">Ton/ta guide n'a pas encore défini d'objectif particulier pour toi.</p>
             <p className="text-sm text-gray-400">Cet objectif sera personnalisé selon tes besoins spécifiques.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Convocations */}
-      {eleve.sessions && eleve.sessions.length > 0 && (
-        <div className="bg-gradient-to-r from-rose-50/80 to-pink-50/80 rounded-xl p-5 border border-rose-100">
-          <div className="flex items-center gap-2 mb-4">
-            <Calendar className="w-5 h-5 text-rose-600" />
-            <h3 className="text-base font-semibold text-gray-800">Convocations aux journées TFH</h3>
-          </div>
-          <div className="space-y-3">
-            {eleve.sessions.map(session => {
-              const statut = session.statut || '';
-              const estConvoque = statut.startsWith('Oui');
-              const message = getMessagePourEleve(statut);
-
-              return (
-                <div key={session.index} className={`bg-white/60 rounded-lg p-4 border ${estConvoque ? 'border-rose-200' : 'border-gray-200'}`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-gray-800">{session.nom}</p>
-                      <p className="text-xs text-gray-500">
-                        {session.date_debut.toLocaleDateString('fr-FR', { 
-                          day: 'numeric', 
-                          month: 'long', 
-                          year: 'numeric' 
-                        })}
-                      </p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      estConvoque 
-                        ? 'bg-rose-100 text-rose-700' 
-                        : 'bg-green-100 text-green-700'
-                    }`}>
-                      {estConvoque ? 'Convoqué·e' : 'Non convoqué·e'}
-                    </span>
-                  </div>
-                  {(estConvoque || !statut) && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <p className="text-sm text-gray-600">{message}</p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
           </div>
         </div>
       )}
