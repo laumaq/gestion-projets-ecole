@@ -170,6 +170,14 @@ export interface Coordinateur {
   mot_de_passe?: string | null;
 }
 
+export interface TypeTFHDisplay {
+  key: string;
+  label: string;
+  description: string;
+  icon: string;
+  color: string;
+}
+
 // Événement de défense
 export interface DefenseEvent {
   id: string;  // student_matricule en string pour compatibilité

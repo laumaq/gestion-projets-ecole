@@ -188,6 +188,23 @@ export default function Header() {
       });
     }
 
+    // 6. Module TFH - accessible aux élèves de 6e uniquement
+    if (userType === 'student') {
+      // On lit directement dans le state (déjà hydraté depuis localStorage)
+      // pour ne pas dépendre du chargement asynchrone de classeConseil
+      const classe = userClass || localStorage.getItem('userClass') || '';
+      
+      // Une classe de 6e commence par "6" (ex: 6PAW, 6A, 6B...)
+      if (classe.startsWith('6')) {
+        links.push({
+          href: '/tools/tfh/eleve',
+          label: 'Mon TFH',
+          icon: BookOpen,
+          condition: true
+        });
+      }
+    }
+
     return links;
   };
 
