@@ -1,153 +1,80 @@
 // app/tools/tfh/eleve/tabs/MesInfosTab.tsx
 'use client';
 
-import { useState } from 'react';
-import { 
-  Search, Link2, Target, Sparkles, ChevronRight, ExternalLink 
-} from 'lucide-react';
-import { EleveInfo } from '../types';
+import { Target, Sparkles, Calendar, BookOpen } from 'lucide-react';
+import { EleveInfo, TypeTFHDisplay } from '../types';
+import { getIconComponent } from '../utils/constants';
 
 interface MesInfosTabProps {
   eleve: EleveInfo;
   objectifGeneral: string;
   objectifParticulier: string;
-  autorisationModification: boolean;
-  onSaveField: (field: string, value: any) => void;
+  typesDisponibles: TypeTFHDisplay[];
 }
 
 export default function MesInfosTab({
   eleve,
   objectifGeneral,
   objectifParticulier,
-  autorisationModification,
-  onSaveField,
+  typesDisponibles,
 }: MesInfosTabProps) {
-  const [editingProblematique, setEditingProblematique] = useState(false);
-  const [newProblematique, setNewProblematique] = useState(eleve.problematique || '');
-  const [editingUrl, setEditingUrl] = useState(false);
-  const [newUrl, setNewUrl] = useState(eleve.url_tfh || '');
+  const isTraditionnel = eleve.type === 'traditionnel';
+  const problematiqueLabel = isTraditionnel ? 'Problématique' : 'Titre';
 
-  const handleSaveProblematique = async () => {
-    await onSaveField('problematique', newProblematique);
-    setEditingProblematique(false);
+  const typeInfo = typesDisponibles.find(t => t.key === eleve.type);
+  const TypeIcon = typeInfo ? getIconComponent(typeInfo.icon) : BookOpen;
+
+  const getMessagePourEleve = (statut: string): string => {
+    if (!statut || statut === '' || statut === 'null' || statut === 'undefined') {
+      return "Ton guide n'a pas encore rendu d'info sur ta convocation.";
+    }
+    switch (statut) {
+      case "Oui, l'élève n'a pas communiqué":
+        return "Tu es convoqué·e car tu n'as pas communiqué (ou pas assez) selon ton/ta guide.";
+      case "Oui, l'élève n'a pas avancé":
+        return "Tu es convoqué·e car tu n'as pas avancé (ou sensiblement pas) selon ton/ta guide.";
+      case "Oui, l'élève n'atteint pas les objectifs":
+        return "Tu es convoqué·e car tu as avancé mais n'atteins pas les objectifs.";
+      case "Non, l'élève atteint bien les objectifs":
+        return "Tu n'es pas convoqué·e.";
+      default:
+        return statut;
+    }
   };
-
-  const handleSaveUrl = async () => {
-    await onSaveField('url_tfh', newUrl || null);
-    setEditingUrl(false);
-  };
-
-  const shouldShowProblematique = eleve.type === 'traditionnel';
 
   return (
     <div className="space-y-6">
-      {/* Problématique (uniquement si type = traditionnel) */}
-      {shouldShowProblematique && (
-        <div className="bg-gradient-to-r from-indigo-50/80 to-violet-50/80 rounded-xl p-5 border border-indigo-100">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Search className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-base font-semibold text-gray-800">Problématique</h3>
-            </div>
-            {!editingProblematique && (
-              autorisationModification ? (
-                <button
-                  onClick={() => setEditingProblematique(true)}
-                  className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
-                >
-                  {eleve.problematique ? 'Modifier' : 'Ajouter'}
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <span className="text-xs text-gray-400 flex items-center gap-1">
-                  🔒 Modifications bloquées
-                </span>
-              )
-            )}
-          </div>
-          {editingProblematique ? (
-            <div className="space-y-3">
-              <textarea
-                value={newProblematique}
-                onChange={(e) => setNewProblematique(e.target.value)}
-                className="w-full border border-indigo-200 rounded-lg p-3 min-h-[120px] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-                placeholder="Décrivez votre problématique..."
-              />
-              <div className="flex gap-2">
-                <button onClick={handleSaveProblematique} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                  Enregistrer
-                </button>
-                <button
-                  onClick={() => { setEditingProblematique(false); setNewProblematique(eleve.problematique || ''); }}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                >
-                  Annuler
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white/60 rounded-lg p-3 text-gray-700 whitespace-pre-wrap">
-              {eleve.problematique || <span className="text-gray-400 italic">Aucune problématique définie</span>}
-            </div>
-          )}
+      {/* En-tête récapitulatif (non-modifiable) */}
+      <div className="bg-gradient-to-r from-indigo-50/80 to-violet-50/80 rounded-xl p-5 border border-indigo-100">
+        <div className="flex items-center gap-2 mb-4">
+          <Target className="w-5 h-5 text-indigo-600" />
+          <h3 className="text-base font-semibold text-gray-800">Mon projet en un coup d'œil</h3>
         </div>
-      )}
 
-      {/* URL du TFH */}
-      <div className="bg-gradient-to-r from-violet-50/80 to-purple-50/80 rounded-xl p-5 border border-violet-100">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Link2 className="w-5 h-5 text-violet-600" />
-            <h3 className="text-base font-semibold text-gray-800">Lien vers mon TFH</h3>
-          </div>
-          {!editingUrl && (
-            <button
-              onClick={() => setEditingUrl(true)}
-              className="text-sm text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1"
-            >
-              {eleve.url_tfh ? 'Modifier' : 'Ajouter'}
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-        {editingUrl ? (
-          <div className="space-y-3">
-            <input
-              type="url"
-              value={newUrl}
-              onChange={(e) => setNewUrl(e.target.value)}
-              className="w-full border border-violet-200 rounded-lg p-3 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white"
-              placeholder="https://..."
-            />
-            <div className="flex gap-2">
-              <button onClick={handleSaveUrl} className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700">
-                Enregistrer
-              </button>
-              <button
-                onClick={() => { setEditingUrl(false); setNewUrl(eleve.url_tfh || ''); }}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-              >
-                Annuler
-              </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Type de TFH */}
+          <div className="bg-white/70 rounded-lg p-4 flex items-center gap-3">
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <TypeIcon className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-indigo-600 font-medium uppercase tracking-wide">Type de TFH</p>
+              <p className="text-sm font-semibold text-gray-800 truncate">
+                {typeInfo?.label || eleve.type || <span className="italic text-gray-400 font-normal">Non défini</span>}
+              </p>
             </div>
           </div>
-        ) : (
-          <div className="bg-white/60 rounded-lg p-3">
-            {eleve.url_tfh ? (
-              <a
-                href={eleve.url_tfh}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-violet-600 hover:text-violet-700 hover:underline flex items-center gap-2 break-all"
-              >
-                <ExternalLink className="w-4 h-4 flex-shrink-0" />
-                {eleve.url_tfh}
-              </a>
-            ) : (
-              <span className="text-gray-400 italic">Aucun lien déposé</span>
-            )}
+
+          {/* Titre / Problématique */}
+          <div className="bg-white/70 rounded-lg p-4">
+            <p className="text-xs text-indigo-600 font-medium uppercase tracking-wide mb-1">
+              {problematiqueLabel}
+            </p>
+            <p className="text-sm text-gray-800 leading-relaxed">
+              {eleve.problematique || <span className="text-gray-400 italic">Non défini</span>}
+            </p>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Objectif général */}
@@ -192,6 +119,52 @@ export default function MesInfosTab({
           <div className="text-center py-4">
             <p className="text-gray-500 mb-1">Ton/ta guide n'a pas encore défini d'objectif particulier pour toi.</p>
             <p className="text-sm text-gray-400">Cet objectif sera personnalisé selon tes besoins spécifiques.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Convocations */}
+      {eleve.sessions && eleve.sessions.length > 0 && (
+        <div className="bg-gradient-to-r from-rose-50/80 to-pink-50/80 rounded-xl p-5 border border-rose-100">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="w-5 h-5 text-rose-600" />
+            <h3 className="text-base font-semibold text-gray-800">Convocations aux journées TFH</h3>
+          </div>
+          <div className="space-y-3">
+            {eleve.sessions.map(session => {
+              const statut = session.statut || '';
+              const estConvoque = statut.startsWith('Oui');
+              const message = getMessagePourEleve(statut);
+
+              return (
+                <div key={session.index} className={`bg-white/60 rounded-lg p-4 border ${estConvoque ? 'border-rose-200' : 'border-gray-200'}`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-800">{session.nom}</p>
+                      <p className="text-xs text-gray-500">
+                        {session.date_debut.toLocaleDateString('fr-FR', { 
+                          day: 'numeric', 
+                          month: 'long', 
+                          year: 'numeric' 
+                        })}
+                      </p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      estConvoque 
+                        ? 'bg-rose-100 text-rose-700' 
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {estConvoque ? 'Convoqué·e' : 'Non convoqué·e'}
+                    </span>
+                  </div>
+                  {(estConvoque || !statut) && (
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <p className="text-sm text-gray-600">{message}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

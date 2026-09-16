@@ -225,8 +225,7 @@ export default function EleveDashboard() {
               eleve={eleve}
               objectifGeneral={objectifGeneral}
               objectifParticulier={objectifParticulier}
-              autorisationModification={autorisationModification}
-              onSaveField={updateField}
+              typesDisponibles={typesDisponibles}
             />
           )}
 

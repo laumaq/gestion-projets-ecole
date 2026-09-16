@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { 
-  Target, BookOpen, PenSquare, ChevronRight, Info 
+  Target, BookOpen, PenSquare, ChevronRight, Info, Search, Link2, ExternalLink 
 } from 'lucide-react';
 import { EleveInfo, TypeTFHDisplay } from '../types';
 import { getIconComponent } from '../utils/constants';
@@ -29,10 +29,20 @@ export default function MesChoixTab({
   onSaveField,
   onOpenInfoModal,
 }: MesChoixTabProps) {
+  const isTraditionnel = eleve.type === 'traditionnel';
+  const problematiqueLabel = isTraditionnel ? 'Problématique' : 'Titre';
+  const problematiquePlaceholder = isTraditionnel
+    ? 'Décrivez votre problématique de recherche...'
+    : 'Donnez un titre à votre projet...';
+
   const [editingThematique, setEditingThematique] = useState(false);
   const [newThematique, setNewThematique] = useState(eleve.thematique || '');
   const [editingDescription, setEditingDescription] = useState(false);
   const [newDescription, setNewDescription] = useState(eleve.description || '');
+  const [editingProblematique, setEditingProblematique] = useState(false);
+  const [newProblematique, setNewProblematique] = useState(eleve.problematique || '');
+  const [editingUrl, setEditingUrl] = useState(false);
+  const [newUrl, setNewUrl] = useState(eleve.url_tfh || '');
   const [editingSource, setEditingSource] = useState<number | null>(null);
   const [newSourceValue, setNewSourceValue] = useState('');
 
@@ -44,6 +54,16 @@ export default function MesChoixTab({
   const handleSaveDescription = async () => {
     await onSaveField('description', newDescription);
     setEditingDescription(false);
+  };
+
+  const handleSaveProblematique = async () => {
+    await onSaveField('problematique', newProblematique);
+    setEditingProblematique(false);
+  };
+
+  const handleSaveUrl = async () => {
+    await onSaveField('url_tfh', newUrl || null);
+    setEditingUrl(false);
   };
 
   const handleSaveSource = async (num: number) => {
@@ -226,6 +246,56 @@ export default function MesChoixTab({
         )}
       </div>
 
+      {/* Problématique / Titre */}
+      <div className="bg-gradient-to-r from-indigo-50/80 to-violet-50/80 rounded-xl p-5 border border-indigo-100">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Search className="w-5 h-5 text-indigo-600" />
+            <h3 className="text-base font-semibold text-gray-800">{problematiqueLabel}</h3>
+          </div>
+          {!editingProblematique && (
+            autorisationModification ? (
+              <button
+                onClick={() => setEditingProblematique(true)}
+                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+              >
+                {eleve.problematique ? 'Modifier' : 'Ajouter'}
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <span className="text-xs text-gray-400 flex items-center gap-1">
+                🔒 Modifications bloquées
+              </span>
+            )
+          )}
+        </div>
+        {editingProblematique ? (
+          <div className="space-y-3">
+            <textarea
+              value={newProblematique}
+              onChange={(e) => setNewProblematique(e.target.value)}
+              className="w-full border border-indigo-200 rounded-lg p-3 min-h-[120px] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              placeholder={problematiquePlaceholder}
+            />
+            <div className="flex gap-2">
+              <button onClick={handleSaveProblematique} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                Enregistrer
+              </button>
+              <button
+                onClick={() => { setEditingProblematique(false); setNewProblematique(eleve.problematique || ''); }}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white/60 rounded-lg p-3 text-gray-700 whitespace-pre-wrap">
+            {eleve.problematique || <span className="text-gray-400 italic">Aucun{isTraditionnel ? 'e problématique' : ' titre'} défini{isTraditionnel ? 'e' : ''}</span>}
+          </div>
+        )}
+      </div>
+
       {/* Sources */}
       <div className="bg-gradient-to-r from-amber-50/80 to-orange-50/80 rounded-xl p-5 border border-amber-100">
         <div className="flex items-center gap-2 mb-4">
@@ -284,6 +354,63 @@ export default function MesChoixTab({
             );
           })}
         </div>
+      </div>
+
+      {/* URL du TFH */}
+      <div className="bg-gradient-to-r from-violet-50/80 to-purple-50/80 rounded-xl p-5 border border-violet-100">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Link2 className="w-5 h-5 text-violet-600" />
+            <h3 className="text-base font-semibold text-gray-800">Lien vers mon TFH</h3>
+          </div>
+          {!editingUrl && (
+            <button
+              onClick={() => setEditingUrl(true)}
+              className="text-sm text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1"
+            >
+              {eleve.url_tfh ? 'Modifier' : 'Ajouter'}
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        {editingUrl ? (
+          <div className="space-y-3">
+            <input
+              type="url"
+              value={newUrl}
+              onChange={(e) => setNewUrl(e.target.value)}
+              className="w-full border border-violet-200 rounded-lg p-3 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white"
+              placeholder="https://..."
+            />
+            <div className="flex gap-2">
+              <button onClick={handleSaveUrl} className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700">
+                Enregistrer
+              </button>
+              <button
+                onClick={() => { setEditingUrl(false); setNewUrl(eleve.url_tfh || ''); }}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white/60 rounded-lg p-3">
+            {eleve.url_tfh ? (
+              <a
+                href={eleve.url_tfh}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-violet-600 hover:text-violet-700 hover:underline flex items-center gap-2 break-all"
+              >
+                <ExternalLink className="w-4 h-4 flex-shrink-0" />
+                {eleve.url_tfh}
+              </a>
+            ) : (
+              <span className="text-gray-400 italic">Aucun lien déposé</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
