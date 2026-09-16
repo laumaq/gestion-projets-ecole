@@ -1,7 +1,7 @@
-// app/tools/tfh/eleve/tabs/vade-mecum/sections/JournalDeBord.tsx
+// app/tools/tfh/eleve/tabs/vade-mecum/sections/SectionJournalDeBord.tsx
 'use client';
 
-export default function JournalDeBord() {
+export default function SectionJournalDeBord() {
   return (
     <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-sm">
       <div className="flex items-center gap-3 mb-2">

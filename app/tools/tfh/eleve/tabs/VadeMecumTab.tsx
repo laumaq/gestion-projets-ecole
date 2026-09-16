@@ -12,7 +12,7 @@ import FormatAtelier from './vade-mecum/sections/FormatAtelier';
 import FormatStage from './vade-mecum/sections/FormatStage';
 import FormatChefOeuvre from './vade-mecum/sections/FormatChefOeuvre';
 import EcritOralJury from './vade-mecum/sections/EcritOralJury';
-import JournalDeBord from './vade-mecum/sections/JournalDeBord';
+import SectionJournalDeBord from './vade-mecum/sections/SectionJournalDeBord';
 import ContactGT from './vade-mecum/sections/ContactGT';
 
 export interface VadeMecumSection {
@@ -31,7 +31,7 @@ const SECTIONS: VadeMecumSection[] = [
   { id: 'format-stage', title: 'Le format stage', component: FormatStage },
   { id: 'format-chef-oeuvre', title: "Le format chef-d'œuvre", component: FormatChefOeuvre },
   { id: 'ecrit-oral-jury', title: 'L\'écrit, l\'oral et le jury', component: EcritOralJury },
-  { id: 'journal-de-bord', title: 'Le journal de bord', component: JournalDeBord },
+  { id: 'journal-de-bord', title: 'Le journal de bord', component: SectionJournalDeBord },  
   { id: 'contact-gt', title: 'Contacter le GT TFH', component: ContactGT },
 ];
 
