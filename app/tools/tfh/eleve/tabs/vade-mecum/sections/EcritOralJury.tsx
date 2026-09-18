@@ -130,7 +130,7 @@ export default function EcritOralJury() {
             Lors de la défense, tu présentes ton travail dans la langue cible de ton immersion devant le jury. Tu dois donc être capable d'expliquer ton projet, de présenter tes choix, de développer ta réflexion et de répondre aux questions dans cette langue.
           </p>
           <p>
-            Dans ton journal de bord, il est demandé, tu devras utiliser la langue cible. Tes notes, réflexions, observations et traces de travail contribueront ainsi au développement de tes compétences linguistiques tout au long du projet.
+            Dans ton journal de bord, tu devras utiliser la langue cible. Tes notes, réflexions, observations et traces de travail contribueront ainsi au développement de tes compétences linguistiques tout au long du projet.
           </p>
         </div>
       </div>

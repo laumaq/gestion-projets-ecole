@@ -52,6 +52,15 @@ export default function Sidebar({
       count: elevesCount
     },
     {
+      id: 'suivi-carnets' as TabType,
+      name: 'Suivi Carnets',
+      icon: <NotebookPen className="w-5 h-5" />,
+      activeClass: 'bg-amber-50 text-amber-700 border border-amber-200',
+      iconClass: 'bg-amber-100 text-amber-600',
+      countClass: 'bg-amber-100 text-amber-700',
+      showCount: false
+    },
+    {
       id: 'convocations' as TabType,
       name: 'Convocations',
       icon: <FileText className="w-5 h-5" />,

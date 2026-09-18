@@ -28,7 +28,7 @@ export default function QuatreFormats() {
           <h3 className="text-xl font-bold text-rose-700 mb-2">Le format atelier</h3>
           <div className="space-y-3 text-gray-700 leading-relaxed">
             <p>
-              En binôme, vous proposez une thématique pour un atelier. Vous l'encadrez et vous vous chargez de nourrir chacune des dix journées qui le composent. Vous gérez la discipline, les stratégies pédagogiques et le volet administratif. Comme de coutume, vous présentez le résultat de l'atelier au public venu pour les portes ouvertes.
+              En binôme, vous proposez une thématique pour un atelier. Ce dernier doit impérativement s'inscrire dans la dimension citoyenne de l'école. Vous l'encadrez et vous vous chargez de nourrir chacune des dix journées qui le composent. Vous gérez la discipline, les stratégies pédagogiques et le volet administratif. Vous concevez un cadre financier sérieux et soutenable. Vous présentez le résultat de l'atelier au public venu pour les portes ouvertes en vous rendant disponible toute cette journée.
             </p>
             <p>
               Cela dit, ce même jour, un jury TFH viendra spécialement pour évaluer la qualité de votre travail. Lors de cette visite, il vous sera demandé d'expliquer avec précision vos motivations et le déroulement de l'atelier. De même, le jury sera attentif à votre capacité à produire un compte rendu réflexif et critique de votre démarche.
@@ -50,7 +50,7 @@ export default function QuatreFormats() {
               Outre ton implication sur place, une partie de ton travail consiste à documenter l'activité de ta structure et à conserver des traces de ton investissement. Celles-ci te permettront de produire un compte rendu (au choix : écrit, sonore ou visuel) à la fois factuel et réflexif sur cette incroyable expérience.
             </p>
             <p>
-              Le GT TFH doit valider ton choix de structure et le volume d'heures que tu comptes prester. Ton évaluation consiste en un exposé oral devant un jury, structuré autour du compte rendu critique que tu auras produit.
+              Le GT TFH doit valider ton choix de structure et le volume d'heures que tu comptes prester. Tu as l'obligation de te remettre en ordre si une partie de ton stage couvre des périodes scolaires. Ton évaluation consiste en un exposé oral devant un jury, structuré autour du compte rendu critique que tu auras produit.
             </p>
           </div>
         </div>

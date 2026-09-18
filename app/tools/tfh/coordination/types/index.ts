@@ -288,6 +288,6 @@ export interface DemandeChangementRole {
   traitee_par: string | null;
 }
 
-export type TabType = 'dashboard' | 'convocations' | 'presences' | 'defenses' | 'calendrier' | 'gestion-utilisateurs' | 'parametres' | 'stats' | 'controle' | 'liste-tfh';
+export type TabType = 'dashboard' | 'convocations' | 'presences' | 'defenses' | 'calendrier' | 'gestion-utilisateurs' | 'parametres' | 'stats' | 'controle' | 'liste-tfh' | 'suivi-carnets';
 
 export type UserType = 'eleves' | 'guides' | 'externes' | 'coordinateurs' | 'direction';

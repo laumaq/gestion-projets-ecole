@@ -21,6 +21,7 @@ import GestionUtilisateursTab from './tabs/GestionUtilisateursTab';
 import { useCoordinateurData } from './hooks/useCoordinateurData';
 import { useElevesOperations } from './hooks/useElevesOperations';
 import { TabType, UserType } from './types';
+import SuiviCarnetsTab from './tabs/SuiviCarnetsTab';
 
 export default function CoordinateurDashboard() {
   const router = useRouter();
@@ -130,7 +131,10 @@ export default function CoordinateurDashboard() {
             onUpdate={handleUpdate}
           />
         );
-            
+
+      case 'suivi-carnets':
+        return <SuiviCarnetsTab eleves={eleves} />;
+                    
       case 'convocations':
         return (
           <ConvocationsTab

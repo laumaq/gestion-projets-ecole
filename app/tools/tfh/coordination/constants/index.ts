@@ -7,6 +7,7 @@ export const CONVOCATION_OPTIONS = [
   { value: 'Oui, l\'élève n\'a pas communiqué', label: 'Oui - Pas communiqué', color: 'bg-orange-100 text-orange-800' },
 ] as const;
 
+
 export const TABS_CONFIG = [
   {
     id: 'dashboard',
@@ -19,6 +20,12 @@ export const TABS_CONFIG = [
     name: 'Liste des TFH',
     icon: '📚',
     color: 'violet',
+  },
+  {
+    id: 'suivi-carnets',
+    name: 'Suivi Carnets',
+    icon: '📓',
+    color: 'amber',
   },
   {
     id: 'convocations',
