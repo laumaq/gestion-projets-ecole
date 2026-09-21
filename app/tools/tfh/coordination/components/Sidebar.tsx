@@ -3,7 +3,7 @@
 
 import { 
   Shield, FileText, UserCheck, Calendar, 
-  Users, Settings, BarChart, LogOut,
+  Users, Settings, BarChart, LogOut,NotebookPen,
   BookOpen
 } from 'lucide-react';
 import { TabType } from '../types';
