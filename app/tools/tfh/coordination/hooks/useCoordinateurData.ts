@@ -5,6 +5,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Eleve, Guide, Externe } from '../types';
 
+// Groupe coordination TFH (à exclure des calculs d'implication)
+const GROUPE_COORDINATION_TFH = '0092b3db-1f7e-40e1-8f6b-70219d6a50f2';
+
 // Type pour les demandes de changement de rôle
 export interface DemandeChangementRole {
   id: string;
@@ -29,10 +32,18 @@ export interface DemandeChangementRole {
   traitee_par: string | null;
 }
 
+// Type pour tous les employees (utilisé pour les stats d'implication)
+export interface EmployeeBasic {
+  id: string;
+  job: string;
+  groupe_id: string | null;
+}
+
 export function useCoordinateurData() {
   const [eleves, setEleves] = useState<Eleve[]>([]);
   const [guides, setGuides] = useState<Guide[]>([]);
   const [externes, setExternes] = useState<Externe[]>([]);
+  const [allEmployees, setAllEmployees] = useState<EmployeeBasic[]>([]);
   const [demandesEnAttente, setDemandesEnAttente] = useState<DemandeChangementRole[]>([]);
   const [demandesTraitees, setDemandesTraitees] = useState<DemandeChangementRole[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +67,7 @@ export function useCoordinateurData() {
       // Demandes traitées (30 derniers jours)
       const dateLimite = new Date();
       dateLimite.setDate(dateLimite.getDate() - 30);
-      
+
       const { data: traitees, error: error2 } = await supabase
         .from('tfh_demandes_changement_role')
         .select('*')
@@ -87,6 +98,21 @@ export function useCoordinateurData() {
       if (guidesError) throw guidesError;
       setGuides(guidesData || []);
 
+      // 1bis. Charger TOUS les employees (prof/educ/direction/administration)
+      //       sauf le groupe coordination → pour les stats d'implication
+      const { data: allEmpData, error: allEmpError } = await supabase
+        .from('employees')
+        .select('id, job, groupe_id')
+        .in('job', ['prof', 'educ', 'direction', 'administration'])
+        .neq('groupe_id', GROUPE_COORDINATION_TFH);
+
+      if (allEmpError) {
+        console.error('Erreur chargement employees:', allEmpError);
+        setAllEmployees([]);
+      } else {
+        setAllEmployees(allEmpData || []);
+      }
+
       // 2. Charger les externes (fusion de lecteurs_externes et mediateurs)
       const { data: externesData, error: externesError } = await supabase
         .from('tfh_externes')
@@ -112,7 +138,7 @@ export function useCoordinateurData() {
           lecteur_externe_id,
           problematique,
           thematique,
-          categorie, 
+          categorie,
           description,
           journal,
           source_1,
@@ -187,15 +213,15 @@ export function useCoordinateurData() {
       // Formater les élèves
       const elevesFormatted: Eleve[] = (elevesData || []).map(eleve => {
         const studentInfo = (eleve as any).students;
-        
+
         // Récupérer les infos du guide depuis employees
         const guideInfo = guidesData?.find(g => g.id === eleve.guide_id);
         const lecteurInterneInfo = guidesData?.find(g => g.id === eleve.lecteur_interne_id);
-        
+
         // Récupérer les infos de l'externe (mediateur ou lecteur externe)
         const mediateurInfo = externesData?.find(e => e.mediateur_id === eleve.mediateur_id);
         const lecteurExterneInfo = externesData?.find(e => e.lecteur_externe_id === eleve.lecteur_externe_id);
-        
+
         return {
           ...eleve,
           id: eleve.student_matricule,
@@ -230,7 +256,7 @@ export function useCoordinateurData() {
           .select('id, nom, prenom')
           .eq('id', userId)
           .single();
-        
+
         if (coordinateurData) {
           setCurrentCoordinateur(coordinateurData);
           // Charger les demandes une fois qu'on a l'ID coordinateur
@@ -258,7 +284,7 @@ export function useCoordinateurData() {
   };
 
   const updateEleveLocal = (updatedEleve: Eleve) => {
-    setEleves(prev => prev.map(e => 
+    setEleves(prev => prev.map(e =>
       e.id === updatedEleve.id ? updatedEleve : e
     ));
   };
@@ -266,7 +292,7 @@ export function useCoordinateurData() {
   // Fonction pour approuver une demande
   const approuverDemande = async (demandeId: string, commentaire?: string) => {
     if (!currentCoordinateur) return false;
-    
+
     try {
       // Mettre à jour le statut de la demande
       const { error: updateError } = await supabase
@@ -345,7 +371,7 @@ export function useCoordinateurData() {
   // Fonction pour refuser une demande
   const refuserDemande = async (demandeId: string, commentaire?: string) => {
     if (!currentCoordinateur) return false;
-    
+
     try {
       const { error: updateError } = await supabase
         .from('tfh_demandes_changement_role')
@@ -372,6 +398,7 @@ export function useCoordinateurData() {
     eleves,
     guides,
     externes,
+    allEmployees,
     currentCoordinateur,
     categories,
     loading,

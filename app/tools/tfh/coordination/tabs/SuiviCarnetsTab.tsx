@@ -194,7 +194,6 @@ export default function SuiviCarnetsTab({ eleves }: SuiviCarnetsTabProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-800">Suivi des carnets de bord</h2>
         <p className="text-sm text-gray-500 mt-1">
           {elevesCarnet.length} élève{elevesCarnet.length > 1 ? 's' : ''} en format non-traditionnel
           {rythmeReference !== null && (

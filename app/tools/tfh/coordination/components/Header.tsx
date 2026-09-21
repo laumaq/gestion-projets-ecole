@@ -15,7 +15,7 @@ export default function Header({ activeTab, userName, onLogout }: HeaderProps) {
     const titles: Record<TabType, string> = {
       dashboard: 'Tableau de bord',
       'liste-tfh': 'Liste des TFH',
-      'suivi-carnets': 'Suivi des carnets',
+      'suivi-carnets': 'Suivi des TFH non-traditionnels',
       convocations: 'Convocations',
       presences: 'Présences',
       defenses: 'Défenses',
@@ -32,7 +32,7 @@ export default function Header({ activeTab, userName, onLogout }: HeaderProps) {
     const descriptions: Record<TabType, string> = {
       dashboard: 'Vue d\'ensemble des TFH',      
       'liste-tfh': 'Liste complète des travaux par classe',
-      'suivi-carnets': 'Suivi des carnets de bord',
+      'suivi-carnets': 'Vue d\'ensemble de la tenue des carnets de bord',
       convocations: 'Gestion des convocations mars/avril',
       presences: 'Présences lors des journées TFH',
       defenses: 'Planification des soutenances',

@@ -77,6 +77,7 @@ export default function CoordinateurDashboard() {
     eleves, 
     guides, 
     externes,
+    allEmployees,
     currentCoordinateur,
     categories,
     loading, 
@@ -111,6 +112,7 @@ export default function CoordinateurDashboard() {
             eleves={eleves}
             guides={guides}
             externes={externes}
+            allEmployees={allEmployees}
             onTabChange={setActiveTab}
             userName={userName}
             coordinateurNom={currentCoordinateur?.nom || ''}
