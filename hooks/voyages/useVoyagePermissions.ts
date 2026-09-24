@@ -79,15 +79,11 @@ export function useVoyagePermissions(voyageId: string) {
 
       switch (voyageStatut) {
         case 'preparation':
-          // Visible uniquement par les responsables
           aAcces = estResponsable;
           break;
         case 'preparation_publique':
         case 'termine':
         case 'archive':
-          // Visible par tous les participants
-          aAcces = estParticipant;
-          break;
         case 'en_cours':
           aAcces = estParticipant;
           break;
@@ -104,7 +100,6 @@ export function useVoyagePermissions(voyageId: string) {
       if (!aAcces) {
         setError('Vous n\'avez pas accès à ce voyage');
       }
-
     } catch (err) {
       console.error('Erreur vérification permissions:', err);
       setError('Erreur lors de la vérification des permissions');
@@ -113,12 +108,12 @@ export function useVoyagePermissions(voyageId: string) {
     }
   };
 
-  return { 
-    isLoading, 
-    hasAccess, 
-    isResponsable, 
-    userType, 
-    userId, 
+  return {
+    isLoading,
+    hasAccess,
+    isResponsable,
+    userType,
+    userId,
     error,
     statut,
     peutAgir
