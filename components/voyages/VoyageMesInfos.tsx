@@ -20,10 +20,12 @@ interface VoyageConfig {
 
 interface MesInfos {
   // Élève
-  eleve_id?: number;
-  telephone_eleve?: string;
-  telephone_parent?: string;
-  regime_alimentaire?: any;
+    eleve_id?: number;
+    telephone_eleve?: string;
+    telephone_parent?: string;
+    regime_alimentaire?: any;
+    date_naissance?: string | null;
+    nationalite?: string | null;
   // Participant (ligne voyage_participants)
   participant_id?: string;
   passport_numero?: string | null;
@@ -78,6 +80,8 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
     regime: 'Omnivore',
     regime_notes: '',
   });
+  const [draftDateNaissance, setDraftDateNaissance] = useState('');
+  const [draftNationalite, setDraftNationalite] = useState('');
 
   useEffect(() => {
     loadAll();
@@ -101,7 +105,7 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
       // Infos élève
       const { data: eleveData } = await supabase
         .from('students')
-        .select('matricule, telephone_eleve, telephone_parent, regime_alimentaire')
+        .select('matricule, telephone_eleve, telephone_parent, regime_alimentaire, date_naissance, nationalite')
         .eq('matricule', eleveId)
         .single();
 
@@ -125,6 +129,8 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
         telephone_eleve: eleveData?.telephone_eleve || '',
         telephone_parent: eleveData?.telephone_parent || '',
         regime_alimentaire: eleveData?.regime_alimentaire || { regime: 'Omnivore', notes: '' },
+        date_naissance: eleveData?.date_naissance,
+        nationalite: eleveData?.nationalite,
         participant_id: partData?.id,
         passport_numero: partData?.passport_numero,
         passport_verifie: partData?.passport_verifie,
@@ -148,6 +154,8 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
 
       setDraftTelephone(merged.telephone_eleve || '');
       setDraftTelephoneParent(merged.telephone_parent || '');
+      setDraftDateNaissance(merged.date_naissance?.split('T')[0] || '');
+      setDraftNationalite(merged.nationalite || '');
       setDraftPassport(merged.passport_numero || '');
       setDraftVisa(merged.visa_numero || '');
 
@@ -221,6 +229,24 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
     });
     setSaving(false);
     alert('Téléphones enregistrés');
+  };
+
+  const saveEtatCivil = async () => {
+    setSaving(true);
+    await supabase
+      .from('students')
+      .update({
+        date_naissance: draftDateNaissance || null,
+        nationalite: draftNationalite || null,
+      })
+      .eq('matricule', infos.eleve_id!);
+    setInfos({
+      ...infos,
+      date_naissance: draftDateNaissance,
+      nationalite: draftNationalite,
+    });
+    setSaving(false);
+    alert('Informations enregistrées');
   };
 
   const savePassport = async () => {
@@ -337,6 +363,42 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
                   Enregistrer
                 </button>
               )}
+            </div>
+          </Section>
+
+          {/* État civil */}
+          <Section title="👤 État civil">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date de naissance
+                </label>
+                <input
+                  type="date"
+                  value={draftDateNaissance}
+                  onChange={(e) => setDraftDateNaissance(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nationalité
+                </label>
+                <input
+                  type="text"
+                  value={draftNationalite}
+                  onChange={(e) => setDraftNationalite(e.target.value)}
+                  placeholder="Ex : Belge"
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </div>
+              <button
+                onClick={saveEtatCivil}
+                disabled={saving}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+              >
+                Enregistrer
+              </button>
             </div>
           </Section>
 
@@ -498,6 +560,7 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
       {/* ========== VUE EMPLOYÉ ========== */}
       {userType === 'employee' && (
         <>
+
           <Section title="📞 Téléphone">
             <input
               type="tel"

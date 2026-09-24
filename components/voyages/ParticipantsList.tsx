@@ -1,4 +1,4 @@
-//components/voyages/ParticipantsList.tsx
+// components/voyages/ParticipantsList.tsx
 
 'use client';
 
@@ -33,7 +33,6 @@ function parseRegime(raw: any): RegimeAlimentaire {
 }
 
 // ── Composant RegimeCell ──────────────────────────────────────────────────────
-// Menu déroulant régime + astérisque rouge si notes + popover d'édition
 
 function RegimeCell({
   regime,
@@ -88,7 +87,6 @@ function RegimeCell({
           </span>
         )}
 
-        {/* Bouton notes */}
         <button
           onClick={() => setOpen(!open)}
           className={`text-xs leading-none px-1 rounded transition-colors ${
@@ -102,7 +100,6 @@ function RegimeCell({
         </button>
       </div>
 
-      {/* Popover */}
       {open && (
         <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-3">
           <p className="text-xs font-semibold text-gray-600 mb-1">
@@ -171,11 +168,25 @@ interface Professeur {
 interface Participant {
   id: string;
   eleve_id: number;
-  statut: string;
+  participe: boolean;
   genre: string;
   classe: string;
   type: 'eleve';
   eleve: Eleve;
+  // Champs administratifs (pour le calcul de complétude)
+  passport_requis?: boolean;
+  visa_requis?: boolean;
+  passport_numero?: string | null;
+  passport_verifie?: boolean;
+  visa_numero?: string | null;
+  visa_verifie?: boolean;
+  fiche_medicale_url?: string | null;
+  fiche_medicale_verifiee?: boolean;
+  carte_mutuelle_url?: string | null;
+  carte_mutuelle_verifiee?: boolean;
+  carte_identite_url?: string | null;
+  carte_identite_verifiee?: boolean;
+  montant_paye?: number;
 }
 
 interface ProfesseurParticipant {
@@ -188,17 +199,43 @@ interface ProfesseurParticipant {
 
 type ParticipantUnion = Participant | ProfesseurParticipant;
 
-// ── Tri ───────────────────────────────────────────────────────────────────────
+// ── Config du voyage ──────────────────────────────────────────────────────────
 
-const STATUT_ORDER: Record<string, number> = { liste_attente: 0, confirme: 1, annule: 2 };
+interface VoyageConfig {
+  passport_requis: boolean;
+  visa_requis: boolean;
+  montant_attendu_defaut: number | null;
+  eleve_peut_modifier_telephone: boolean;
+  eleve_peut_modifier_regime: boolean;
+}
 
-function trierParticipants(list: Participant[]): Participant[] {
+// ── Complétude ────────────────────────────────────────────────────────────────
+
+function estComplet(p: Participant, config: VoyageConfig): boolean {
+  if (!p.participe) return false;
+  if (config.passport_requis && (!p.passport_numero || !p.passport_verifie)) return false;
+  if (config.visa_requis && (!p.visa_numero || !p.visa_verifie)) return false;
+  if (!p.fiche_medicale_url || !p.fiche_medicale_verifiee) return false;
+  if (!p.carte_mutuelle_url || !p.carte_mutuelle_verifiee) return false;
+  if (!p.carte_identite_url || !p.carte_identite_verifiee) return false;
+  if (config.montant_attendu_defaut != null) {
+    if ((p.montant_paye || 0) < config.montant_attendu_defaut) return false;
+  }
+  return true;
+}
+
+function trierParticipants(list: Participant[], config: VoyageConfig): Participant[] {
   return [...list].sort((a, b) => {
-    const diff = (STATUT_ORDER[a.statut] ?? 1) - (STATUT_ORDER[b.statut] ?? 1);
-    if (diff !== 0) return diff;
-    if (a.classe !== b.classe) return a.classe.localeCompare(b.classe);
-    if (a.eleve.nom !== b.eleve.nom) return a.eleve.nom.localeCompare(b.eleve.nom);
-    return a.eleve.prenom.localeCompare(b.eleve.prenom);
+    const aComplet = estComplet(a, config);
+    const bComplet = estComplet(b, config);
+    if (aComplet !== bComplet) return aComplet ? -1 : 1;
+    const classeA = a.classe || '';
+    const classeB = b.classe || '';
+    if (classeA !== classeB) return classeA.localeCompare(classeB);
+    const nomA = a.eleve?.nom || '';
+    const nomB = b.eleve?.nom || '';
+    if (nomA !== nomB) return nomA.localeCompare(nomB);
+    return (a.eleve?.prenom || '').localeCompare(b.eleve?.prenom || '');
   });
 }
 
@@ -206,29 +243,28 @@ function trierParticipants(list: Participant[]): Participant[] {
 
 interface ExportConfig {
   colonnes: {
-    nom: boolean; prenom: boolean; classe: boolean; genre: boolean; statut: boolean;
+    nom: boolean; prenom: boolean; classe: boolean; genre: boolean; complet: boolean;
     date_naissance: boolean; nationalite: boolean; regime: boolean; notes_regime: boolean;
   };
-  statuts: { confirme: boolean; liste_attente: boolean; annule: boolean };
   inclure_profs: boolean;
   colonne_type: boolean;
   dateFormat: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
 }
 
-function ModalExport({ participants, professeursParticipants, isResponsable, isEmployee, onClose }: {
+function ModalExport({ participants, professeursParticipants, config, isResponsable, isEmployee, onClose }: {
   participants: Participant[];
   professeursParticipants: ProfesseurParticipant[];
+  config: VoyageConfig;
   isResponsable: boolean;
   isEmployee: boolean;
   onClose: () => void;
 }) {
-  const [config, setConfig] = useState<ExportConfig>({
+  const [cfg, setCfg] = useState<ExportConfig>({
     colonnes: {
-      nom: true, prenom: true, classe: true, genre: true, statut: true,
+      nom: true, prenom: true, classe: true, genre: true, complet: isResponsable,
       date_naissance: isResponsable, nationalite: isResponsable,
       regime: isEmployee, notes_regime: isEmployee,
     },
-    statuts: { confirme: true, liste_attente: true, annule: false },
     inclure_profs: true,
     colonne_type: true,
     dateFormat: 'DD/MM/YYYY',
@@ -241,7 +277,7 @@ function ModalExport({ participants, professeursParticipants, isResponsable, isE
     const dd = String(d.getUTCDate()).padStart(2, '0');
     const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
     const yyyy = String(d.getUTCFullYear());
-    switch (config.dateFormat) {
+    switch (cfg.dateFormat) {
       case 'MM/DD/YYYY': return `${mm}/${dd}/${yyyy}`;
       case 'YYYY-MM-DD': return `${yyyy}-${mm}-${dd}`;
       default:           return `${dd}/${mm}/${yyyy}`;
@@ -249,25 +285,21 @@ function ModalExport({ participants, professeursParticipants, isResponsable, isE
   };
 
   const toggleCol = (k: keyof ExportConfig['colonnes']) =>
-    setConfig(c => ({ ...c, colonnes: { ...c.colonnes, [k]: !c.colonnes[k] } }));
-  const toggleStatut = (k: keyof ExportConfig['statuts']) =>
-    setConfig(c => ({ ...c, statuts: { ...c.statuts, [k]: !c.statuts[k] } }));
+    setCfg(c => ({ ...c, colonnes: { ...c.colonnes, [k]: !c.colonnes[k] } }));
 
-  const SLABELS: Record<string, string> = { confirme: 'Confirmé', liste_attente: "Liste d'attente", annule: 'Annulé' };
   const GLABELS: Record<string, string> = { M: 'Garçon', G: 'Garçon', F: 'Fille' };
 
   const handleExport = () => {
     const wb = XLSX.utils.book_new();
-    const c = config.colonnes;
+    const c = cfg.colonnes;
 
-    // ── En-têtes ──────────────────────────────────────────────────────────
     const header: string[] = [];
-    if (config.inclure_profs && config.colonne_type) header.push('Type');
+    if (cfg.inclure_profs && cfg.colonne_type) header.push('Type');
     if (c.nom) header.push('Nom');
     if (c.prenom) header.push('Prénom');
     if (c.classe) header.push('Classe / Rôle');
     if (c.genre) header.push('Genre');
-    if (c.statut) header.push('Statut');
+    if (c.complet) header.push('État');
     if (c.date_naissance) header.push('Date de naissance');
     if (c.nationalite) header.push('Nationalité');
     if (c.regime) header.push('Régime alimentaire');
@@ -275,20 +307,17 @@ function ModalExport({ participants, professeursParticipants, isResponsable, isE
 
     const rows: (string | null)[][] = [];
 
-    // ── Lignes élèves ─────────────────────────────────────────────────────
-    const elevesFiltered = trierParticipants(participants).filter(
-      p => config.statuts[p.statut as keyof ExportConfig['statuts']]
-    );
+    const elevesFiltered = trierParticipants(participants.filter(p => p.participe), config);
 
     elevesFiltered.forEach(p => {
       const r = parseRegime(p.eleve.regime_alimentaire);
       const row: (string | null)[] = [];
-      if (config.inclure_profs && config.colonne_type) row.push('Élève');
+      if (cfg.inclure_profs && cfg.colonne_type) row.push('Élève');
       if (c.nom) row.push(p.eleve.nom);
       if (c.prenom) row.push(p.eleve.prenom);
       if (c.classe) row.push(p.classe);
       if (c.genre) row.push(GLABELS[p.genre] ?? p.genre);
-      if (c.statut) row.push(SLABELS[p.statut] ?? p.statut);
+      if (c.complet) row.push(estComplet(p, config) ? 'Complet' : 'Incomplet');
       if (c.date_naissance) row.push(formatDate(p.eleve.date_naissance));
       if (c.nationalite) row.push(p.eleve.nationalite ?? '');
       if (c.regime) row.push(r.regime);
@@ -296,19 +325,18 @@ function ModalExport({ participants, professeursParticipants, isResponsable, isE
       rows.push(row);
     });
 
-    // ── Lignes profs (après les élèves) ───────────────────────────────────
-    if (config.inclure_profs) {
+    if (cfg.inclure_profs) {
       [...professeursParticipants]
         .sort((a, b) => a.professeur.nom.localeCompare(b.professeur.nom))
         .forEach(p => {
           const r = parseRegime(p.professeur.regime_alimentaire);
           const row: (string | null)[] = [];
-          if (config.colonne_type) row.push('Professeur');
+          if (cfg.colonne_type) row.push('Professeur');
           if (c.nom) row.push(p.professeur.nom);
           if (c.prenom) row.push(p.professeur.prenom);
           if (c.classe) row.push(p.role);
           if (c.genre) row.push('');
-          if (c.statut) row.push('');
+          if (c.complet) row.push('');
           if (c.date_naissance) row.push(formatDate(p.professeur.date_naissance));
           if (c.nationalite) row.push(p.professeur.nationalite ?? '');
           if (c.regime) row.push(r.regime);
@@ -325,12 +353,13 @@ function ModalExport({ participants, professeursParticipants, isResponsable, isE
     onClose();
   };
 
-  const nbEleves = participants.filter(p => config.statuts[p.statut as keyof ExportConfig['statuts']]).length;
-  const nbTotal = nbEleves + (config.inclure_profs ? professeursParticipants.length : 0);
+  const nbEleves = participants.filter(p => p.participe).length;
+  const nbTotal = nbEleves + (cfg.inclure_profs ? professeursParticipants.length : 0);
 
   const COLS: [keyof ExportConfig['colonnes'], string, boolean][] = [
     ['nom', 'Nom', true], ['prenom', 'Prénom', true],
-    ['classe', 'Classe / Rôle', true], ['genre', 'Genre', true], ['statut', 'Statut', true],
+    ['classe', 'Classe / Rôle', true], ['genre', 'Genre', true],
+    ['complet', 'État (complet/incomplet)', isResponsable],
     ['date_naissance', 'Date de naissance', isResponsable],
     ['nationalite', 'Nationalité', isResponsable],
     ['regime', 'Régime alimentaire', isEmployee],
@@ -345,53 +374,36 @@ function ModalExport({ participants, professeursParticipants, isResponsable, isE
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
         </div>
         <div className="p-6 space-y-6">
-
-          {/* Statuts */}
-          <div>
-            <p className="text-sm font-semibold text-gray-700 mb-2">Statuts élèves à inclure</p>
-            <div className="flex gap-4">
-              {(['confirme', 'liste_attente', 'annule'] as const).map(s => (
-                <label key={s} className="flex items-center gap-2 cursor-pointer text-sm">
-                  <input type="checkbox" checked={config.statuts[s]} onChange={() => toggleStatut(s)} className="rounded" />
-                  {SLABELS[s]}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Colonnes */}
           <div>
             <p className="text-sm font-semibold text-gray-700 mb-2">Colonnes</p>
             <div className="grid grid-cols-2 gap-2">
-              {COLS.filter(([,, v]) => v).map(([k, label]) => (
+              {COLS.filter(([, , v]) => v).map(([k, label]) => (
                 <label key={k} className="flex items-center gap-2 cursor-pointer text-sm">
-                  <input type="checkbox" checked={config.colonnes[k]} onChange={() => toggleCol(k)} className="rounded" />
+                  <input type="checkbox" checked={cfg.colonnes[k]} onChange={() => toggleCol(k)} className="rounded" />
                   {label}
                 </label>
               ))}
             </div>
           </div>
 
-          {/* Profs */}
           {professeursParticipants.length > 0 && (
             <div className="space-y-2">
               <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-gray-700">
-                <input type="checkbox" checked={config.inclure_profs}
-                  onChange={() => setConfig(c => ({ ...c, inclure_profs: !c.inclure_profs }))} className="rounded" />
+                <input type="checkbox" checked={cfg.inclure_profs}
+                  onChange={() => setCfg(c => ({ ...c, inclure_profs: !c.inclure_profs }))} className="rounded" />
                 Inclure les professeurs ({professeursParticipants.length}) après les élèves
               </label>
-              {config.inclure_profs && (
+              {cfg.inclure_profs && (
                 <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600 ml-6">
-                  <input type="checkbox" checked={config.colonne_type}
-                    onChange={() => setConfig(c => ({ ...c, colonne_type: !c.colonne_type }))} className="rounded" />
+                  <input type="checkbox" checked={cfg.colonne_type}
+                    onChange={() => setCfg(c => ({ ...c, colonne_type: !c.colonne_type }))} className="rounded" />
                   Ajouter une colonne "Type" (Élève / Professeur)
                 </label>
               )}
             </div>
           )}
 
-          {/* Format de date — uniquement si la colonne date est cochée */}
-          {config.colonnes.date_naissance && (
+          {cfg.colonnes.date_naissance && (
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Format des dates</p>
               <div className="flex gap-3">
@@ -404,8 +416,8 @@ function ModalExport({ participants, professeursParticipants, isResponsable, isE
                     <input
                       type="radio"
                       name="dateFormat"
-                      checked={config.dateFormat === fmt}
-                      onChange={() => setConfig(c => ({ ...c, dateFormat: fmt }))}
+                      checked={cfg.dateFormat === fmt}
+                      onChange={() => setCfg(c => ({ ...c, dateFormat: fmt }))}
                       className="rounded"
                     />
                     <span className="font-mono">{fmt}</span>
@@ -418,7 +430,7 @@ function ModalExport({ participants, professeursParticipants, isResponsable, isE
 
           <p className="text-xs text-gray-400">
             {nbTotal} ligne{nbTotal > 1 ? 's' : ''} dans la feuille "Participants"
-            {config.inclure_profs && professeursParticipants.length > 0
+            {cfg.inclure_profs && professeursParticipants.length > 0
               ? ` (${nbEleves} élève${nbEleves > 1 ? 's' : ''} + ${professeursParticipants.length} professeur${professeursParticipants.length > 1 ? 's' : ''})`
               : ''}
           </p>
@@ -453,178 +465,44 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
   const [classesDisponibles, setClassesDisponibles] = useState<string[]>([]);
   const [loadingClasses, setLoadingClasses] = useState(false);
   const [selectedProfRole, setSelectedProfRole] = useState('accompagnateur');
-  const [userId, setUserId] = useState<string>('');
-  const [editingSelfProf, setEditingSelfProf] = useState(false);
-  const [selfDraft, setSelfDraft] = useState({ date_naissance: '', nationalite: '' });
   const [editingEleve, setEditingEleve] = useState<Eleve | null>(null);
   const [editingEmploye, setEditingEmploye] = useState<Professeur | null>(null);
-  const [expandedParticipants, setExpandedParticipants] = useState<Set<string>>(new Set());
   const [expandedTableEleves, setExpandedTableEleves] = useState(false);
   const [expandedTableProfs, setExpandedTableProfs] = useState(false);
   const [editingEleveSelf, setEditingEleveSelf] = useState(false);
-  const [selfEleveData, setSelfEleveData] = useState({ 
-    telephone_eleve: '', 
+  const [selfEleveData, setSelfEleveData] = useState({
+    telephone_eleve: '',
     telephone_parent: '',
-    regime_alimentaire: null 
+    regime_alimentaire: null as any,
   });
   const [currentUserEleveId, setCurrentUserEleveId] = useState<number | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [filtreRegime, setFiltreRegime] = useState<string>('all');
+
+  const [config, setConfig] = useState<VoyageConfig>({
+    passport_requis: false,
+    visa_requis: false,
+    montant_attendu_defaut: null,
+    eleve_peut_modifier_telephone: false,
+    eleve_peut_modifier_regime: false,
+  });
 
   const canEdit = userType === 'employee' && isResponsable;
   const isEmployee = userType === 'employee';
   const isEleve = userType === 'student';
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
-  const [elevePeutModifierTelephone, setElevePeutModifierTelephone] = useState(false);
-  const [elevePeutModifierRegime, setElevePeutModifierRegime] = useState(false);
-  const [filtreRegime, setFiltreRegime] = useState<string>('all');
-
-  useEffect(() => {
-    setCurrentUserId(localStorage.getItem('userId'));
-  }, []);
-
-  
-  const updateSelfEleveInfo = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    const userId = localStorage.getItem('userId');
-    if (!userId) return;
-    
-    const formData = new FormData(e.currentTarget);
-    const updateData: any = {};
-    
-    // Mettre à jour les téléphones seulement si la permission est activée
-    if (elevePeutModifierTelephone) {
-      const telephoneEleve = formData.get('telephone_eleve');
-      updateData.telephone_eleve = telephoneEleve || null;
-      
-      const telephoneParent = formData.get('telephone_parent');
-      updateData.telephone_parent = telephoneParent || null;
-    }
-    
-    // Mettre à jour le régime seulement si la permission est activée
-    if (elevePeutModifierRegime) {
-      const regimeData = {
-        regime: formData.get('regime') || 'Omnivore',
-        notes: formData.get('regime_notes') || ''
-      };
-      updateData.regime_alimentaire = regimeData;
-    }
-    
-    const { error } = await supabase
-      .from('students')
-      .update(updateData)
-      .eq('matricule', parseInt(userId));
-    
-    if (!error) {
-      setEditingEleveSelf(false);
-      // Recharger les données pour que l'affichage se mette à jour
-      loadParticipants();
-      loadProfesseursParticipants();
-      // Mettre à jour selfEleveData
-      setSelfEleveData({
-        telephone_eleve: updateData.telephone_eleve || '',
-        telephone_parent: updateData.telephone_parent || '',
-        regime_alimentaire: updateData.regime_alimentaire
-      });
-    }
-  };
-
-  const toggleTableEleves = () => setExpandedTableEleves(!expandedTableEleves);
-  const toggleTableProfs = () => setExpandedTableProfs(!expandedTableProfs);
-
-  // Fonction pour mettre à jour les infos d'un élève
-  const updateEleveInfo = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!editingEleve) return;
-    
-    const formData = new FormData(e.currentTarget);
-    
-    const updateData: any = {};
-    
-    const telephoneEleve = formData.get('telephone_eleve');
-    updateData.telephone_eleve = telephoneEleve || null;
-    
-    const telephoneParent = formData.get('telephone_parent');
-    updateData.telephone_parent = telephoneParent || null;
-    
-    const { error } = await supabase
-      .from('students')
-      .update(updateData)
-      .eq('matricule', editingEleve.matricule);
-    
-    if (!error) {
-      setEditingEleve(null);
-      loadParticipants();
-      loadProfesseursParticipants();
-    }
-  };
-
-  // Fonction pour mettre à jour les infos d'un employé
-  const updateEmployeInfo = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!editingEmploye) return;
-    
-    const formData = new FormData(e.currentTarget);
-    
-    const regimeData = {
-      regime: formData.get('regime') || 'Omnivore',
-      notes: formData.get('regime_notes') || ''
-    };
-    
-    const updateData: any = {};
-    
-    // Email : si vide, mettre null
-    const email = formData.get('email');
-    updateData.email = email || null;
-    
-    // Téléphone : si vide, mettre null
-    const telephone = formData.get('telephone');
-    updateData.telephone = telephone || null;
-    
-    updateData.eleve_voir_telephone = formData.get('eleve_voir_telephone') === 'on';
-    
-    // Date de naissance : si vide, mettre null
-    const dateNaissance = formData.get('date_naissance');
-    updateData.date_naissance = dateNaissance || null;
-    
-    // Nationalité : si vide, mettre null
-    const nationalite = formData.get('nationalite');
-    updateData.nationalite = nationalite || null;
-    
-    updateData.regime_alimentaire = regimeData;
-    
-    const { error } = await supabase
-      .from('employees')
-      .update(updateData)
-      .eq('id', editingEmploye.id);
-    
-    if (!error) {
-      setEditingEmploye(null);
-      loadParticipants();
-      loadProfesseursParticipants();
-    } else {
-      console.error('Erreur lors de la mise à jour:', error);
-      alert('Erreur lors de l\'enregistrement');
-    }
-  };
-
-  const toggleExpand = (id: string) => {
-    const newExpanded = new Set(expandedParticipants);
-    if (newExpanded.has(id)) newExpanded.delete(id);
-    else newExpanded.add(id);
-    setExpandedParticipants(newExpanded);
-  };
 
   useEffect(() => {
     const type = localStorage.getItem('userType');
     const id = localStorage.getItem('userId');
-    
-    if (type === 'student' && id) {
-      setCurrentUserEleveId(parseInt(id));
-    }
+    setCurrentUserId(id);
+    if (type === 'student' && id) setCurrentUserEleveId(parseInt(id));
   }, []);
 
-  useEffect(() => { loadParticipants(); loadProfesseursParticipants(); }, [voyageId]);
+  useEffect(() => {
+    loadVoyageConfig();
+    loadParticipants();
+    loadProfesseursParticipants();
+  }, [voyageId]);
 
   useEffect(() => {
     if (showAddModal && canEdit) {
@@ -652,30 +530,19 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
   const loadVoyageConfig = async () => {
     const { data } = await supabase
       .from('voyages')
-      .select('eleve_peut_modifier_telephone, eleve_peut_modifier_regime')
+      .select('passport_requis, visa_requis, montant_attendu_defaut, eleve_peut_modifier_telephone, eleve_peut_modifier_regime')
       .eq('id', voyageId)
       .single();
-    
-    if (data) {
-      setElevePeutModifierTelephone(data.eleve_peut_modifier_telephone || false);
-      setElevePeutModifierRegime(data.eleve_peut_modifier_regime || false);
-    }
-  };
 
-  // Appeler cette fonction dans un useEffect
-  useEffect(() => {
-    loadVoyageConfig();
-  }, [voyageId]);
+    if (data) setConfig(data);
+  };
 
   const updateElevePeutModifierTelephone = async (value: boolean) => {
     const { error } = await supabase
       .from('voyages')
       .update({ eleve_peut_modifier_telephone: value })
       .eq('id', voyageId);
-    
-    if (!error) {
-      setElevePeutModifierTelephone(value);
-    }
+    if (!error) setConfig({ ...config, eleve_peut_modifier_telephone: value });
   };
 
   const updateElevePeutModifierRegime = async (value: boolean) => {
@@ -683,10 +550,7 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
       .from('voyages')
       .update({ eleve_peut_modifier_regime: value })
       .eq('id', voyageId);
-    
-    if (!error) {
-      setElevePeutModifierRegime(value);
-    }
+    if (!error) setConfig({ ...config, eleve_peut_modifier_regime: value });
   };
 
   const loadClassesDisponibles = async () => {
@@ -697,6 +561,7 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
   };
 
   const loadParticipants = async () => {
+    // 1. Charger les participants
     const { data, error } = await supabase
       .from('voyage_participants')
       .select(`*, eleve:students!inner(
@@ -704,10 +569,42 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
         date_naissance, nationalite, regime_alimentaire,
         telephone_eleve, telephone_parent
       )`)
-      .eq('voyage_id', voyageId);
-    if (!error && data) setParticipants(data);
+      .eq('voyage_id', voyageId)
+      .eq('participe', true);
+
+    if (error || !data) {
+      setParticipants([]);
+      return;
+    }
+
+    // 2. Charger les paiements pour calculer le montant payé
+    const participantIds = data.map((p: any) => p.id);
+    let paiements: any[] = [];
+    if (participantIds.length > 0) {
+      const { data: paiementsData } = await supabase
+        .from('voyage_paiements')
+        .select('voyage_participant_id, montant')
+        .in('voyage_participant_id', participantIds);
+      paiements = paiementsData || [];
+    }
+
+    const totalParParticipant = new Map<string, number>();
+    paiements.forEach((p: any) => {
+      const current = totalParParticipant.get(p.voyage_participant_id) || 0;
+      totalParParticipant.set(p.voyage_participant_id, current + Number(p.montant));
+    });
+
+    // 3. Fusionner
+    const enriched: Participant[] = data.map((p: any) => ({
+      ...p,
+      eleve: Array.isArray(p.eleve) ? p.eleve[0] : p.eleve,
+      montant_paye: totalParParticipant.get(p.id) || 0,
+    }));
+
+    setParticipants(enriched);
+    setLoading(false);
   };
-  
+
   const loadProfesseursParticipants = async () => {
     const res = await supabase
       .from('voyage_professeurs')
@@ -744,7 +641,7 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
     if (data) setProfesseursDisponibles(data);
   };
 
-  // ── Mise à jour régime ────────────────────────────────────────────────────
+  // ── Régime ────────────────────────────────────────────────────────────────
 
   const updateRegimeEleve = async (matricule: number, regime: RegimeAlimentaire) => {
     await supabase.from('students').update({ regime_alimentaire: regime }).eq('matricule', matricule);
@@ -760,21 +657,7 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
     ));
   };
 
-  const saveSelfProf = async () => {
-    const payload: Record<string, string | null> = {
-      date_naissance: selfDraft.date_naissance || null,
-      nationalite: selfDraft.nationalite || null,
-    };
-    await supabase.from('employees').update(payload).eq('id', userId);
-    setProfesseursParticipants(prev => prev.map(p =>
-      p.professeur_id === userId
-        ? { ...p, professeur: { ...p.professeur, ...payload } }
-        : p
-    ));
-    setEditingSelfProf(false);
-  };
-
-  // ── Autres actions ────────────────────────────────────────────────────────
+  // ── Actions ───────────────────────────────────────────────────────────────
 
   const addParticipants = async () => {
     if (addMode === 'prof') {
@@ -798,7 +681,13 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
       }
       if (elevesAAjouter.length === 0) { alert('Aucun élève à ajouter'); return; }
       const { error } = await supabase.from('voyage_participants').insert(
-        elevesAAjouter.map(e => ({ voyage_id: voyageId, eleve_id: e.matricule, genre: e.sexe, classe: e.classe, statut: 'confirme' }))
+        elevesAAjouter.map(e => ({
+          voyage_id: voyageId,
+          eleve_id: e.matricule,
+          genre: e.sexe,
+          classe: e.classe,
+          participe: true,
+        }))
       );
       if (!error) { loadParticipants(); setShowAddModal(false); setSelectedEleves(new Set()); }
     }
@@ -830,26 +719,86 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
     } else if (c) alert('Classe non trouvée');
   };
 
-  const updateStatut = async (id: string, statut: string) => {
-    const { error } = await supabase.from('voyage_participants').update({ statut }).eq('id', id);
-    if (!error) loadParticipants();
-  };
-
-  const updateStatutMultiple = async (statut: string) => {
-    const classes = Array.from(new Set(participants.map(p => p.classe))).sort();
-    const c = prompt(`Classe à mettre à jour (${statut}):\nClasses: ${classes.join(', ')}`);
-    if (c && classes.includes(c)) {
-      const toUpdate = participants.filter(p => p.classe === c);
-      if (confirm(`Mettre à jour les ${toUpdate.length} élèves de ${c} ?`)) {
-        const { error } = await supabase.from('voyage_participants').update({ statut }).in('id', toUpdate.map(p => p.id));
-        if (!error) loadParticipants();
-      }
-    } else if (c) alert('Classe non trouvée');
-  };
-
   const updateProfRole = async (id: string, role: string) => {
     const { error } = await supabase.from('voyage_professeurs').update({ role }).eq('id', id);
     if (!error) loadProfesseursParticipants();
+  };
+
+  const updateEleveInfo = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingEleve) return;
+
+    const formData = new FormData(e.currentTarget);
+    const updateData: any = {
+      telephone_eleve: formData.get('telephone_eleve') || null,
+      telephone_parent: formData.get('telephone_parent') || null,
+    };
+
+    const { error } = await supabase
+      .from('students')
+      .update(updateData)
+      .eq('matricule', editingEleve.matricule);
+
+    if (!error) {
+      setEditingEleve(null);
+      loadParticipants();
+    }
+  };
+
+  const updateEmployeInfo = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingEmploye) return;
+
+    const formData = new FormData(e.currentTarget);
+    const regimeData = {
+      regime: formData.get('regime') || 'Omnivore',
+      notes: formData.get('regime_notes') || '',
+    };
+
+    const updateData: any = {
+      email: formData.get('email') || null,
+      telephone: formData.get('telephone') || null,
+      eleve_voir_telephone: formData.get('eleve_voir_telephone') === 'on',
+      date_naissance: formData.get('date_naissance') || null,
+      nationalite: formData.get('nationalite') || null,
+      regime_alimentaire: regimeData,
+    };
+
+    const { error } = await supabase.from('employees').update(updateData).eq('id', editingEmploye.id);
+
+    if (!error) {
+      setEditingEmploye(null);
+      loadProfesseursParticipants();
+    } else {
+      alert('Erreur lors de l\'enregistrement');
+    }
+  };
+
+  const updateSelfEleveInfo = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    const formData = new FormData(e.currentTarget);
+    const updateData: any = {};
+
+    if (config.eleve_peut_modifier_telephone) {
+      updateData.telephone_eleve = formData.get('telephone_eleve') || null;
+      updateData.telephone_parent = formData.get('telephone_parent') || null;
+    }
+    if (config.eleve_peut_modifier_regime) {
+      updateData.regime_alimentaire = {
+        regime: formData.get('regime') || 'Omnivore',
+        notes: formData.get('regime_notes') || '',
+      };
+    }
+
+    const { error } = await supabase.from('students').update(updateData).eq('matricule', parseInt(userId));
+
+    if (!error) {
+      setEditingEleveSelf(false);
+      loadParticipants();
+    }
   };
 
   const toggleSelectEleve = (m: number) => {
@@ -865,27 +814,31 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
     selectedProfesseurs.size === professeursDisponibles.length ? new Set() : new Set(professeursDisponibles.map(p => p.id))
   );
 
-  // ── Grid columns dynamiques ───────────────────────────────────────────────
+  // ── Colonnes ──────────────────────────────────────────────────────────────
 
-  const colsEleve = isResponsable
-    ? '3fr 2fr 1.5fr 1.5fr 2fr 1.5fr 2fr 1.5fr 1.5fr 1fr'  
-    : isEmployee
-    ? '4fr 2fr 1.5fr 2fr 2fr 1.5fr 1.5fr 1fr' 
-    : '5fr 2fr 1.5fr 2fr 1fr';
+  // Colonnes élève : élève | classe | genre | état | (date naiss | nationalité) | (régime) | (tél élève | tél parent) | actions
+  const colsEleve = (() => {
+    const parts = ['3fr', '1.5fr', '1.2fr', '0.8fr'];
+    if (isResponsable) parts.push('2fr', '2fr');
+    if (isEmployee) parts.push('2.5fr', '2fr', '2fr');
+    parts.push('1fr');
+    return parts.join(' ');
+  })();
 
-  const colsProf = isResponsable && isEmployee
-    ? '3fr 2fr 2fr 2fr 1.5fr 2fr 1fr'   // + date_naiss + nationalite + regime
-    : isResponsable
-    ? '3fr 2fr 2fr 1.5fr 1fr'            // + date_naiss + nationalite
-    : isEmployee
-    ? '3fr 2fr 2fr 1fr'                  // + regime
-    : '4fr 3fr 1fr';
+  // Colonnes prof : prof | rôle | (date naiss | nationalité) | (régime) | téléphone | actions
+  const colsProf = (() => {
+    const parts = ['3fr', '2fr'];
+    if (isResponsable) parts.push('2fr', '2fr');
+    if (isEmployee) parts.push('2.5fr');
+    parts.push('2fr', '1fr');
+    return parts.join(' ');
+  })();
 
   const classesParticipants = Array.from(new Set(participants.map(p => p.classe))).sort();
   const niveaux = [1, 2, 3, 4, 5, 6];
-  const participantsTries = trierParticipants(participants);
-  const elevesConfirmes = participants.filter(p => p.statut === 'confirme').length;
-  const total = elevesConfirmes + professeursParticipants.length;
+  const participantsTries = trierParticipants(participants, config);
+  const elevesComplets = participants.filter(p => estComplet(p, config)).length;
+  const total = participants.length + professeursParticipants.length;
 
   if (loading) return <div className="text-center py-8">Chargement des participants...</div>;
 
@@ -897,7 +850,7 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Participants</h2>
           <p className="text-gray-600 mt-1">
-            {total} participant{total > 1 ? 's' : ''} ({elevesConfirmes} élève{elevesConfirmes > 1 ? 's' : ''} confirmé{elevesConfirmes > 1 ? 's' : ''}, {professeursParticipants.length} professeur{professeursParticipants.length > 1 ? 's' : ''})
+            {total} participant{total > 1 ? 's' : ''} ({participants.length} élève{participants.length > 1 ? 's' : ''}, dont {elevesComplets} complet{elevesComplets > 1 ? 's' : ''} · {professeursParticipants.length} professeur{professeursParticipants.length > 1 ? 's' : ''})
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -910,7 +863,6 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
           {canEdit && (
             <>
               <button onClick={removeMultipleParticipants} className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50">Retirer une classe</button>
-              <button onClick={() => updateStatutMultiple('liste_attente')} className="px-4 py-2 border border-yellow-300 text-yellow-600 rounded-lg hover:bg-yellow-50">Mettre en liste d'attente</button>
               <button onClick={() => { setAddMode('prof'); setShowAddModal(true); }} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">+ Ajouter des professeurs</button>
               <button onClick={() => { setAddMode('individuel'); setShowAddModal(true); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">+ Ajouter des élèves</button>
             </>
@@ -924,21 +876,16 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
         </div>
       )}
 
-      {/* Filtre */}
+      {/* Filtres + permissions */}
       <div className="flex flex-wrap gap-4 items-center justify-between">
         <div className="flex gap-4">
           <select value={selectedClasse} onChange={e => setSelectedClasse(e.target.value)} className="px-3 py-2 border rounded-lg text-sm">
             <option value="">Toutes les classes</option>
             {classesParticipants.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          
-          {/* Filtre par régime - visible uniquement pour les employés */}
+
           {isEmployee && (
-            <select 
-              value={filtreRegime} 
-              onChange={e => setFiltreRegime(e.target.value)} 
-              className="px-3 py-2 border rounded-lg text-sm"
-            >
+            <select value={filtreRegime} onChange={e => setFiltreRegime(e.target.value)} className="px-3 py-2 border rounded-lg text-sm">
               <option value="all">Tous les régimes</option>
               <option value="Omnivore">🍖 Omnivore</option>
               <option value="Végétarien">🥬 Végétarien</option>
@@ -946,40 +893,28 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
             </select>
           )}
         </div>
-        
-        {/* Permissions élèves - visibles uniquement pour les responsables */}
+
         {canEdit && (
           <div className="flex gap-4">
             <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={elevePeutModifierTelephone}
-                onChange={(e) => updateElevePeutModifierTelephone(e.target.checked)}
-                className="rounded"
-              />
+              <input type="checkbox" checked={config.eleve_peut_modifier_telephone}
+                onChange={e => updateElevePeutModifierTelephone(e.target.checked)} className="rounded" />
               <span>📱 Les élèves peuvent modifier leurs numéros</span>
             </label>
             <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={elevePeutModifierRegime}
-                onChange={(e) => updateElevePeutModifierRegime(e.target.checked)}
-                className="rounded"
-              />
+              <input type="checkbox" checked={config.eleve_peut_modifier_regime}
+                onChange={e => updateElevePeutModifierRegime(e.target.checked)} className="rounded" />
               <span>🍽️ Les élèves peuvent modifier leur régime</span>
             </label>
           </div>
         )}
       </div>
 
-
-
-      {/* Professeurs */}
-
+      {/* ── Tableau professeurs ── */}
       {professeursParticipants.length > 0 && (
         <div className="bg-white rounded-lg border overflow-hidden">
           <button
-            onClick={toggleTableProfs}
+            onClick={() => setExpandedTableProfs(!expandedTableProfs)}
             className="w-full px-4 py-3 bg-purple-50 hover:bg-purple-100 transition flex justify-between items-center"
           >
             <div className="font-medium text-purple-800">
@@ -987,10 +922,11 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
             </div>
             <span className="text-purple-600">{expandedTableProfs ? '▲' : '▼'}</span>
           </button>
-          
+
           {expandedTableProfs && (
             <div className="overflow-x-auto">
-              <div className="grid gap-4 p-4 bg-purple-50 font-medium text-sm text-gray-700 border-b"
+              {/* En-têtes */}
+              <div className="grid gap-4 p-4 bg-purple-50 font-medium text-xs text-gray-600 uppercase border-b"
                 style={{ gridTemplateColumns: colsProf }}>
                 <div>Professeur</div>
                 <div>Rôle</div>
@@ -1000,32 +936,31 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
                 <div />
               </div>
 
+              {/* Lignes */}
               {professeursParticipants.map((prof) => {
                 const showPhone = isEmployee || (isEleve && prof.professeur?.eleve_voir_telephone);
                 const isCurrentUser = prof.professeur_id === currentUserId;
-                
+
                 return (
-                  <div key={prof.id} className="grid gap-4 p-4 border-b hover:bg-gray-50 items-center"
+                  <div key={prof.id} className="grid gap-4 p-4 border-b hover:bg-gray-50 items-center text-sm"
                     style={{ gridTemplateColumns: colsProf }}>
                     <div>
                       <div className="flex items-center gap-2">
                         <div className="font-medium">{prof.professeur.prenom} {prof.professeur.nom}</div>
                         {isCurrentUser && isEmployee && (
                           <button
-                            onClick={() => {
-                              setEditingEmploye({
-                                id: prof.professeur.id,
-                                nom: prof.professeur.nom,
-                                prenom: prof.professeur.prenom,
-                                initiale: prof.professeur.initiale,
-                                email: prof.professeur.email || '',
-                                telephone: prof.professeur.telephone || '',
-                                eleve_voir_telephone: prof.professeur.eleve_voir_telephone || false,
-                                date_naissance: prof.professeur.date_naissance || '',
-                                nationalite: prof.professeur.nationalite || '',
-                                regime_alimentaire: prof.professeur.regime_alimentaire
-                              });
-                            }}
+                            onClick={() => setEditingEmploye({
+                              id: prof.professeur.id,
+                              nom: prof.professeur.nom,
+                              prenom: prof.professeur.prenom,
+                              initiale: prof.professeur.initiale,
+                              email: prof.professeur.email || '',
+                              telephone: prof.professeur.telephone || '',
+                              eleve_voir_telephone: prof.professeur.eleve_voir_telephone || false,
+                              date_naissance: prof.professeur.date_naissance || '',
+                              nationalite: prof.professeur.nationalite || '',
+                              regime_alimentaire: prof.professeur.regime_alimentaire,
+                            })}
                             className="text-blue-600 hover:text-blue-800"
                             title="Modifier mes informations"
                           >
@@ -1033,10 +968,10 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
                           </button>
                         )}
                       </div>
-                      <div className="text-xs text-gray-500">{prof.professeur.email || '—'}</div>
+                      <div className="text-xs text-gray-500 truncate">{prof.professeur.email || '—'}</div>
                     </div>
                     <div>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
                         prof.role === 'responsable' ? 'bg-yellow-100 text-yellow-800' :
                         prof.role === 'direction' ? 'bg-blue-100 text-blue-800' :
                         prof.role === 'infirmier' ? 'bg-green-100 text-green-800' :
@@ -1050,10 +985,10 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
                     </div>
                     {isResponsable && (
                       <>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-xs text-gray-600">
                           {prof.professeur.date_naissance ? new Date(prof.professeur.date_naissance).toLocaleDateString('fr-BE') : '–'}
                         </div>
-                        <div className="text-sm text-gray-600">{prof.professeur.nationalite ?? '–'}</div>
+                        <div className="text-xs text-gray-600">{prof.professeur.nationalite ?? '–'}</div>
                       </>
                     )}
                     {isEmployee && (
@@ -1063,18 +998,18 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
                         onUpdate={r => updateRegimeProf(prof.professeur_id, r)}
                       />
                     )}
-                    <div className="text-sm text-gray-600">
+                    <div className="text-xs text-gray-600 font-mono">
                       {showPhone && prof.professeur.telephone ? (
-                        <span className="font-mono">{prof.professeur.telephone}</span>
+                        prof.professeur.telephone
                       ) : prof.professeur.telephone ? (
                         <span className="text-gray-400 italic">Non partagé</span>
                       ) : (
                         <span className="text-gray-400 italic">—</span>
                       )}
                     </div>
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end">
                       {canEdit && !isCurrentUser && (
-                        <button onClick={() => removeParticipant(prof)} className="text-red-600 hover:text-red-800 text-sm">
+                        <button onClick={() => removeParticipant(prof)} className="text-red-600 hover:text-red-800 text-xs">
                           Retirer
                         </button>
                       )}
@@ -1082,25 +1017,22 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
                   </div>
                 );
               })}
-
             </div>
           )}
         </div>
       )}
 
-      {/* Élèves */}
-      {/* Bouton de modification des informations - visible pour les élèves si au moins une permission est activée */}
-      {isEleve && (elevePeutModifierTelephone || elevePeutModifierRegime) && (
-        <div className="mb-4 flex justify-end">
+      {/* ── Bouton élève : Modifier mes infos ── */}
+      {isEleve && (config.eleve_peut_modifier_telephone || config.eleve_peut_modifier_regime) && (
+        <div className="flex justify-end">
           <button
             onClick={() => {
-              // Charger les données actuelles de l'élève
               const eleve = participants.find(p => p.eleve.matricule === currentUserEleveId)?.eleve;
               if (eleve) {
                 setSelfEleveData({
                   telephone_eleve: eleve.telephone_eleve || '',
                   telephone_parent: eleve.telephone_parent || '',
-                  regime_alimentaire: eleve.regime_alimentaire
+                  regime_alimentaire: eleve.regime_alimentaire,
                 });
               }
               setEditingEleveSelf(true);
@@ -1112,9 +1044,10 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
         </div>
       )}
 
+      {/* ── Tableau élèves ── */}
       <div className="bg-white rounded-lg border overflow-hidden">
         <button
-          onClick={toggleTableEleves}
+          onClick={() => setExpandedTableEleves(!expandedTableEleves)}
           className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition flex justify-between items-center"
         >
           <div className="font-medium text-gray-800">
@@ -1122,128 +1055,114 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
           </div>
           <span className="text-gray-600">{expandedTableEleves ? '▲' : '▼'}</span>
         </button>
-        
+
         {expandedTableEleves && (
           <div className="overflow-x-auto">
-            <div className="grid gap-4 p-4 bg-gray-50 font-medium text-sm text-gray-700 border-b"
+            {/* En-têtes */}
+            <div className="grid gap-4 p-4 bg-gray-50 font-medium text-xs text-gray-600 uppercase border-b"
               style={{ gridTemplateColumns: colsEleve }}>
               <div>Élève</div>
               <div>Classe</div>
               <div>Genre</div>
-              <div>Statut</div>
+              <div className="text-center">État</div>
               {isResponsable && <><div>Date naiss.</div><div>Nationalité</div></>}
-              {isEmployee && <div>Régime</div>}
-              {isEmployee && <div>Tél. élève</div>}
-              {isEmployee && <div>Tél. parent</div>}
+              {isEmployee && <><div>Régime</div><div>Tél. élève</div><div>Tél. parent</div></>}
               <div />
             </div>
 
+            {/* Lignes */}
             {participantsTries
               .filter(p => !selectedClasse || p.classe === selectedClasse)
               .filter(p => {
                 if (filtreRegime === 'all') return true;
-                const regime = parseRegime(p.eleve.regime_alimentaire).regime;
-                return regime === filtreRegime;
+                return parseRegime(p.eleve.regime_alimentaire).regime === filtreRegime;
               })
-              .map((p, idx, arr) => {
-                const showDivider = idx > 0 && arr[idx - 1].statut !== p.statut;
+              .map((p) => {
+                const complet = estComplet(p, config);
+
                 return (
-                  <div key={p.id}>
-                    {showDivider && <div className="border-t-2 border-gray-300" />}
-                    <div
-                      className={`grid gap-4 p-4 border-b hover:bg-gray-50 items-center ${
-                        p.statut === 'annule' ? 'opacity-50' :
-                        p.statut === 'liste_attente' ? 'bg-yellow-50' : ''
-                      }`}
-                      style={{ gridTemplateColumns: colsEleve }}
-                    >
-                      <div className="font-medium">{p.eleve.nom} {p.eleve.prenom}</div>
-                      <div className="text-gray-600">{p.classe}</div>
-                      <div>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          p.genre === 'M' ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'
-                        }`}>{p.genre === 'M' ? 'Garçon' : 'Fille'}</span>
-                      </div>
-                      <div>
-                        {canEdit ? (
-                          <select value={p.statut} onChange={e => updateStatut(p.id, e.target.value)} className="text-sm border rounded px-2 py-1">
-                            <option value="confirme">✅ Confirmé</option>
-                            <option value="liste_attente">⏳ Liste d'attente</option>
-                            <option value="annule">❌ Annulé</option>
-                          </select>
-                        ) : (
-                          <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
-                            p.statut === 'confirme' ? 'bg-green-100 text-green-800' :
-                            p.statut === 'liste_attente' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {p.statut === 'confirme' ? '✅ Confirmé' :
-                            p.statut === 'liste_attente' ? "⏳ Liste d'attente" : '❌ Annulé'}
-                          </span>
-                        )}
-                      </div>
-                      {isResponsable && (
-                        <>
-                          <div className="text-sm text-gray-600">
-                            {p.eleve.date_naissance ? new Date(p.eleve.date_naissance).toLocaleDateString('fr-BE') : '–'}
-                          </div>
-                          <div className="text-sm text-gray-600">{p.eleve.nationalite ?? '–'}</div>
-                        </>
+                  <div
+                    key={p.id}
+                    className={`grid gap-4 p-4 border-b hover:bg-gray-50 items-center text-sm ${
+                      complet ? '' : 'bg-orange-50'
+                    }`}
+                    style={{ gridTemplateColumns: colsEleve }}
+                  >
+                    <div className="font-medium">{p.eleve.nom} {p.eleve.prenom}</div>
+                    <div className="text-gray-600">{p.classe}</div>
+                    <div>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        p.genre === 'M' ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {p.genre === 'M' ? 'Garçon' : 'Fille'}
+                      </span>
+                    </div>
+                    <div className="text-center">
+                      {complet ? (
+                        <span className="text-green-600 text-lg" title="Complet">✅</span>
+                      ) : (
+                        <span className="text-orange-500 text-lg" title="Incomplet">⚠️</span>
                       )}
-                      {isEmployee && (
+                    </div>
+                    {isResponsable && (
+                      <>
+                        <div className="text-xs text-gray-600">
+                          {p.eleve.date_naissance ? new Date(p.eleve.date_naissance).toLocaleDateString('fr-BE') : '–'}
+                        </div>
+                        <div className="text-xs text-gray-600">{p.eleve.nationalite ?? '–'}</div>
+                      </>
+                    )}
+                    {isEmployee && (
+                      <>
                         <RegimeCell
                           regime={parseRegime(p.eleve.regime_alimentaire)}
-                          canEdit={canEdit || (isEleve && elevePeutModifierRegime && p.eleve.matricule === currentUserEleveId)}
+                          canEdit={canEdit || (isEleve && config.eleve_peut_modifier_regime && p.eleve.matricule === currentUserEleveId)}
                           onUpdate={r => updateRegimeEleve(p.eleve.matricule, r)}
                         />
-                      )}
-                      {(isEmployee || (isEleve && p.eleve.matricule === currentUserEleveId)) && (
-                        <div>
-                          {p.eleve.telephone_eleve ? (
-                            <span className="text-xs font-mono">{p.eleve.telephone_eleve}</span>
-                          ) : (
-                            <span className="text-xs text-gray-400 italic">—</span>
-                          )}
+                        <div className="text-xs font-mono">
+                          {p.eleve.telephone_eleve ? p.eleve.telephone_eleve : <span className="text-gray-400 italic">—</span>}
+                        </div>
+                        <div className="text-xs font-mono">
+                          {p.eleve.telephone_parent ? p.eleve.telephone_parent : <span className="text-gray-400 italic">—</span>}
+                        </div>
+                      </>
+                    )}
+                    <div className="flex justify-end">
+                      {canEdit && (
+                        <div className="flex gap-2">
+                          <button onClick={() => setEditingEleve(p.eleve)} className="text-blue-600 hover:text-blue-800 text-xs" title="Modifier téléphones">
+                            ✏️
+                          </button>
+                          <button onClick={() => removeParticipant(p)} className="text-red-500 hover:text-red-700 text-xs" title="Retirer du voyage">
+                            ✕
+                          </button>
                         </div>
                       )}
-                      {(isEmployee || (isEleve && p.eleve.matricule === currentUserEleveId)) && (
-                        <div>
-                          {p.eleve.telephone_parent ? (
-                            <span className="text-xs font-mono">{p.eleve.telephone_parent}</span>
-                          ) : (
-                            <span className="text-xs text-gray-400 italic">—</span>
-                          )}
-                        </div>
-                      )}
-                      <div className="flex justify-end">
-                        {canEdit && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setEditingEleve(p.eleve)}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              ✏️
-                            </button>
-                            <button onClick={() => removeParticipant(p as any)} className="text-red-500 hover:text-red-700 text-sm">
-                              x
-                            </button>
-                          </div>
-                        )}
-                      </div>
                     </div>
                   </div>
                 );
               })}
+
+            {participantsTries.length === 0 && (
+              <p className="text-center py-8 text-gray-500">Aucun élève participant pour le moment.</p>
+            )}
           </div>
         )}
       </div>
 
-      {/* Modal export */}
+      {/* ── Modal export ── */}
       {showExportModal && (
-        <ModalExport participants={participants} professeursParticipants={professeursParticipants}
-          isResponsable={isResponsable} isEmployee={isEmployee} onClose={() => setShowExportModal(false)} />
+        <ModalExport
+          participants={participants}
+          professeursParticipants={professeursParticipants}
+          config={config}
+          isResponsable={isResponsable}
+          isEmployee={isEmployee}
+          onClose={() => setShowExportModal(false)}
+        />
       )}
 
-      {/* Modal ajout */}
+      {/* ── Modal ajout ── */}
       {canEdit && showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col">
@@ -1256,7 +1175,7 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
                 <div className="mt-4 flex gap-4 border-b pb-4">
                   {(['individuel', 'classe', 'niveau'] as const).map(mode => (
                     <button key={mode} onClick={() => { setAddMode(mode); setSelectedClasse(''); setSelectedNiveau(''); }}
-                      className={`px-4 py-2 rounded-lg ${addMode === mode ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                      className={`px-4 py-2 rounded-lg text-sm ${addMode === mode ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
                       {mode === 'individuel' ? 'Ajout individuel' : mode === 'classe' ? 'Ajouter une classe' : 'Ajouter un niveau'}
                     </button>
                   ))}
@@ -1407,74 +1326,30 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
         </div>
       )}
 
-      {/* Modal d'édition des informations pour l'élève lui-même */}
-      {isEleve && editingEleveSelf && (
+      {/* ── Modal édition élève (responsable) ── */}
+      {canEdit && editingEleve && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
             <div className="p-6 border-b">
               <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold">Mes informations</h3>
-                <button onClick={() => setEditingEleveSelf(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                <h3 className="text-xl font-bold">Téléphones</h3>
+                <button onClick={() => setEditingEleve(null)} className="text-gray-400 hover:text-gray-600">✕</button>
               </div>
+              <p className="text-sm text-gray-500 mt-1">{editingEleve.prenom} {editingEleve.nom}</p>
             </div>
-            <form onSubmit={updateSelfEleveInfo} className="p-6 space-y-4">
-              
-              {/* Téléphone - visible seulement si la permission est activée */}
-              {elevePeutModifierTelephone && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">📱 Mon téléphone</label>
-                    <input 
-                      name="telephone_eleve" 
-                      type="tel" 
-                      defaultValue={selfEleveData.telephone_eleve || ''} 
-                      className="w-full px-3 py-2 border rounded-lg" 
-                      placeholder="+32 123 45 67 89" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">👪 Téléphone d'un parent</label>
-                    <input 
-                      name="telephone_parent" 
-                      type="tel" 
-                      defaultValue={selfEleveData.telephone_parent || ''} 
-                      className="w-full px-3 py-2 border rounded-lg" 
-                      placeholder="+32 123 45 67 89" 
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* Régime alimentaire - visible seulement si la permission est activée */}
-              {elevePeutModifierRegime && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">🍽️ Régime alimentaire</label>
-                    <select
-                      name="regime"
-                      defaultValue={parseRegime(selfEleveData.regime_alimentaire).regime}
-                      className="w-full px-3 py-2 border rounded-lg"
-                    >
-                      <option value="Omnivore">Omnivore</option>
-                      <option value="Végétarien">Végétarien</option>
-                      <option value="Halal">Halal</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">📝 Allergies / intolérances</label>
-                    <textarea
-                      name="regime_notes"
-                      rows={3}
-                      defaultValue={parseRegime(selfEleveData.regime_alimentaire).notes}
-                      className="w-full px-3 py-2 border rounded-lg"
-                      placeholder="Ex: allergie aux noix, intolérance au lactose..."
-                    />
-                  </div>
-                </>
-              )}
-
+            <form onSubmit={updateEleveInfo} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">📱 Téléphone de l'élève</label>
+                <input name="telephone_eleve" type="tel" defaultValue={editingEleve.telephone_eleve || ''}
+                  className="w-full px-3 py-2 border rounded-lg" placeholder="+32 123 45 67 89" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">👪 Téléphone d'un parent</label>
+                <input name="telephone_parent" type="tel" defaultValue={editingEleve.telephone_parent || ''}
+                  className="w-full px-3 py-2 border rounded-lg" placeholder="+32 123 45 67 89" />
+              </div>
               <div className="flex justify-end gap-3 pt-4">
-                <button type="button" onClick={() => setEditingEleveSelf(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Annuler</button>
+                <button type="button" onClick={() => setEditingEleve(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Annuler</button>
                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Enregistrer</button>
               </div>
             </form>
@@ -1482,7 +1357,7 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
         </div>
       )}
 
-      {/* Modal d'édition des informations employé */}
+      {/* ── Modal édition employé (soi-même) ── */}
       {editingEmploye && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -1493,101 +1368,102 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
               </div>
               <p className="text-sm text-gray-500 mt-1">{editingEmploye.prenom} {editingEmploye.nom}</p>
             </div>
-            
             <form onSubmit={updateEmployeInfo} className="p-6 space-y-4">
-              {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">📧 Email</label>
-                <input
-                  name="email"
-                  type="email"
-                  defaultValue={editingEmploye.email || ''}
-                  className="w-full px-3 py-2 border rounded-lg"
-                  placeholder="exemple@ecole.be"
-                />
+                <input name="email" type="email" defaultValue={editingEmploye.email || ''}
+                  className="w-full px-3 py-2 border rounded-lg" placeholder="exemple@ecole.be" />
               </div>
-
-              {/* Téléphone */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">📞 Téléphone</label>
-                <input
-                  name="telephone"
-                  type="tel"
-                  defaultValue={editingEmploye.telephone || ''}
-                  className="w-full px-3 py-2 border rounded-lg"
-                  placeholder="+32 123 45 67 89"
-                />
+                <input name="telephone" type="tel" defaultValue={editingEmploye.telephone || ''}
+                  className="w-full px-3 py-2 border rounded-lg" placeholder="+32 123 45 67 89" />
               </div>
-
-              {/* Visibilité du téléphone */}
               <div>
                 <label className="flex items-center gap-2">
-                  <input
-                    name="eleve_voir_telephone"
-                    type="checkbox"
-                    defaultChecked={editingEmploye.eleve_voir_telephone || false}
-                    className="rounded"
-                  />
+                  <input name="eleve_voir_telephone" type="checkbox" defaultChecked={editingEmploye.eleve_voir_telephone || false} className="rounded" />
                   <span className="text-sm text-gray-700">Les élèves peuvent voir mon numéro de téléphone</span>
                 </label>
               </div>
-
-              {/* Date de naissance */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">🎂 Date de naissance</label>
-                <input
-                  name="date_naissance"
-                  type="date"
-                  defaultValue={editingEmploye.date_naissance?.split('T')[0] || ''}
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
+                <input name="date_naissance" type="date" defaultValue={editingEmploye.date_naissance?.split('T')[0] || ''}
+                  className="w-full px-3 py-2 border rounded-lg" />
               </div>
-
-              {/* Nationalité */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">🌍 Nationalité</label>
-                <input
-                  name="nationalite"
-                  type="text"
-                  defaultValue={editingEmploye.nationalite || ''}
-                  className="w-full px-3 py-2 border rounded-lg"
-                  placeholder="Ex: Belge"
-                />
+                <input name="nationalite" type="text" defaultValue={editingEmploye.nationalite || ''}
+                  className="w-full px-3 py-2 border rounded-lg" placeholder="Ex: Belge" />
               </div>
-
-              {/* Régime alimentaire */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">🍽️ Régime alimentaire</label>
-                <select
-                  name="regime"
-                  defaultValue={parseRegime(editingEmploye.regime_alimentaire).regime}
-                  className="w-full px-3 py-2 border rounded-lg"
-                >
+                <select name="regime" defaultValue={parseRegime(editingEmploye.regime_alimentaire).regime}
+                  className="w-full px-3 py-2 border rounded-lg">
                   <option value="Omnivore">Omnivore</option>
                   <option value="Végétarien">Végétarien</option>
                   <option value="Halal">Halal</option>
                 </select>
               </div>
-
-              {/* Notes régime */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">📝 Allergies / intolérances</label>
-                <textarea
-                  name="regime_notes"
-                  rows={3}
-                  defaultValue={parseRegime(editingEmploye.regime_alimentaire).notes}
-                  className="w-full px-3 py-2 border rounded-lg"
-                  placeholder="Ex: allergie aux noix, intolérance au lactose..."
-                />
+                <textarea name="regime_notes" rows={3} defaultValue={parseRegime(editingEmploye.regime_alimentaire).notes}
+                  className="w-full px-3 py-2 border rounded-lg" placeholder="Ex: allergie aux noix..." />
               </div>
-
               <div className="flex justify-end gap-3 pt-4 border-t">
-                <button type="button" onClick={() => setEditingEmploye(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
-                  Annuler
-                </button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  Enregistrer toutes mes informations
-                </button>
+                <button type="button" onClick={() => setEditingEmploye(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Annuler</button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Enregistrer</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal édition élève (soi-même) ── */}
+      {isEleve && editingEleveSelf && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div className="p-6 border-b">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold">Mes informations</h3>
+                <button onClick={() => setEditingEleveSelf(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+              </div>
+            </div>
+            <form onSubmit={updateSelfEleveInfo} className="p-6 space-y-4">
+              {config.eleve_peut_modifier_telephone && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">📱 Mon téléphone</label>
+                    <input name="telephone_eleve" type="tel" defaultValue={selfEleveData.telephone_eleve || ''}
+                      className="w-full px-3 py-2 border rounded-lg" placeholder="+32 123 45 67 89" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">👪 Téléphone d'un parent</label>
+                    <input name="telephone_parent" type="tel" defaultValue={selfEleveData.telephone_parent || ''}
+                      className="w-full px-3 py-2 border rounded-lg" placeholder="+32 123 45 67 89" />
+                  </div>
+                </>
+              )}
+              {config.eleve_peut_modifier_regime && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">🍽️ Régime alimentaire</label>
+                    <select name="regime" defaultValue={parseRegime(selfEleveData.regime_alimentaire).regime}
+                      className="w-full px-3 py-2 border rounded-lg">
+                      <option value="Omnivore">Omnivore</option>
+                      <option value="Végétarien">Végétarien</option>
+                      <option value="Halal">Halal</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">📝 Allergies / intolérances</label>
+                    <textarea name="regime_notes" rows={3} defaultValue={parseRegime(selfEleveData.regime_alimentaire).notes}
+                      className="w-full px-3 py-2 rounded-lg border" placeholder="Ex: allergie aux noix..." />
+                  </div>
+                </>
+              )}
+              <div className="flex justify-end gap-3 pt-4">
+                <button type="button" onClick={() => setEditingEleveSelf(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">Annuler</button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Enregistrer</button>
               </div>
             </form>
           </div>

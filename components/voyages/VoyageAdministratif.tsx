@@ -16,6 +16,8 @@ interface Eleve {
   prenom: string;
   classe: string;
   regime_alimentaire: any;
+  date_naissance: string | null;
+  nationalite: string | null;
 }
 
 interface Paiement {
@@ -83,10 +85,12 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
         fiche_medicale_url, fiche_medicale_verifiee,
         carte_mutuelle_url, carte_mutuelle_verifiee,
         carte_identite_url, carte_identite_verifiee,
-        eleve:students!inner(matricule, nom, prenom, classe, regime_alimentaire)
+        eleve:students!inner(
+          matricule, nom, prenom, classe,
+          regime_alimentaire, date_naissance, nationalite
+        )
       `)
-      .eq('voyage_id', voyageId)
-      .eq('participe', true);
+      .eq('voyage_id', voyageId);
 
     if (!partsData) {
       setLoading(false);
@@ -123,12 +127,11 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
     if (!p.participe) return false;
     if (config.passport_requis && (!p.passport_numero || !p.passport_verifie)) return false;
     if (config.visa_requis && (!p.visa_numero || !p.visa_verifie)) return false;
-    if (!p.fiche_medicale_url) return false;
-    if (!p.carte_mutuelle_url) return false;
-    if (!p.carte_identite_url) return false;
-    // Montant : on utilise le montant par défaut du voyage
-    if (config.montant_attendu_defaut != null && getTotalPaye(p) !== config.montant_attendu_defaut) {
-      return false;
+    if (!p.fiche_medicale_url || !p.fiche_medicale_verifiee) return false;
+    if (!p.carte_mutuelle_url || !p.carte_mutuelle_verifiee) return false;
+    if (!p.carte_identite_url || !p.carte_identite_verifiee) return false;
+    if (config.montant_attendu_defaut != null) {
+      if (getTotalPaye(p) < config.montant_attendu_defaut) return false;
     }
     return true;
   };
@@ -228,10 +231,14 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
                 ? p.eleve.regime_alimentaire.regime
                 : 'Omnivore';
 
-              const Dot = ({ ok, title }: { ok: boolean; title?: string }) => (
+              const Dot = ({ status, title }: { status: 'ok' | 'warning' | 'missing'; title?: string }) => (
                 <span
                   title={title}
-                  className={`inline-block w-3 h-3 rounded-full ${ok ? 'bg-green-500' : 'bg-red-500'}`}
+                  className={`inline-block w-3 h-3 rounded-full ${
+                    status === 'ok' ? 'bg-green-500' :
+                    status === 'warning' ? 'bg-orange-500' :
+                    'bg-red-500'
+                  }`}
                 />
               );
 
@@ -255,46 +262,104 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
                   <td className="px-3 py-2 text-center text-xs">
                     {regime === 'Omnivore' ? '🍖' : regime === 'Végétarien' ? '🥬' : regime === 'Halal' ? '🕌' : regime}
                   </td>
+
+                  {/* Passeport */}
                   <td className="px-3 py-2 text-center">
                     {config.passport_requis ? (
-                      <Dot ok={!!p.passport_numero && p.passport_verifie} title={
-                        !p.passport_numero ? 'Non renseigné' : !p.passport_verifie ? 'Non vérifié' : 'OK'
-                      } />
+                      <Dot
+                        status={
+                          !p.passport_numero ? 'missing' :
+                          !p.passport_verifie ? 'warning' :
+                          'ok'
+                        }
+                        title={
+                          !p.passport_numero ? 'Non renseigné' :
+                          !p.passport_verifie ? 'À vérifier' :
+                          'Vérifié'
+                        }
+                      />
                     ) : (
                       <span className="text-gray-300">—</span>
                     )}
                   </td>
+
+                  {/* Visa */}
                   <td className="px-3 py-2 text-center">
                     {config.visa_requis ? (
-                      <Dot ok={!!p.visa_numero && p.visa_verifie} title={
-                        !p.visa_numero ? 'Non renseigné' : !p.visa_verifie ? 'Non vérifié' : 'OK'
-                      } />
+                      <Dot
+                        status={
+                          !p.visa_numero ? 'missing' :
+                          !p.visa_verifie ? 'warning' :
+                          'ok'
+                        }
+                        title={
+                          !p.visa_numero ? 'Non renseigné' :
+                          !p.visa_verifie ? 'À vérifier' :
+                          'Vérifié'
+                        }
+                      />
                     ) : (
                       <span className="text-gray-300">—</span>
                     )}
                   </td>
+
+                  {/* Fiche médicale */}
                   <td className="px-3 py-2 text-center">
-                    <Dot ok={!!p.fiche_medicale_url} title={p.fiche_medicale_verifiee ? 'Vérifiée' : p.fiche_medicale_url ? 'À vérifier' : 'Manquante'} />
+                    <Dot
+                      status={
+                        !p.fiche_medicale_url ? 'missing' :
+                        !p.fiche_medicale_verifiee ? 'warning' :
+                        'ok'
+                      }
+                      title={
+                        !p.fiche_medicale_url ? 'Manquante' :
+                        !p.fiche_medicale_verifiee ? 'À vérifier' :
+                        'Vérifiée'
+                      }
+                    />
                   </td>
+
+                  {/* Carte mutuelle */}
                   <td className="px-3 py-2 text-center">
-                    <Dot ok={!!p.carte_mutuelle_url} title={p.carte_mutuelle_verifiee ? 'Vérifiée' : p.carte_mutuelle_url ? 'À vérifier' : 'Manquante'} />
+                    <Dot
+                      status={
+                        !p.carte_mutuelle_url ? 'missing' :
+                        !p.carte_mutuelle_verifiee ? 'warning' :
+                        'ok'
+                      }
+                      title={
+                        !p.carte_mutuelle_url ? 'Manquante' :
+                        !p.carte_mutuelle_verifiee ? 'À vérifier' :
+                        'Vérifiée'
+                      }
+                    />
                   </td>
+
+                  {/* Carte identité */}
                   <td className="px-3 py-2 text-center">
-                    <Dot ok={!!p.carte_identite_url} title={p.carte_identite_verifiee ? 'Vérifiée' : p.carte_identite_url ? 'À vérifier' : 'Manquante'} />
+                    <Dot
+                      status={
+                        !p.carte_identite_url ? 'missing' :
+                        !p.carte_identite_verifiee ? 'warning' :
+                        'ok'
+                      }
+                      title={
+                        !p.carte_identite_url ? 'Manquante' :
+                        !p.carte_identite_verifiee ? 'À vérifier' :
+                        'Vérifiée'
+                      }
+                    />
                   </td>
+
+                  {/* Paiement */}
                   <td className="px-3 py-2 text-center text-xs font-mono">
                     {(() => {
                       const attendu = config.montant_attendu_defaut;
-                      
+
                       if (attendu == null) {
-                        // Pas de montant demandé défini → juste afficher le payé en neutre
-                        return (
-                          <span className="text-gray-500">
-                            {totalPaye}€
-                          </span>
-                        );
+                        return <span className="text-gray-500">{totalPaye}€</span>;
                       }
-                      
+
                       if (totalPaye === attendu) {
                         return (
                           <span className="text-green-600 font-bold" title="Montant complet">
@@ -302,7 +367,7 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
                           </span>
                         );
                       }
-                      
+
                       if (totalPaye < attendu) {
                         return (
                           <span className="text-red-600 font-bold" title={`Reste ${attendu - totalPaye}€ à payer`}>
@@ -310,8 +375,7 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
                           </span>
                         );
                       }
-                      
-                      // totalPaye > attendu
+
                       return (
                         <span className="text-orange-500 font-bold" title={`Trop-perçu de ${totalPaye - attendu}€ — à rembourser`}>
                           ⚠️ {totalPaye}/{attendu}€
@@ -344,6 +408,53 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
   );
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Composant Section 
+// ─────────────────────────────────────────────────────────────────────────────
+
+function Section({
+  title,
+  id,
+  sectionEdition,
+  onEdit,
+  onCancel,
+  children,
+  editContent,
+}: {
+  title: string;
+  id: string;
+  sectionEdition: string | null;
+  onEdit: (id: string) => void;
+  onCancel: () => void;
+  children: React.ReactNode;
+  editContent: React.ReactNode;
+}) {
+  return (
+    <div className="border rounded-lg p-4">
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="font-semibold text-gray-800">{title}</h3>
+        {sectionEdition === id ? (
+          <button
+            onClick={onCancel}
+            className="text-xs text-gray-500 hover:text-gray-700"
+          >
+            Annuler
+          </button>
+        ) : (
+          <button
+            onClick={() => onEdit(id)}
+            className="text-xs text-blue-600 hover:text-blue-800"
+          >
+            ✏️ Modifier
+          </button>
+        )}
+      </div>
+      {sectionEdition === id ? editContent : children}
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Modal "Fiche élève"
 // ─────────────────────────────────────────────────────────────────────────────
@@ -365,22 +476,103 @@ function FicheEleveAdmin({
   const [sectionEdition, setSectionEdition] = useState<string | null>(null);
   const [showAddPaiement, setShowAddPaiement] = useState(false);
 
-  const [passportNumero, setPassportNumero] = useState(participant.passport_numero || '');
-  const [passportVerifie, setPassportVerifie] = useState(participant.passport_verifie);
-  const [visaNumero, setVisaNumero] = useState(participant.visa_numero || '');
-  const [visaVerifie, setVisaVerifie] = useState(participant.visa_verifie);
+  // ── Copies locales (option B) ──────────────────────────────────────────
+  const [passport, setPassport] = useState({
+    numero: participant.passport_numero || '',
+    verifie: participant.passport_verifie,
+  });
+  const [visa, setVisa] = useState({
+    numero: participant.visa_numero || '',
+    verifie: participant.visa_verifie,
+  });
+  const [etatCivil, setEtatCivil] = useState({
+    date_naissance: participant.eleve.date_naissance,
+    nationalite: participant.eleve.nationalite,
+  });
+  const [paiements, setPaiements] = useState<Paiement[]>(participant.paiements);
+  const [documents, setDocuments] = useState({
+    fiche_medicale_url: participant.fiche_medicale_url,
+    fiche_medicale_verifiee: participant.fiche_medicale_verifiee,
+    carte_mutuelle_url: participant.carte_mutuelle_url,
+    carte_mutuelle_verifiee: participant.carte_mutuelle_verifiee,
+    carte_identite_url: participant.carte_identite_url,
+    carte_identite_verifiee: participant.carte_identite_verifiee,
+  });
 
-  const totalPaye = participant.paiements.reduce((s, v) => s + Number(v.montant), 0);
+  // Drafts en cours d'édition
+  const [draftPassport, setDraftPassport] = useState({
+    numero: participant.passport_numero || '',
+    verifie: participant.passport_verifie,
+  });
+  const [draftVisa, setDraftVisa] = useState({
+    numero: participant.visa_numero || '',
+    verifie: participant.visa_verifie,
+  });
+  const [draftEtatCivil, setDraftEtatCivil] = useState({
+    date_naissance: participant.eleve.date_naissance?.split('T')[0] || '',
+    nationalite: participant.eleve.nationalite || '',
+  });
+
+  const totalPaye = paiements.reduce((s, v) => s + Number(v.montant), 0);
   const attendu = config.montant_attendu_defaut;
 
-  const saveParticipantField = async (payload: Record<string, any>) => {
+  // ── Helpers ────────────────────────────────────────────────────────────
+
+  const savePassport = async () => {
     setSaving(true);
     const { error } = await supabase
       .from('voyage_participants')
-      .update(payload)
+      .update({
+        passport_numero: draftPassport.numero || null,
+        passport_verifie: draftPassport.verifie,
+      })
       .eq('id', participant.id);
     setSaving(false);
     if (!error) {
+      setPassport(draftPassport);
+      onUpdate();
+      setSectionEdition(null);
+    } else {
+      alert('Erreur lors de la sauvegarde');
+      console.error(error);
+    }
+  };
+
+  const saveVisa = async () => {
+    setSaving(true);
+    const { error } = await supabase
+      .from('voyage_participants')
+      .update({
+        visa_numero: draftVisa.numero || null,
+        visa_verifie: draftVisa.verifie,
+      })
+      .eq('id', participant.id);
+    setSaving(false);
+    if (!error) {
+      setVisa(draftVisa);
+      onUpdate();
+      setSectionEdition(null);
+    } else {
+      alert('Erreur lors de la sauvegarde');
+      console.error(error);
+    }
+  };
+
+  const saveEtatCivil = async () => {
+    setSaving(true);
+    const { error } = await supabase
+      .from('students')
+      .update({
+        date_naissance: draftEtatCivil.date_naissance || null,
+        nationalite: draftEtatCivil.nationalite || null,
+      })
+      .eq('matricule', participant.eleve.matricule);
+    setSaving(false);
+    if (!error) {
+      setEtatCivil({
+        date_naissance: draftEtatCivil.date_naissance,
+        nationalite: draftEtatCivil.nationalite,
+      });
       onUpdate();
       setSectionEdition(null);
     } else {
@@ -417,31 +609,72 @@ function FicheEleveAdmin({
     const urlField = `${type}_url`;
     const verifField = `${type}_verifiee`;
 
-    await saveParticipantField({
+    const { error: dbError } = await supabase
+      .from('voyage_participants')
+      .update({ [urlField]: urlWithCacheBust, [verifField]: false })
+      .eq('id', participant.id);
+
+    if (dbError) {
+      alert('Erreur lors de la sauvegarde');
+      console.error(dbError);
+      setSaving(false);
+      return;
+    }
+
+    setDocuments(prev => ({
+      ...prev,
       [urlField]: urlWithCacheBust,
       [verifField]: false,
-    });
-
+    }));
+    onUpdate();
     setSaving(false);
   };
 
   const marquerVerifie = async (
     type: 'fiche_medicale' | 'carte_mutuelle' | 'carte_identite'
   ) => {
-    await saveParticipantField({ [`${type}_verifiee`]: true });
+    setSaving(true);
+    const { error } = await supabase
+      .from('voyage_participants')
+      .update({ [`${type}_verifiee`]: true })
+      .eq('id', participant.id);
+    setSaving(false);
+    if (!error) {
+      setDocuments(prev => ({ ...prev, [`${type}_verifiee`]: true }));
+      onUpdate();
+    }
+  };
+
+  const supprimerDocument = async (
+    type: 'fiche_medicale' | 'carte_mutuelle' | 'carte_identite'
+  ) => {
+    if (!confirm('Supprimer définitivement ce document ? L\'élève devra le recharger.')) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from('voyage_participants')
+      .update({ [`${type}_url`]: null, [`${type}_verifiee`]: false })
+      .eq('id', participant.id);
+    setSaving(false);
+    if (!error) {
+      setDocuments(prev => ({ ...prev, [`${type}_url`]: null, [`${type}_verifiee`]: false }));
+      onUpdate();
+    }
   };
 
   const ajouterPaiement = async (montant: number, date: string) => {
     setSaving(true);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('voyage_paiements')
       .insert({
         voyage_participant_id: participant.id,
         montant,
         date_versement: date,
-      });
+      })
+      .select()
+      .single();
     setSaving(false);
-    if (!error) {
+    if (!error && data) {
+      setPaiements([{ id: data.id, montant: data.montant, date_versement: data.date_versement }, ...paiements]);
       setShowAddPaiement(false);
       onUpdate();
     } else {
@@ -451,43 +684,14 @@ function FicheEleveAdmin({
 
   const supprimerPaiement = async (id: string) => {
     if (!confirm('Supprimer ce versement ?')) return;
-    await supabase.from('voyage_paiements').delete().eq('id', id);
-    onUpdate();
+    setSaving(true);
+    const { error } = await supabase.from('voyage_paiements').delete().eq('id', id);
+    setSaving(false);
+    if (!error) {
+      setPaiements(paiements.filter(p => p.id !== id));
+      onUpdate();
+    }
   };
-
-  const Section = ({
-    title,
-    id,
-    children,
-    editContent,
-  }: {
-    title: string;
-    id: string;
-    children: React.ReactNode;
-    editContent: React.ReactNode;
-  }) => (
-    <div className="border rounded-lg p-4">
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="font-semibold text-gray-800">{title}</h3>
-        {sectionEdition === id ? (
-          <button
-            onClick={() => setSectionEdition(null)}
-            className="text-xs text-gray-500 hover:text-gray-700"
-          >
-            Annuler
-          </button>
-        ) : (
-          <button
-            onClick={() => setSectionEdition(id)}
-            className="text-xs text-blue-600 hover:text-blue-800"
-          >
-            ✏️ Modifier
-          </button>
-        )}
-      </div>
-      {sectionEdition === id ? editContent : children}
-    </div>
-  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -511,47 +715,124 @@ function FicheEleveAdmin({
 
         <div className="p-6 space-y-4">
 
+          {/* Participation */}
+          <div className="border rounded-lg p-4 bg-gray-50">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={participant.participe}
+                onChange={async (e) => {
+                  await supabase
+                    .from('voyage_participants')
+                    .update({ participe: e.target.checked })
+                    .eq('id', participant.id);
+                  onUpdate();
+                }}
+                disabled={saving}
+                className="w-5 h-5 rounded"
+              />
+              <span className="font-medium text-gray-800">Participe au voyage</span>
+            </label>
+            <p className="text-xs text-gray-500 mt-2">
+              Si décoché, l'élève reste dans la liste mais avec l'indicateur ❌.
+            </p>
+          </div>
+
+          {/* État civil */}
+          <Section
+            title="👤 État civil"
+            id="etat-civil"
+            sectionEdition={sectionEdition}
+            onEdit={setSectionEdition}
+            onCancel={() => setSectionEdition(null)}
+            editContent={
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date de naissance
+                  </label>
+                  <input
+                    type="date"
+                    value={draftEtatCivil.date_naissance}
+                    onChange={(e) => setDraftEtatCivil({ ...draftEtatCivil, date_naissance: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nationalité
+                  </label>
+                  <input
+                    type="text"
+                    value={draftEtatCivil.nationalite}
+                    onChange={(e) => setDraftEtatCivil({ ...draftEtatCivil, nationalite: e.target.value })}
+                    placeholder="Ex : Belge"
+                    className="w-full px-3 py-2 border rounded-lg"
+                  />
+                </div>
+                <button
+                  onClick={saveEtatCivil}
+                  disabled={saving}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Enregistrer
+                </button>
+              </div>
+            }
+          >
+            <div className="text-sm space-y-1">
+              <p>
+                <span className="font-medium">Date de naissance :</span>{' '}
+                {etatCivil.date_naissance
+                  ? new Date(etatCivil.date_naissance).toLocaleDateString('fr-BE')
+                  : <span className="text-gray-400 italic">Non renseignée</span>}
+              </p>
+              <p>
+                <span className="font-medium">Nationalité :</span>{' '}
+                {etatCivil.nationalite || <span className="text-gray-400 italic">Non renseignée</span>}
+              </p>
+            </div>
+          </Section>
+
           {/* Passeport */}
           {config.passport_requis && (
             <Section
               title="🛂 Passeport"
               id="passport"
+              sectionEdition={sectionEdition}
+              onEdit={setSectionEdition}
+              onCancel={() => setSectionEdition(null)}
               editContent={
                 <div className="space-y-2">
                   <input
                     type="text"
-                    value={passportNumero}
-                    onChange={(e) => setPassportNumero(e.target.value)}
+                    value={draftPassport.numero}
+                    onChange={(e) => setDraftPassport({ ...draftPassport, numero: e.target.value })}
                     placeholder="Numéro de passeport"
                     className="w-full px-3 py-2 border rounded-lg"
                   />
                   <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
-                      checked={passportVerifie}
-                      onChange={(e) => setPassportVerifie(e.target.checked)}
+                      checked={draftPassport.verifie}
+                      onChange={(e) => setDraftPassport({ ...draftPassport, verifie: e.target.checked })}
                     />
                     Vérifié
                   </label>
                   <button
-                    onClick={() =>
-                      saveParticipantField({
-                        passport_numero: passportNumero,
-                        passport_verifie: passportVerifie,
-                      })
-                    }
+                    onClick={savePassport}
                     disabled={saving}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
                   >
                     Enregistrer
                   </button>
                 </div>
               }
             >
-              {participant.passport_numero ? (
+              {passport.numero ? (
                 <p className="text-sm">
-                  Numéro : <span className="font-mono">{participant.passport_numero}</span>{' '}
-                  {participant.passport_verifie ? (
+                  Numéro : <span className="font-mono">{passport.numero}</span>{' '}
+                  {passport.verifie ? (
                     <span className="text-green-600 font-medium">✅ Vérifié</span>
                   ) : (
                     <span className="text-orange-500 font-medium">⚠️ Non vérifié</span>
@@ -568,42 +849,40 @@ function FicheEleveAdmin({
             <Section
               title="🛂 Visa"
               id="visa"
+              sectionEdition={sectionEdition}
+              onEdit={setSectionEdition}
+              onCancel={() => setSectionEdition(null)}
               editContent={
                 <div className="space-y-2">
                   <input
                     type="text"
-                    value={visaNumero}
-                    onChange={(e) => setVisaNumero(e.target.value)}
+                    value={draftVisa.numero}
+                    onChange={(e) => setDraftVisa({ ...draftVisa, numero: e.target.value })}
                     placeholder="Numéro de visa"
                     className="w-full px-3 py-2 border rounded-lg"
                   />
                   <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
-                      checked={visaVerifie}
-                      onChange={(e) => setVisaVerifie(e.target.checked)}
+                      checked={draftVisa.verifie}
+                      onChange={(e) => setDraftVisa({ ...draftVisa, verifie: e.target.checked })}
                     />
                     Vérifié
                   </label>
                   <button
-                    onClick={() =>
-                      saveParticipantField({
-                        visa_numero: visaNumero,
-                        visa_verifie: visaVerifie,
-                      })
-                    }
+                    onClick={saveVisa}
                     disabled={saving}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
                   >
                     Enregistrer
                   </button>
                 </div>
               }
             >
-              {participant.visa_numero ? (
+              {visa.numero ? (
                 <p className="text-sm">
-                  Numéro : <span className="font-mono">{participant.visa_numero}</span>{' '}
-                  {participant.visa_verifie ? (
+                  Numéro : <span className="font-mono">{visa.numero}</span>{' '}
+                  {visa.verifie ? (
                     <span className="text-green-600 font-medium">✅ Vérifié</span>
                   ) : (
                     <span className="text-orange-500 font-medium">⚠️ Non vérifié</span>
@@ -615,10 +894,13 @@ function FicheEleveAdmin({
             </Section>
           )}
 
-          {/* Régime alimentaire */}
+          {/* Régime alimentaire (lecture seule) */}
           <Section
             title="🍽️ Régime alimentaire"
             id="regime"
+            sectionEdition={sectionEdition}
+            onEdit={setSectionEdition}
+            onCancel={() => setSectionEdition(null)}
             editContent={
               <p className="text-sm text-gray-500">
                 Le régime alimentaire se modifie depuis l'onglet Participants.
@@ -651,6 +933,9 @@ function FicheEleveAdmin({
           <Section
             title="💰 Paiements"
             id="paiements"
+            sectionEdition={sectionEdition}
+            onEdit={setSectionEdition}
+            onCancel={() => setSectionEdition(null)}
             editContent={
               <p className="text-sm text-gray-500">
                 Utilisez le bouton "Ajouter un versement" ci-dessous.
@@ -662,17 +947,20 @@ function FicheEleveAdmin({
                 <p className="text-sm">
                   <span className="font-medium">Demandé :</span> {attendu}€{' '}
                   <span className="font-medium ml-3">Payé :</span>{' '}
-                  {totalPaye === attendu && (
-                    <span className="text-green-600 font-bold">🟢 {totalPaye}€</span>
-                  )}
                   {totalPaye < attendu && (
                     <span className="text-red-600 font-bold">
                       🔴 {totalPaye}€ (reste {attendu - totalPaye}€)
                     </span>
                   )}
+                  {totalPaye === attendu && (
+                    <span className="text-green-600 font-bold">🟢 {totalPaye}€</span>
+                  )}
                   {totalPaye > attendu && (
-                    <span className="text-orange-500 font-bold">
-                      ⚠️ {totalPaye}€ (trop-perçu de {totalPaye - attendu}€ — à rembourser)
+                    <span className="text-green-600 font-bold">
+                      🟢 {totalPaye}€
+                      <span className="text-orange-500 font-normal ml-2">
+                        (trop-perçu de {totalPaye - attendu}€)
+                      </span>
                     </span>
                   )}
                 </p>
@@ -683,9 +971,9 @@ function FicheEleveAdmin({
                 </p>
               )}
 
-              {participant.paiements.length > 0 && (
+              {paiements.length > 0 && (
                 <ul className="text-sm space-y-1 mt-2">
-                  {participant.paiements.map((p) => (
+                  {paiements.map((p) => (
                     <li
                       key={p.id}
                       className="flex justify-between items-center border rounded px-2 py-1"
@@ -705,7 +993,7 @@ function FicheEleveAdmin({
 
               <button
                 onClick={() => setShowAddPaiement(true)}
-                className="mt-2 px-3 py-1 bg-green-600 text-white rounded text-xs"
+                className="mt-2 px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
               >
                 + Ajouter un versement
               </button>
@@ -719,16 +1007,70 @@ function FicheEleveAdmin({
               carte_mutuelle: '💳 Carte européenne de mutuelle',
               carte_identite: '🪪 Carte d\'identité',
             };
-            const url = participant[`${type}_url` as keyof Participant] as string | null;
-            const verifiee = participant[`${type}_verifiee` as keyof Participant] as boolean;
+            const url = documents[`${type}_url` as keyof typeof documents] as string | null;
+            const verifiee = documents[`${type}_verifiee` as keyof typeof documents] as boolean;
 
             return (
-              <Section
-                key={type}
-                title={labels[type]}
-                id={type}
-                editContent={
+              <div key={type} className="border rounded-lg p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-semibold text-gray-800">{labels[type]}</h3>
+                  {url && (
+                    <button
+                      onClick={() => supprimerDocument(type)}
+                      disabled={saving}
+                      className="text-red-500 hover:text-red-700 text-sm"
+                      title="Supprimer le document"
+                    >
+                      🗑️
+                    </button>
+                  )}
+                </div>
+
+                {url ? (
+                  <div className="space-y-2 text-sm">
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 hover:underline block"
+                    >
+                      📎 Voir le document
+                    </a>
+                    {verifiee ? (
+                      <p className="text-green-600 font-medium">✅ Vérifié</p>
+                    ) : (
+                      <p className="text-orange-500 font-medium">⚠️ À vérifier</p>
+                    )}
+
+                    {!verifiee && (
+                      <button
+                        onClick={() => marquerVerifie(type)}
+                        disabled={saving}
+                        className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:opacity-50"
+                      >
+                        ✅ Marquer comme vérifié
+                      </button>
+                    )}
+
+                    <div className="pt-2">
+                      <label className="text-xs text-gray-500 block mb-1">
+                        Remplacer le document :
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) uploadDocument(type, f);
+                        }}
+                        className="text-xs"
+                        disabled={saving}
+                      />
+                    </div>
+                  </div>
+                ) : (
                   <div className="space-y-2">
+                    <p className="text-sm text-gray-400 italic">Aucun document</p>
                     <input
                       type="file"
                       accept="image/*,application/pdf"
@@ -739,37 +1081,9 @@ function FicheEleveAdmin({
                       className="text-sm"
                       disabled={saving}
                     />
-                    {url && !verifiee && (
-                      <button
-                        onClick={() => marquerVerifie(type)}
-                        className="px-3 py-1 bg-green-600 text-white rounded text-xs"
-                      >
-                        ✅ Marquer comme vérifié
-                      </button>
-                    )}
                   </div>
-                }
-              >
-                {url ? (
-                  <div className="text-sm space-y-1">
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      📎 Voir le document
-                    </a>
-                    {verifiee ? (
-                      <p className="text-green-600 font-medium">✅ Vérifié</p>
-                    ) : (
-                      <p className="text-orange-500 font-medium">⚠️ À vérifier</p>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-400 italic">Aucun document</p>
                 )}
-              </Section>
+              </div>
             );
           })}
 
