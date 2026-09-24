@@ -636,7 +636,7 @@ export default function DashboardPage() {
 
       {/* Accès Archives */}
       <div className="mt-12 pt-8 border-t border-gray-200">
-        <Link href="../archives" className="block">
+        <Link href="./archives" className="block">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition flex items-center gap-4">
             <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">📦</span>
