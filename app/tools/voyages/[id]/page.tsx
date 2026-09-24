@@ -18,6 +18,7 @@ import VueEleveChoixActivites from '@/components/voyages/activites/VueEleveChoix
 import PrisePresencesActivites from '@/components/voyages/activites/PrisePresencesActivites';
 import GestionInscriptionsActivites from '@/components/voyages/activites/GestionInscriptionsActivites';
 import PrisePresencesResponsable from '@/components/voyages/activites/PrisePresencesResponsable';
+import VoyageAdministratif from '@/components/voyages/VoyageAdministratif';
 
 interface Voyage {
   id: string;
@@ -268,6 +269,7 @@ export default function VoyageDetailPage() {
 
   const tabs = [
     { id: 'participants', label: 'Participants', icon: '👥' },
+      ...(isResponsable ? [{ id: 'administratif', label: 'Administratif', icon: '📋' }] : []),
     { id: 'hebergement', label: 'Hébergement', icon: '🏨' },
     { id: 'planning', label: 'Planning', icon: '📅' },
     { id: 'charte', label: 'Charte', icon: '📜' },
@@ -333,7 +335,7 @@ export default function VoyageDetailPage() {
           {/* Badge permission */}
           {isResponsable && (
             <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-medium">
-              ⭐ Vous êtes responsable de ce voyage
+              ⭐ Vous êtes profondément responsable de ce voyage
             </div>
           )}
 
@@ -386,6 +388,13 @@ export default function VoyageDetailPage() {
             voyageId={voyageId}
             isResponsable={peutAgir}
             userType={userType}
+          />
+        )}
+
+        {activeTab === 'administratif' && (
+          <VoyageAdministratif
+            voyageId={voyageId}
+            isResponsable={isResponsable}
           />
         )}
 
