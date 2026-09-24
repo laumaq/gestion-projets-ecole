@@ -126,7 +126,10 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
     if (!p.fiche_medicale_url) return false;
     if (!p.carte_mutuelle_url) return false;
     if (!p.carte_identite_url) return false;
-    if (p.montant_attendu != null && getTotalPaye(p) < Number(p.montant_attendu)) return false;
+    // Montant : on utilise le montant par défaut du voyage
+    if (config.montant_attendu_defaut != null && getTotalPaye(p) !== config.montant_attendu_defaut) {
+      return false;
+    }
     return true;
   };
 
@@ -280,13 +283,41 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
                     <Dot ok={!!p.carte_identite_url} title={p.carte_identite_verifiee ? 'Vérifiée' : p.carte_identite_url ? 'À vérifier' : 'Manquante'} />
                   </td>
                   <td className="px-3 py-2 text-center text-xs font-mono">
-                    {p.montant_attendu != null ? (
-                      <span className={totalPaye >= Number(p.montant_attendu) ? 'text-green-600 font-bold' : 'text-orange-600 font-bold'}>
-                        {totalPaye}/{p.montant_attendu}€
-                      </span>
-                    ) : (
-                      <span className="text-gray-400">—</span>
-                    )}
+                    {(() => {
+                      const attendu = config.montant_attendu_defaut;
+                      
+                      if (attendu == null) {
+                        // Pas de montant demandé défini → juste afficher le payé en neutre
+                        return (
+                          <span className="text-gray-500">
+                            {totalPaye}€
+                          </span>
+                        );
+                      }
+                      
+                      if (totalPaye === attendu) {
+                        return (
+                          <span className="text-green-600 font-bold" title="Montant complet">
+                            🟢 {totalPaye}€
+                          </span>
+                        );
+                      }
+                      
+                      if (totalPaye < attendu) {
+                        return (
+                          <span className="text-red-600 font-bold" title={`Reste ${attendu - totalPaye}€ à payer`}>
+                            🔴 {totalPaye}/{attendu}€
+                          </span>
+                        );
+                      }
+                      
+                      // totalPaye > attendu
+                      return (
+                        <span className="text-orange-500 font-bold" title={`Trop-perçu de ${totalPaye - attendu}€ — à rembourser`}>
+                          ⚠️ {totalPaye}/{attendu}€
+                        </span>
+                      );
+                    })()}
                   </td>
                 </tr>
               );
@@ -338,9 +369,9 @@ function FicheEleveAdmin({
   const [passportVerifie, setPassportVerifie] = useState(participant.passport_verifie);
   const [visaNumero, setVisaNumero] = useState(participant.visa_numero || '');
   const [visaVerifie, setVisaVerifie] = useState(participant.visa_verifie);
-  const [montantAttendu, setMontantAttendu] = useState<number | null>(participant.montant_attendu);
 
   const totalPaye = participant.paiements.reduce((s, v) => s + Number(v.montant), 0);
+  const attendu = config.montant_attendu_defaut;
 
   const saveParticipantField = async (payload: Record<string, any>) => {
     setSaving(true);
@@ -358,7 +389,10 @@ function FicheEleveAdmin({
     }
   };
 
-  const uploadDocument = async (type: 'fiche_medicale' | 'carte_mutuelle' | 'carte_identite', file: File) => {
+  const uploadDocument = async (
+    type: 'fiche_medicale' | 'carte_mutuelle' | 'carte_identite',
+    file: File
+  ) => {
     const ext = file.name.split('.').pop() || 'pdf';
     const path = `${voyageId}/${participant.eleve_id}/${type}.${ext}`;
 
@@ -391,7 +425,9 @@ function FicheEleveAdmin({
     setSaving(false);
   };
 
-  const marquerVerifie = async (type: 'fiche_medicale' | 'carte_mutuelle' | 'carte_identite') => {
+  const marquerVerifie = async (
+    type: 'fiche_medicale' | 'carte_mutuelle' | 'carte_identite'
+  ) => {
     await saveParticipantField({ [`${type}_verifiee`]: true });
   };
 
@@ -464,7 +500,12 @@ function FicheEleveAdmin({
               </h2>
               <p className="text-sm text-gray-500">{participant.eleve.classe}</p>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 text-xl"
+            >
+              ✕
+            </button>
           </div>
         </div>
 
@@ -485,11 +526,20 @@ function FicheEleveAdmin({
                     className="w-full px-3 py-2 border rounded-lg"
                   />
                   <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={passportVerifie} onChange={(e) => setPassportVerifie(e.target.checked)} />
+                    <input
+                      type="checkbox"
+                      checked={passportVerifie}
+                      onChange={(e) => setPassportVerifie(e.target.checked)}
+                    />
                     Vérifié
                   </label>
                   <button
-                    onClick={() => saveParticipantField({ passport_numero: passportNumero, passport_verifie: passportVerifie })}
+                    onClick={() =>
+                      saveParticipantField({
+                        passport_numero: passportNumero,
+                        passport_verifie: passportVerifie,
+                      })
+                    }
                     disabled={saving}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
                   >
@@ -528,11 +578,20 @@ function FicheEleveAdmin({
                     className="w-full px-3 py-2 border rounded-lg"
                   />
                   <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={visaVerifie} onChange={(e) => setVisaVerifie(e.target.checked)} />
+                    <input
+                      type="checkbox"
+                      checked={visaVerifie}
+                      onChange={(e) => setVisaVerifie(e.target.checked)}
+                    />
                     Vérifié
                   </label>
                   <button
-                    onClick={() => saveParticipantField({ visa_numero: visaNumero, visa_verifie: visaVerifie })}
+                    onClick={() =>
+                      saveParticipantField({
+                        visa_numero: visaNumero,
+                        visa_verifie: visaVerifie,
+                      })
+                    }
                     disabled={saving}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
                   >
@@ -567,45 +626,25 @@ function FicheEleveAdmin({
             }
           >
             {(() => {
-              const r = typeof participant.eleve.regime_alimentaire === 'object' && participant.eleve.regime_alimentaire !== null
-                ? participant.eleve.regime_alimentaire
-                : null;
+              const r =
+                typeof participant.eleve.regime_alimentaire === 'object' &&
+                participant.eleve.regime_alimentaire !== null
+                  ? participant.eleve.regime_alimentaire
+                  : null;
               if (!r) return <p className="text-sm text-gray-400 italic">Non renseigné</p>;
               return (
                 <div className="text-sm">
-                  <p><span className="font-medium">Régime :</span> {r.regime}</p>
-                  {r.notes && <p className="text-gray-600 mt-1"><span className="font-medium">Notes :</span> {r.notes}</p>}
+                  <p>
+                    <span className="font-medium">Régime :</span> {r.regime}
+                  </p>
+                  {r.notes && (
+                    <p className="text-gray-600 mt-1">
+                      <span className="font-medium">Notes :</span> {r.notes}
+                    </p>
+                  )}
                 </div>
               );
             })()}
-          </Section>
-
-          {/* Montant attendu individuel */}
-          <Section
-            title="🎯 Montant attendu (individuel)"
-            id="montant"
-            editContent={
-              <div className="space-y-2">
-                <input
-                  type="number"
-                  step="0.01"
-                  value={montantAttendu ?? ''}
-                  onChange={(e) => setMontantAttendu(e.target.value ? Number(e.target.value) : null)}
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-                <button
-                  onClick={() => saveParticipantField({ montant_attendu: montantAttendu })}
-                  disabled={saving}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
-                >
-                  Enregistrer
-                </button>
-              </div>
-            }
-          >
-            <p className="text-sm">
-              {participant.montant_attendu != null ? `${participant.montant_attendu}€` : <span className="text-gray-400 italic">Non défini</span>}
-            </p>
           </Section>
 
           {/* Paiements */}
@@ -618,27 +657,52 @@ function FicheEleveAdmin({
               </p>
             }
           >
-            <div className="space-y-2">
-              {participant.montant_attendu != null && (
+            <div className="space-y-3">
+              {attendu != null ? (
                 <p className="text-sm">
-                  <span className="font-medium">Attendu :</span> {participant.montant_attendu}€{' '}
+                  <span className="font-medium">Demandé :</span> {attendu}€{' '}
                   <span className="font-medium ml-3">Payé :</span>{' '}
-                  <span className={totalPaye >= Number(participant.montant_attendu) ? 'text-green-600 font-bold' : 'text-orange-600 font-bold'}>
-                    {totalPaye}€
-                  </span>
+                  {totalPaye === attendu && (
+                    <span className="text-green-600 font-bold">🟢 {totalPaye}€</span>
+                  )}
+                  {totalPaye < attendu && (
+                    <span className="text-red-600 font-bold">
+                      🔴 {totalPaye}€ (reste {attendu - totalPaye}€)
+                    </span>
+                  )}
+                  {totalPaye > attendu && (
+                    <span className="text-orange-500 font-bold">
+                      ⚠️ {totalPaye}€ (trop-perçu de {totalPaye - attendu}€ — à rembourser)
+                    </span>
+                  )}
+                </p>
+              ) : (
+                <p className="text-sm">
+                  <span className="font-medium">Payé :</span>{' '}
+                  <span className="text-gray-700 font-bold">{totalPaye}€</span>
                 </p>
               )}
+
               {participant.paiements.length > 0 && (
                 <ul className="text-sm space-y-1 mt-2">
                   {participant.paiements.map((p) => (
-                    <li key={p.id} className="flex justify-between items-center border rounded px-2 py-1">
+                    <li
+                      key={p.id}
+                      className="flex justify-between items-center border rounded px-2 py-1"
+                    >
                       <span>{new Date(p.date_versement).toLocaleDateString('fr-BE')}</span>
                       <span className="font-mono">{p.montant}€</span>
-                      <button onClick={() => supprimerPaiement(p.id)} className="text-red-500 hover:text-red-700 text-xs">✕</button>
+                      <button
+                        onClick={() => supprimerPaiement(p.id)}
+                        className="text-red-500 hover:text-red-700 text-xs"
+                      >
+                        ✕
+                      </button>
                     </li>
                   ))}
                 </ul>
               )}
+
               <button
                 onClick={() => setShowAddPaiement(true)}
                 className="mt-2 px-3 py-1 bg-green-600 text-white rounded text-xs"
@@ -688,7 +752,12 @@ function FicheEleveAdmin({
               >
                 {url ? (
                   <div className="text-sm space-y-1">
-                    <a href={url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
                       📎 Voir le document
                     </a>
                     {verifiee ? (
@@ -707,7 +776,10 @@ function FicheEleveAdmin({
         </div>
 
         <div className="p-6 border-t flex justify-end sticky bottom-0 bg-white">
-          <button onClick={onClose} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+          >
             Fermer
           </button>
         </div>

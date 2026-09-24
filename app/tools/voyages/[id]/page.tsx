@@ -19,6 +19,7 @@ import PrisePresencesActivites from '@/components/voyages/activites/PrisePresenc
 import GestionInscriptionsActivites from '@/components/voyages/activites/GestionInscriptionsActivites';
 import PrisePresencesResponsable from '@/components/voyages/activites/PrisePresencesResponsable';
 import VoyageAdministratif from '@/components/voyages/VoyageAdministratif';
+import VoyageMesInfos from '@/components/voyages/VoyageMesInfos';
 
 interface Voyage {
   id: string;
@@ -273,6 +274,7 @@ export default function VoyageDetailPage() {
     { id: 'hebergement', label: 'Hébergement', icon: '🏨' },
     { id: 'planning', label: 'Planning', icon: '📅' },
     { id: 'charte', label: 'Charte', icon: '📜' },
+    { id: 'mes-infos', label: 'Mes infos', icon: '📝' },
   ];
 
   return (
@@ -551,6 +553,15 @@ export default function VoyageDetailPage() {
             userType={userType}
           />
         )}
+
+        {activeTab === 'mes-infos' && currentUserId && (
+          <VoyageMesInfos
+            voyageId={voyageId}
+            userType={userType}
+            userId={currentUserId}
+          />
+        )}
+
       </div>
     </div>
   );

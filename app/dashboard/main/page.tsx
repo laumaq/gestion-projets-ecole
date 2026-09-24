@@ -225,11 +225,12 @@ export default function DashboardPage() {
         else if (voyagesEleve) {
           const voyages = voyagesEleve
             .map((item: any) => item.voyages)
-            .filter((v: any): v is Voyage => 
-              v !== null && 
-              typeof v === 'object' && 
+            .filter((v: any): v is Voyage =>
+              v !== null &&
+              typeof v === 'object' &&
               'id' in v &&
-              v.statut !== 'archive'
+              v.statut !== 'archive' &&
+              v.statut !== 'preparation'  // ← ajout
             );
           setMesVoyages(voyages);
         }

@@ -16,33 +16,33 @@ export function useCharteVoyage(voyageId: string, eleveId: number | null) {
     }
     
     const loadData = async () => {
-      setLoading(true); 
-      // 1. Charger la charte
-      const { data: charteData } = await supabase
-        .from('voyage_chartes')
-        .select('contenu, version')
-        .eq('voyage_id', voyageId)
-        .order('version', { ascending: false })
-        .limit(1)
-        .single();
-
-
-      if (charteData) {
-        setCharte(charteData);
-        
-        // 2. Vérifier l'acceptation de CETTE version
-        const { data: acceptData } = await supabase
-          .from('voyage_charte_acceptations')
-          .select('id')
+      try {
+        const { data: charteData } = await supabase
+          .from('voyage_chartes')
+          .select('contenu, version')
           .eq('voyage_id', voyageId)
-          .eq('eleve_id', eleveId)
-          .eq('charte_version', charteData.version)
-          .maybeSingle();
+          .order('version', { ascending: false })
+          .limit(1)
+          .maybeSingle();  // ← changé
 
-        console.log('📜 acceptData:', acceptData);
-        setAAccepte(!!acceptData);
+        if (charteData) {
+          setCharte(charteData);
+
+          const { data: acceptData } = await supabase
+            .from('voyage_charte_acceptations')
+            .select('id')
+            .eq('voyage_id', voyageId)
+            .eq('eleve_id', eleveId)
+            .eq('charte_version', charteData.version)
+            .maybeSingle();
+
+          setAAccepte(!!acceptData);
+        }
+      } catch (err) {
+        console.error('Erreur chargement charte:', err);
+      } finally {
+        setLoading(false);  // ← toujours appelé
       }
-      setLoading(false);
     };
 
     loadData();
