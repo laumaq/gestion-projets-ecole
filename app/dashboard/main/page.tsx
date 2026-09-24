@@ -618,6 +618,23 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Accès Archives */}
+      <div className="mt-12 pt-8 border-t border-gray-200">
+        <Link href="../dashboard/archives" className="block">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition flex items-center gap-4">
+            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+              <span className="text-2xl">📦</span>
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Archives</h3>
+              <p className="text-sm text-gray-500">
+                Consultez les projets, voyages et activités terminées et archivés auxquels vous avez participé
+              </p>
+            </div>
+          </div>
+        </Link>
+      </div>
+
     </main>
   );
 }

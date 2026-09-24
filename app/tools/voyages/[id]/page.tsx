@@ -1,4 +1,4 @@
-// app/tools/voyages/[id]/page.tsx
+// /app/tools/voyages/[id]/page.tsx
 
 'use client';
 
@@ -6,18 +6,18 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { useVoyagePermissions } from '@/hooks/voyages/useVoyagePermissions';
-import { useCharteVoyage } from '@/hooks/voyages/useCharteVoyage';
+import { useVoyagePermissions } from '@/hooks/useVoyagePermissions';
+import { useCharteVoyage } from '@/hooks/useCharteVoyage';
 import ParticipantsList from '@/components/voyages/ParticipantsList';
-import HebergementConfigs from '@/components/voyages/chambres/HebergementConfigs';
-import GestionCharte from '@/components/voyages/charte/GestionCharte';
-import CharteModal from '@/components/voyages/charte/CharteModal';
+import HebergementConfigs from '@/components/voyages/HebergementConfigs';
+import GestionCharte from '@/components/voyages/GestionCharte';
+import CharteModal from '@/components/voyages/CharteModal';
 import GestionPlanning from '@/components/voyages/activites/GestionPlanning';
 import VueElevePlanning from '@/components/voyages/activites/VueElevePlanning';
 import VueEleveChoixActivites from '@/components/voyages/activites/VueEleveChoixActivites';
 import PrisePresencesActivites from '@/components/voyages/activites/PrisePresencesActivites';
-import PrisePresencesResponsable from '@/components/voyages/activites/PrisePresencesResponsable';
 import GestionInscriptionsActivites from '@/components/voyages/activites/GestionInscriptionsActivites';
+import PrisePresencesResponsable from '@/components/voyages/activites/PrisePresencesResponsable';
 
 interface Voyage {
   id: string;
@@ -33,34 +33,51 @@ export default function VoyageDetailPage() {
   const params = useParams();
   const router = useRouter();
   const voyageId = params.id as string;
-  
+
   const [voyage, setVoyage] = useState<Voyage | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('planning');
+  const [activeTab, setActiveTab] = useState('participants');
   const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
   const [currentUserEleveId, setCurrentUserEleveId] = useState<number | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showCharte, setShowCharte] = useState(false);
-  
-  // États pour les sous-onglets
-  const [planningTab, setPlanningTab] = useState<'planning' | 'eleve_choix' | 'presences' | 'presences_responsable' | 'gestion' | 'super'>('planning');  
+
+  const [planningTab, setPlanningTab] = useState<'planning' | 'eleve_choix' | 'presences' | 'gestion' | 'super'>('planning');
   const [elevePlanningTab, setElevePlanningTab] = useState<'planning' | 'choix'>('planning');
+
+  // États pour le menu statut
+  const [showStatutMenu, setShowStatutMenu] = useState(false);
+  const [updatingStatut, setUpdatingStatut] = useState(false);
 
   // Récupérer l'ID de l'utilisateur
   useEffect(() => {
     const type = localStorage.getItem('userType');
     const id = localStorage.getItem('userId');
     setCurrentUserId(id);
-    
+
     if (type === 'student' && id) {
       setCurrentUserEleveId(parseInt(id));
     }
   }, []);
-  
-  const { isLoading: permissionsLoading, hasAccess, isResponsable, userType, error } = useVoyagePermissions(voyageId);
 
-  const { charte, aAccepte, loading: charteLoading, tempsLecture, peutAccepter, accepterCharte } = 
-    useCharteVoyage(voyageId, userType === 'student' ? currentUserEleveId : null);
+  const {
+    isLoading: permissionsLoading,
+    hasAccess,
+    isResponsable,
+    userType,
+    error,
+    statut,
+    peutAgir
+  } = useVoyagePermissions(voyageId);
+
+  const {
+    charte,
+    aAccepte,
+    loading: charteLoading,
+    tempsLecture,
+    peutAccepter,
+    accepterCharte
+  } = useCharteVoyage(voyageId, userType === 'student' ? currentUserEleveId : null);
 
   useEffect(() => {
     if (hasAccess) {
@@ -87,15 +104,66 @@ export default function VoyageDetailPage() {
 
   // Gestion de l'affichage de la charte
   useEffect(() => {
-    // Ne rien faire tant qu'on charge
-    if (charteLoading || permissionsLoading || loading) {
-      return;
-    }
-    
+    if (charteLoading || permissionsLoading || loading) return;
+
     if (userType === 'student' && charte && !aAccepte) {
       setShowCharte(true);
     }
   }, [userType, charteLoading, permissionsLoading, loading, charte, aAccepte]);
+
+  // Changer le statut du voyage
+  const changerStatut = async (nouveauStatut: string) => {
+    const labels: Record<string, string> = {
+      'preparation': 'En préparation',
+      'preparation_publique': 'En préparation publique',
+      'en_cours': 'En cours',
+      'termine': 'Terminé',
+      'archive': 'Archivé'
+    };
+
+    if (!confirm(`Changer le statut du voyage en "${labels[nouveauStatut]}" ?`)) {
+      setShowStatutMenu(false);
+      return;
+    }
+
+    setUpdatingStatut(true);
+    const { error } = await supabase
+      .from('voyages')
+      .update({ statut: nouveauStatut })
+      .eq('id', voyageId);
+
+    setUpdatingStatut(false);
+    setShowStatutMenu(false);
+
+    if (error) {
+      alert('Erreur lors du changement de statut');
+      console.error(error);
+    } else {
+      window.location.reload();
+    }
+  };
+
+  const getStatutLabel = (s: string) => {
+    switch (s) {
+      case 'preparation': return 'En préparation';
+      case 'preparation_publique': return 'En préparation publique';
+      case 'en_cours': return 'En cours';
+      case 'termine': return 'Terminé';
+      case 'archive': return '📦 Archivé';
+      default: return s;
+    }
+  };
+
+  const getStatutClasses = (s: string) => {
+    switch (s) {
+      case 'preparation': return 'bg-yellow-100 text-yellow-800';
+      case 'preparation_publique': return 'bg-blue-100 text-blue-800';
+      case 'en_cours': return 'bg-green-100 text-green-800';
+      case 'termine': return 'bg-gray-100 text-gray-800';
+      case 'archive': return 'bg-gray-200 text-gray-700';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   if (permissionsLoading || loading || (userType === 'student' && charteLoading)) {
     return (
@@ -120,7 +188,7 @@ export default function VoyageDetailPage() {
           setShowCharte(false);
         }}
         onRefuser={() => {
-          router.push('/dashboard/main');
+          router.push('/dashboard');
         }}
       />
     );
@@ -141,7 +209,7 @@ export default function VoyageDetailPage() {
           </p>
           <div className="space-y-3">
             <Link
-              href="/dashboard/main"
+              href="/dashboard"
               className="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Retour au tableau de bord
@@ -160,8 +228,8 @@ export default function VoyageDetailPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Voyage introuvable</h1>
-          <Link href="/tools/voyages" className="text-blue-600 hover:underline">
-            Retour à la liste des voyages
+          <Link href="/dashboard" className="text-blue-600 hover:underline">
+            Retour au tableau de bord
           </Link>
         </div>
       </div>
@@ -169,9 +237,9 @@ export default function VoyageDetailPage() {
   }
 
   const tabs = [
-    { id: 'planning', label: 'Planning', icon: '📅' },
     { id: 'participants', label: 'Participants', icon: '👥' },
     { id: 'hebergement', label: 'Hébergement', icon: '🏨' },
+    { id: 'planning', label: 'Planning', icon: '📅' },
     { id: 'charte', label: 'Charte', icon: '📜' },
   ];
 
@@ -181,35 +249,75 @@ export default function VoyageDetailPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <Link 
-              href="/tools/voyages" 
+            <Link
+              href="/dashboard"
               className="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block"
             >
-              ← Retour aux voyages
+              ← Retour au tableau de bord
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">{voyage.nom}</h1>
             <p className="text-gray-600 mt-2">{voyage.destination}</p>
-            <div className="flex gap-4 mt-2 text-sm text-gray-500">
+            <div className="flex gap-4 mt-2 text-sm text-gray-500 items-center">
               <span>📅 {new Date(voyage.date_debut).toLocaleDateString('fr-FR')} - {new Date(voyage.date_fin).toLocaleDateString('fr-FR')}</span>
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                voyage.statut === 'preparation' ? 'bg-yellow-100 text-yellow-800' :
-                voyage.statut === 'actif' ? 'bg-green-100 text-green-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {voyage.statut === 'preparation' ? 'En préparation' : 
-                 voyage.statut === 'actif' ? 'Actif' : 'Terminé'}
-              </span>
+
+              {/* Badge statut cliquable */}
+              <div className="relative">
+                <button
+                  onClick={() => isResponsable && setShowStatutMenu(!showStatutMenu)}
+                  disabled={!isResponsable || updatingStatut}
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${getStatutClasses(statut)} ${
+                    isResponsable ? 'hover:opacity-80 cursor-pointer' : 'cursor-default'
+                  }`}
+                >
+                  {getStatutLabel(statut)}
+                  {isResponsable && <span className="ml-1">▾</span>}
+                </button>
+
+                {showStatutMenu && isResponsable && (
+                  <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg z-20 min-w-[220px]">
+                    {[
+                      { value: 'preparation', label: '🔧 En préparation' },
+                      { value: 'preparation_publique', label: '👁️ En préparation publique' },
+                      { value: 'en_cours', label: '▶️ En cours' },
+                      { value: 'termine', label: '✅ Terminé' },
+                      { value: 'archive', label: '📦 Archivé' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => changerStatut(option.value)}
+                        disabled={updatingStatut || option.value === statut}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
+                          option.value === statut ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                        }`}
+                      >
+                        {option.label}
+                        {option.value === statut && ' ✓'}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-          
-          {/* Badge pour indiquer le niveau de permission */}
+
+          {/* Badge permission */}
           {isResponsable && (
             <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-medium">
-              ⭐ Tu es profondément responsable de ce voyage
+              ⭐ Vous êtes responsable de ce voyage
             </div>
           )}
         </div>
       </div>
+
+      {/* Bandeau lecture seule */}
+      {!peutAgir && (statut === 'preparation_publique' || statut === 'termine' || statut === 'archive') && (
+        <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+          👁️ Ce voyage est en lecture seule pour vous (statut :{' '}
+          {statut === 'preparation_publique' ? 'en préparation publique' :
+           statut === 'termine' ? 'terminé' :
+           statut === 'archive' ? 'archivé' : statut}).
+        </div>
+      )}
 
       {/* Onglets principaux */}
       <div className="border-b border-gray-200 mb-6">
@@ -233,32 +341,28 @@ export default function VoyageDetailPage() {
 
       {/* Contenu des onglets */}
       <div className="mt-6">
-        {/* Onglet Participants */}
         {activeTab === 'participants' && (
-          <ParticipantsList 
-            voyageId={voyageId} 
-            isResponsable={isResponsable}
-            userType={userType}
-          />
-        )}
-        
-        {/* Onglet Hébergement */}
-        {activeTab === 'hebergement' && (
-          <HebergementConfigs 
+          <ParticipantsList
             voyageId={voyageId}
-            isResponsable={isResponsable}
+            isResponsable={peutAgir}
             userType={userType}
-            onConfigSelect={handleConfigSelect} 
           />
         )}
 
-        {/* Onglet Planning */}
+        {activeTab === 'hebergement' && (
+          <HebergementConfigs
+            voyageId={voyageId}
+            isResponsable={peutAgir}
+            userType={userType}
+            onConfigSelect={handleConfigSelect}
+          />
+        )}
+
         {activeTab === 'planning' && (
           <>
-            {/* Sous-onglets - visibles selon le rôle */}
+            {/* Sous-onglets - visibles selon le rôle et l'état */}
             <div className="border-b border-gray-200 mb-6">
               <nav className="flex gap-4 flex-wrap">
-                {/* Mon planning - visible pour tous */}
                 <button
                   onClick={() => setPlanningTab('planning')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -269,8 +373,7 @@ export default function VoyageDetailPage() {
                 >
                   📅 Mon planning
                 </button>
-                
-                {/* Choix des activités - visible pour tous (élèves et employés) */}
+
                 <button
                   onClick={() => setPlanningTab('eleve_choix')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -281,9 +384,8 @@ export default function VoyageDetailPage() {
                 >
                   🎯 Choix des activités
                 </button>
-                
-                {/* Prise de présence - visible UNIQUEMENT pour les employés */}
-                {userType === 'employee' && !isResponsable && (
+
+                {userType === 'employee' && (
                   <button
                     onClick={() => setPlanningTab('presences')}
                     className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -296,21 +398,6 @@ export default function VoyageDetailPage() {
                   </button>
                 )}
 
-                {/* Prise de présence responsable - visible UNIQUEMENT pour les responsables */}
-                {userType === 'employee' && isResponsable && (
-                  <button
-                    onClick={() => setPlanningTab('presences_responsable')}
-                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                      planningTab === 'presences_responsable'
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    👑 Présences (responsable)
-                  </button>
-                )}
-                
-                {/* Gestion du planning - visible UNIQUEMENT pour les responsables */}
                 {userType === 'employee' && isResponsable && (
                   <button
                     onClick={() => setPlanningTab('gestion')}
@@ -324,7 +411,6 @@ export default function VoyageDetailPage() {
                   </button>
                 )}
 
-                {/* SUPER - gestion avancée des inscriptions, visible UNIQUEMENT pour les responsables */}
                 {userType === 'employee' && isResponsable && (
                   <button
                     onClick={() => setPlanningTab('super')}
@@ -354,15 +440,15 @@ export default function VoyageDetailPage() {
             {planningTab === 'planning' && userType && (
               <VueElevePlanning
                 voyageId={voyageId}
-                participantId={userType === 'student' 
-                  ? currentUserEleveId!.toString() 
+                participantId={userType === 'student'
+                  ? currentUserEleveId!.toString()
                   : currentUserId!}
                 participantType={userType as 'student' | 'employee'}
               />
             )}
 
             {planningTab === 'presences' && (
-              userType === 'employee' && !isResponsable ? (
+              userType === 'employee' ? (
                 <PrisePresencesActivites
                   voyageId={voyageId}
                   employeId={currentUserId!}
@@ -376,27 +462,12 @@ export default function VoyageDetailPage() {
                 </div>
               )
             )}
-            
-            {planningTab === 'presences_responsable' && (
-              userType === 'employee' && isResponsable ? (
-                <PrisePresencesResponsable
-                  voyageId={voyageId}
-                  isResponsable={isResponsable}
-                />
-              ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <div className="text-4xl mb-4">🔒</div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Accès réservé</h3>
-                  <p className="text-gray-600">Seuls les responsables peuvent accéder à la prise de présence sudo.</p>
-                </div>
-              )
-            )}
 
             {planningTab === 'gestion' && (
               userType === 'employee' && isResponsable ? (
-                <GestionPlanning 
+                <GestionPlanning
                   voyageId={voyageId}
-                  isResponsable={isResponsable}
+                  isResponsable={peutAgir}
                 />
               ) : (
                 <div className="text-center py-12 bg-gray-50 rounded-lg">
@@ -411,7 +482,7 @@ export default function VoyageDetailPage() {
               userType === 'employee' && isResponsable ? (
                 <GestionInscriptionsActivites
                   voyageId={voyageId}
-                  isResponsable={isResponsable}
+                  isResponsable={peutAgir}
                 />
               ) : (
                 <div className="text-center py-12 bg-gray-50 rounded-lg">
@@ -424,11 +495,10 @@ export default function VoyageDetailPage() {
           </>
         )}
 
-        {/* Onglet Charte */}
         {activeTab === 'charte' && (
-          <GestionCharte 
+          <GestionCharte
             voyageId={voyageId}
-            isResponsable={isResponsable}
+            isResponsable={peutAgir}
             userType={userType}
           />
         )}

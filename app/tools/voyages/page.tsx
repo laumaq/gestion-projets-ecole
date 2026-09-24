@@ -1,3 +1,5 @@
+// /app/tools/voyages/page.tsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -29,6 +31,7 @@ export default function VoyagesPage() {
     const { data, error } = await supabase
       .from('voyages')
       .select('*')
+      .neq('statut', 'archive')
       .order('created_at', { ascending: false });
 
     if (!error && data) setVoyages(data);
@@ -76,12 +79,33 @@ export default function VoyagesPage() {
 
     if (profError) {
       console.error('Erreur ajout professeur:', profError);
-      // On redirige quand même vers le voyage, mais on notifie l'erreur
       alert('Voyage créé mais erreur lors de l\'ajout comme responsable. Veuillez vous ajouter manuellement.');
     }
 
     // 3. Rediriger vers la page du voyage
     router.push(`/tools/voyages/${voyage.id}`);
+  };
+
+  const getStatutLabel = (statut: string): string => {
+    switch (statut) {
+      case 'preparation': return 'Préparation';
+      case 'preparation_publique': return 'Préparation publique';
+      case 'en_cours': return 'En cours';
+      case 'termine': return 'Terminé';
+      case 'archive': return 'Archivé';
+      default: return statut;
+    }
+  };
+
+  const getStatutClasses = (statut: string): string => {
+    switch (statut) {
+      case 'preparation': return 'bg-yellow-100 text-yellow-800';
+      case 'preparation_publique': return 'bg-blue-100 text-blue-800';
+      case 'en_cours': return 'bg-green-100 text-green-800';
+      case 'termine': return 'bg-gray-100 text-gray-800';
+      case 'archive': return 'bg-gray-200 text-gray-700';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   if (loading) return <div className="p-8 text-center">Chargement...</div>;
@@ -177,13 +201,8 @@ export default function VoyagesPage() {
                 <h2 className="text-xl font-bold text-gray-900">{voyage.nom}</h2>
                 <p className="text-gray-600 mt-1">{voyage.destination}</p>
               </div>
-              <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                voyage.statut === 'preparation' ? 'bg-yellow-100 text-yellow-800' :
-                voyage.statut === 'actif' ? 'bg-green-100 text-green-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {voyage.statut === 'preparation' ? 'Préparation' : 
-                 voyage.statut === 'actif' ? 'Actif' : 'Terminé'}
+              <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatutClasses(voyage.statut)}`}>
+                {getStatutLabel(voyage.statut)}
               </span>
             </div>
             <div className="flex justify-between text-sm text-gray-500">
@@ -192,6 +211,13 @@ export default function VoyagesPage() {
           </Link>
         ))}
       </div>
+
+      {voyages.length === 0 && (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <div className="text-4xl mb-3">✈️</div>
+          <p className="text-gray-500">Aucun voyage pour le moment</p>
+        </div>
+      )}
     </div>
   );
 }

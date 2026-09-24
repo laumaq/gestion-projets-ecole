@@ -9,6 +9,8 @@ export function useVoyagePermissions(voyageId: string) {
   const [userType, setUserType] = useState<'employee' | 'student' | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [statut, setStatut] = useState<string>('preparation');
+  const [peutAgir, setPeutAgir] = useState(false);
 
   useEffect(() => {
     checkPermissions();
@@ -16,7 +18,6 @@ export function useVoyagePermissions(voyageId: string) {
 
   const checkPermissions = async () => {
     try {
-      // Récupérer l'utilisateur connecté
       const type = localStorage.getItem('userType') as 'employee' | 'student';
       const id = localStorage.getItem('userId');
 
@@ -29,8 +30,22 @@ export function useVoyagePermissions(voyageId: string) {
       setUserType(type);
       setUserId(id);
 
+      // 1. Charger le statut du voyage
+      const { data: voyageData, error: voyageError } = await supabase
+        .from('voyages')
+        .select('statut')
+        .eq('id', voyageId)
+        .single();
+
+      if (voyageError) throw voyageError;
+      const voyageStatut = voyageData?.statut || 'preparation';
+      setStatut(voyageStatut);
+
+      // 2. Vérifier si l'utilisateur fait partie du voyage
+      let estParticipant = false;
+      let estResponsable = false;
+
       if (type === 'employee') {
-        // Vérifier si l'employé est responsable du voyage
         const { data, error } = await supabase
           .from('voyage_professeurs')
           .select('role')
@@ -41,15 +56,10 @@ export function useVoyagePermissions(voyageId: string) {
         if (error) throw error;
 
         if (data) {
-          setHasAccess(true);
-          setIsResponsable(data.role === 'responsable');
-        } else {
-          // L'employé n'est pas dans la liste des professeurs du voyage
-          setHasAccess(false);
-          setError('Vous n\'êtes pas autorisé à accéder à ce voyage');
+          estParticipant = true;
+          estResponsable = data.role === 'responsable';
         }
       } else {
-        // Pour les élèves, vérifier s'ils sont participants
         const { data, error } = await supabase
           .from('voyage_participants')
           .select('id')
@@ -59,14 +69,42 @@ export function useVoyagePermissions(voyageId: string) {
 
         if (error) throw error;
 
-        if (data) {
-          setHasAccess(true);
-          setIsResponsable(false); // Les élèves ne sont jamais responsables
-        } else {
-          setHasAccess(false);
-          setError('Vous n\'êtes pas inscrit à ce voyage');
-        }
+        if (data) estParticipant = true;
       }
+
+      setIsResponsable(estResponsable);
+
+      // 3. Appliquer les règles selon le statut
+      let aAcces = false;
+
+      switch (voyageStatut) {
+        case 'preparation':
+          // Visible uniquement par les responsables
+          aAcces = estResponsable;
+          break;
+        case 'preparation_publique':
+        case 'termine':
+        case 'archive':
+          // Visible par tous les participants
+          aAcces = estParticipant;
+          break;
+        case 'en_cours':
+          aAcces = estParticipant;
+          break;
+        default:
+          aAcces = estParticipant;
+      }
+
+      setHasAccess(aAcces);
+
+      // Peut agir si responsable OU si statut 'en_cours'
+      const peutModifier = estResponsable || voyageStatut === 'en_cours';
+      setPeutAgir(peutModifier);
+
+      if (!aAcces) {
+        setError('Vous n\'avez pas accès à ce voyage');
+      }
+
     } catch (err) {
       console.error('Erreur vérification permissions:', err);
       setError('Erreur lors de la vérification des permissions');
@@ -75,5 +113,14 @@ export function useVoyagePermissions(voyageId: string) {
     }
   };
 
-  return { isLoading, hasAccess, isResponsable, userType, userId, error };
+  return { 
+    isLoading, 
+    hasAccess, 
+    isResponsable, 
+    userType, 
+    userId, 
+    error,
+    statut,
+    peutAgir
+  };
 }
