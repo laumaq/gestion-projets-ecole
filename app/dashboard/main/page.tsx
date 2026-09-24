@@ -208,7 +208,12 @@ export default function DashboardPage() {
         else if (voyagesProf) {
           const voyages = voyagesProf
             .map((item: any) => item.voyages)
-            .filter((v: any): v is Voyage => v !== null && typeof v === 'object' && 'id' in v);
+            .filter((v: any): v is Voyage => 
+              v !== null && 
+              typeof v === 'object' && 
+              'id' in v &&
+              v.statut !== 'archive'
+            );
           setMesVoyages(voyages);
         }
       } else {
@@ -220,7 +225,12 @@ export default function DashboardPage() {
         else if (voyagesEleve) {
           const voyages = voyagesEleve
             .map((item: any) => item.voyages)
-            .filter((v: any): v is Voyage => v !== null && typeof v === 'object' && 'id' in v);
+            .filter((v: any): v is Voyage => 
+              v !== null && 
+              typeof v === 'object' && 
+              'id' in v &&
+              v.statut !== 'archive'
+            );
           setMesVoyages(voyages);
         }
       }
@@ -591,13 +601,19 @@ export default function DashboardPage() {
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="text-lg font-medium text-gray-900">{voyage.nom}</h3>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        voyage.statut === 'préparation' ? 'bg-yellow-100 text-yellow-800' :
-                        voyage.statut === 'confirmé' ? 'bg-green-100 text-green-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {voyage.statut}
-                      </span>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          voyage.statut === 'preparation' ? 'bg-yellow-100 text-yellow-800' :
+                          voyage.statut === 'preparation_publique' ? 'bg-blue-100 text-blue-800' :
+                          voyage.statut === 'en_cours' ? 'bg-green-100 text-green-800' :
+                          voyage.statut === 'termine' ? 'bg-gray-100 text-gray-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {voyage.statut === 'preparation' ? 'Préparation' :
+                          voyage.statut === 'preparation_publique' ? 'Préparation publique' :
+                          voyage.statut === 'en_cours' ? 'En cours' :
+                          voyage.statut === 'termine' ? 'Terminé' :
+                          voyage.statut}
+                        </span>
                     </div>
                     <p className="text-sm text-gray-600 mb-2">{voyage.destination}</p>
                     <p className="text-xs text-gray-500">
@@ -620,7 +636,7 @@ export default function DashboardPage() {
 
       {/* Accès Archives */}
       <div className="mt-12 pt-8 border-t border-gray-200">
-        <Link href="../dashboard/archives" className="block">
+        <Link href="../archives" className="block">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition flex items-center gap-4">
             <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">📦</span>
