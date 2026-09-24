@@ -49,6 +49,8 @@ export default function VoyageDetailPage() {
   const [showStatutMenu, setShowStatutMenu] = useState(false);
   const [updatingStatut, setUpdatingStatut] = useState(false);
 
+  const [deleting, setDeleting] = useState(false);
+
   // Récupérer l'ID de l'utilisateur
   useEffect(() => {
     const type = localStorage.getItem('userType');
@@ -96,6 +98,34 @@ export default function VoyageDetailPage() {
       setVoyage(data);
     }
     setLoading(false);
+  };
+
+  const supprimerVoyage = async () => {
+    if (!voyage) return;
+
+    const confirmation = prompt(
+      `Pour confirmer la suppression DÉFINITIVE du voyage "${voyage.nom}", tapez SUPPRIMER :`
+    );
+
+    if (confirmation !== 'SUPPRIMER') {
+      return;
+    }
+
+    setDeleting(true);
+
+    const { error } = await supabase
+      .from('voyages')
+      .delete()
+      .eq('id', voyageId);
+
+    if (error) {
+      console.error(error);
+      alert('Erreur lors de la suppression du voyage.');
+      setDeleting(false);
+      return;
+    }
+
+    router.push('/dashboard/main');
   };
 
   const handleConfigSelect = (configId: string) => {
@@ -305,6 +335,16 @@ export default function VoyageDetailPage() {
             <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-medium">
               ⭐ Vous êtes responsable de ce voyage
             </div>
+          )}
+
+          {isResponsable && (
+            <button
+              onClick={supprimerVoyage}
+              disabled={deleting}
+              className="ml-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm font-medium"
+            >
+              {deleting ? 'Suppression...' : '🗑️ Supprimer le voyage'}
+            </button>
           )}
         </div>
       </div>
