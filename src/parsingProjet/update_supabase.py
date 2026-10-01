@@ -13,6 +13,10 @@ Fichiers sources (UTF-8-BOM, séparateur ';') :
 Mappings (JSON) :
 - mapping_profs.json    : nom|prenom → employee_id
 - mapping_groupes.json  : pattern → nom de groupe
+
+Préservations :
+- Les élèves et employees dont le nom contient "testeur" (insensible casse)
+- Les profs non référencés dans les fichiers horairistes passent à job=NULL
 """
 
 import csv
@@ -36,6 +40,9 @@ PREFIXE_MATRICULE = str(ANNEE_SCOLAIRE)[-2:]
 MODE_TEST = False
 LIMITE_ELEVES = 100
 LIMITE_COURS = 100
+
+# Noms à préserver (élèves ET employees) - test insensible à la casse
+NOMS_A_PRESERVER = ['testeur']
 
 # ============================================================================
 # CONFIGURATION SUPABASE
@@ -162,6 +169,13 @@ CODES_SANS_OPTION = {'M', 'MW', 'MAI', 'MNI', 'MDI', 'MNDI'}
 # FONCTIONS UTILITAIRES
 # ============================================================================
 
+def est_testeur(nom: str) -> bool:
+    """Vérifie si un nom (élève ou employee) est à préserver (nom contenant 'testeur')."""
+    if not nom:
+        return False
+    nom_lower = nom.lower()
+    return any(preserve in nom_lower for preserve in NOMS_A_PRESERVER)
+
 def normaliser_valeur(valeur: str) -> str:
     if not valeur:
         return ""
@@ -253,9 +267,7 @@ def parser_valeurs_options(valeurs_str: str) -> List:
             continue
         
         # Option principale (tout le reste)
-        # Gérer les '+' internes (ex: CPC-EC+SO déjà splité, mais EC+SO ici)
         if '+' in partie:
-            # Plusieurs options dans une même partie
             sous_options = [p.strip() for p in partie.split('+') if p.strip()]
             options_principales.extend(sous_options)
         else:
@@ -330,6 +342,18 @@ def get_or_create_professeur(nom: str, prenom: str, mapping: Dict, employees_cac
         emp_nom = normaliser_nom(emp.get('nom', ''))
         emp_prenom = normaliser_nom(emp.get('prenom', ''))
         if emp_nom == nom_norm and emp_prenom == prenom_norm:
+            # Si le prof existe mais n'a plus le job 'prof', le remettre
+            if emp.get('job') != 'prof':
+                try:
+                    supabase_service.table('employees') \
+                        .update({'job': 'prof'}) \
+                        .eq('id', emp['id']) \
+                        .execute()
+                    emp['job'] = 'prof'  # Mettre à jour le cache
+                    print(f"   🔄 {prenom} {nom} → job remis à 'prof'")
+                except Exception as e:
+                    print(f"   ⚠️  Impossible de remettre job=prof pour {prenom} {nom}: {e}")
+            
             mapping[cle_mapping] = emp['id']
             return emp['id']
     
@@ -383,8 +407,12 @@ def get_or_create_professeur(nom: str, prenom: str, mapping: Dict, employees_cac
             prof_id = result.data[0]['id']
             print(f"   ✅ Professeur créé: {nouveau_prenom} {nouveau_nom} (ID: {prof_id})")
             mapping[cle_mapping] = prof_id
-            # Ajouter au cache
-            employees_cache.append({'id': prof_id, 'nom': nouveau_nom, 'prenom': nouveau_prenom})
+            employees_cache.append({
+                'id': prof_id, 
+                'nom': nouveau_nom, 
+                'prenom': nouveau_prenom,
+                'job': 'prof'
+            })
             return prof_id
     except Exception as e:
         print(f"   ❌ Erreur création professeur: {e}")
@@ -422,7 +450,6 @@ def importer_groupes():
         
         # Détecter si c'est un nom de groupe (pas d'indentation, pas de <>)
         if not line.startswith('<') and not line.startswith(' ') and ' ' not in line[:3]:
-            # C'est un nom de groupe
             current_groupe = normaliser_groupe(line)
             continue
         
@@ -434,7 +461,6 @@ def importer_groupes():
         classe = match.group(1).strip()
         valeurs_str = match.group(2).strip()
         
-        # Parser les valeurs
         options = parser_valeurs_options(valeurs_str)
         
         current_cours_id += 1
@@ -448,7 +474,7 @@ def importer_groupes():
             'options': json.dumps(options, ensure_ascii=False)
         })
     
-    print(f"   ✅ {len(conditions_data)} conditions extraites ({current_groupe})")
+    print(f"   ✅ {len(conditions_data)} conditions extraites")
     
     # Vider et insérer
     print("\n   🗑️  Vidage de courses_conditions...")
@@ -500,6 +526,17 @@ def importer_eleves(employees_cache: List):
     options_data = []
     groupes_data = []
     matricules_presents = []
+    
+    # Récupérer les matricules des élèves à préserver (Testeur, etc.)
+    matricules_preserves = []
+    try:
+        result = supabase_anon.table('students').select('matricule, nom').execute()
+        for r in result.data:
+            if est_testeur(r.get('nom', '')):
+                matricules_preserves.append(r['matricule'])
+        print(f"   🧪 {len(matricules_preserves)} élèves à préserver: {matricules_preserves}")
+    except Exception as e:
+        print(f"   ⚠️  Impossible de récupérer les élèves à préserver: {e}")
     
     # Prochain matricule
     try:
@@ -613,7 +650,6 @@ def importer_eleves(employees_cache: List):
                         options_data.append((next_id_options, matricule_effectif, 'Option', opt5))
                         next_id_options += 1
                         total_options += 1
-
             
             # Groupes pédagogiques (ceux du fichier EXP_ELEVE)
             if groupes_str:
@@ -624,9 +660,8 @@ def importer_eleves(employees_cache: List):
                         next_id_groups += 1
                         total_groupes += 1
             
-            # ⭐ Groupe-classe : pour matcher les cours dont raw_pattern = classe
+            # Groupe-classe : pour matcher les cours dont raw_pattern = classe
             if classe:
-                # Éviter les doublons (si la classe est déjà dans les groupes pédagogiques)
                 deja_present = any(
                     g[2] == classe for g in groupes_data 
                     if g[1] == matricule_effectif
@@ -645,16 +680,32 @@ def importer_eleves(employees_cache: List):
     print(f"\n   ✅ {total_eleves} élèves ({total_crees} créés, {total_mis_a_jour} mis à jour)")
     print(f"   ✅ {total_options} options, {total_groupes} groupes")
     
-    # Vider et insérer
-    print("\n   🗑️  Vidage...")
+    # Vidage en préservant les élèves protégés
+    print("\n   🗑️  Vidage (en préservant les élèves protégés)...")
+    
+    # Options
     try:
-        supabase_service.table('students_options').delete().neq('matricule', 0).execute()
+        if matricules_preserves:
+            supabase_service.table('students_options') \
+                .delete() \
+                .not_.in_('matricule', matricules_preserves) \
+                .execute()
+        else:
+            supabase_service.table('students_options').delete().neq('matricule', 0).execute()
     except Exception as e:
-        print(f"      ⚠️  {e}")
+        print(f"      ⚠️  Options: {e}")
+    
+    # Groupes
     try:
-        supabase_service.table('students_groups').delete().neq('matricule', 0).execute()
+        if matricules_preserves:
+            supabase_service.table('students_groups') \
+                .delete() \
+                .not_.in_('matricule', matricules_preserves) \
+                .execute()
+        else:
+            supabase_service.table('students_groups').delete().neq('matricule', 0).execute()
     except Exception as e:
-        print(f"      ⚠️  {e}")
+        print(f"      ⚠️  Groupes: {e}")
     
     print("   📤 Insertion des options...")
     batch_size = 100
@@ -681,7 +732,7 @@ def importer_eleves(employees_cache: List):
         except Exception as e:
             print(f"      ❌ {e}")
     
-    # Nettoyage
+    # Nettoyage en préservant les élèves protégés
     print("\n   🧹 Nettoyage des élèves absents...")
     if matricules_presents:
         try:
@@ -690,10 +741,10 @@ def importer_eleves(employees_cache: List):
                 .filter('matricule', 'not.in', tuple(matricules_presents)) \
                 .execute()
             
-            # Filtrer en Python pour exclure les Testeur
+            # Filtrer : exclure les Testeur
             ids_a_nettoyer = [
                 r['matricule'] for r in result.data 
-                if r.get('nom', '').lower() != 'testeur'
+                if not est_testeur(r.get('nom', ''))
             ]
             
             if ids_a_nettoyer:
@@ -707,13 +758,15 @@ def importer_eleves(employees_cache: List):
         except Exception as e:
             print(f"      ⚠️  {e}")
 
-
 # ============================================================================
 # PHASE 3 : EXP_COURS
 # ============================================================================
 
-def importer_cours(employees_cache: List, mapping_profs: Dict, mapping_groupes: Dict):
-    """Parse EXP_COURS.txt et importe cours"""
+def importer_cours(employees_cache: List, mapping_profs: Dict, mapping_groupes: Dict) -> Set[str]:
+    """
+    Parse EXP_COURS.txt et importe cours.
+    Retourne l'ensemble des IDs de profs référencés.
+    """
     print("\n" + "="*60)
     print("📚 IMPORT DES COURS")
     print("="*60)
@@ -724,7 +777,7 @@ def importer_cours(employees_cache: List, mapping_profs: Dict, mapping_groupes: 
             content = f.read()
     except FileNotFoundError:
         print(f"   ❌ Fichier {FICHIER_COURS} non trouvé!")
-        return
+        return set()
     
     reader = csv.reader(StringIO(content), delimiter=';')
     rows = list(reader)
@@ -734,6 +787,7 @@ def importer_cours(employees_cache: List, mapping_profs: Dict, mapping_groupes: 
     conditions_data = []
     cours_count = 0
     next_id_conditions = 0
+    profs_references = set()  # ⭐ IDs des profs référencés dans les fichiers
     
     # Prochain ID conditions (pour ne pas écraser EXP_GROUPE)
     try:
@@ -776,6 +830,7 @@ def importer_cours(employees_cache: List, mapping_profs: Dict, mapping_groupes: 
                     prof_id = get_or_create_professeur(nom, prenom, mapping_profs, employees_cache)
                     if prof_id:
                         prof_ids.append(prof_id)
+                        profs_references.add(prof_id)  # ⭐
             
             prof_json = json.dumps(prof_ids, ensure_ascii=False)
             
@@ -889,6 +944,7 @@ def importer_cours(employees_cache: List, mapping_profs: Dict, mapping_groupes: 
     
     print(f"\n   ✅ {len(courses_data)} cours extraits")
     print(f"   ✅ {len(conditions_data)} conditions supplémentaires")
+    print(f"   ✅ {len(profs_references)} profs référencés")
     
     # Sauvegarder le mapping
     sauvegarder_mapping(mapping_profs, FICHIER_MAPPING_PROFS)
@@ -920,6 +976,8 @@ def importer_cours(employees_cache: List, mapping_profs: Dict, mapping_groupes: 
                 print(f"      ❌ {e}")
     
     print(f"\n✅ Import cours terminé: {len(courses_data)} cours")
+    
+    return profs_references
 
 # ============================================================================
 # MAIN
@@ -933,16 +991,26 @@ def main():
         print("   🧪 MODE TEST ACTIF")
     print("="*60)
     
-    # Charger le cache employees
+    # Charger le cache employees (avec job pour gérer la réactivation)
     print("\n🔍 Chargement des employees...")
     employees_cache = []
     try:
-        result = supabase_anon.table('employees').select('id, nom, prenom').execute()
+        result = supabase_anon.table('employees').select('id, nom, prenom, job').execute()
         employees_cache = result.data
         print(f"   {len(employees_cache)} employees en cache")
     except Exception as e:
         print(f"   ❌ Erreur: {e}")
         return
+    
+    # Récupérer la liste des profs actuellement en base (sauf Testeur)
+    profs_avant_import = set()
+    try:
+        for emp in employees_cache:
+            if emp.get('job') == 'prof' and not est_testeur(emp.get('nom', '')):
+                profs_avant_import.add(emp['id'])
+        print(f"   📋 {len(profs_avant_import)} profs actuellement en base (hors Testeur)")
+    except Exception as e:
+        print(f"   ⚠️  Impossible de récupérer les profs: {e}")
     
     # Charger les mappings
     mapping_profs = charger_mapping(FICHIER_MAPPING_PROFS)
@@ -963,14 +1031,45 @@ def main():
         print(f"\n❌ Fichier {FICHIER_ELEVES} non trouvé")
     
     # Phase 3 : Cours
+    profs_references = set()
     if os.path.exists(FICHIER_COURS):
-        importer_cours(employees_cache, mapping_profs, mapping_groupes)
+        profs_references = importer_cours(employees_cache, mapping_profs, mapping_groupes)
     else:
         print(f"\n❌ Fichier {FICHIER_COURS} non trouvé")
+    
+    # ─────────────────────────────────────────────────────────────
+    # Phase 4 : Nettoyage des profs non référencés
+    # ─────────────────────────────────────────────────────────────
+    if profs_references and profs_avant_import:
+        print("\n" + "="*60)
+        print("🧹 NETTOYAGE DES PROFESSEURS NON RÉFÉRENCÉS")
+        print("="*60)
+        
+        # Profs qui étaient profs mais ne sont plus référencés
+        profs_a_retirer = profs_avant_import - profs_references
+        
+        if profs_a_retirer:
+            print(f"   {len(profs_a_retirer)} profs ne sont plus dans les fichiers horairistes")
+            print(f"   → passage du job à NULL")
+            
+            for prof_id in profs_a_retirer:
+                try:
+                    supabase_service.table('employees') \
+                        .update({'job': None}) \
+                        .eq('id', prof_id) \
+                        .execute()
+                except Exception as e:
+                    print(f"      ⚠️  Erreur pour {prof_id}: {e}")
+            
+            print(f"   ✅ {len(profs_a_retirer)} profs retirés")
+        else:
+            print("   ✅ Aucun prof à retirer")
     
     print("\n" + "="*60)
     print("✅ IMPORT TERMINÉ AVEC SUCCÈS")
     print("="*60)
+    print(f"\n🧪 Élèves/Profs préservés (noms contenant 'testeur'):")
+    print(f"   Noms protégés: {NOMS_A_PRESERVER}")
 
 if __name__ == "__main__":
     main()

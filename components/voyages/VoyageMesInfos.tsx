@@ -18,14 +18,20 @@ interface VoyageConfig {
   eleve_peut_modifier_regime: boolean;
 }
 
+type DocType =
+  | 'fiche_medicale'
+  | 'carte_mutuelle'
+  | 'carte_identite'
+  | 'autorisation_sortie';
+
 interface MesInfos {
   // Élève
-    eleve_id?: number;
-    telephone_eleve?: string;
-    telephone_parent?: string;
-    regime_alimentaire?: any;
-    date_naissance?: string | null;
-    nationalite?: string | null;
+  eleve_id?: number;
+  telephone_eleve?: string;
+  telephone_parent?: string;
+  regime_alimentaire?: any;
+  date_naissance?: string | null;
+  nationalite?: string | null;
   // Participant (ligne voyage_participants)
   participant_id?: string;
   passport_numero?: string | null;
@@ -38,6 +44,8 @@ interface MesInfos {
   carte_mutuelle_verifiee?: boolean;
   carte_identite_url?: string | null;
   carte_identite_verifiee?: boolean;
+  autorisation_sortie_url?: string | null;
+  autorisation_sortie_verifiee?: boolean;
   montant_attendu?: number | null;
   // Professeur
   prof_id?: string;
@@ -90,7 +98,6 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
   const loadAll = async () => {
     setLoading(true);
 
-    // Config du voyage
     const { data: voyageData } = await supabase
       .from('voyages')
       .select('passport_requis, visa_requis, eleve_peut_modifier_telephone, eleve_peut_modifier_regime')
@@ -102,14 +109,12 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
     if (userType === 'student') {
       const eleveId = parseInt(userId);
 
-      // Infos élève
       const { data: eleveData } = await supabase
         .from('students')
         .select('matricule, telephone_eleve, telephone_parent, regime_alimentaire, date_naissance, nationalite')
         .eq('matricule', eleveId)
         .single();
 
-      // Ligne participant du voyage
       const { data: partData } = await supabase
         .from('voyage_participants')
         .select(`
@@ -118,6 +123,7 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
           fiche_medicale_url, fiche_medicale_verifiee,
           carte_mutuelle_url, carte_mutuelle_verifiee,
           carte_identite_url, carte_identite_verifiee,
+          autorisation_sortie_url, autorisation_sortie_verifiee,
           montant_attendu
         `)
         .eq('voyage_id', voyageId)
@@ -142,6 +148,8 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
         carte_mutuelle_verifiee: partData?.carte_mutuelle_verifiee,
         carte_identite_url: partData?.carte_identite_url,
         carte_identite_verifiee: partData?.carte_identite_verifiee,
+        autorisation_sortie_url: partData?.autorisation_sortie_url,
+        autorisation_sortie_verifiee: partData?.autorisation_sortie_verifiee,
         montant_attendu: partData?.montant_attendu,
       };
 
@@ -159,7 +167,6 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
       setDraftPassport(merged.passport_numero || '');
       setDraftVisa(merged.visa_numero || '');
 
-      // Paiements
       if (partData?.id) {
         const { data: paiementsData } = await supabase
           .from('voyage_paiements')
@@ -170,7 +177,6 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
         setPaiements(paiementsData || []);
       }
     } else if (userType === 'employee') {
-      // Infos employé
       const { data: empData } = await supabase
         .from('employees')
         .select('telephone, date_naissance, nationalite, regime_alimentaire, eleve_voir_telephone')
@@ -203,6 +209,10 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
   };
 
   const saveRegime = async () => {
+    if (draftRegime.regime === 'Autre' && !draftRegime.notes.trim()) {
+      alert('Vous devez préciser le régime dans les notes.');
+      return;
+    }
     setSaving(true);
     await supabase
       .from('students')
@@ -273,7 +283,7 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
     alert('Visa enregistré (à vérifier par un responsable)');
   };
 
-  const uploadDocument = async (type: 'fiche_medicale' | 'carte_mutuelle' | 'carte_identite', file: File) => {
+  const uploadDocument = async (type: DocType, file: File) => {
     if (!infos.participant_id || !infos.eleve_id) return;
 
     const ext = file.name.split('.').pop() || 'pdf';
@@ -310,6 +320,10 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
   };
 
   const saveProfInfos = async () => {
+    if (draftProfInfos.regime === 'Autre' && !draftProfInfos.regime_notes.trim()) {
+      alert('Vous devez préciser le régime dans les notes.');
+      return;
+    }
     setSaving(true);
     await supabase
       .from('employees')
@@ -349,6 +363,7 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
                 <option value="Omnivore">Omnivore</option>
                 <option value="Végétarien">Végétarien</option>
                 <option value="Halal">Halal</option>
+                <option value="Autre">Autre</option>
               </select>
               <textarea
                 value={draftRegime.notes}
@@ -358,6 +373,9 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
                 rows={3}
                 className="w-full px-3 py-2 border rounded-lg disabled:bg-gray-100"
               />
+              {draftRegime.regime === 'Autre' && !draftRegime.notes.trim() && (
+                <p className="text-sm text-red-500">Précisez le régime dans les notes.</p>
+              )}
               {config.eleve_peut_modifier_regime && (
                 <button onClick={saveRegime} disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">
                   Enregistrer
@@ -484,11 +502,12 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
           )}
 
           {/* Documents */}
-          {(['fiche_medicale', 'carte_mutuelle', 'carte_identite'] as const).map((type) => {
-            const labels = {
+          {(['fiche_medicale', 'carte_mutuelle', 'carte_identite', 'autorisation_sortie'] as const).map((type) => {
+            const labels: Record<DocType, string> = {
               fiche_medicale: '🏥 Fiche médicale',
               carte_mutuelle: '💳 Carte européenne de mutuelle',
               carte_identite: '🪪 Carte d\'identité',
+              autorisation_sortie: '✈️ Autorisation de sortie du territoire',
             };
             const url = infos[`${type}_url` as keyof MesInfos] as string | null;
             const verifiee = infos[`${type}_verifiee` as keyof MesInfos] as boolean;
@@ -527,18 +546,9 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
 
           {/* Paiements */}
           <Section title="💰 Paiements">
-            <div className="space-y-2 text-sm">
-              {infos.montant_attendu != null && (
-                <p>
-                  <span className="font-medium">Montant attendu :</span> {infos.montant_attendu}€{' '}
-                  <span className="font-medium ml-3">Payé :</span>{' '}
-                  <span className={totalPaye >= Number(infos.montant_attendu) ? 'text-green-600 font-bold' : 'text-orange-600 font-bold'}>
-                    {totalPaye}€
-                  </span>
-                </p>
-              )}
+            <div className="space-y-3 text-sm">
               {paiements.length > 0 ? (
-                <ul className="space-y-1 mt-2">
+                <ul className="space-y-1">
                   {paiements.map((p) => (
                     <li key={p.id} className="flex justify-between border rounded px-2 py-1">
                       <span>{new Date(p.date_versement).toLocaleDateString('fr-BE')}</span>
@@ -549,6 +559,39 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
               ) : (
                 <p className="text-gray-400 italic">Aucun versement enregistré</p>
               )}
+
+              <div className="border-t pt-3 mt-3">
+                {infos.montant_attendu != null ? (
+                  <>
+                    <p className="flex justify-between">
+                      <span className="font-medium">Total versé :</span>
+                      <span className="font-mono font-bold">{totalPaye}€</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="font-medium">Montant demandé :</span>
+                      <span className="font-mono">{infos.montant_attendu}€</span>
+                    </p>
+                    {totalPaye < Number(infos.montant_attendu) ? (
+                      <p className="flex justify-between text-red-600 font-bold mt-1">
+                        <span>Reste à payer :</span>
+                        <span className="font-mono">{Number(infos.montant_attendu) - totalPaye}€</span>
+                      </p>
+                    ) : totalPaye === Number(infos.montant_attendu) ? (
+                      <p className="text-green-600 font-bold mt-1">✅ Payé complet</p>
+                    ) : (
+                      <p className="text-orange-500 mt-1">
+                        Trop-perçu de {totalPaye - Number(infos.montant_attendu)}€
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="flex justify-between">
+                    <span className="font-medium">Total versé :</span>
+                    <span className="font-mono font-bold">{totalPaye}€</span>
+                  </p>
+                )}
+              </div>
+
               <p className="text-xs text-gray-500 mt-2">
                 Les paiements sont encaissés et enregistrés par les responsables du voyage.
               </p>
@@ -560,7 +603,6 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
       {/* ========== VUE EMPLOYÉ ========== */}
       {userType === 'employee' && (
         <>
-
           <Section title="📞 Téléphone">
             <input
               type="tel"
@@ -608,6 +650,7 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
                 <option value="Omnivore">Omnivore</option>
                 <option value="Végétarien">Végétarien</option>
                 <option value="Halal">Halal</option>
+                <option value="Autre">Autre</option>
               </select>
               <textarea
                 value={draftProfInfos.regime_notes}
@@ -616,6 +659,9 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
                 rows={3}
                 className="w-full px-3 py-2 border rounded-lg"
               />
+              {draftProfInfos.regime === 'Autre' && !draftProfInfos.regime_notes.trim() && (
+                <p className="text-sm text-red-500">Précisez le régime dans les notes.</p>
+              )}
             </div>
           </Section>
 

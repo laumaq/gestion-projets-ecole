@@ -15,11 +15,11 @@ interface Props {
 // ── Régime alimentaire (JSONB) ────────────────────────────────────────────────
 
 interface RegimeAlimentaire {
-  regime: 'Omnivore' | 'Végétarien' | 'Halal';
+  regime: 'Omnivore' | 'Végétarien' | 'Halal' | 'Autre';
   notes: string;
 }
 
-const REGIMES = ['Omnivore', 'Végétarien', 'Halal'] as const;
+const REGIMES = ['Omnivore', 'Végétarien', 'Halal', 'Autre'] as const;
 
 function parseRegime(raw: any): RegimeAlimentaire {
   if (!raw) return { regime: 'Végétarien', notes: '' };
@@ -64,6 +64,7 @@ function RegimeCell({
     Omnivore: 'bg-gray-100 text-gray-700',
     Végétarien: 'bg-green-100 text-green-700',
     Halal: 'bg-blue-100 text-blue-700',
+    Autre: 'bg-purple-100 text-purple-700',
   };
 
   return (
@@ -73,9 +74,15 @@ function RegimeCell({
           <select
             value={draft.regime}
             onChange={e => {
-              const updated = { ...draft, regime: e.target.value as RegimeAlimentaire['regime'] };
+              const newRegime = e.target.value as RegimeAlimentaire['regime'];
+              const updated = { ...draft, regime: newRegime };
               setDraft(updated);
-              onUpdate(updated);
+              // Si "Autre", on attend des notes avant d'enregistrer
+              if (newRegime !== 'Autre' || updated.notes.trim()) {
+                onUpdate(updated);
+              } else {
+                setOpen(true);
+              }
             }}
             className={`text-xs px-2 py-0.5 rounded-full border-0 font-medium cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 ${REGIME_COLORS[draft.regime]}`}
           >
@@ -121,11 +128,17 @@ function RegimeCell({
                 </button>
                 <button
                   onClick={() => { onUpdate(draft); setOpen(false); }}
-                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                  disabled={draft.regime === 'Autre' && !draft.notes.trim()}
+                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Enregistrer
                 </button>
               </div>
+              {draft.regime === 'Autre' && !draft.notes.trim() && (
+                <p className="text-xs text-red-500 mt-1">
+                  Précisez le régime dans les notes.
+                </p>
+              )}
             </>
           ) : (
             <p className="text-xs text-gray-700 whitespace-pre-wrap">{regime.notes || 'Aucune note.'}</p>
@@ -173,7 +186,6 @@ interface Participant {
   classe: string;
   type: 'eleve';
   eleve: Eleve;
-  // Champs administratifs (pour le calcul de complétude)
   passport_requis?: boolean;
   visa_requis?: boolean;
   passport_numero?: string | null;
@@ -187,6 +199,8 @@ interface Participant {
   carte_identite_url?: string | null;
   carte_identite_verifiee?: boolean;
   montant_paye?: number;
+  autorisation_sortie_url?: string | null;
+  autorisation_sortie_verifiee?: boolean;
 }
 
 interface ProfesseurParticipant {
@@ -218,6 +232,7 @@ function estComplet(p: Participant, config: VoyageConfig): boolean {
   if (!p.fiche_medicale_url || !p.fiche_medicale_verifiee) return false;
   if (!p.carte_mutuelle_url || !p.carte_mutuelle_verifiee) return false;
   if (!p.carte_identite_url || !p.carte_identite_verifiee) return false;
+  if (!p.autorisation_sortie_url || !p.autorisation_sortie_verifiee) return false;
   if (config.montant_attendu_defaut != null) {
     if ((p.montant_paye || 0) < config.montant_attendu_defaut) return false;
   }
@@ -561,7 +576,6 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
   };
 
   const loadParticipants = async () => {
-    // 1. Charger les participants
     const { data, error } = await supabase
       .from('voyage_participants')
       .select(`*, eleve:students!inner(
@@ -577,7 +591,6 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
       return;
     }
 
-    // 2. Charger les paiements pour calculer le montant payé
     const participantIds = data.map((p: any) => p.id);
     let paiements: any[] = [];
     if (participantIds.length > 0) {
@@ -594,7 +607,6 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
       totalParParticipant.set(p.voyage_participant_id, current + Number(p.montant));
     });
 
-    // 3. Fusionner
     const enriched: Participant[] = data.map((p: any) => ({
       ...p,
       eleve: Array.isArray(p.eleve) ? p.eleve[0] : p.eleve,
@@ -750,10 +762,14 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
     if (!editingEmploye) return;
 
     const formData = new FormData(e.currentTarget);
-    const regimeData = {
-      regime: formData.get('regime') || 'Omnivore',
-      notes: formData.get('regime_notes') || '',
-    };
+    const regimeValue = (formData.get('regime') as string) || 'Omnivore';
+    const notesValue = (formData.get('regime_notes') as string) || '';
+
+    // 🚧 Lot A : validation "Autre" oblige des notes
+    if (regimeValue === 'Autre' && !notesValue.trim()) {
+      alert('Vous devez préciser le régime dans les notes.');
+      return;
+    }
 
     const updateData: any = {
       email: formData.get('email') || null,
@@ -761,7 +777,7 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
       eleve_voir_telephone: formData.get('eleve_voir_telephone') === 'on',
       date_naissance: formData.get('date_naissance') || null,
       nationalite: formData.get('nationalite') || null,
-      regime_alimentaire: regimeData,
+      regime_alimentaire: { regime: regimeValue, notes: notesValue },
     };
 
     const { error } = await supabase.from('employees').update(updateData).eq('id', editingEmploye.id);
@@ -787,10 +803,16 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
       updateData.telephone_parent = formData.get('telephone_parent') || null;
     }
     if (config.eleve_peut_modifier_regime) {
-      updateData.regime_alimentaire = {
-        regime: formData.get('regime') || 'Omnivore',
-        notes: formData.get('regime_notes') || '',
-      };
+      const regimeValue = (formData.get('regime') as string) || 'Omnivore';
+      const notesValue = (formData.get('regime_notes') as string) || '';
+
+      // 🚧 Lot A : validation "Autre" oblige des notes
+      if (regimeValue === 'Autre' && !notesValue.trim()) {
+        alert('Vous devez préciser le régime dans les notes.');
+        return;
+      }
+
+      updateData.regime_alimentaire = { regime: regimeValue, notes: notesValue };
     }
 
     const { error } = await supabase.from('students').update(updateData).eq('matricule', parseInt(userId));
@@ -816,16 +838,13 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
 
   // ── Colonnes ──────────────────────────────────────────────────────────────
 
-  // Colonnes élève : élève | classe | genre | état | (date naiss | nationalité) | (régime) | (tél élève | tél parent) | actions
   const colsEleve = (() => {
     const parts = ['3fr', '1.5fr', '1.2fr', '0.8fr'];
     if (isResponsable) parts.push('2fr', '2fr');
-    if (isEmployee) parts.push('2.5fr', '2fr', '2fr');
-    parts.push('1fr');
+    if (isEmployee) parts.push('2.5fr', '2fr', '2fr', '1.5fr');
     return parts.join(' ');
   })();
 
-  // Colonnes prof : prof | rôle | (date naiss | nationalité) | (régime) | téléphone | actions
   const colsProf = (() => {
     const parts = ['3fr', '2fr'];
     if (isResponsable) parts.push('2fr', '2fr');
@@ -890,6 +909,7 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
               <option value="Omnivore">🍖 Omnivore</option>
               <option value="Végétarien">🥬 Végétarien</option>
               <option value="Halal">🕌 Halal</option>
+              <option value="Autre">❓ Autre</option>
             </select>
           )}
         </div>
@@ -925,7 +945,6 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
 
           {expandedTableProfs && (
             <div className="overflow-x-auto">
-              {/* En-têtes */}
               <div className="grid gap-4 p-4 bg-purple-50 font-medium text-xs text-gray-600 uppercase border-b"
                 style={{ gridTemplateColumns: colsProf }}>
                 <div>Professeur</div>
@@ -936,7 +955,6 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
                 <div />
               </div>
 
-              {/* Lignes */}
               {professeursParticipants.map((prof) => {
                 const showPhone = isEmployee || (isEleve && prof.professeur?.eleve_voir_telephone);
                 const isCurrentUser = prof.professeur_id === currentUserId;
@@ -1058,7 +1076,6 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
 
         {expandedTableEleves && (
           <div className="overflow-x-auto">
-            {/* En-têtes */}
             <div className="grid gap-4 p-4 bg-gray-50 font-medium text-xs text-gray-600 uppercase border-b"
               style={{ gridTemplateColumns: colsEleve }}>
               <div>Élève</div>
@@ -1070,7 +1087,6 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
               <div />
             </div>
 
-            {/* Lignes */}
             {participantsTries
               .filter(p => !selectedClasse || p.classe === selectedClasse)
               .filter(p => {
@@ -1402,6 +1418,7 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
                   <option value="Omnivore">Omnivore</option>
                   <option value="Végétarien">Végétarien</option>
                   <option value="Halal">Halal</option>
+                  <option value="Autre">Autre</option>
                 </select>
               </div>
               <div>
@@ -1452,6 +1469,7 @@ export default function ParticipantsList({ voyageId, isResponsable, userType }: 
                       <option value="Omnivore">Omnivore</option>
                       <option value="Végétarien">Végétarien</option>
                       <option value="Halal">Halal</option>
+                      <option value="Autre">Autre</option>
                     </select>
                   </div>
                   <div>

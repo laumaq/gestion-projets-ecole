@@ -41,6 +41,8 @@ interface Participant {
   carte_mutuelle_verifiee: boolean;
   carte_identite_url: string | null;
   carte_identite_verifiee: boolean;
+  autorisation_sortie_url: string | null;
+  autorisation_sortie_verifiee: boolean;
   eleve: Eleve;
   paiements: Paiement[];
 }
@@ -85,6 +87,7 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
         fiche_medicale_url, fiche_medicale_verifiee,
         carte_mutuelle_url, carte_mutuelle_verifiee,
         carte_identite_url, carte_identite_verifiee,
+        autorisation_sortie_url, autorisation_sortie_verifiee,
         eleve:students!inner(
           matricule, nom, prenom, classe,
           regime_alimentaire, date_naissance, nationalite
@@ -130,6 +133,7 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
     if (!p.fiche_medicale_url || !p.fiche_medicale_verifiee) return false;
     if (!p.carte_mutuelle_url || !p.carte_mutuelle_verifiee) return false;
     if (!p.carte_identite_url || !p.carte_identite_verifiee) return false;
+    if (!p.autorisation_sortie_url || !p.autorisation_sortie_verifiee) return false;
     if (config.montant_attendu_defaut != null) {
       if (getTotalPaye(p) < config.montant_attendu_defaut) return false;
     }
@@ -144,17 +148,17 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
     if (!error) setConfig({ ...config, [key]: value });
   };
 
-    const sortedParticipants = [...participants].sort((a, b) => {
+  const sortedParticipants = [...participants].sort((a, b) => {
     const aComplet = estComplet(a);
     const bComplet = estComplet(b);
     if (aComplet !== bComplet) return aComplet ? -1 : 1;
-    
+
     const classeA = a.eleve.classe || '';
     const classeB = b.eleve.classe || '';
     if (classeA !== classeB) return classeA.localeCompare(classeB);
-    
+
     return (a.eleve.nom || '').localeCompare(b.eleve.nom || '');
-    });
+  });
 
   if (loading) return <div className="text-center py-8">Chargement...</div>;
 
@@ -220,6 +224,7 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
               <th className="px-3 py-2 text-center">Fiche méd.</th>
               <th className="px-3 py-2 text-center">Carte mut.</th>
               <th className="px-3 py-2 text-center">Carte ID</th>
+              <th className="px-3 py-2 text-center">Autorisation</th>
               <th className="px-3 py-2 text-center">Paiement</th>
             </tr>
           </thead>
@@ -260,7 +265,10 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
                   </td>
                   <td className="px-3 py-2 text-gray-600">{p.eleve.classe}</td>
                   <td className="px-3 py-2 text-center text-xs">
-                    {regime === 'Omnivore' ? '🍖' : regime === 'Végétarien' ? '🥬' : regime === 'Halal' ? '🕌' : regime}
+                    {regime === 'Omnivore' ? '🍖' :
+                     regime === 'Végétarien' ? '🥬' :
+                     regime === 'Halal' ? '🕌' :
+                     regime === 'Autre' ? '❓' : regime}
                   </td>
 
                   {/* Passeport */}
@@ -351,6 +359,22 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
                     />
                   </td>
 
+                  {/* Autorisation de sortie du territoire */}
+                  <td className="px-3 py-2 text-center">
+                    <Dot
+                      status={
+                        !p.autorisation_sortie_url ? 'missing' :
+                        !p.autorisation_sortie_verifiee ? 'warning' :
+                        'ok'
+                      }
+                      title={
+                        !p.autorisation_sortie_url ? 'Manquante' :
+                        !p.autorisation_sortie_verifiee ? 'À vérifier' :
+                        'Vérifiée'
+                      }
+                    />
+                  </td>
+
                   {/* Paiement */}
                   <td className="px-3 py-2 text-center text-xs font-mono">
                     {(() => {
@@ -410,7 +434,7 @@ export default function VoyageAdministratif({ voyageId, isResponsable }: Props) 
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Composant Section 
+// Composant Section
 // ─────────────────────────────────────────────────────────────────────────────
 
 function Section({
@@ -459,6 +483,12 @@ function Section({
 // Modal "Fiche élève"
 // ─────────────────────────────────────────────────────────────────────────────
 
+type DocType =
+  | 'fiche_medicale'
+  | 'carte_mutuelle'
+  | 'carte_identite'
+  | 'autorisation_sortie';
+
 function FicheEleveAdmin({
   voyageId,
   participant,
@@ -476,7 +506,6 @@ function FicheEleveAdmin({
   const [sectionEdition, setSectionEdition] = useState<string | null>(null);
   const [showAddPaiement, setShowAddPaiement] = useState(false);
 
-  // ── Copies locales (option B) ──────────────────────────────────────────
   const [passport, setPassport] = useState({
     numero: participant.passport_numero || '',
     verifie: participant.passport_verifie,
@@ -497,9 +526,10 @@ function FicheEleveAdmin({
     carte_mutuelle_verifiee: participant.carte_mutuelle_verifiee,
     carte_identite_url: participant.carte_identite_url,
     carte_identite_verifiee: participant.carte_identite_verifiee,
+    autorisation_sortie_url: participant.autorisation_sortie_url,
+    autorisation_sortie_verifiee: participant.autorisation_sortie_verifiee,
   });
 
-  // Drafts en cours d'édition
   const [draftPassport, setDraftPassport] = useState({
     numero: participant.passport_numero || '',
     verifie: participant.passport_verifie,
@@ -515,8 +545,6 @@ function FicheEleveAdmin({
 
   const totalPaye = paiements.reduce((s, v) => s + Number(v.montant), 0);
   const attendu = config.montant_attendu_defaut;
-
-  // ── Helpers ────────────────────────────────────────────────────────────
 
   const savePassport = async () => {
     setSaving(true);
@@ -581,10 +609,7 @@ function FicheEleveAdmin({
     }
   };
 
-  const uploadDocument = async (
-    type: 'fiche_medicale' | 'carte_mutuelle' | 'carte_identite',
-    file: File
-  ) => {
+  const uploadDocument = async (type: DocType, file: File) => {
     const ext = file.name.split('.').pop() || 'pdf';
     const path = `${voyageId}/${participant.eleve_id}/${type}.${ext}`;
 
@@ -630,9 +655,7 @@ function FicheEleveAdmin({
     setSaving(false);
   };
 
-  const marquerVerifie = async (
-    type: 'fiche_medicale' | 'carte_mutuelle' | 'carte_identite'
-  ) => {
+  const marquerVerifie = async (type: DocType) => {
     setSaving(true);
     const { error } = await supabase
       .from('voyage_participants')
@@ -645,9 +668,7 @@ function FicheEleveAdmin({
     }
   };
 
-  const supprimerDocument = async (
-    type: 'fiche_medicale' | 'carte_mutuelle' | 'carte_identite'
-  ) => {
+  const supprimerDocument = async (type: DocType) => {
     if (!confirm('Supprimer définitivement ce document ? L\'élève devra le recharger.')) return;
     setSaving(true);
     const { error } = await supabase
@@ -1001,11 +1022,12 @@ function FicheEleveAdmin({
           </Section>
 
           {/* Documents */}
-          {(['fiche_medicale', 'carte_mutuelle', 'carte_identite'] as const).map((type) => {
-            const labels = {
+          {(['fiche_medicale', 'carte_mutuelle', 'carte_identite', 'autorisation_sortie'] as const).map((type) => {
+            const labels: Record<DocType, string> = {
               fiche_medicale: '🏥 Fiche médicale',
               carte_mutuelle: '💳 Carte européenne de mutuelle',
               carte_identite: '🪪 Carte d\'identité',
+              autorisation_sortie: '✈️ Autorisation de sortie du territoire',
             };
             const url = documents[`${type}_url` as keyof typeof documents] as string | null;
             const verifiee = documents[`${type}_verifiee` as keyof typeof documents] as boolean;

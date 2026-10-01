@@ -20,6 +20,7 @@ import GestionInscriptionsActivites from '@/components/voyages/activites/Gestion
 import PrisePresencesResponsable from '@/components/voyages/activites/PrisePresencesResponsable';
 import VoyageAdministratif from '@/components/voyages/VoyageAdministratif';
 import VoyageMesInfos from '@/components/voyages/VoyageMesInfos';
+import VoyageDocuments from '@/components/voyages/VoyageDocuments';
 
 interface Voyage {
   id: string;
@@ -270,11 +271,12 @@ export default function VoyageDetailPage() {
 
   const tabs = [
     { id: 'participants', label: 'Participants', icon: '👥' },
-      ...(isResponsable ? [{ id: 'administratif', label: 'Administratif', icon: '📋' }] : []),
+    ...(isResponsable ? [{ id: 'administratif', label: 'Administratif', icon: '📋' }] : []),
+    { id: 'mes-infos', label: 'Mes infos', icon: '📝' },
+    { id: 'documents', label: 'Documents', icon: '📎' },
     { id: 'hebergement', label: 'Hébergement', icon: '🏨' },
     { id: 'planning', label: 'Planning', icon: '📅' },
     { id: 'charte', label: 'Charte', icon: '📜' },
-    { id: 'mes-infos', label: 'Mes infos', icon: '📝' },
   ];
 
   return (
@@ -554,9 +556,18 @@ export default function VoyageDetailPage() {
           />
         )}
 
-        {activeTab === 'mes-infos' && currentUserId && (
+        {activeTab === 'mes-infos' && currentUserId && userType && (
           <VoyageMesInfos
             voyageId={voyageId}
+            userType={userType}
+            userId={currentUserId}
+          />
+        )}
+
+        {activeTab === 'documents' && currentUserId && (
+          <VoyageDocuments
+            voyageId={voyageId}
+            isResponsable={isResponsable}
             userType={userType}
             userId={currentUserId}
           />
