@@ -16,6 +16,7 @@ interface VoyageConfig {
   visa_requis: boolean;
   eleve_peut_modifier_telephone: boolean;
   eleve_peut_modifier_regime: boolean;
+  montant_attendu_defaut: number | null;   // ⬅️ ajouté
 }
 
 type DocType =
@@ -70,6 +71,7 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
     visa_requis: false,
     eleve_peut_modifier_telephone: false,
     eleve_peut_modifier_regime: false,
+    montant_attendu_defaut: null,   // ⬅️ ajouté
   });
   const [infos, setInfos] = useState<MesInfos>({});
   const [paiements, setPaiements] = useState<Paiement[]>([]);
@@ -100,7 +102,7 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
 
     const { data: voyageData } = await supabase
       .from('voyages')
-      .select('passport_requis, visa_requis, eleve_peut_modifier_telephone, eleve_peut_modifier_regime')
+      .select('passport_requis, visa_requis, eleve_peut_modifier_telephone, eleve_peut_modifier_regime, montant_attendu_defaut')
       .eq('id', voyageId)
       .single();
 
@@ -342,6 +344,12 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
 
   const totalPaye = paiements.reduce((s, p) => s + Number(p.montant), 0);
 
+  // 🎯 Montant attendu effectif : individuel si défini, sinon défaut du voyage
+  const montantAttenduEffectif =
+    infos.montant_attendu != null
+      ? Number(infos.montant_attendu)
+      : config.montant_attendu_defaut;
+
   if (loading) return <div className="text-center py-8">Chargement...</div>;
 
   return (
@@ -561,7 +569,7 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
               )}
 
               <div className="border-t pt-3 mt-3">
-                {infos.montant_attendu != null ? (
+                {montantAttenduEffectif != null ? (
                   <>
                     <p className="flex justify-between">
                       <span className="font-medium">Total versé :</span>
@@ -569,18 +577,18 @@ export default function VoyageMesInfos({ voyageId, userType, userId }: Props) {
                     </p>
                     <p className="flex justify-between">
                       <span className="font-medium">Montant demandé :</span>
-                      <span className="font-mono">{infos.montant_attendu}€</span>
+                      <span className="font-mono">{montantAttenduEffectif}€</span>
                     </p>
-                    {totalPaye < Number(infos.montant_attendu) ? (
+                    {totalPaye < montantAttenduEffectif ? (
                       <p className="flex justify-between text-red-600 font-bold mt-1">
                         <span>Reste à payer :</span>
-                        <span className="font-mono">{Number(infos.montant_attendu) - totalPaye}€</span>
+                        <span className="font-mono">{montantAttenduEffectif - totalPaye}€</span>
                       </p>
-                    ) : totalPaye === Number(infos.montant_attendu) ? (
+                    ) : totalPaye === montantAttenduEffectif ? (
                       <p className="text-green-600 font-bold mt-1">✅ Payé complet</p>
                     ) : (
                       <p className="text-orange-500 mt-1">
-                        Trop-perçu de {totalPaye - Number(infos.montant_attendu)}€
+                        Trop-perçu de {totalPaye - montantAttenduEffectif}€
                       </p>
                     )}
                   </>
