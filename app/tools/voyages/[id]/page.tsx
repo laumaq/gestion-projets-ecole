@@ -272,11 +272,11 @@ export default function VoyageDetailPage() {
   const tabs = [
     { id: 'participants', label: 'Participants', icon: '👥' },
     ...(isResponsable ? [{ id: 'administratif', label: 'Administratif', icon: '📋' }] : []),
-    { id: 'mes-infos', label: 'Mes infos', icon: '📝' },
-    { id: 'documents', label: 'Documents', icon: '📎' },
     { id: 'hebergement', label: 'Hébergement', icon: '🏨' },
     { id: 'planning', label: 'Planning', icon: '📅' },
     { id: 'charte', label: 'Charte', icon: '📜' },
+    { id: 'mes-infos', label: 'Mes infos', icon: '📝' },
+    { id: 'documents', label: 'Documents', icon: '📎' },
   ];
 
   return (
