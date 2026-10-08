@@ -1,22 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-IMPORT RENTRÉE - SCRIPT UNIQUE SUPABASE (v2026)
-----------------------------------------
-Parse EXP_ELEVE.txt, EXP_COURS.txt et EXP_GROUPE.txt et importe dans Supabase.
-
-Fichiers sources (UTF-8-BOM, séparateur ';') :
-- EXP_ELEVE.txt  : liste des élèves
-- EXP_COURS.txt  : grille horaire
-- EXP_GROUPE.txt : composition des groupes pédagogiques
-
-Mappings (JSON) :
-- mapping_profs.json    : nom|prenom → employee_id
-- mapping_groupes.json  : pattern → nom de groupe
-
-Préservations :
-- Les élèves et employees dont le nom contient "testeur" (insensible casse)
-- Les profs non référencés dans les fichiers horairistes passent à job=NULL
+IMPORT RENTRÉE - SCRIPT UNIQUE SUPABASE (v2026-2027)
 """
 
 import csv
@@ -24,7 +9,7 @@ import re
 import json
 import uuid
 from io import StringIO
-from typing import Dict, List, Tuple, Optional, Set
+from typing import Dict, List, Tuple, Optional, Set, Any
 from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
@@ -36,12 +21,21 @@ from pathlib import Path
 
 ANNEE_SCOLAIRE = 2026
 PREFIXE_MATRICULE = str(ANNEE_SCOLAIRE)[-2:]
+ANNEE_SCOLAIRE_LABEL = "2026-2027"
 
 MODE_TEST = False
 LIMITE_ELEVES = 100
 LIMITE_COURS = 100
 
-# Noms à préserver (élèves ET employees) - test insensible à la casse
+VIDER_COURSES = True              # True pour tester (vide courses avant import)
+
+# Import des élèves : passer à False une fois qu'ils sont stables (gain de temps)
+IMPORTER_ELEVES = False
+
+# Nettoyage one-shot des cours logiques obsolètes.
+# PASSER À False après un premier run propre !
+NETTOYER_COURS_LOGICIQUES_OBSOLETES = True
+
 NOMS_A_PRESERVER = ['testeur']
 
 # ============================================================================
@@ -73,17 +67,15 @@ FICHIER_GROUPE = "EXP_GROUPE.txt"
 FICHIER_MAPPING_PROFS = "mapping_profs.json"
 FICHIER_MAPPING_GROUPES = "mapping_groupes.json"
 
+MAPPING_GROUPES: Dict[str, str] = {}
+
 # ============================================================================
 # DICTIONNAIRES
 # ============================================================================
 
-# Codes de langue
 CODES_LANGUES = {'A', 'I', 'E', 'N', 'D', 'AI', 'DI', 'NI'}
-
-# Codes de sexe
 CODES_SEXE = {'G', 'F'}
 
-# Codes de philo
 CODES_PHILO = {
     'CPC', 'M', 'MORALE', 'RC', 'RI', 'RP', 'RO',
     'rel cat', 'rel isl', 'rel prot', 'rel ortho',
@@ -92,7 +84,6 @@ CODES_PHILO = {
     'Religion Protestante', 'Religion Orthodoxe',
 }
 
-# Conversion des codes vers libellés lisibles
 CONVERSION = {
     'G': 'Garçon', 'F': 'Fille',
     'M': 'Morale', 'Ma': 'Morale',
@@ -119,7 +110,6 @@ CONVERSION = {
     'ME4': 'Communication',
 }
 
-# Décomposition des options principales
 OPTION_DECOMPOSITIONS = {
     'L': [('Option', 'Latin')], 'LW': [('Option', 'Latin')],
     'LS': [('Option', 'Latin'), ('Option', 'Sciences')],
@@ -166,30 +156,121 @@ OPTION_DECOMPOSITIONS = {
 CODES_SANS_OPTION = {'M', 'MW', 'MAI', 'MNI', 'MDI', 'MNDI'}
 
 # ============================================================================
-# FONCTIONS UTILITAIRES
+# FONCTIONS UTILITAIRES (PAGINATION FIABLE)
 # ============================================================================
 
+def fetch_all(
+    table_name: str,
+    select: str = '*',
+    filters: Optional[List[Tuple[str, str, Any]]] = None,
+    order_by: Optional[Tuple[str, bool]] = None,
+    client=None,
+    batch_size: int = 500,
+    verbose: bool = False,
+) -> List[Dict]:
+    """
+    Récupère TOUTES les lignes d'une table en paginant.
+
+    Notes importantes :
+      - PostgREST retourne (batch_size - 1) éléments pour .range(0, N-1) (quirk).
+      - On avance de len(data) réellement reçu, et on ne s'arrête QUE sur
+        réponse vide. Cela évite de couper la pagination trop tôt.
+      - order_by est OBLIGATOIRE : sans ordre stable, la pagination n'est
+        pas déterministe et certaines lignes peuvent être sautées.
+    """
+    if client is None:
+        client = supabase_service
+
+    if order_by is None:
+        raise ValueError(
+            f"fetch_all('{table_name}') requiert un order_by explicite "
+            f"pour une pagination fiable."
+        )
+
+    all_rows: List[Dict] = []
+    offset = 0
+    iteration = 0
+    max_iterations = 10_000
+
+    while True:
+        iteration += 1
+        if iteration > max_iterations:
+            print(f"      ⚠️  fetch_all({table_name}) : garde-fou atteint à {len(all_rows)} lignes")
+            break
+
+        q = client.table(table_name).select(select)
+        if filters:
+            for op, col, val in filters:
+                if op == 'eq':
+                    q = q.eq(col, val)
+                elif op == 'neq':
+                    q = q.neq(col, val)
+                elif op == 'ilike':
+                    q = q.ilike(col, val)
+                elif op == 'in':
+                    q = q.in_(col, val)
+                elif op == 'not.in':
+                    q = q.not_.in_(col, val)
+                elif op == 'gte':
+                    q = q.gte(col, val)
+                elif op == 'lte':
+                    q = q.lte(col, val)
+
+        col, desc = order_by
+        q = q.order(col, desc=desc)
+        q = q.range(offset, offset + batch_size - 1)
+
+        res = q.execute()
+        data = res.data or []
+
+        if verbose:
+            print(f"      [fetch_all {table_name}] iter={iteration} offset={offset} reçu={len(data)}")
+
+        if not data:
+            break
+
+        all_rows.extend(data)
+        offset += len(data)
+
+    if verbose:
+        print(f"      [fetch_all {table_name}] TOTAL = {len(all_rows)}")
+
+    return all_rows
+
+
+def delete_by_values_in_batches(table_name: str, column: str, values: List[Any], batch_size: int = 500):
+    """DELETE ... WHERE column IN (...) par batches pour éviter la limite URL."""
+    if not values:
+        return 0
+    total = 0
+    for i in range(0, len(values), batch_size):
+        batch = values[i:i + batch_size]
+        try:
+            supabase_service.table(table_name).delete().in_(column, batch).execute()
+            total += len(batch)
+        except Exception as e:
+            print(f"      ⚠️  delete batch {i // batch_size + 1}: {e}")
+    return total
+
+
 def est_testeur(nom: str) -> bool:
-    """Vérifie si un nom (élève ou employee) est à préserver (nom contenant 'testeur')."""
     if not nom:
         return False
-    nom_lower = nom.lower()
-    return any(preserve in nom_lower for preserve in NOMS_A_PRESERVER)
+    return any(p in nom.lower() for p in NOMS_A_PRESERVER)
+
 
 def normaliser_valeur(valeur: str) -> str:
     if not valeur:
         return ""
     val = valeur.strip().lower().strip('"\'')
-    normalisations = {
-        'rel cat': 'rel cat', 'rel isl': 'rel isl', 'rel prot': 'rel prot', 'o': 'o',
-    }
-    return normalisations.get(val, val.upper())
+    return {'rel cat': 'rel cat', 'rel isl': 'rel isl', 'rel prot': 'rel prot', 'o': 'o'}.get(val, val.upper())
+
 
 def normaliser_groupe(code: str) -> str:
-    """Normalise un nom de groupe (trim + espaces simples)"""
     if not code:
         return ""
     return ' '.join(code.strip().split())
+
 
 def extraire_classe_et_niveau(chaine_classe: str) -> Tuple[str, int]:
     if not chaine_classe:
@@ -201,8 +282,8 @@ def extraire_classe_et_niveau(chaine_classe: str) -> Tuple[str, int]:
         return classe, niveau
     return "", 0
 
+
 def calculer_heure_fin(heure_debut: str, duree_str: str) -> Optional[str]:
-    """Calcule l'heure de fin avec séparateur 'h'."""
     if not heure_debut or not duree_str:
         return None
     try:
@@ -210,385 +291,414 @@ def calculer_heure_fin(heure_debut: str, duree_str: str) -> Optional[str]:
         duree_minutes = duree_heures * 50
         heure, minute = int(heure_debut[:2]), int(heure_debut[3:])
         total_minutes = heure * 60 + minute + duree_minutes
-        heure_fin = total_minutes // 60
-        minute_fin = total_minutes % 60
-        return f"{heure_fin:02d}h{minute_fin:02d}"
-    except:
+        return f"{total_minutes // 60:02d}h{total_minutes % 60:02d}"
+    except Exception:
         return None
 
+
 def parser_valeurs_options(valeurs_str: str) -> List:
-    """
-    Parse les valeurs d'une condition et retourne une liste
-    [Sexe, LM1, LM2, LM3, Philo, Opt1, Opt2, Opt3]
-    """
-    options = [None, None, None, None, None, None, None, None]
-    
+    options = [None] * 8
     if not valeurs_str:
         return options
-    
-    # Nettoyer
     valeurs_str = valeurs_str.strip()
-    # Ignorer "que LM1", " CL", etc.
     valeurs_str = re.sub(r'\s+que\s+LM\d?', '', valeurs_str, flags=re.IGNORECASE)
     valeurs_str = re.sub(r'\s+CL\s*$', '', valeurs_str)
-    valeurs_str = valeurs_str.strip()
-    
-    # Découper par '-'
     parties = [p.strip() for p in valeurs_str.split('-') if p.strip()]
-    
-    # Compteur pour les langues (dans l'ordre)
-    langues_trouvees = []
-    options_principales = []
-    philo_trouvee = None
-    sexe_trouve = None
-    
+
+    langues, options_principales = [], []
+    philo, sexe = None, None
     for partie in parties:
-        # Ignorer les suffixes spéciaux
-        partie = partie.strip()
         if not partie:
             continue
-        
-        # Sexe
         if partie in CODES_SEXE:
-            sexe_trouve = partie
-            continue
-        
-        # Philo
-        partie_lower = partie.lower()
-        if (partie in CODES_PHILO or 
-            partie_lower in ['rel cat', 'rel isl', 'rel prot', 'rel ortho', 'morale'] or
-            'rel ' in partie_lower or 'religion' in partie_lower):
-            philo_trouvee = partie
-            continue
-        
-        # Langue
+            sexe = partie; continue
+        pl = partie.lower()
+        if (partie in CODES_PHILO or
+                pl in ['rel cat', 'rel isl', 'rel prot', 'rel ortho', 'morale'] or
+                'rel ' in pl or 'religion' in pl):
+            philo = partie; continue
         if partie in CODES_LANGUES:
-            langues_trouvees.append(partie)
-            continue
-        
-        # Option principale (tout le reste)
+            langues.append(partie); continue
         if '+' in partie:
-            sous_options = [p.strip() for p in partie.split('+') if p.strip()]
-            options_principales.extend(sous_options)
+            options_principales.extend([p.strip() for p in partie.split('+') if p.strip()])
         else:
             options_principales.append(partie)
-    
-    # Remplir le tableau
-    options[0] = sexe_trouve
-    for i, langue in enumerate(langues_trouvees[:3]):
-        options[1 + i] = langue
-    options[4] = philo_trouvee
-    for i, opt in enumerate(options_principales[:3]):
-        options[5 + i] = opt
-    
+
+    options[0] = sexe
+    for i, l in enumerate(langues[:3]):
+        options[1 + i] = l
+    options[4] = philo
+    for i, o in enumerate(options_principales[:3]):
+        options[5 + i] = o
     return options
 
+
 # ============================================================================
-# GESTION DES MAPPINGS
+# MAPPINGS
 # ============================================================================
 
 def charger_mapping(nom_fichier: str) -> Dict:
-    mapping_file = Path(__file__).parent / nom_fichier
-    if mapping_file.exists():
+    p = Path(__file__).parent / nom_fichier
+    if p.exists():
         try:
-            with open(mapping_file, 'r', encoding='utf-8') as f:
+            with open(p, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except:
+        except Exception:
             pass
     return {}
 
+
 def sauvegarder_mapping(mapping: Dict, nom_fichier: str):
-    mapping_file = Path(__file__).parent / nom_fichier
-    with open(mapping_file, 'w', encoding='utf-8') as f:
+    p = Path(__file__).parent / nom_fichier
+    with open(p, 'w', encoding='utf-8') as f:
         json.dump(mapping, f, indent=2, ensure_ascii=False)
 
+
+def demander_nom_groupe(pattern: str) -> str:
+    global MAPPING_GROUPES
+    pattern = (pattern or "").strip()
+    if pattern in MAPPING_GROUPES:
+        return MAPPING_GROUPES[pattern]
+    print("\n   ❓ Pattern de groupe sans nom [groupe] :")
+    print(f"      {pattern}")
+    nom = input("   Nom du groupe pour ce pattern ? ").strip()
+    while not nom:
+        nom = input("   Le nom ne peut pas être vide. Nom du groupe ? ").strip()
+    nom = normaliser_groupe(nom)
+    MAPPING_GROUPES[pattern] = nom
+    sauvegarder_mapping(MAPPING_GROUPES, FICHIER_MAPPING_GROUPES)
+    print(f"   ✅ Groupe enregistré : {nom}")
+    return nom
+
+
+def extraire_groupe(classe_pattern: str) -> str:
+    global MAPPING_GROUPES
+    pattern = (classe_pattern or "").strip()
+    if not pattern:
+        return ""
+    if pattern in MAPPING_GROUPES:
+        return MAPPING_GROUPES[pattern]
+    m = re.search(r'\[([^\]]+)\]', pattern)
+    if m:
+        return normaliser_groupe(m.group(1))
+    if pattern.startswith('<'):
+        return demander_nom_groupe(pattern)
+    return normaliser_groupe(pattern)
+
+
 # ============================================================================
-# GESTION DES PROFESSEURS
+# PARSING PATTERNS COMPLEXES
+# ============================================================================
+
+def parser_pattern_groupe(pattern: str) -> List[Tuple[str, str, str]]:
+    if not pattern:
+        return []
+    p = re.sub(r'^\s*\[[^\]]+\]\s*,?\s*', '', pattern).strip()
+    result = []
+    for part in re.split(r',\s*(?=<)', p):
+        m = re.match(r'<([^>]+)>\s*<([^>]+)>\s*(.+)', part.strip())
+        if m:
+            result.append((m.group(1).strip(), m.group(2).strip(),
+                           m.group(3).strip().rstrip(',').strip()))
+    return result
+
+
+def matcher_condition_student(raw: Dict, template: str, valeur: str) -> bool:
+    suffix = None
+    if ' + ' in valeur:
+        main, suffix = valeur.split(' + ', 1)
+        valeur = main.strip()
+        suffix = suffix.strip()
+
+    template_parts = [t.strip() for t in template.strip().strip('()').split('+') if t.strip()]
+    valeur_parts = [v.strip() for v in valeur.split('-')]
+
+    for i, tp in enumerate(template_parts):
+        if i >= len(valeur_parts):
+            break
+        v = valeur_parts[i].upper()
+        tpu = tp.upper()
+        if tpu == 'OPTION':
+            if (raw.get('opt5') or '').strip().upper() != v:
+                return False
+        elif tpu.startswith('LM'):
+            idx = tpu[2:]
+            if idx not in ('1', '2', '3'):
+                continue
+            if (raw.get(f'opt{idx}') or '').strip().upper() != v:
+                return False
+        elif tpu == 'PHILO':
+            if (raw.get('opt4') or '').strip().upper() != v:
+                return False
+        elif tpu == 'SEXE':
+            if (raw.get('sexe') or '').strip().upper() != v:
+                return False
+
+    if suffix:
+        s = suffix.upper()
+        o4 = (raw.get('opt4') or '').strip().upper()
+        mapping = {
+            'CPC': ('CPC',),
+            'REL CAT': ('RC', 'REL CAT'),
+            'RC': ('RC', 'REL CAT'),
+            'REL ISL': ('RI', 'REL ISL'),
+            'RI': ('RI', 'REL ISL'),
+            'REL PROT': ('RP', 'REL PROT'),
+            'RP': ('RP', 'REL PROT'),
+            'MORALE': ('M', 'MORALE', 'MA'),
+            'M': ('M', 'MORALE', 'MA'),
+        }
+        if s in mapping and o4 not in mapping[s]:
+            return False
+    return True
+
+
+def completer_students_groups(matricule_to_raw: Dict, next_id_groups: int) -> List[Tuple[int, int, str]]:
+    if not MAPPING_GROUPES or not matricule_to_raw:
+        return []
+    print("\n   🔗 Complétion students_groups depuis mapping_groupes.json...")
+    rows = []
+    stats = {}
+    for pattern, code in MAPPING_GROUPES.items():
+        if not pattern or not code:
+            continue
+        conditions = parser_pattern_groupe(pattern)
+        if not conditions:
+            continue
+        matched = set()
+        for classe, template, valeur in conditions:
+            for matricule, raw in matricule_to_raw.items():
+                if raw.get('classe') != classe:
+                    continue
+                if matcher_condition_student(raw, template, valeur):
+                    matched.add(matricule)
+        for m in matched:
+            rows.append((next_id_groups, m, code))
+            next_id_groups += 1
+        stats[code] = stats.get(code, 0) + len(matched)
+    for code, n in stats.items():
+        print(f"      • {code} : {n} élèves")
+    print(f"   ✅ {len(rows)} associations supplémentaires")
+    return rows
+
+
+# ============================================================================
+# PROFS
 # ============================================================================
 
 def normaliser_nom(chaine: str) -> str:
     if not chaine:
         return ""
     chaine = chaine.lower().strip()
-    accents = {
-        'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
-        'à': 'a', 'â': 'a', 'ä': 'a',
-        'ô': 'o', 'ö': 'o',
-        'ï': 'i', 'î': 'i', 'ç': 'c',
-        'ù': 'u', 'û': 'u', 'ü': 'u'
-    }
-    for accent, sans in accents.items():
-        chaine = chaine.replace(accent, sans)
+    for a, s in {'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e', 'à': 'a', 'â': 'a', 'ä': 'a',
+                 'ô': 'o', 'ö': 'o', 'ï': 'i', 'î': 'i', 'ç': 'c',
+                 'ù': 'u', 'û': 'u', 'ü': 'u'}.items():
+        chaine = chaine.replace(a, s)
     return chaine
 
+
 def get_or_create_professeur(nom: str, prenom: str, mapping: Dict, employees_cache: List) -> Optional[str]:
-    """Récupère ou crée un professeur"""
     if not nom or not prenom:
         return None
-    
-    nom = nom.strip()
-    prenom = prenom.strip()
-    cle_mapping = f"{nom}|{prenom}"
-    
-    # 1. Vérifier le mapping
-    if cle_mapping in mapping:
-        return mapping[cle_mapping]
-    
-    # 2. Recherche dans le cache employees
-    nom_norm = normaliser_nom(nom)
-    prenom_norm = normaliser_nom(prenom)
-    
+    nom, prenom = nom.strip(), prenom.strip()
+    cle = f"{nom}|{prenom}"
+    if cle in mapping:
+        return mapping[cle]
+
+    nn, pn = normaliser_nom(nom), normaliser_nom(prenom)
     for emp in employees_cache:
-        emp_nom = normaliser_nom(emp.get('nom', ''))
-        emp_prenom = normaliser_nom(emp.get('prenom', ''))
-        if emp_nom == nom_norm and emp_prenom == prenom_norm:
-            # Si le prof existe mais n'a plus le job 'prof', le remettre
+        if normaliser_nom(emp.get('nom', '')) == nn and normaliser_nom(emp.get('prenom', '')) == pn:
             if emp.get('job') != 'prof':
                 try:
-                    supabase_service.table('employees') \
-                        .update({'job': 'prof'}) \
-                        .eq('id', emp['id']) \
-                        .execute()
-                    emp['job'] = 'prof'  # Mettre à jour le cache
+                    supabase_service.table('employees').update({'job': 'prof'}).eq('id', emp['id']).execute()
+                    emp['job'] = 'prof'
                     print(f"   🔄 {prenom} {nom} → job remis à 'prof'")
                 except Exception as e:
-                    print(f"   ⚠️  Impossible de remettre job=prof pour {prenom} {nom}: {e}")
-            
-            mapping[cle_mapping] = emp['id']
+                    print(f"   ⚠️  {e}")
+            mapping[cle] = emp['id']
             return emp['id']
-    
-    # 3. Pas trouvé → demander
+
     print(f"\n   ❓ Professeur inconnu: {prenom} {nom}")
-    
-    # Correspondances partielles
     correspondances = []
     for emp in employees_cache:
-        emp_nom = normaliser_nom(emp.get('nom', ''))
-        emp_prenom = normaliser_nom(emp.get('prenom', ''))
-        if (nom_norm in emp_nom or emp_nom in nom_norm or
-            prenom_norm in emp_prenom or emp_prenom in prenom_norm):
+        en, ep = normaliser_nom(emp.get('nom', '')), normaliser_nom(emp.get('prenom', ''))
+        if (nn in en or en in nn or pn in ep or ep in pn):
             correspondances.append((emp.get('nom', ''), emp.get('prenom', ''), emp['id']))
-    
+
     if correspondances:
         print("   🔍 Correspondances possibles:")
-        for i, (e_nom, e_prenom, e_id) in enumerate(correspondances, 1):
-            print(f"      {i}. {e_prenom} {e_nom} (ID: {e_id})")
+        for i, (en, ep, eid) in enumerate(correspondances, 1):
+            print(f"      {i}. {ep} {en} (ID: {eid})")
         print("      0. Aucun - Créer un nouveau professeur")
-        
         choix = input("   Choisissez un numéro: ").strip()
         if choix.isdigit() and 1 <= int(choix) <= len(correspondances):
             prof_id = correspondances[int(choix) - 1][2]
-            mapping[cle_mapping] = prof_id
+            mapping[cle] = prof_id
             return prof_id
-    
-    # Créer
+
     print("   📝 Création d'un nouveau professeur")
     nouveau_nom = input(f"   Nom (actuel: {nom}): ").strip() or nom
     nouveau_prenom = input(f"   Prénom (actuel: {prenom}): ").strip() or prenom
-    
     new_id = str(uuid.uuid4())
-    initiale = nouveau_prenom[0].upper() if nouveau_prenom else ''
-    
     new_prof = {
-        'id': new_id,
-        'nom': nouveau_nom,
-        'prenom': nouveau_prenom,
-        'initiale': initiale,
-        'job': 'prof',
-        'mot_de_passe': None,
-        'eleve_voir_telephone': False,
-        'tfh_accepte_numerique': False,
-        'regime_alimentaire': json.dumps({"regime": "Végétarien", "notes": ""})
+        'id': new_id, 'nom': nouveau_nom, 'prenom': nouveau_prenom,
+        'initiale': nouveau_prenom[0].upper() if nouveau_prenom else '',
+        'job': 'prof', 'mot_de_passe': None,
+        'eleve_voir_telephone': False, 'tfh_accepte_numerique': False,
+        'regime_alimentaire': json.dumps({"regime": "Végétarien", "notes": ""}),
     }
-    
     try:
-        result = supabase_service.table('employees').insert(new_prof).execute()
-        if result.data:
-            prof_id = result.data[0]['id']
-            print(f"   ✅ Professeur créé: {nouveau_prenom} {nouveau_nom} (ID: {prof_id})")
-            mapping[cle_mapping] = prof_id
-            employees_cache.append({
-                'id': prof_id, 
-                'nom': nouveau_nom, 
-                'prenom': nouveau_prenom,
-                'job': 'prof'
-            })
-            return prof_id
+        r = supabase_service.table('employees').insert(new_prof).execute()
+        if r.data:
+            pid = r.data[0]['id']
+            print(f"   ✅ Professeur créé: {nouveau_prenom} {nouveau_nom} (ID: {pid})")
+            mapping[cle] = pid
+            employees_cache.append({'id': pid, 'nom': nouveau_nom, 'prenom': nouveau_prenom, 'job': 'prof'})
+            return pid
     except Exception as e:
-        print(f"   ❌ Erreur création professeur: {e}")
-    
+        print(f"   ❌ {e}")
     return None
 
+
 # ============================================================================
-# PHASE 1 : EXP_GROUPE → courses_conditions
+# PHASE 1 : EXP_GROUPE → group_conditions
 # ============================================================================
 
 def importer_groupes():
-    """Parse EXP_GROUPE.txt et remplit courses_conditions"""
-    print("\n" + "="*60)
-    print("📚 IMPORT DES GROUPES PÉDAGOGIQUES (courses_conditions)")
-    print("="*60)
-    
-    print(f"\n   Lecture de {FICHIER_GROUPE}...")
+    print("\n" + "=" * 60)
+    print("📚 IMPORT DES GROUPES PÉDAGOGIQUES (group_conditions)")
+    print("=" * 60)
+
     try:
         with open(FICHIER_GROUPE, 'r', encoding='utf-8-sig') as f:
             lines = f.readlines()
     except FileNotFoundError:
         print(f"   ❌ Fichier {FICHIER_GROUPE} non trouvé!")
         return
-    
-    # Parser
+
     conditions_data = []
+    classes_vues = set()
     current_groupe = None
-    current_cours_id = 0
-    current_condition_id = 0
-    
+    cid = 0
+
     for line in lines:
         line = line.rstrip('\n\r')
         if not line.strip():
             continue
-        
-        # Détecter si c'est un nom de groupe (pas d'indentation, pas de <>)
         if not line.startswith('<') and not line.startswith(' ') and ' ' not in line[:3]:
             current_groupe = normaliser_groupe(line)
             continue
-        
-        # C'est une condition
-        match = re.match(r'<\s*([^>]+)\s*>\s*(.+)', line)
-        if not match:
+        m = re.match(r'<\s*([^>]+)\s*>\s*(.+)', line)
+        if not m:
             continue
-        
-        classe = match.group(1).strip()
-        valeurs_str = match.group(2).strip()
-        
-        options = parser_valeurs_options(valeurs_str)
-        
-        current_cours_id += 1
-        current_condition_id += 1
-        
+        classe = m.group(1).strip()
+        options = parser_valeurs_options(m.group(2).strip())
+        cid += 1
         conditions_data.append({
-            'id': current_condition_id,
-            'cours_id': current_cours_id,
-            'groupe_pedagogique': current_groupe,
-            'classe': classe,
-            'options': json.dumps(options, ensure_ascii=False)
+            'id': cid, 'groupe_pedagogique': current_groupe,
+            'classe': classe, 'options': json.dumps(options, ensure_ascii=False),
         })
-    
-    print(f"   ✅ {len(conditions_data)} conditions extraites")
-    
-    # Vider et insérer
-    print("\n   🗑️  Vidage de courses_conditions...")
+        classes_vues.add(classe)
+
+    print(f"   ✅ {len(conditions_data)} conditions extraites depuis EXP_GROUPE.txt")
+    print(f"   📚 Ajout des lignes pour les classes simples...")
+    for classe in sorted(classes_vues):
+        if not any(c['groupe_pedagogique'] == classe and c['classe'] == classe for c in conditions_data):
+            cid += 1
+            conditions_data.append({
+                'id': cid, 'groupe_pedagogique': classe,
+                'classe': classe, 'options': json.dumps([None] * 8, ensure_ascii=False),
+            })
+    print(f"   ✅ {len(conditions_data)} conditions au total")
+
+    print("\n   🗑️  Vidage de group_conditions...")
     try:
-        supabase_service.table('courses_conditions').delete().neq('id', 0).execute()
+        supabase_service.table('group_conditions').delete().neq('id', 0).execute()
     except Exception as e:
         print(f"      ⚠️  {e}")
-    
+
     print("   📤 Insertion...")
-    batch_size = 100
-    for i in range(0, len(conditions_data), batch_size):
-        batch = conditions_data[i:i+batch_size]
+    for i in range(0, len(conditions_data), 100):
         try:
-            supabase_service.table('courses_conditions').insert(batch).execute()
+            supabase_service.table('group_conditions').insert(conditions_data[i:i + 100]).execute()
         except Exception as e:
-            print(f"      ❌ Erreur batch {i//batch_size + 1}: {e}")
-    
+            print(f"      ❌ batch {i // 100 + 1}: {e}")
     print(f"\n✅ Import groupes terminé: {len(conditions_data)} conditions")
+
 
 # ============================================================================
 # PHASE 2 : EXP_ELEVE
 # ============================================================================
 
 def importer_eleves(employees_cache: List):
-    """Parse EXP_ELEVE.txt et importe élèves, options, groupes"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("📚 IMPORT DES ÉLÈVES")
-    print(f"   Année scolaire: {ANNEE_SCOLAIRE} (préfixe matricule: {PREFIXE_MATRICULE})")
-    print("="*60)
-    
-    print(f"\n   Lecture de {FICHIER_ELEVES}...")
+    print(f"   Année: {ANNEE_SCOLAIRE_LABEL} (préfixe: {PREFIXE_MATRICULE})")
+    print("=" * 60)
+
     try:
         with open(FICHIER_ELEVES, 'r', encoding='utf-8-sig') as f:
             content = f.read()
     except FileNotFoundError:
         print(f"   ❌ Fichier {FICHIER_ELEVES} non trouvé!")
         return
-    
+
     reader = csv.reader(StringIO(content), delimiter=';')
     rows = list(reader)
-    print(f"   {len(rows)} lignes lues (header + {len(rows)-1} élèves)")
-    
-    total_eleves = 0
-    total_options = 0
-    total_groupes = 0
-    total_crees = 0
-    total_mis_a_jour = 0
-    
-    options_data = []
-    groupes_data = []
-    matricules_presents = []
-    
-    # Récupérer les matricules des élèves à préserver (Testeur, etc.)
+    print(f"   {len(rows)} lignes lues (header + {len(rows) - 1} élèves)")
+
+    total_eleves = total_options = total_groupes = total_crees = total_mis_a_jour = 0
+    options_data, groupes_data, matricules_presents = [], [], []
+    matricule_to_raw: Dict[int, Dict[str, str]] = {}
+
+    # Récupérer élèves à préserver (paginé + ordonné)
     matricules_preserves = []
     try:
-        result = supabase_anon.table('students').select('matricule, nom').execute()
-        for r in result.data:
+        for r in fetch_all('students', select='matricule, nom',
+                           order_by=('matricule', False)):
             if est_testeur(r.get('nom', '')):
                 matricules_preserves.append(r['matricule'])
-        print(f"   🧪 {len(matricules_preserves)} élèves à préserver: {matricules_preserves}")
+        print(f"   🧪 {len(matricules_preserves)} élèves à préserver")
     except Exception as e:
-        print(f"   ⚠️  Impossible de récupérer les élèves à préserver: {e}")
-    
+        print(f"   ⚠️  {e}")
+
     # Prochain matricule
     try:
-        result = supabase_anon.table('students').select('matricule').order('matricule', desc=True).limit(1).execute()
-        if result.data:
-            max_matricule = int(result.data[0]['matricule'])
-            prochain_matricule = max_matricule + 1
+        r = supabase_anon.table('students').select('matricule').order('matricule', desc=True).limit(1).execute()
+        if r.data:
+            prochain_matricule = int(r.data[0]['matricule']) + 1
         else:
             prochain_matricule = int(f"{PREFIXE_MATRICULE}0001")
-        
         if not str(prochain_matricule).startswith(PREFIXE_MATRICULE):
             prochain_matricule = int(f"{PREFIXE_MATRICULE}0001")
-        
         print(f"   📊 Prochain matricule: {prochain_matricule}")
     except Exception as e:
-        print(f"   ⚠️  Impossible de récupérer le max matricule: {e}")
+        print(f"   ⚠️  {e}")
         prochain_matricule = int(f"{PREFIXE_MATRICULE}0001")
-    
+
     next_id_options = 1
     next_id_groups = 1
-    
+
     print("\n   🔄 Traitement des élèves...")
-    
     for i, row in enumerate(rows[1:], 1):
         if MODE_TEST and total_eleves >= LIMITE_ELEVES:
-            print(f"   ⏹️  Limite TEST atteinte")
             break
-        
         if len(row) < 10:
             continue
-        
         try:
-            nom = row[0].strip()
-            prenom = row[1].strip()
-            sexe = row[2].strip()
-            classe_raw = row[3].strip()
+            nom, prenom, sexe, classe_raw = row[0].strip(), row[1].strip(), row[2].strip(), row[3].strip()
             opt1 = row[4].strip() if len(row) > 4 else ""
             opt2 = row[5].strip() if len(row) > 5 else ""
             opt3 = row[6].strip() if len(row) > 6 else ""
             opt4 = row[7].strip() if len(row) > 7 else ""
             opt5 = row[8].strip() if len(row) > 8 else ""
             groupes_str = row[10].strip() if len(row) > 10 else ""
-            
             if not nom or not prenom:
                 continue
-            
             classe, niveau = extraire_classe_et_niveau(classe_raw)
-            
-            # Recherche
+
             result = supabase_anon.table('students').select('matricule') \
                 .ilike('nom', nom).ilike('prenom', prenom).execute()
-            
             if result.data:
                 matricule_effectif = result.data[0]['matricule']
                 supabase_service.table('students').update({
@@ -599,477 +709,640 @@ def importer_eleves(employees_cache: List):
                 matricule_effectif = prochain_matricule
                 prochain_matricule += 1
                 supabase_service.table('students').insert({
-                    'matricule': matricule_effectif,
-                    'nom': nom, 'prenom': prenom,
+                    'matricule': matricule_effectif, 'nom': nom, 'prenom': prenom,
                     'classe': classe, 'niveau': niveau
                 }).execute()
-                print(f"   ✨ {prenom} {nom} → créé avec matricule {matricule_effectif}")
+                print(f"   ✨ {prenom} {nom} → matricule {matricule_effectif}")
                 total_crees += 1
-            
             matricules_presents.append(matricule_effectif)
-            
-            # Options
-            # Sexe (EP)
-            if sexe:
-                if sexe == 'G':
-                    options_data.append((next_id_options, matricule_effectif, 'EP', 'Garçon'))
-                    next_id_options += 1
-                    total_options += 1
-                elif sexe == 'F':
-                    options_data.append((next_id_options, matricule_effectif, 'EP', 'Fille'))
-                    next_id_options += 1
-                    total_options += 1
-            
-            # Langues LM1, LM2, LM3
+
+            matricule_to_raw[matricule_effectif] = {
+                'classe': classe, 'sexe': sexe,
+                'opt1': opt1, 'opt2': opt2, 'opt3': opt3, 'opt4': opt4, 'opt5': opt5,
+            }
+
+            if sexe == 'G':
+                options_data.append((next_id_options, matricule_effectif, 'EP', 'Garçon'))
+                next_id_options += 1; total_options += 1
+            elif sexe == 'F':
+                options_data.append((next_id_options, matricule_effectif, 'EP', 'Fille'))
+                next_id_options += 1; total_options += 1
+
             for j, opt in enumerate([opt1, opt2, opt3], 1):
                 if opt:
                     norm = normaliser_valeur(opt)
-                    val = CONVERSION.get(norm, norm)
-                    options_data.append((next_id_options, matricule_effectif, f'LM{j}', val))
-                    next_id_options += 1
-                    total_options += 1
-            
-            # Philo (opt4)
+                    options_data.append((next_id_options, matricule_effectif, f'LM{j}', CONVERSION.get(norm, norm)))
+                    next_id_options += 1; total_options += 1
+
             if opt4:
                 norm = normaliser_valeur(opt4)
-                val = CONVERSION.get(norm, norm)
-                options_data.append((next_id_options, matricule_effectif, 'Philo', val))
-                next_id_options += 1
-                total_options += 1
-            
-            # Option principale (opt5)
+                options_data.append((next_id_options, matricule_effectif, 'Philo', CONVERSION.get(norm, norm)))
+                next_id_options += 1; total_options += 1
+
             if opt5:
                 code_clean = opt5.strip().upper().strip('"\'')
                 if code_clean not in CODES_SANS_OPTION:
                     if code_clean in OPTION_DECOMPOSITIONS:
-                        for type_opt, val_opt in OPTION_DECOMPOSITIONS[code_clean]:
-                            options_data.append((next_id_options, matricule_effectif, type_opt, val_opt))
-                            next_id_options += 1
-                            total_options += 1
+                        for t, v in OPTION_DECOMPOSITIONS[code_clean]:
+                            options_data.append((next_id_options, matricule_effectif, t, v))
+                            next_id_options += 1; total_options += 1
                     else:
                         options_data.append((next_id_options, matricule_effectif, 'Option', opt5))
-                        next_id_options += 1
-                        total_options += 1
-            
-            # Groupes pédagogiques (ceux du fichier EXP_ELEVE)
+                        next_id_options += 1; total_options += 1
+
             if groupes_str:
-                for groupe in groupes_str.split(','):
-                    groupe_norm = normaliser_groupe(groupe)
-                    if groupe_norm:
-                        groupes_data.append((next_id_groups, matricule_effectif, groupe_norm))
-                        next_id_groups += 1
-                        total_groupes += 1
-            
-            # Groupe-classe : pour matcher les cours dont raw_pattern = classe
+                for g in groupes_str.split(','):
+                    gn = normaliser_groupe(g)
+                    if gn:
+                        groupes_data.append((next_id_groups, matricule_effectif, gn))
+                        next_id_groups += 1; total_groupes += 1
+
             if classe:
-                deja_present = any(
-                    g[2] == classe for g in groupes_data 
-                    if g[1] == matricule_effectif
-                )
-                if not deja_present:
+                if not any(g[2] == classe for g in groupes_data if g[1] == matricule_effectif):
                     groupes_data.append((next_id_groups, matricule_effectif, classe))
-                    next_id_groups += 1
-                    total_groupes += 1
-            
+                    next_id_groups += 1; total_groupes += 1
+
             total_eleves += 1
-                    
         except Exception as e:
-            print(f"   ⚠️  Erreur ligne {i}: {e}")
-            continue
-    
-    print(f"\n   ✅ {total_eleves} élèves ({total_crees} créés, {total_mis_a_jour} mis à jour)")
-    print(f"   ✅ {total_options} options, {total_groupes} groupes")
-    
-    # Vidage en préservant les élèves protégés
-    print("\n   🗑️  Vidage (en préservant les élèves protégés)...")
-    
-    # Options
+            print(f"   ⚠️  ligne {i}: {e}")
+
+    print(f"\n   ✅ {total_eleves} élèves ({total_crees} créés, {total_mis_a_jour} MAJ)")
+    print(f"   ✅ {total_options} options, {total_groupes} groupes (base)")
+
+    groupes_supp = completer_students_groups(matricule_to_raw, next_id_groups)
+    if groupes_supp:
+        groupes_data.extend(groupes_supp)
+        total_groupes += len(groupes_supp)
+        print(f"   ✅ Total groupes après complétion : {total_groupes}")
+
+    print("\n   🗑️  Vidage (en préservant les protégés)...")
     try:
         if matricules_preserves:
-            supabase_service.table('students_options') \
-                .delete() \
-                .not_.in_('matricule', matricules_preserves) \
-                .execute()
+            supabase_service.table('students_options').delete().not_.in_('matricule', matricules_preserves).execute()
         else:
             supabase_service.table('students_options').delete().neq('matricule', 0).execute()
     except Exception as e:
         print(f"      ⚠️  Options: {e}")
-    
-    # Groupes
     try:
         if matricules_preserves:
-            supabase_service.table('students_groups') \
-                .delete() \
-                .not_.in_('matricule', matricules_preserves) \
-                .execute()
+            supabase_service.table('students_groups').delete().not_.in_('matricule', matricules_preserves).execute()
         else:
             supabase_service.table('students_groups').delete().neq('matricule', 0).execute()
     except Exception as e:
         print(f"      ⚠️  Groupes: {e}")
-    
-    print("   📤 Insertion des options...")
-    batch_size = 100
-    for i in range(0, len(options_data), batch_size):
-        batch = options_data[i:i+batch_size]
-        rows_to_insert = [
-            {'id': id_val, 'matricule': m, 'type_option': t, 'valeur_option': v}
-            for id_val, m, t, v in batch
-        ]
+
+    print("   📤 Insertion options...")
+    for i in range(0, len(options_data), 100):
+        batch = options_data[i:i + 100]
         try:
-            supabase_service.table('students_options').insert(rows_to_insert).execute()
+            supabase_service.table('students_options').insert([
+                {'id': idv, 'matricule': m, 'type_option': t, 'valeur_option': v}
+                for idv, m, t, v in batch
+            ]).execute()
         except Exception as e:
             print(f"      ❌ {e}")
-    
-    print("   📤 Insertion des groupes...")
-    for i in range(0, len(groupes_data), batch_size):
-        batch = groupes_data[i:i+batch_size]
-        rows_to_insert = [
-            {'id': id_val, 'matricule': m, 'groupe_code': g}
-            for id_val, m, g in batch
-        ]
+
+    print("   📤 Insertion groupes...")
+    for i in range(0, len(groupes_data), 100):
+        batch = groupes_data[i:i + 100]
         try:
-            supabase_service.table('students_groups').insert(rows_to_insert).execute()
+            supabase_service.table('students_groups').insert([
+                {'id': idv, 'matricule': m, 'groupe_code': g} for idv, m, g in batch
+            ]).execute()
         except Exception as e:
             print(f"      ❌ {e}")
-    
-    # Nettoyage en préservant les élèves protégés
-    print("\n   🧹 Nettoyage des élèves absents...")
+
+    print("\n   🧹 Nettoyage élèves absents...")
     if matricules_presents:
         try:
-            result = supabase_anon.table('students') \
-                .select('matricule, nom') \
-                .filter('matricule', 'not.in', tuple(matricules_presents)) \
-                .execute()
-            
-            # Filtrer : exclure les Testeur
+            presents_set = set(matricules_presents)
             ids_a_nettoyer = [
-                r['matricule'] for r in result.data 
-                if not est_testeur(r.get('nom', ''))
+                r['matricule'] for r in fetch_all('students', select='matricule, nom',
+                                                   order_by=('matricule', False))
+                if r['matricule'] not in presents_set and not est_testeur(r.get('nom', ''))
             ]
-            
-            if ids_a_nettoyer:
-                for matricule in ids_a_nettoyer:
-                    supabase_service.table('students') \
-                        .update({'classe': None, 'niveau': 0}) \
-                        .eq('matricule', matricule).execute()
-                print(f"   ✅ {len(ids_a_nettoyer)} élèves absents → classe=NULL, niveau=0")
-            else:
-                print("   ✅ Aucun élève absent à nettoyer")
+            for m in ids_a_nettoyer:
+                supabase_service.table('students').update({'classe': None, 'niveau': 0}).eq('matricule', m).execute()
+            print(f"   ✅ {len(ids_a_nettoyer)} élèves absents → classe=NULL, niveau=0")
         except Exception as e:
             print(f"      ⚠️  {e}")
+
 
 # ============================================================================
 # PHASE 3 : EXP_COURS
 # ============================================================================
 
-def importer_cours(employees_cache: List, mapping_profs: Dict, mapping_groupes: Dict) -> Set[str]:
-    """
-    Parse EXP_COURS.txt et importe cours.
-    Retourne l'ensemble des IDs de profs référencés.
-    """
-    print("\n" + "="*60)
+def importer_cours(employees_cache: List, mapping_profs: Dict) -> Set[str]:
+    print("\n" + "=" * 60)
     print("📚 IMPORT DES COURS")
-    print("="*60)
-    
-    print(f"\n   Lecture de {FICHIER_COURS}...")
+    if VIDER_COURSES:
+        print("   ⚠️  VIDER_COURSES=True")
+    print("=" * 60)
+
     try:
         with open(FICHIER_COURS, 'r', encoding='utf-8-sig') as f:
             content = f.read()
     except FileNotFoundError:
         print(f"   ❌ Fichier {FICHIER_COURS} non trouvé!")
         return set()
-    
+
     reader = csv.reader(StringIO(content), delimiter=';')
     rows = list(reader)
-    print(f"   {len(rows)} lignes lues (header + {len(rows)-1} cours)")
-    
-    courses_data = []
-    conditions_data = []
-    cours_count = 0
-    next_id_conditions = 0
-    profs_references = set()  # ⭐ IDs des profs référencés dans les fichiers
-    
-    # Prochain ID conditions (pour ne pas écraser EXP_GROUPE)
+    print(f"   {len(rows)} lignes lues")
+
+    if VIDER_COURSES:
+        print("\n   🗑️  Vidage de courses...")
+        try:
+            supabase_service.table('courses').delete().neq('cours_id', 0).execute()
+            print("      ✅ Vidée")
+        except Exception as e:
+            print(f"      ⚠️  {e}")
+
     try:
-        result = supabase_anon.table('courses_conditions').select('id').order('id', desc=True).limit(1).execute()
-        next_id_conditions = (result.data[0]['id'] + 1) if result.data else 1
-    except:
-        next_id_conditions = 1
-    
+        r = supabase_anon.table('courses').select('cours_id').order('cours_id', desc=True).limit(1).execute()
+        max_id = int(r.data[0]['cours_id']) if r.data else 0
+    except Exception:
+        max_id = 0
+    cours_id_next = max_id + 1
+    print(f"   📊 Prochain cours_id: {cours_id_next}")
+
+    courses_data = []
+    profs_references = set()
+    cours_count = 0
+
     for i, row in enumerate(rows[1:], 1):
         if MODE_TEST and cours_count >= LIMITE_COURS:
-            print(f"   ⏹️  Limite TEST atteinte")
             break
-        
         if len(row) < 9:
             continue
-        
         try:
-            duree = row[0].strip()
-            mat_code = row[1].strip()
-            mat_libelle = row[2].strip()
-            prof_nom = row[3].strip()
-            prof_prenom = row[4].strip()
+            duree, mat_code, mat_libelle = row[0].strip(), row[1].strip(), row[2].strip()
+            prof_nom, prof_prenom = row[3].strip(), row[4].strip()
             classe_pattern = row[5].strip()
-            pond = row[6].strip()
-            jour = row[7].strip()
-            h_debut = row[8].strip()
-            
-            # Ignorer si pas de matière et pas de prof
+            jour, h_debut = row[7].strip(), row[8].strip()
             if not prof_nom and not prof_prenom:
                 continue
-            
-            # --- Identifier les profs ---
+
             prof_ids = []
             noms = [n.strip() for n in prof_nom.split(',') if n.strip()]
             prenoms = [p.strip() for p in prof_prenom.split(',') if p.strip()]
-            
-            for j, nom in enumerate(noms):
-                prenom = prenoms[j] if j < len(prenoms) else ''
-                if nom and prenom:
-                    prof_id = get_or_create_professeur(nom, prenom, mapping_profs, employees_cache)
-                    if prof_id:
-                        prof_ids.append(prof_id)
-                        profs_references.add(prof_id)  # ⭐
-            
-            prof_json = json.dumps(prof_ids, ensure_ascii=False)
-            
-            # --- Type de pattern ---
+            for j, n in enumerate(noms):
+                p = prenoms[j] if j < len(prenoms) else ''
+                if n and p:
+                    pid = get_or_create_professeur(n, p, mapping_profs, employees_cache)
+                    if pid:
+                        prof_ids.append(pid)
+                        profs_references.add(pid)
+
+            groupe = extraire_groupe(classe_pattern)
             if not classe_pattern:
-                # Cours externe
-                type_pattern = 'externe'
-                matiere = ''
-                salle = 'externe'
-                raw_pattern = ''
+                matiere, salle = '', 'externe'
             else:
-                # Analyser le pattern
-                if classe_pattern.startswith('<'):
-                    # Pattern complexe sans groupe identifié
-                    type_pattern = 'complexe'
-                    raw_pattern = classe_pattern
-                    
-                    # Demander un nom de groupe
-                    if raw_pattern in mapping_groupes:
-                        groupe_nom = mapping_groupes[raw_pattern]
-                    else:
-                        print(f"\n   ❓ Pattern sans groupe identifié: {raw_pattern[:100]}...")
-                        groupe_nom = input(f"   Nom du groupe: ").strip()
-                        if not groupe_nom:
-                            groupe_nom = f"GROUPE_{cours_count + 1}"
-                        mapping_groupes[raw_pattern] = groupe_nom
-                        sauvegarder_mapping(mapping_groupes, FICHIER_MAPPING_GROUPES)
-                    
-                    # Ajouter les conditions dans courses_conditions
-                    for bloc in classe_pattern.split(','):
-                        bloc = bloc.strip()
-                        match = re.search(r'<\s*([^>]+)\s*>\s*(.+)', bloc)
-                        if match:
-                            classe = match.group(1).strip()
-                            valeurs_str = match.group(2).strip()
-                            options = parser_valeurs_options(valeurs_str)
-                            
-                            next_id_conditions += 1
-                            conditions_data.append({
-                                'id': next_id_conditions,
-                                'cours_id': next_id_conditions,
-                                'groupe_pedagogique': groupe_nom,
-                                'classe': classe,
-                                'options': json.dumps(options, ensure_ascii=False)
-                            })
-                    
-                    salle = ''
-                    matiere = mat_libelle or mat_code
-                else:
-                    # Pattern avec [groupe] et/ou mixte
-                    type_pattern = 'complexe' if '[' in classe_pattern else 'simple'
-                    raw_pattern = classe_pattern
-                    
-                    # Extraire les groupes [xxx]
-                    groupes_trouves = re.findall(r'\[([^\]]+)\]', classe_pattern)
-                    
-                    # Vérifier s'il y a des patterns complexes additionnels
-                    if '<' in classe_pattern:
-                        # Mixte : groupe + conditions ad hoc
-                        if raw_pattern in mapping_groupes:
-                            groupe_nom = mapping_groupes[raw_pattern]
-                        else:
-                            print(f"\n   ❓ Pattern mixte: {raw_pattern[:100]}...")
-                            groupe_nom = input(f"   Nom du groupe: ").strip()
-                            if not groupe_nom:
-                                groupe_nom = f"GROUPE_{cours_count + 1}"
-                            mapping_groupes[raw_pattern] = groupe_nom
-                            sauvegarder_mapping(mapping_groupes, FICHIER_MAPPING_GROUPES)
-                        
-                        # Ajouter les conditions complexes
-                        for match in re.finditer(r'<\s*([^>]+)\s*>\s*([^<]+?)(?=\s*[,<]|$)', classe_pattern):
-                            classe = match.group(1).strip()
-                            valeurs_str = match.group(2).strip()
-                            options = parser_valeurs_options(valeurs_str)
-                            
-                            next_id_conditions += 1
-                            conditions_data.append({
-                                'id': next_id_conditions,
-                                'cours_id': next_id_conditions,
-                                'groupe_pedagogique': groupe_nom,
-                                'classe': classe,
-                                'options': json.dumps(options, ensure_ascii=False)
-                            })
-                    
-                    salle = ''
-                    matiere = mat_libelle or mat_code
-                
-                # Nettoyer salle
-                if salle.startswith('"') and salle.endswith('"'):
-                    salle = salle[1:-1]
-            
-            # Calculer heure_fin
-            heure_fin = calculer_heure_fin(h_debut, duree)
-            
-            cours_count += 1
+                salle = ''
+                matiere = mat_libelle or mat_code
+
             courses_data.append({
-                'cours_id': cours_count,
-                'jour': jour,
-                'heure_debut': h_debut,
-                'heure_fin': heure_fin,
-                'prof': prof_json,
-                'matiere': matiere if 'matiere' in dir() else (mat_libelle or mat_code),
-                'salle': salle if 'salle' in dir() else '',
-                'type_pattern': type_pattern,
-                'raw_pattern': raw_pattern if 'raw_pattern' in dir() else ''
+                'cours_id': cours_id_next,
+                'jour': jour, 'heure_debut': h_debut,
+                'heure_fin': calculer_heure_fin(h_debut, duree),
+                'prof': json.dumps(prof_ids, ensure_ascii=False),
+                'matiere': matiere, 'salle': salle, 'groupe': groupe,
+                'annee_scolaire': ANNEE_SCOLAIRE_LABEL,
             })
-                    
+            cours_id_next += 1
+            cours_count += 1
         except Exception as e:
-            print(f"   ⚠️  Erreur ligne {i}: {e}")
-            continue
-    
+            print(f"   ⚠️  ligne {i}: {e}")
+
     print(f"\n   ✅ {len(courses_data)} cours extraits")
-    print(f"   ✅ {len(conditions_data)} conditions supplémentaires")
     print(f"   ✅ {len(profs_references)} profs référencés")
-    
-    # Sauvegarder le mapping
+
     sauvegarder_mapping(mapping_profs, FICHIER_MAPPING_PROFS)
-    sauvegarder_mapping(mapping_groupes, FICHIER_MAPPING_GROUPES)
-    
-    # Vider et insérer
-    print("\n   🗑️  Vidage de courses...")
-    try:
-        supabase_service.table('courses').delete().neq('cours_id', 0).execute()
-    except Exception as e:
-        print(f"      ⚠️  {e}")
-    
-    print("   📤 Insertion des cours...")
-    batch_size = 100
-    for i in range(0, len(courses_data), batch_size):
-        batch = courses_data[i:i+batch_size]
+    sauvegarder_mapping(MAPPING_GROUPES, FICHIER_MAPPING_GROUPES)
+
+    print("\n   📤 Insertion des cours...")
+    for i in range(0, len(courses_data), 100):
         try:
-            supabase_service.table('courses').insert(batch).execute()
+            supabase_service.table('courses').insert(courses_data[i:i + 100]).execute()
         except Exception as e:
             print(f"      ❌ {e}")
-    
-    if conditions_data:
-        print("   📤 Insertion des conditions supplémentaires...")
-        for i in range(0, len(conditions_data), batch_size):
-            batch = conditions_data[i:i+batch_size]
-            try:
-                supabase_service.table('courses_conditions').insert(batch).execute()
-            except Exception as e:
-                print(f"      ❌ {e}")
-    
+
     print(f"\n✅ Import cours terminé: {len(courses_data)} cours")
-    
     return profs_references
+
+
+# ============================================================================
+# PHASE 4 : COURS LOGIQUES
+# ============================================================================
+
+def _parser_prof_field(prof_field) -> List[str]:
+    if not prof_field:
+        return []
+    try:
+        arr = json.loads(prof_field) if isinstance(prof_field, str) else prof_field
+        if not isinstance(arr, list):
+            return []
+        return [str(x) for x in arr if x]
+    except Exception:
+        return []
+
+
+def detecter_groupes_orphelins() -> Set[str]:
+    try:
+        rows_c = fetch_all(
+            'courses',
+            select='groupe',
+            filters=[('eq', 'annee_scolaire', ANNEE_SCOLAIRE_LABEL)],
+            order_by=('cours_id', False),
+        )
+        groupes_courses = {(r.get('groupe') or '').strip() for r in rows_c if (r.get('groupe') or '').strip()}
+
+        rows_sg = fetch_all(
+            'students_groups',
+            select='groupe_code',
+            order_by=('matricule', False),
+        )
+        groupes_eleves = {(r.get('groupe_code') or '').strip() for r in rows_sg if (r.get('groupe_code') or '').strip()}
+
+        return groupes_courses - groupes_eleves
+    except Exception as e:
+        print(f"   ⚠️  {e}")
+        return set()
+
+
+def creer_cours_logiques() -> Set[str]:
+    print("\n" + "=" * 60)
+    print("🎓 GÉNÉRATION DES COURS LOGIQUES")
+    print(f"   Année : {ANNEE_SCOLAIRE_LABEL}")
+    print("=" * 60)
+
+    # -----------------------------------------------------------------
+    # 1. Charger toutes les plages (paginé + ordonné)
+    # -----------------------------------------------------------------
+    try:
+        courses = fetch_all(
+            'courses',
+            select='cours_id, matiere, groupe, prof, annee_scolaire',
+            filters=[('eq', 'annee_scolaire', ANNEE_SCOLAIRE_LABEL)],
+            order_by=('cours_id', False),
+        )
+    except Exception as e:
+        print(f"   ❌ {e}")
+        return set()
+    print(f"\n   {len(courses)} plages horaires chargées")
+
+    # -----------------------------------------------------------------
+    # 2. Classifier
+    # -----------------------------------------------------------------
+    a_traiter = []
+    stats = {'B': 0, 'C': 0, 'E': 0}
+    for c in courses:
+        m = (c.get('matiere') or '').strip()
+        g = (c.get('groupe') or '').strip()
+        if m == 'Conseil de la classe':
+            stats['B'] += 1; continue
+        if not m and g:
+            stats['E'] += 1; continue
+        if not m or not g:
+            stats['C'] += 1; continue
+        a_traiter.append(c)
+    print(f"   Cat. A+D : {len(a_traiter)} | Ignorés → Conseil: {stats['B']}, "
+          f"Externes: {stats['C']}, Sans matière: {stats['E']}")
+
+    groupes_cours: Dict[Tuple[str, str, str], List[Dict]] = {}
+    for c in a_traiter:
+        groupes_cours.setdefault((c['matiere'], c['groupe'], c['annee_scolaire']), []).append(c)
+    print(f"   Cours logiques attendus : {len(groupes_cours)}")
+
+    # -----------------------------------------------------------------
+    # 3. Charger cours logiques existants (paginé + ordonné)
+    # -----------------------------------------------------------------
+    try:
+        existants = fetch_all(
+            'cours_logiques',
+            select='id, matiere, groupe_pedagogique, annee_scolaire',
+            filters=[('eq', 'annee_scolaire', ANNEE_SCOLAIRE_LABEL)],
+            order_by=('id', False),
+        )
+    except Exception as e:
+        print(f"   ❌ {e}")
+        return set()
+
+    index_existants: Dict[Tuple[str, str, str], str] = {}
+    for cl in existants:
+        index_existants[(cl['matiere'], cl['groupe_pedagogique'], cl['annee_scolaire'])] = cl['id']
+    nb_preserves = len(existants)
+    print(f"   {nb_preserves} cours logiques existants")
+
+    # -----------------------------------------------------------------
+    # 4. Créer les manquants
+    # -----------------------------------------------------------------
+    a_creer = []
+    for cle in groupes_cours:
+        if cle not in index_existants:
+            m, g, a = cle
+            a_creer.append({
+                'matiere': m, 'groupe_pedagogique': g,
+                'annee_scolaire': a, 'nom_affichage': f"{m} {g}",
+            })
+
+    nb_crees = 0
+    if a_creer:
+        print(f"\n   📝 Création de {len(a_creer)} cours logiques...")
+        for i in range(0, len(a_creer), 100):
+            batch = a_creer[i:i + 100]
+            try:
+                r = supabase_service.table('cours_logiques').insert(batch).execute()
+                for cl in (r.data or []):
+                    index_existants[(cl['matiere'], cl['groupe_pedagogique'], cl['annee_scolaire'])] = cl['id']
+                    nb_crees += 1
+            except Exception as e:
+                print(f"      ❌ batch {i // 100 + 1}: {e}")
+        print(f"      ✅ {nb_crees} créés")
+    else:
+        print("\n   ✅ Aucun nouveau cours logique à créer")
+
+    # -----------------------------------------------------------------
+    # 5. Lier les plages
+    # -----------------------------------------------------------------
+    print(f"\n   🔗 Liaison des plages...")
+    try:
+        rows = fetch_all(
+            'courses',
+            select='cours_id, cours_logique_id',
+            filters=[('eq', 'annee_scolaire', ANNEE_SCOLAIRE_LABEL)],
+            order_by=('cours_id', False),
+        )
+        cours_id_to_existing = {r['cours_id']: r.get('cours_logique_id') for r in rows}
+    except Exception as e:
+        print(f"      ⚠️  {e}")
+        cours_id_to_existing = {}
+
+    liaisons_ok = 0
+    liaisons_faites = 0
+    non_liees = 0
+    for c in a_traiter:
+        cle = (c['matiere'], c['groupe'], c['annee_scolaire'])
+        cl_id = index_existants.get(cle)
+        if not cl_id:
+            non_liees += 1
+            continue
+        cid = c['cours_id']
+        if cours_id_to_existing.get(cid) == cl_id:
+            liaisons_ok += 1
+            continue
+        try:
+            supabase_service.table('courses').update({'cours_logique_id': cl_id}).eq('cours_id', cid).execute()
+            liaisons_faites += 1
+            liaisons_ok += 1
+        except Exception as e:
+            print(f"      ⚠️  cours_id {cid} : {e}")
+    print(f"      ✅ {liaisons_ok} liées ({liaisons_faites} MAJ)")
+
+    # -----------------------------------------------------------------
+    # 6. Nettoyer les cours logiques obsolètes
+    # -----------------------------------------------------------------
+    ids_obsoletes: Set[str] = set()
+    if NETTOYER_COURS_LOGICIQUES_OBSOLETES:
+        print(f"\n   🧹 Nettoyage cours logiques obsolètes...")
+        try:
+            tous_cl = fetch_all(
+                'cours_logiques',
+                select='id, matiere, groupe_pedagogique, annee_scolaire',
+                filters=[('eq', 'annee_scolaire', ANNEE_SCOLAIRE_LABEL)],
+                order_by=('id', False),
+            )
+        except Exception as e:
+            print(f"      ⚠️  {e}")
+            tous_cl = []
+
+        cles_references = set(groupes_cours.keys())
+
+        for cl in tous_cl:
+            m = (cl.get('matiere') or '').strip()
+            g = (cl.get('groupe_pedagogique') or '').strip()
+            cle = (m, g, cl['annee_scolaire'])
+            raison = None
+            if m == 'Conseil de la classe':
+                raison = 'Conseil'
+            elif not m or not g:
+                raison = 'Matière ou groupe vide'
+            elif cle not in cles_references:
+                raison = 'Orphelin'
+            if raison:
+                ids_obsoletes.add(cl['id'])
+
+        if ids_obsoletes:
+            print(f"      {len(ids_obsoletes)} cours logiques obsolètes détectés")
+            n_assoc = delete_by_values_in_batches('cours_logiques_profs', 'cours_logique_id', list(ids_obsoletes))
+            print(f"      🗑️  {n_assoc} associations supprimées")
+            n_cl = delete_by_values_in_batches('cours_logiques', 'id', list(ids_obsoletes))
+            print(f"      🗑️  {n_cl} cours logiques supprimés")
+            for k in [k for k, v in index_existants.items() if v in ids_obsoletes]:
+                del index_existants[k]
+        else:
+            print("      ✅ Aucun cours logique obsolète")
+
+    # -----------------------------------------------------------------
+    # 7. Charger associations existantes (paginé + ordonné)
+    # -----------------------------------------------------------------
+    print(f"\n   👥 Associations profs ↔ cours logiques...")
+    try:
+        assoc_existantes = fetch_all(
+            'cours_logiques_profs',
+            select='cours_logique_id, employee_id, role',
+            order_by=('cours_logique_id', False),
+        )
+    except Exception as e:
+        print(f"      ❌ {e}")
+        assoc_existantes = []
+    assoc_set = {(a['cours_logique_id'], a['employee_id']) for a in assoc_existantes}
+    print(f"      {len(assoc_existantes)} associations existantes")
+
+    # -----------------------------------------------------------------
+    # 8. Calculer les associations à créer (upsert idempotent)
+    # -----------------------------------------------------------------
+    profs_par_cl: Dict[str, Set[str]] = {}
+    for cle, list_courses in groupes_cours.items():
+        cl_id = index_existants.get(cle)
+        if not cl_id:
+            continue
+        profs = set()
+        for c in list_courses:
+            profs.update(_parser_prof_field(c.get('prof')))
+        if profs:
+            profs_par_cl.setdefault(cl_id, set()).update(profs)
+
+    assoc_a_creer = []
+    cl_sans_prof = 0
+    for cl_id, profs in profs_par_cl.items():
+        if not profs:
+            cl_sans_prof += 1
+            continue
+        for emp_id in profs:
+            if (cl_id, emp_id) not in assoc_set:
+                assoc_a_creer.append({
+                    'cours_logique_id': cl_id, 'employee_id': emp_id, 'role': 'prof',
+                })
+
+    nb_assoc_crees = 0
+    erreurs = 0
+    if assoc_a_creer:
+        print(f"      📝 {len(assoc_a_creer)} associations à créer (upsert)...")
+        for assoc in assoc_a_creer:
+            try:
+                supabase_service.table('cours_logiques_profs') \
+                    .upsert(assoc, on_conflict='cours_logique_id,employee_id') \
+                    .execute()
+                nb_assoc_crees += 1
+            except Exception as e:
+                erreurs += 1
+                if erreurs <= 5:
+                    print(f"      ⚠️  {assoc['cours_logique_id'][:8]}/{assoc['employee_id'][:8]}: {e}")
+        print(f"      ✅ {nb_assoc_crees} créées, {erreurs} échecs")
+    else:
+        print("      ✅ Aucune nouvelle association")
+
+    # -----------------------------------------------------------------
+    # 9. Détection groupes orphelins
+    # -----------------------------------------------------------------
+    orphelins = detecter_groupes_orphelins()
+    if orphelins:
+        print(f"\n   ⚠️  {len(orphelins)} groupe(s) orphelin(s) :")
+        for g in sorted(orphelins):
+            print(f"      • {g}")
+    else:
+        print(f"\n   ✅ Aucun groupe orphelin")
+
+    # -----------------------------------------------------------------
+    # 10. Refresh vue
+    # -----------------------------------------------------------------
+    print(f"\n   🔄 Refresh v_course_teachers...")
+    refresh_ok = False
+    try:
+        supabase_service.rpc('refresh_v_course_teachers').execute()
+        refresh_ok = True
+        print("      ✅ Vue rafraîchie (RPC)")
+    except Exception:
+        pass
+    if not refresh_ok:
+        try:
+            supabase_service.rpc('exec_sql', {
+                'query': 'REFRESH MATERIALIZED VIEW CONCURRENTLY v_course_teachers'
+            }).execute()
+            refresh_ok = True
+            print("      ✅ Vue rafraîchie (exec_sql)")
+        except Exception:
+            print("      ⚠️  Refresh manuel requis : REFRESH MATERIALIZED VIEW CONCURRENTLY v_course_teachers;")
+
+    # -----------------------------------------------------------------
+    # 11. Bilan
+    # -----------------------------------------------------------------
+    print(f"\n   📊 BILAN :")
+    print(f"      • Cours logiques préservés : {nb_preserves}")
+    print(f"      • Cours logiques créés     : {nb_crees}")
+    print(f"      • Cours logiques supprimés : {len(ids_obsoletes) if NETTOYER_COURS_LOGICIQUES_OBSOLETES else 0}")
+    print(f"      • Plages liées             : {liaisons_ok}")
+    print(f"      • Associations créées      : {nb_assoc_crees}")
+    print(f"      • Cours logiques sans prof : {cl_sans_prof}")
+    print(f"      • Groupes orphelins        : {len(orphelins)}")
+
+    return orphelins
+
 
 # ============================================================================
 # MAIN
 # ============================================================================
 
 def main():
-    print("="*60)
-    print("🚀 IMPORT RENTRÉE - SCRIPT UNIQUE SUPABASE")
-    print(f"   Année scolaire: {ANNEE_SCOLAIRE}")
+    global MAPPING_GROUPES
+    print("=" * 60)
+    print("🚀 IMPORT RENTRÉE - SUPABASE")
+    print(f"   Année : {ANNEE_SCOLAIRE_LABEL}")
     if MODE_TEST:
         print("   🧪 MODE TEST ACTIF")
-    print("="*60)
-    
-    # Charger le cache employees (avec job pour gérer la réactivation)
-    print("\n🔍 Chargement des employees...")
-    employees_cache = []
+    if VIDER_COURSES:
+        print("   ⚠️  VIDER_COURSES=True")
+    if IMPORTER_ELEVES:
+        print("   👨‍🎓 Import des élèves ACTIVÉ")
+    else:
+        print("   ⏭️  Import des élèves DÉSACTIVÉ")
+    if NETTOYER_COURS_LOGICIQUES_OBSOLETES:
+        print("   🧹 Nettoyage cours logiques obsolètes ACTIVÉ")
+    print("=" * 60)
+
+    print("\n🔍 Chargement des employees (paginé)...")
     try:
-        result = supabase_anon.table('employees').select('id, nom, prenom, job').execute()
-        employees_cache = result.data
-        print(f"   {len(employees_cache)} employees en cache")
+        employees_cache = fetch_all(
+            'employees',
+            select='id, nom, prenom, job',
+            order_by=('id', False),
+        )
+        print(f"   {len(employees_cache)} employees")
     except Exception as e:
-        print(f"   ❌ Erreur: {e}")
+        print(f"   ❌ {e}")
         return
-    
-    # Récupérer la liste des profs actuellement en base (sauf Testeur)
-    profs_avant_import = set()
-    try:
-        for emp in employees_cache:
-            if emp.get('job') == 'prof' and not est_testeur(emp.get('nom', '')):
-                profs_avant_import.add(emp['id'])
-        print(f"   📋 {len(profs_avant_import)} profs actuellement en base (hors Testeur)")
-    except Exception as e:
-        print(f"   ⚠️  Impossible de récupérer les profs: {e}")
-    
-    # Charger les mappings
+
+    profs_avant_import = {
+        emp['id'] for emp in employees_cache
+        if emp.get('job') == 'prof' and not est_testeur(emp.get('nom', ''))
+    }
+    print(f"   📋 {len(profs_avant_import)} profs actuellement en base")
+
     mapping_profs = charger_mapping(FICHIER_MAPPING_PROFS)
-    mapping_groupes = charger_mapping(FICHIER_MAPPING_GROUPES)
     print(f"   {len(mapping_profs)} mappings profs")
-    print(f"   {len(mapping_groupes)} mappings groupes")
-    
-    # Phase 1 : Groupes pédagogiques (courses_conditions)
+    MAPPING_GROUPES = charger_mapping(FICHIER_MAPPING_GROUPES)
+    print(f"   {len(MAPPING_GROUPES)} mappings groupes")
+
+    # Phase 1 : Groupes pédagogiques
     if os.path.exists(FICHIER_GROUPE):
         importer_groupes()
     else:
-        print(f"\n⚠️  Fichier {FICHIER_GROUPE} non trouvé - étape ignorée")
-    
+        print(f"\n⚠️  {FICHIER_GROUPE} absent")
+
     # Phase 2 : Élèves
-    if os.path.exists(FICHIER_ELEVES):
-        importer_eleves(employees_cache)
+    if IMPORTER_ELEVES:
+        if os.path.exists(FICHIER_ELEVES):
+            importer_eleves(employees_cache)
+        else:
+            print(f"\n❌ {FICHIER_ELEVES} absent")
     else:
-        print(f"\n❌ Fichier {FICHIER_ELEVES} non trouvé")
-    
+        print("\n⏭️  Import des élèves sauté (IMPORTER_ELEVES=False)")
+
     # Phase 3 : Cours
     profs_references = set()
     if os.path.exists(FICHIER_COURS):
-        profs_references = importer_cours(employees_cache, mapping_profs, mapping_groupes)
+        profs_references = importer_cours(employees_cache, mapping_profs)
     else:
-        print(f"\n❌ Fichier {FICHIER_COURS} non trouvé")
-    
-    # ─────────────────────────────────────────────────────────────
-    # Phase 4 : Nettoyage des profs non référencés
-    # ─────────────────────────────────────────────────────────────
+        print(f"\n❌ {FICHIER_COURS} absent")
+
+    # Phase 4 : Cours logiques
+    try:
+        creer_cours_logiques()
+    except Exception as e:
+        print(f"\n⚠️  Erreur creer_cours_logiques : {e}")
+
+    # Phase 5 : Nettoyage profs non référencés
     if profs_references and profs_avant_import:
-        print("\n" + "="*60)
-        print("🧹 NETTOYAGE DES PROFESSEURS NON RÉFÉRENCÉS")
-        print("="*60)
-        
-        # Profs qui étaient profs mais ne sont plus référencés
+        print("\n" + "=" * 60)
+        print("🧹 NETTOYAGE DES PROFS NON RÉFÉRENCÉS")
+        print("=" * 60)
         profs_a_retirer = profs_avant_import - profs_references
-        
         if profs_a_retirer:
-            print(f"   {len(profs_a_retirer)} profs ne sont plus dans les fichiers horairistes")
-            print(f"   → passage du job à NULL")
-            
-            for prof_id in profs_a_retirer:
+            print(f"   {len(profs_a_retirer)} profs → job=NULL")
+            for pid in profs_a_retirer:
                 try:
-                    supabase_service.table('employees') \
-                        .update({'job': None}) \
-                        .eq('id', prof_id) \
-                        .execute()
+                    supabase_service.table('employees').update({'job': None}).eq('id', pid).execute()
                 except Exception as e:
-                    print(f"      ⚠️  Erreur pour {prof_id}: {e}")
-            
+                    print(f"      ⚠️  {pid}: {e}")
             print(f"   ✅ {len(profs_a_retirer)} profs retirés")
         else:
             print("   ✅ Aucun prof à retirer")
-    
-    print("\n" + "="*60)
-    print("✅ IMPORT TERMINÉ AVEC SUCCÈS")
-    print("="*60)
-    print(f"\n🧪 Élèves/Profs préservés (noms contenant 'testeur'):")
-    print(f"   Noms protégés: {NOMS_A_PRESERVER}")
+
+    print("\n" + "=" * 60)
+    print("✅ IMPORT TERMINÉ")
+    print("=" * 60)
+
 
 if __name__ == "__main__":
     main()
