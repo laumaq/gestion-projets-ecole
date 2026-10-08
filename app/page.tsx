@@ -8,6 +8,29 @@ import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { User, Lock, LogIn, Sparkles, GraduationCap, School, ArrowRight } from 'lucide-react';
 
+function todayLocal(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const j = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${j}`;
+}
+
+async function getRedirectAfterLogin(): Promise<string> {
+  try {
+    const today = todayLocal();
+    const { data } = await supabase
+      .from('conseil_lutte_configs')
+      .select('id, redirection_active')
+      .eq('date_evenement', today)
+      .eq('redirection_active', true)
+      .maybeSingle();
+    return data ? '/dashboard/conseil-de-lutte' : '/dashboard/main';
+  } catch {
+    return '/dashboard/main';
+  }
+}
+
 export default function LoginPage() {
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
@@ -20,7 +43,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     localStorage.clear();
-    
+
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -29,14 +52,14 @@ export default function LoginPage() {
       const nomNormalized = nom.trim().toUpperCase();
       const prenomNormalized = prenom.trim();
 
-      const { data: employeeData, error: employeeError } = await supabase
+      const { data: employeeData } = await supabase
         .from('employees')
         .select('*')
         .ilike('nom', nomNormalized)
         .ilike('prenom', prenomNormalized)
         .maybeSingle();
 
-      const { data: studentData, error: studentError } = await supabase
+      const { data: studentData } = await supabase
         .from('students')
         .select('*')
         .ilike('nom', nomNormalized)
@@ -56,7 +79,7 @@ export default function LoginPage() {
 
       if (!storedPassword || storedPassword === '') {
         let updateError = null;
-        
+
         if (userType === 'employee') {
           const result = await supabase
             .from('employees')
@@ -90,8 +113,8 @@ export default function LoginPage() {
           localStorage.setItem('userClass', userData.classe || '');
           localStorage.setItem('userLevel', userData.niveau || '');
         }
-        
-        router.push('/dashboard/main');
+
+        router.push(await getRedirectAfterLogin());
         return;
       }
 
@@ -109,15 +132,14 @@ export default function LoginPage() {
           localStorage.setItem('userClass', userData.classe || '');
           localStorage.setItem('userLevel', userData.niveau || '');
         }
-        
-        router.push('/dashboard/main');
+
+        router.push(await getRedirectAfterLogin());
         return;
       } else {
         setError('Mot de passe incorrect');
         setLoading(false);
         return;
       }
-
     } catch (err) {
       console.error('Erreur inattendue:', err);
       setError('Une erreur est survenue. Veuillez réessayer.');
@@ -134,12 +156,10 @@ export default function LoginPage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-100 rounded-full mix-blend-multiply filter blur-3xl opacity-10"></div>
       </div>
 
-      {/* Conteneur principal - deux colonnes sur desktop */}
       <div className="w-full max-w-6xl relative z-10 flex flex-col md:flex-row items-stretch gap-8 md:gap-12">
-        
-        {/* Colonne gauche - Branding et logo long */}
+
+        {/* Colonne gauche - Branding */}
         <div className="flex-1 flex flex-col items-center justify-center text-center md:text-left p-6 md:p-8">
-          {/* Logo long tourné de 90° sur desktop */}
           <div className="hidden md:block relative w-full max-w-md h-48 mx-auto mb-8 animate-float-slow">
             <Image
               src="/images/logo/logotype-forme-longue-B1.png"
@@ -149,8 +169,7 @@ export default function LoginPage() {
               priority
             />
           </div>
-          
-          {/* Logo court pour mobile */}
+
           <div className="md:hidden relative w-24 h-24 mx-auto mb-6">
             <Image
               src="/images/logo/logotype-tampon-forme-courte-vert.png"
@@ -173,12 +192,12 @@ export default function LoginPage() {
                 </h2>
               </div>
             </div>
-            
+
             <p className="text-gray-500 text-lg md:text-xl flex items-center justify-center md:justify-start gap-2">
               <GraduationCap className="w-5 h-5 text-emerald-500" />
               <span>Plateforme pédagogique collaborative</span>
             </p>
-            
+
             <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-gray-400">
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
@@ -196,7 +215,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Badges ou statistiques décoratives */}
             <div className="hidden md:flex items-center gap-6 pt-4">
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
@@ -221,10 +239,9 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Colonne droite - Formulaire de connexion */}
+        {/* Colonne droite - Formulaire */}
         <div className="flex-1 flex items-center">
           <div className="w-full bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 lg:p-10 border border-white/50 relative overflow-hidden">
-            {/* Décoration intérieure */}
             <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-emerald-400/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-green-400/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
@@ -238,7 +255,7 @@ export default function LoginPage() {
               </div>
 
               <form onSubmit={handleLogin} className="space-y-5">
-                {/* Champ Nom */}
+                {/* Nom */}
                 <div className="relative">
                   <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200 ${
                     isFocused === 'nom' || nom ? 'text-emerald-500' : 'text-gray-400'
@@ -266,7 +283,7 @@ export default function LoginPage() {
                   )}
                 </div>
 
-                {/* Champ Prénom */}
+                {/* Prénom */}
                 <div className="relative">
                   <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200 ${
                     isFocused === 'prenom' || prenom ? 'text-emerald-500' : 'text-gray-400'
@@ -289,7 +306,7 @@ export default function LoginPage() {
                   />
                 </div>
 
-                {/* Champ Mot de passe */}
+                {/* Mot de passe */}
                 <div className="relative">
                   <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200 ${
                     isFocused === 'password' || password ? 'text-emerald-500' : 'text-gray-400'
@@ -381,7 +398,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Footer */}
       <div className="absolute bottom-6 left-0 right-0 text-center">
         <p className="text-xs text-gray-400/60 flex items-center justify-center gap-2">
           <span>© 2026 Waha</span>
