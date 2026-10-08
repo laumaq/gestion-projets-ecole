@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import AdminGroupes from './AdminGroupes';
 import AffectationManuelle from './AffectationManuelle';
-import { repartirAuto } from './repartition';
+import { repartirAuto, assignerProfsAuto  } from './repartition';
 
 interface Props {
   phase: any;
@@ -19,6 +19,7 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
   const [groupes, setGroupes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
+  const [workingProfs, setWorkingProfs] = useState(false);  
 
   // Édition des réglages
   const [edit, setEdit] = useState({
@@ -67,6 +68,29 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
       alert('Erreur : ' + (e?.message || e));
     }
     setWorking(false);
+  };
+
+  const lancerProfsAuto = async () => {
+    if (!confirm(
+      'Distribuer automatiquement les profs (job=prof, avec cours le mardi avant 12h40) dans les groupes ?\n\n' +
+      'Ils seront placés 1 par groupe, dans l\'ordre étage → numéro. Les profs déjà affectés sont préservés.'
+    )) return;
+    setWorkingProfs(true);
+    try {
+      const res = await assignerProfsAuto({
+        phaseId: phase.id,
+        anneeScolaire: config.annee_scolaire || '2026-2027',
+      });
+      alert(
+        `Profs éligibles : ${res.profsEligibles}\n` +
+        `Placés : ${res.profsPlaces}\n` +
+        `Ignorés (déjà placés) : ${res.profsIgnores}`
+      );
+      load();
+    } catch (e: any) {
+      alert('Erreur : ' + (e?.message || e));
+    }
+    setWorkingProfs(false);
   };
 
   const toggleVerrou = async () => {
@@ -183,6 +207,26 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
             {working ? 'Répartition en cours…' : 'Lancer la répartition auto'}
           </button>
           {edit.verrouille && <p className="text-xs text-red-600 mt-2">Phase verrouillée — déverrouillez d'abord.</p>}
+
+          <div className="border-t pt-6 mt-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">Répartition des profs</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Distribue les profs qui ont cours le mardi avant 12h40 dans les groupes,
+              dans l'ordre étage → numéro. Répartition équilibrée : les groupes reçoivent
+              un prof à tour de rôle jusqu'à ce que tous les profs éligibles soient placés.
+              Les profs déjà placés sont préservés.
+            </p>
+            <button
+              onClick={lancerProfsAuto}
+              disabled={workingProfs || edit.verrouille}
+              className="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {workingProfs ? 'Distribution…' : 'Distribuer les profs auto'}
+            </button>
+            {edit.verrouille && (
+              <p className="text-xs text-red-600 mt-2">Phase verrouillée — déverrouillez d'abord.</p>
+            )}
+          </div>
         </div>
       )}
     </div>

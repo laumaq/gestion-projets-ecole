@@ -18,12 +18,12 @@ function todayLocal(): string {
 
 async function getRedirectAfterLogin(): Promise<string> {
   try {
-    const today = todayLocal();
     const { data } = await supabase
       .from('conseil_lutte_configs')
-      .select('id, redirection_active')
-      .eq('date_evenement', today)
+      .select('id')
       .eq('redirection_active', true)
+      .order('date_evenement', { ascending: false })
+      .limit(1)
       .maybeSingle();
     return data ? '/dashboard/conseil-de-lutte' : '/dashboard/main';
   } catch {

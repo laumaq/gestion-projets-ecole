@@ -284,3 +284,129 @@ function dispatcherDispersees(pool: any[], groupeIds: string[], capaciteDe: (id:
   }
   return placements;
 }
+
+// ---- Assignation automatique des profs (job='prof') qui ont cours le mardi ----
+
+export async function assignerProfsAuto(params: {
+  phaseId: string;
+  anneeScolaire: string;
+  heureMax?: string; // seuil texte, défaut '12h40' (= fin de la 6e heure)
+}): Promise<{ profsPlaces: number; profsIgnores: number; profsEligibles: number }> {
+  const { phaseId, anneeScolaire, heureMax = '12h40' } = params;
+
+  // 1. Groupes triés par local (étage → id numérique)
+  const ORDRE: Record<string, number> = { '1': 1, '2': 2, '3': 3, '4': 4, '6': 6, 'Annexe': 7 };
+  const { data: groupes, error: gErr } = await supabase
+    .from('conseil_lutte_groupes')
+    .select(`id, nom, localisation_fixe (id, etage)`)
+    .eq('phase_id', phaseId);
+  if (gErr) throw gErr;
+  if (!groupes || groupes.length === 0) throw new Error('Aucun groupe.');
+
+  const groupesTries = [...groupes].sort((a: any, b: any) => {
+    const la = Array.isArray(a.localisation_fixe) ? a.localisation_fixe[0] : a.localisation_fixe;
+    const lb = Array.isArray(b.localisation_fixe) ? b.localisation_fixe[0] : b.localisation_fixe;
+    const ea = la ? (ORDRE[la.etage] ?? 99) : 99;
+    const eb = lb ? (ORDRE[lb.etage] ?? 99) : 99;
+    if (ea !== eb) return ea - eb;
+    return (la?.id || '').localeCompare(lb?.id || '', undefined, { numeric: true });
+  });
+
+  // 2. Charger TOUS les cours du mardi (pagination obligatoire)
+  const courses: any[] = [];
+  let from = 0;
+  const PAGE = 500;
+  while (true) {
+    const { data, error } = await supabase
+      .from('courses')
+      .select('prof, heure_debut')
+      .eq('annee_scolaire', anneeScolaire)
+      .eq('jour', 'mardi')
+      .not('prof', 'is', null)
+      .neq('prof', '')
+      .neq('prof', '[]')
+      .order('cours_id')
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    courses.push(...data);
+    if (data.length < PAGE) break;
+    from += data.length;
+  }
+
+  // 3. Filtrer heure_debut < seuil + déplier le tableau JSON de profs
+  const profsAvecCoursMardi = new Set<string>();
+  for (const c of courses) {
+    if (!c.heure_debut || c.heure_debut >= heureMax) continue;
+    let ids: any[] = [];
+    try { ids = JSON.parse(c.prof); } catch { continue; }
+    if (!Array.isArray(ids)) continue;
+    for (const id of ids) {
+      if (typeof id === 'string' && id.length > 0) profsAvecCoursMardi.add(id);
+    }
+  }
+
+  if (profsAvecCoursMardi.size === 0) {
+    return { profsPlaces: 0, profsIgnores: 0, profsEligibles: 0 };
+  }
+
+  // 4. Employees avec job='prof' ET présents dans cet ensemble
+  const { data: profs, error: pErr } = await supabase
+    .from('employees')
+    .select('id, nom, prenom')
+    .eq('job', 'prof')
+    .in('id', Array.from(profsAvecCoursMardi));
+  if (pErr) throw pErr;
+
+  const eligibles = profs || [];
+  if (eligibles.length === 0) {
+    return { profsPlaces: 0, profsIgnores: 0, profsEligibles: 0 };
+  }
+
+  // 5. Retirer ceux déjà affectés dans cette phase (préserver le manuel)
+  const { data: dejaAffectesData, error: dErr } = await supabase
+    .from('conseil_lutte_membres')
+    .select('participant_id')
+    .in('groupe_id', groupesTries.map((g: any) => g.id))
+    .eq('participant_type', 'employee');
+  if (dErr) throw dErr;
+  const dejaAffectes = new Set((dejaAffectesData || []).map(m => m.participant_id));
+
+  const aPlacer = eligibles.filter(p => !dejaAffectes.has(p.id));
+  const profsIgnores = eligibles.length - aPlacer.length;
+
+  // 6. Shuffle
+  const shuffled = [...aPlacer].sort(() => Math.random() - 0.5);
+
+  // 7. Distribution : on tourne en boucle sur les groupes (ordre étage → numéro)
+  //    jusqu'à ce que tous les profs soient placés.
+  const placements: any[] = [];
+  let idxGroupe = 0;
+  for (const prof of shuffled) {
+    const g = groupesTries[idxGroupe % groupesTries.length];
+    placements.push({
+      groupe_id: (g as any).id,
+      participant_id: prof.id,
+      participant_type: 'employee',
+      manuel: false,
+    });
+    idxGroupe++;
+  }
+
+  // 8. Insertion par chunks
+  if (placements.length > 0) {
+    const CHUNK = 200;
+    for (let i = 0; i < placements.length; i += CHUNK) {
+      const { error } = await supabase
+        .from('conseil_lutte_membres')
+        .insert(placements.slice(i, i + CHUNK));
+      if (error) throw error;
+    }
+  }
+
+  return {
+    profsPlaces: placements.length,
+    profsIgnores,
+    profsEligibles: eligibles.length,
+  };
+}

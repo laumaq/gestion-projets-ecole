@@ -50,66 +50,62 @@ export default function ConseilDeLuttePage() {
     loadAll(type, id);
   }, []);
 
-    const loadAll = async (type: string, id: string) => {
+  const loadAll = async (type: string, id: string) => {
     setLoading(true);
     const isAdminUser = type === 'employee' && estAdminConseilLutte(id);
-    const today = todayLocal();
 
-    // 1) Chercher d'abord la config AUJOURD'HUI
-    // 2) Sinon, pour un admin : la prochaine config à venir
     let cfg: any = null;
 
-    const { data: todayCfg } = await supabase
-        .from('conseil_lutte_configs')
-        .select('*')
-        .eq('date_evenement', today)
-        .maybeSingle();
+    // 1) Config active (redirection en cours) — priorité absolue
+    const { data: activeCfg } = await supabase
+      .from('conseil_lutte_configs')
+      .select('*')
+      .eq('redirection_active', true)
+      .order('date_evenement', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (todayCfg) {
-        cfg = todayCfg;
+    if (activeCfg) {
+      cfg = activeCfg;
     } else if (isAdminUser) {
-        // Prochaine config future (la plus proche dans le temps)
-        const { data: futureCfg } = await supabase
+      // Pas de config active → admin peut voir la prochaine à venir ou celle du jour
+      const today = todayLocal();
+      const { data: futureCfg } = await supabase
         .from('conseil_lutte_configs')
         .select('*')
         .gte('date_evenement', today)
         .order('date_evenement', { ascending: true })
         .limit(1)
         .maybeSingle();
-        cfg = futureCfg;
+      cfg = futureCfg;
     }
 
     if (!cfg) {
-        if (!isAdminUser) { router.push('/dashboard/main'); return; }
-        setConfig(null);
-        setPhases([]);
-        setPhaseActiveId(null);
-        setLoading(false);
-        return;
+      if (!isAdminUser) { router.push('/dashboard/main'); return; }
+      setConfig(null);
+      setPhases([]);
+      setPhaseActiveId(null);
+      setLoading(false);
+      return;
     }
 
     setConfig(cfg);
 
-    // Accès : admin toujours OK ; sinon il faut que la redirection soit active pour AUJOURD'HUI
-    const estAujourdHui = cfg.date_evenement === today;
-    const accesAutorise =
-        isAdminUser ||
-        (estAujourdHui && cfg.redirection_active === true) ||
-        (estAujourdHui && cfg.ouverte_inscriptions === true);
-
+    // Accès : soit tu es admin, soit la config est active (redirection ouverte)
+    const accesAutorise = isAdminUser || cfg.redirection_active === true;
     if (!accesAutorise) { router.push('/dashboard/main'); return; }
 
     const { data: ph } = await supabase
-        .from('conseil_lutte_phases')
-        .select('*')
-        .eq('config_id', cfg.id)
-        .order('ordre');
+      .from('conseil_lutte_phases')
+      .select('*')
+      .eq('config_id', cfg.id)
+      .order('ordre');
 
     setPhases(ph || []);
     const active = determinePhaseActive(ph || []);
     setPhaseActiveId(active?.id || null);
     setLoading(false);
-    };
+  };
 
   if (loading || !userType) {
     return <div className="text-center py-12">Chargement...</div>;
@@ -198,7 +194,12 @@ export default function ConseilDeLuttePage() {
         userType === 'student' ? (
           <MonGroupe phaseId={phaseActiveId} userType={userType} userId={userId} />
         ) : (
-          <VueGlobale phaseId={phaseActiveId} userType={userType} userId={userId} />
+        <VueGlobale
+          phaseId={phaseActiveId}
+          phase={phases.find(p => p.id === phaseActiveId)}
+          userType={userType}
+          userId={userId}
+        />
         )
       ) : (
         <div className="text-center py-12 text-gray-500">Aucune phase configurée.</div>
