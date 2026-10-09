@@ -15,6 +15,7 @@ import {
   createEvaluation,
   getEvaluations,
   getResultatsForEvaluations,
+  syncResultatsForCoursLogique
 } from '@/lib/cahier-cotes/queries';
 import { CelluleNote, CelluleNoteHandle } from './CelluleNote';
 import { EnTeteEvaluation } from './EnTeteEvaluation';
@@ -84,8 +85,16 @@ export function CahierCotesClient({
   const loadPeriode = useCallback(async (p: Periode) => {
     setIsLoadingPeriode(true);
     try {
-      const evals = await getEvaluations(initialData.coursLogique.id, p, anneeScolaire);  // ⭐
-      const res = await getResultatsForEvaluations(evals.map(e => e.id));
+      const evals = await getEvaluations(initialData.coursLogique.id, p, anneeScolaire);
+      
+      // ⭐ Auto-sync : créer les lignes manquantes pour les élèves actuels
+      const res = await syncResultatsForCoursLogique({
+        coursLogiqueId: initialData.coursLogique.id,
+        periode: p,
+        anneeScolaire,
+        eleveMatricules: initialData.eleves.map(e => e.matricule),
+      });
+      
       setEvaluations(evals);
       setResultats(res);
     } catch (e) {
@@ -93,7 +102,7 @@ export function CahierCotesClient({
     } finally {
       setIsLoadingPeriode(false);
     }
-  }, [initialData.coursLogique.id, anneeScolaire]);   // ⭐
+  }, [initialData.coursLogique.id, initialData.eleves, anneeScolaire]);
 
   // ─── Changement de période ───
   const handlePeriodeChange = (p: Periode) => {

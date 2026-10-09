@@ -324,3 +324,57 @@ export async function upsertItineraireCote(params: {
     if (error) throw error;
   }
 }
+
+/**
+ * S'assure que chaque élève du cours logique a bien une ligne de résultat
+ * pour chaque évaluation de la période. Crée les manquantes.
+ */
+export async function syncResultatsForCoursLogique(params: {
+  coursLogiqueId: string;
+  periode: Periode;
+  anneeScolaire: string;
+  eleveMatricules: number[];
+}): Promise<EvaluationResultat[]> {
+  const { coursLogiqueId, periode, anneeScolaire, eleveMatricules } = params;
+
+  if (eleveMatricules.length === 0) return [];
+
+  // 1. Récupérer les évals de la période
+  const evaluations = await getEvaluations(coursLogiqueId, periode, anneeScolaire);
+  if (evaluations.length === 0) return [];
+
+  const evalIds = evaluations.map(e => e.id);
+
+  // 2. Récupérer les résultats existants
+  const { data: existing, error: e1 } = await supabase
+    .from('evaluation_resultats')
+    .select('evaluation_id, eleve_matricule')
+    .in('evaluation_id', evalIds);
+  if (e1) throw e1;
+
+  const existingSet = new Set(
+    (existing ?? []).map(r => `${r.evaluation_id}::${r.eleve_matricule}`)
+  );
+
+  // 3. Calculer les manquants
+  const toInsert: { evaluation_id: string; eleve_matricule: number }[] = [];
+  for (const ev of evaluations) {
+    for (const matricule of eleveMatricules) {
+      const key = `${ev.id}::${matricule}`;
+      if (!existingSet.has(key)) {
+        toInsert.push({ evaluation_id: ev.id, eleve_matricule: matricule });
+      }
+    }
+  }
+
+  // 4. Insérer en batch
+  if (toInsert.length > 0) {
+    const { error: e2 } = await supabase
+      .from('evaluation_resultats')
+      .insert(toInsert);
+    if (e2) throw e2;
+  }
+
+  // 5. Retourner tous les résultats (existants + nouveaux)
+  return getResultatsForEvaluations(evalIds);
+}
