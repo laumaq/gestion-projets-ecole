@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import MonGroupe from '@/components/conseilLutte/MonGroupe';
@@ -20,6 +20,7 @@ function todayLocal(): string {
 }
 
 function determinePhaseActive(phases: any[]) {
+  if (!phases || phases.length === 0) return null;
   const now = new Date();
   const hhmm = now.getHours() * 60 + now.getMinutes();
   const parseHM = (s: string) => {
@@ -41,6 +42,10 @@ export default function ConseilDeLuttePage() {
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<'participant' | 'admin'>('participant');
 
+  // Anti-race : chaque appel loadAll incrémente ce compteur.
+  // Seule la dernière requête a le droit d'écrire dans le state.
+  const loadIdRef = useRef(0);
+
   useEffect(() => {
     const type = localStorage.getItem('userType') as 'employee' | 'student' | null;
     const id = localStorage.getItem('userId');
@@ -51,34 +56,47 @@ export default function ConseilDeLuttePage() {
   }, []);
 
   const loadAll = async (type: string, id: string) => {
+    const myLoadId = ++loadIdRef.current;
     setLoading(true);
+
     const isAdminUser = type === 'employee' && estAdminConseilLutte(id);
 
     let cfg: any = null;
 
-    // 1) Config active (redirection en cours) — priorité absolue
-    const { data: activeCfg } = await supabase
-      .from('conseil_lutte_configs')
-      .select('*')
-      .eq('redirection_active', true)
-      .order('date_evenement', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (activeCfg) {
-      cfg = activeCfg;
-    } else if (isAdminUser) {
-      // Pas de config active → admin peut voir la prochaine à venir ou celle du jour
-      const today = todayLocal();
-      const { data: futureCfg } = await supabase
+    if (isAdminUser) {
+      const { data } = await supabase
         .from('conseil_lutte_configs')
         .select('*')
-        .gte('date_evenement', today)
-        .order('date_evenement', { ascending: true })
+        .order('date_evenement', { ascending: false })
         .limit(1)
         .maybeSingle();
-      cfg = futureCfg;
+      cfg = data;
+    } else {
+      const col = type === 'employee' ? 'redirect_employees' : 'redirect_students';
+      const { data: redirCfg } = await supabase
+        .from('conseil_lutte_configs')
+        .select('*')
+        .eq(col, true)
+        .order('date_evenement', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (redirCfg) {
+        cfg = redirCfg;
+      } else {
+        const accesCol = type === 'employee' ? 'acces_employees' : 'acces_students';
+        const { data: accesCfg } = await supabase
+          .from('conseil_lutte_configs')
+          .select('*')
+          .eq(accesCol, true)
+          .order('date_evenement', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        cfg = accesCfg;
+      }
     }
+
+    if (myLoadId !== loadIdRef.current) return;
 
     if (!cfg) {
       if (!isAdminUser) { router.push('/dashboard/main'); return; }
@@ -89,10 +107,10 @@ export default function ConseilDeLuttePage() {
       return;
     }
 
-    setConfig(cfg);
+    const accesAutorise = isAdminUser
+      || (type === 'employee' && (cfg.redirect_employees || cfg.acces_employees))
+      || (type === 'student' && (cfg.redirect_students || cfg.acces_students));
 
-    // Accès : soit tu es admin, soit la config est active (redirection ouverte)
-    const accesAutorise = isAdminUser || cfg.redirection_active === true;
     if (!accesAutorise) { router.push('/dashboard/main'); return; }
 
     const { data: ph } = await supabase
@@ -101,9 +119,16 @@ export default function ConseilDeLuttePage() {
       .eq('config_id', cfg.id)
       .order('ordre');
 
-    setPhases(ph || []);
-    const active = determinePhaseActive(ph || []);
-    setPhaseActiveId(active?.id || null);
+    // ⚠️ Si un autre loadAll a démarré entre-temps, on abandonne.
+    if (myLoadId !== loadIdRef.current) return;
+
+    const phasesRecues = ph || [];
+    const active = determinePhaseActive(phasesRecues);
+
+    // Un seul batch de setState, à la fin, avec tout prêt.
+    setConfig(cfg);
+    setPhases(phasesRecues);
+    setPhaseActiveId(active?.id || phasesRecues[0]?.id || null);
     setLoading(false);
   };
 
@@ -113,7 +138,6 @@ export default function ConseilDeLuttePage() {
 
   const isAdmin = userType === 'employee' && estAdminConseilLutte(userId);
 
-  // Cas particulier : admin sans config → écran de création
   if (!config) {
     if (!isAdmin) return null;
     return (
@@ -190,20 +214,23 @@ export default function ConseilDeLuttePage() {
           onPhaseChange={setPhaseActiveId}
           onRefresh={() => loadAll(userType, userId)}
         />
-      ) : phaseActiveId ? (
-        userType === 'student' ? (
-          <MonGroupe phaseId={phaseActiveId} userType={userType} userId={userId} />
+      ) : (() => {
+        // Fallback : si phaseActiveId est null mais qu'il y a des phases, on prend la première.
+        const eff = phaseActiveId || phases[0]?.id;
+        if (!eff) {
+          return <div className="text-center py-12 text-gray-500">Aucune phase configurée.</div>;
+        }
+        return userType === 'student' ? (
+          <MonGroupe phaseId={eff} userType={userType} userId={userId} />
         ) : (
-        <VueGlobale
-          phaseId={phaseActiveId}
-          phase={phases.find(p => p.id === phaseActiveId)}
-          userType={userType}
-          userId={userId}
-        />
-        )
-      ) : (
-        <div className="text-center py-12 text-gray-500">Aucune phase configurée.</div>
-      )}
+          <VueGlobale
+            phaseId={eff}
+            phase={phases.find(p => p.id === eff)}
+            userType={userType}
+            userId={userId}
+          />
+        );
+      })()}
     </main>
   );
 }

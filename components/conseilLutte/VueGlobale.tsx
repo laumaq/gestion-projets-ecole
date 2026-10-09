@@ -134,39 +134,11 @@ export default function VueGlobale({ phaseId, phase, userType, userId }: Props) 
       {vue === 'presences' ? (
         <VuePresencesGlobale groupes={groupes} userId={userId} />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {groupes.map(g => {
-            const l = extraireLocal(g);
-            const isMonGroupe = g.id === monGroupeId;
-            return (
-              <button
-                key={g.id}
-                onClick={() => setGroupeSelectionneId(g.id)}
-                className={`text-left border rounded-lg p-4 hover:shadow-md transition bg-white ${
-                  isMonGroupe ? 'border-red-400 ring-2 ring-red-200' : 'hover:border-red-300'
-                }`}
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <div className="font-bold text-gray-900">
-                      {g.nom}
-                      {isMonGroupe && <span className="text-xs text-red-600 ml-1">· mon groupe</span>}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      Local {l?.id || g.localisation_id || '—'}
-                      {l?.etage && ` • Étage ${l.etage}`}
-                    </div>
-                  </div>
-                  <div className="text-red-600">→</div>
-                </div>
-                <div className="flex gap-3 text-xs text-gray-600 mt-3 pt-3 border-t">
-                  <span>👤 {g.elevesCount}{g.capacite_max ? `/${g.capacite_max}` : ''}</span>
-                  <span>👨‍🏫 {g.employesCount}</span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        <GroupesParEtage
+          groupes={groupes}
+          monGroupeId={monGroupeId}
+          onSelect={setGroupeSelectionneId}
+        />
       )}
 
       {groupes.length === 0 && (
@@ -174,6 +146,91 @@ export default function VueGlobale({ phaseId, phase, userType, userId }: Props) 
           Aucun groupe pour cette phase.
         </div>
       )}
+    </div>
+  );
+}
+
+function GroupesParEtage({
+  groupes,
+  monGroupeId,
+  onSelect,
+}: {
+  groupes: any[];
+  monGroupeId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  // Regroupe par étage (en conservant l'ordre déjà trié)
+  const parEtage: { etage: string; groupes: any[] }[] = [];
+  for (const g of groupes) {
+    const l = extraireLocal(g);
+    const etage = l?.etage ? String(l.etage) : '—';
+    let bloc = parEtage.find(b => b.etage === etage);
+    if (!bloc) {
+      bloc = { etage, groupes: [] };
+      parEtage.push(bloc);
+    }
+    bloc.groupes.push(g);
+  }
+
+  const labelEtage = (e: string) => {
+    if (e === 'Annexe') return 'Annexe';
+    if (e === '—') return 'Sans local';
+    return `Étage ${e}`;
+  };
+
+  return (
+    <div className="space-y-6">
+      {parEtage.map(bloc => (
+        <div key={bloc.etage}>
+          {/* Démarcation d'étage */}
+          <div className="flex items-center gap-3 mb-3">
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              {labelEtage(bloc.etage)}
+            </h3>
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400">
+              {bloc.groupes.length} groupe{bloc.groupes.length > 1 ? 's' : ''}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {bloc.groupes.map(g => {
+              const l = extraireLocal(g);
+              const isMonGroupe = g.id === monGroupeId;
+              return (
+                <button
+                  key={g.id}
+                  onClick={() => onSelect(g.id)}
+                  className={`text-left border rounded-lg p-4 hover:shadow-md transition bg-white ${
+                    isMonGroupe
+                      ? 'border-red-400 ring-2 ring-red-200'
+                      : 'hover:border-red-300'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <div className="font-bold text-gray-900">
+                        {g.nom}
+                        {isMonGroupe && (
+                          <span className="text-xs text-red-600 ml-1">· mon groupe</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Local {l?.id || g.localisation_id || '—'}
+                      </div>
+                    </div>
+                    <div className="text-red-600">→</div>
+                  </div>
+                  <div className="flex gap-3 text-xs text-gray-600 mt-3 pt-3 border-t">
+                    <span>👤 {g.elevesCount}{g.capacite_max ? `/${g.capacite_max}` : ''}</span>
+                    <span>👨‍🏫 {g.employesCount}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

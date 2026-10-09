@@ -16,15 +16,19 @@ function todayLocal(): string {
   return `${y}-${m}-${j}`;
 }
 
-async function getRedirectAfterLogin(): Promise<string> {
+async function getRedirectAfterLogin(
+  userType: 'employee' | 'student'
+): Promise<string> {
   try {
+    const col = userType === 'employee' ? 'redirect_employees' : 'redirect_students';
     const { data } = await supabase
       .from('conseil_lutte_configs')
       .select('id')
-      .eq('redirection_active', true)
+      .eq(col, true)
       .order('date_evenement', { ascending: false })
       .limit(1)
       .maybeSingle();
+
     return data ? '/dashboard/conseil-de-lutte' : '/dashboard/main';
   } catch {
     return '/dashboard/main';
@@ -114,7 +118,7 @@ export default function LoginPage() {
           localStorage.setItem('userLevel', userData.niveau || '');
         }
 
-        router.push(await getRedirectAfterLogin());
+        router.push(await getRedirectAfterLogin(userType as 'employee' | 'student'));
         return;
       }
 
@@ -133,7 +137,7 @@ export default function LoginPage() {
           localStorage.setItem('userLevel', userData.niveau || '');
         }
 
-        router.push(await getRedirectAfterLogin());
+        router.push(await getRedirectAfterLogin(userType as 'employee' | 'student'));
         return;
       } else {
         setError('Mot de passe incorrect');

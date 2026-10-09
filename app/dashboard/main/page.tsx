@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import AGStatusBadge from '@/components/ag/AGStatusBadge';
 import { getTfhDashboardType, TfhDashboardType } from '@/lib/tfh/permissions';
 import { ConseilDeLaClasseCard } from '@/components/conseilLaClasse/ConseilDeLaClasseCard';
+import { estAdminConseilLutte } from '@/components/conseilLutte/admins';
 
 interface Voyage {
   id: string;
@@ -42,7 +43,8 @@ export default function DashboardPage() {
   const [groupeTravail, setGroupeTravail] = useState<GroupeTravail | null>(null);
   const [tfhDashboardType, setTfhDashboardType] = useState<TfhDashboardType>(null);
   const [classesConseil, setClassesConseil] = useState<string[]>([]);
-  
+  const [conseilLutteVisible, setConseilLutteVisible] = useState(false);
+
   useEffect(() => {
     const type = localStorage.getItem('userType') as 'employee' | 'student';
     const id = localStorage.getItem('userId');
@@ -58,6 +60,7 @@ export default function DashboardPage() {
     chargerMesVoyages(type, id);
     chargerStatutAG();
     chargerTfhDashboardType(type, id, job || '');
+    chargerVisibiliteConseilLutte(type, id);
     
     // Passer les valeurs directement, pas via le state
     chargerClassesConseil(type, id, job || '');
@@ -67,6 +70,37 @@ export default function DashboardPage() {
     }
   }, [router]);
 
+  const chargerVisibiliteConseilLutte = async (type: 'employee' | 'student', id: string) => {
+    const isAdminUser = type === 'employee' && estAdminConseilLutte(id);
+    const today = new Date().toISOString().split('T')[0];
+
+    // Pour l'admin : la dernière config, sans filtre de date
+    // Pour les autres : la dernière config où accesX = true OU redirectX = true,
+    //                  ET dont la plage de visibilité couvre aujourd'hui (ou pas de plage)
+    const col = type === 'employee' ? 'acces_employees' : 'acces_students';
+    const colRedir = type === 'employee' ? 'redirect_employees' : 'redirect_students';
+
+    const { data } = await supabase
+      .from('conseil_lutte_configs')
+      .select('id, date_debut_visibilite, date_fin_visibilite, acces_employees, acces_students, redirect_employees, redirect_students')
+      .or(isAdminUser ? 'id.not.is.null' : `${col}.eq.true,${colRedir}.eq.true`)
+      .order('date_evenement', { ascending: false })
+      .limit(5);
+
+    if (!data || data.length === 0) { setConseilLutteVisible(false); return; }
+
+    // Prend la première config dont la plage couvre aujourd'hui
+    const visible = data.some(c => {
+      const d1 = c.date_debut_visibilite;
+      const d2 = c.date_fin_visibilite;
+      if (!d1 && !d2) return true; // pas de plage → toujours
+      if (d1 && today < d1) return false;
+      if (d2 && today > d2) return false;
+      return true;
+    });
+
+    setConseilLutteVisible(visible || isAdminUser);
+  };
 
   const chargerClassesConseil = async (type: 'employee' | 'student', id: string, job: string) => {
     // Récupérer l'année scolaire courante
@@ -350,6 +384,46 @@ export default function DashboardPage() {
       <div className="mb-12">
         <h2 className="text-lg font-semibold text-gray-700 mb-4">Outils disponibles</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+          {/* Conseil de lutte */}
+          {conseilLutteVisible && (
+            <Link href="/dashboard/conseil-de-lutte" className="block h-full">
+              <div
+                className="relative h-40 rounded-lg p-6 shadow-md hover:shadow-xl transition transform hover:scale-105 cursor-pointer flex flex-col justify-between overflow-hidden group text-white"
+                style={{
+                  background: 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 35%, #b91c1c 70%, #dc2626 100%)',
+                }}
+              >
+                {/* Effet de profondeur / grain */}
+                <div className="absolute inset-0 opacity-20 pointer-events-none"
+                  style={{
+                    background:
+                      'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15), transparent 40%),' +
+                      'radial-gradient(circle at 80% 80%, rgba(0,0,0,0.35), transparent 50%)',
+                  }}
+                />
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+                      <span className="text-lg leading-none">✊</span>
+                    </div>
+                    <h3 className="text-lg font-semibold text-white">
+                      Conseil de lutte
+                    </h3>
+                  </div>
+                  <p className="text-sm text-white/85 line-clamp-2 group-hover:line-clamp-none transition-all">
+                    Journée du 13 octobre — consultez votre groupe, votre local et les présences.
+                  </p>
+                </div>
+                <div className="relative flex justify-between items-end">
+                  <span className="text-xs uppercase tracking-wide text-white/70 font-medium">
+                    Outil du jour
+                  </span>
+                  <span className="text-white/80 text-sm group-hover:translate-x-1 transition-transform">→</span>
+                </div>
+              </div>
+            </Link>
+          )}
 
 
           {/* Assemblée Générale */}

@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import AdminPhase from './AdminPhase';
 
@@ -40,10 +40,26 @@ export default function AdminPreparation({ config, phases, onRefresh }: Props) {
   const [modeClasses, setModeClasses] = useState<'groupees' | 'aleatoire' | 'dispersees'>('aleatoire');
   const [creating, setCreating] = useState(false);
 
+  const [cfgLocal, setCfgLocal] = useState(config);
+
+  useEffect(() => { setCfgLocal(config); }, [config]);
+
   // --- Interrupteurs globaux d'accès ---
   const setConfigFlag = async (patch: Record<string, any>) => {
-    await supabase.from('conseil_lutte_configs').update(patch).eq('id', config.id);
-    onRefresh();
+    // 1) Optimiste : on met à jour le local tout de suite
+    setCfgLocal((prev: any) => ({ ...prev, ...patch }));
+
+    // 2) Persistance en base
+    const { error } = await supabase
+      .from('conseil_lutte_configs')
+      .update(patch)
+      .eq('id', config.id);
+
+    // 3) En cas d'erreur, on annule la modif locale et on prévient
+    if (error) {
+      setCfgLocal(config);
+      alert('Erreur : ' + error.message);
+    }
   };
 
   // --- Créer une phase + N groupes + auto-fill des locaux ---
@@ -126,55 +142,95 @@ export default function AdminPreparation({ config, phases, onRefresh }: Props) {
       {/* ═══════════════════════════════════════════ */}
       {/* CONTRÔLE D'ACCÈS                            */}
       {/* ═══════════════════════════════════════════ */}
-      <div className="bg-white border-2 border-red-200 rounded-lg p-5">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="bg-white border-2 border-red-200 rounded-lg p-5 space-y-4">
+        <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">🔐</div>
           <div>
             <h3 className="text-base font-semibold text-gray-900">Contrôle d'accès</h3>
-            <p className="text-xs text-gray-500">Décidez qui voit l'outil et quand.</p>
+            <p className="text-xs text-gray-500">Qui voit l'outil, et à quelles conditions.</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <label className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition ${
-            config.redirection_active ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300'
+            cfgLocal.acces_employees ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white hover:border-emerald-300'
           }`}>
-            <input
-              type="checkbox"
-              checked={!!config.redirection_active}
-              onChange={(e) => setConfigFlag({ redirection_active: e.target.checked })}
-              className="mt-1 w-4 h-4 accent-red-600"
-            />
+            <input type="checkbox" checked={!!cfgLocal.acces_employees}
+              onChange={(e) => setConfigFlag({ acces_employees: e.target.checked })}
+              className="mt-1 w-4 h-4 accent-emerald-600" />
             <div className="text-sm">
-              <div className="font-semibold text-gray-900">
-                Rediriger à la connexion {config.redirection_active && '· ACTIF'}
-              </div>
+              <div className="font-semibold text-gray-900">Accès employés</div>
               <div className="text-xs text-gray-600 mt-1">
-                Si activé, <strong>élèves et employés</strong> sont renvoyés ici au login.
-                Toi, tu gardes toujours accès via ton tableau de bord.
+                Les employés peuvent ouvrir l'outil à la main (URL, carte du dashboard).
               </div>
             </div>
           </label>
 
           <label className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition ${
-            config.ouverte_inscriptions ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-blue-300'
+            cfgLocal.acces_students ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white hover:border-emerald-300'
           }`}>
-            <input
-              type="checkbox"
-              checked={!!config.ouverte_inscriptions}
-              onChange={(e) => setConfigFlag({ ouverte_inscriptions: e.target.checked })}
-              className="mt-1 w-4 h-4 accent-blue-600"
-            />
+            <input type="checkbox" checked={!!cfgLocal.acces_students}
+              onChange={(e) => setConfigFlag({ acces_students: e.target.checked })}
+              className="mt-1 w-4 h-4 accent-emerald-600" />
             <div className="text-sm">
-              <div className="font-semibold text-gray-900">
-                Ouvrir les pré-inscriptions {config.ouverte_inscriptions && '· ACTIF'}
-              </div>
+              <div className="font-semibold text-gray-900">Accès élèves</div>
               <div className="text-xs text-gray-600 mt-1">
-                Si activé, un lien vers l'outil apparaît dans leur dashboard (sans forcer la redirection).
-                Ils peuvent venir s'inscrire à l'avance.
+                Les élèves peuvent ouvrir l'outil à la main (URL, carte du dashboard).
               </div>
             </div>
           </label>
+
+          <label className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition ${
+            cfgLocal.redirect_employees ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300'
+          }`}>
+            <input type="checkbox" checked={!!cfgLocal.redirect_employees}
+              onChange={(e) => setConfigFlag({ redirect_employees: e.target.checked })}
+              className="mt-1 w-4 h-4 accent-red-600" />
+            <div className="text-sm">
+              <div className="font-semibold text-gray-900">Redirection employés</div>
+              <div className="text-xs text-gray-600 mt-1">
+                À la connexion, les employés sont envoyés directement ici.
+              </div>
+            </div>
+          </label>
+
+          <label className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition ${
+            cfgLocal.redirect_students ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300'
+          }`}>
+            <input type="checkbox" checked={!!cfgLocal.redirect_students}
+              onChange={(e) => setConfigFlag({ redirect_students: e.target.checked })}
+              className="mt-1 w-4 h-4 accent-red-600" />
+            <div className="text-sm">
+              <div className="font-semibold text-gray-900">Redirection élèves</div>
+              <div className="text-xs text-gray-600 mt-1">
+                À la connexion, les élèves sont envoyés directement ici.
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <div className="border-t pt-4">
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">Visibilité de la carte sur le dashboard</h4>
+          <p className="text-xs text-gray-500 mb-3">
+            La carte « Conseil de lutte » apparaît sur le dashboard entre ces deux dates (incluses).
+            Vide = toujours visible pour ceux qui ont accès.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-600 block mb-1">Du</label>
+              <input type="date"
+                value={cfgLocal.date_debut_visibilite || ''}
+                onChange={(e) => setConfigFlag({ date_debut_visibilite: e.target.value || null })}
+                className="w-full px-2 py-1.5 border rounded text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-600 block mb-1">Au</label>
+              <input type="date"
+                value={cfgLocal.date_fin_visibilite || ''}
+                onChange={(e) => setConfigFlag({ date_fin_visibilite: e.target.value || null })}
+                className="w-full px-2 py-1.5 border rounded text-sm" />
+            </div>
+          </div>
         </div>
       </div>
 
