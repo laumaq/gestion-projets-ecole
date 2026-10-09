@@ -56,7 +56,7 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
       groupe_id: groupeId,
       participant_id: userId,
       participant_type: userType === 'student' ? 'student' : 'employee',
-      manuel: false,
+      manuel: true,
     });
     setJoining(false);
     if (!error) onJoined();

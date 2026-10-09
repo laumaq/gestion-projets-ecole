@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import MonGroupe from '@/components/conseilLutte/MonGroupe';
 import VueGlobale from '@/components/conseilLutte/VueGlobale';
+import VueEducatrices from '@/components/conseilLutte/VueEducatrices';
 import AdminPreparation from '@/components/conseilLutte/AdminPreparation';
 import CreerConfig from '@/components/conseilLutte/CreerConfig';
 import { estAdminConseilLutte } from '@/components/conseilLutte/admins';
@@ -36,22 +37,23 @@ export default function ConseilDeLuttePage() {
   const router = useRouter();
   const [userType, setUserType] = useState<'employee' | 'student' | null>(null);
   const [userId, setUserId] = useState('');
+  const [userJob, setUserJob] = useState('');
   const [config, setConfig] = useState<any>(null);
   const [phases, setPhases] = useState<any[]>([]);
   const [phaseActiveId, setPhaseActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<'participant' | 'admin'>('participant');
 
-  // Anti-race : chaque appel loadAll incrémente ce compteur.
-  // Seule la dernière requête a le droit d'écrire dans le state.
   const loadIdRef = useRef(0);
 
   useEffect(() => {
     const type = localStorage.getItem('userType') as 'employee' | 'student' | null;
     const id = localStorage.getItem('userId');
+    const job = localStorage.getItem('userJob') || '';
     if (!type || !id) { router.push('/'); return; }
     setUserType(type);
     setUserId(id);
+    setUserJob(job);
     loadAll(type, id);
   }, []);
 
@@ -119,13 +121,11 @@ export default function ConseilDeLuttePage() {
       .eq('config_id', cfg.id)
       .order('ordre');
 
-    // ⚠️ Si un autre loadAll a démarré entre-temps, on abandonne.
     if (myLoadId !== loadIdRef.current) return;
 
     const phasesRecues = ph || [];
     const active = determinePhaseActive(phasesRecues);
 
-    // Un seul batch de setState, à la fin, avec tout prêt.
     setConfig(cfg);
     setPhases(phasesRecues);
     setPhaseActiveId(active?.id || phasesRecues[0]?.id || null);
@@ -137,6 +137,7 @@ export default function ConseilDeLuttePage() {
   }
 
   const isAdmin = userType === 'employee' && estAdminConseilLutte(userId);
+  const isEduc = userType === 'employee' && userJob === 'educ';
 
   if (!config) {
     if (!isAdmin) return null;
@@ -150,6 +151,12 @@ export default function ConseilDeLuttePage() {
       </main>
     );
   }
+
+  // Calcul du phaseId effectif (fallback sur la première phase)
+  const effectivePhaseId = phaseActiveId || phases[0]?.id || null;
+  const effectivePhase = effectivePhaseId
+    ? phases.find(p => p.id === effectivePhaseId)
+    : null;
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -214,23 +221,23 @@ export default function ConseilDeLuttePage() {
           onPhaseChange={setPhaseActiveId}
           onRefresh={() => loadAll(userType, userId)}
         />
-      ) : (() => {
-        // Fallback : si phaseActiveId est null mais qu'il y a des phases, on prend la première.
-        const eff = phaseActiveId || phases[0]?.id;
-        if (!eff) {
-          return <div className="text-center py-12 text-gray-500">Aucune phase configurée.</div>;
-        }
-        return userType === 'student' ? (
-          <MonGroupe phaseId={eff} userType={userType} userId={userId} />
+      ) : effectivePhaseId ? (
+        userType === 'student' ? (
+          <MonGroupe phaseId={effectivePhaseId} userType={userType} userId={userId} />
         ) : (
           <VueGlobale
-            phaseId={eff}
-            phase={phases.find(p => p.id === eff)}
+            phaseId={effectivePhaseId}
+            phase={effectivePhase}
             userType={userType}
             userId={userId}
+            isEduc={isEduc}
+            isAdmin={isAdmin}
           />
-        );
-      })()}
+        )
+      ) : (
+        <div className="text-center py-12 text-gray-500">Aucune phase configurée.</div>
+      )}
+
     </main>
   );
 }

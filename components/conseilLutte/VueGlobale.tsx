@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import DetailGroupe from './DetailGroupe';
 import VuePresencesGlobale from './VuePresencesGlobale';
 import ChoisirGroupe from './ChoisirGroupe';
+import VueEducatrices from './VueEducatrices';
 
 const ORDRE_ETAGES: Record<string, number> = {
   '1': 1, '2': 2, '3': 3, '4': 4, '6': 6, 'Annexe': 7,
@@ -35,13 +36,16 @@ interface Props {
   phase?: any;
   userType: 'employee' | 'student';
   userId: string;
+  isEduc?: boolean;
+  isAdmin?: boolean;
 }
 
-export default function VueGlobale({ phaseId, phase, userType, userId }: Props) {
-  const [groupes, setGroupes] = useState<any[]>([]);
+export default function VueGlobale({ phaseId, phase, userType, userId, isEduc, isAdmin }: Props) {  const [groupes, setGroupes] = useState<any[]>([]);
   const [groupeSelectionneId, setGroupeSelectionneId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [vue, setVue] = useState<'cartes' | 'presences'>('cartes');
+  const [vue, setVue] = useState<'cartes' | 'presences' | 'educ'>(
+    isEduc ? 'educ' : 'cartes'
+  );
   const [monGroupeId, setMonGroupeId] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
@@ -106,32 +110,42 @@ export default function VueGlobale({ phaseId, phase, userType, userId }: Props) 
             Groupes de la phase ({groupes.length})
           </h2>
           <p className="text-sm text-gray-500">
-            {vue === 'cartes'
-              ? 'Cliquez sur un groupe pour voir le détail et prendre les présences.'
-              : 'Vue combinée : tous les groupes et leurs présences sur une seule page.'}
+            {vue === 'cartes' && 'Cliquez sur un groupe pour voir le détail et prendre les présences.'}
+            {vue === 'presences' && 'Vue combinée : tous les groupes et leurs présences sur une seule page.'}
+            {vue === 'educ' && 'Vue par classe : retrouvez un élève et corrigez son statut de présence.'}
           </p>
         </div>
         <div className="flex border rounded-lg overflow-hidden">
           <button
             onClick={() => setVue('cartes')}
             className={`px-3 py-1.5 text-sm ${
-              vue === 'cartes'
-                ? 'bg-red-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
+              vue === 'cartes' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
             }`}
           >Cartes</button>
           <button
             onClick={() => setVue('presences')}
             className={`px-3 py-1.5 text-sm ${
-              vue === 'presences'
-                ? 'bg-red-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
+              vue === 'presences' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
             }`}
           >Vue présences</button>
+          {(isEduc || isAdmin) && (
+            <button
+              onClick={() => setVue('educ')}
+              className={`px-3 py-1.5 text-sm ${
+                vue === 'educ' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >Vue éduc</button>
+          )}
         </div>
       </div>
 
-      {vue === 'presences' ? (
+      {vue === 'educ' && (isEduc || isAdmin) ? (
+        <VueEducatrices
+          phaseId={phaseId}
+          phase={phase}
+          userId={userId}
+        />
+      ) : vue === 'presences' ? (
         <VuePresencesGlobale groupes={groupes} userId={userId} />
       ) : (
         <GroupesParEtage
