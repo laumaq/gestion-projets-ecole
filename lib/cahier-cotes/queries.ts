@@ -378,3 +378,24 @@ export async function syncResultatsForCoursLogique(params: {
   // 5. Retourner tous les résultats (existants + nouveaux)
   return getResultatsForEvaluations(evalIds);
 }
+
+/**
+ * Supprime toutes les cotes d'itinéraire pour un cours logique, une période et une année.
+ * ⚠️ Action irréversible.
+ */
+export async function deleteItineraireForPeriode(params: {
+  coursLogiqueId: string;
+  periode: Periode;
+  anneeScolaire: string;
+}): Promise<void> {
+  const { coursLogiqueId, periode, anneeScolaire } = params;
+
+  const { error } = await supabase
+    .from('itineraire_periodes')
+    .delete()
+    .eq('cours_logique_id', coursLogiqueId)
+    .eq('periode', periode)
+    .eq('annee_scolaire', anneeScolaire);
+
+  if (error) throw error;
+}

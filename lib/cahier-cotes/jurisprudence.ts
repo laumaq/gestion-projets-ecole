@@ -1,22 +1,13 @@
 import { Cote, Evaluation, EvaluationResultat } from './types';
 
-export interface PatternInfo {
-  eleveMatricule: number;
-  // Pattern complet de cotes sur les évals de la compétence (dans l'ordre des évals)
-  // Ex: ['EC', 'A', 'EC'] ou ['NA', 'EC', null] (null = pas encore noté)
-  pattern: (Cote | null)[];
-}
-
 export interface JurisprudenceResult {
-  // Élèves dont on peut déduire la cote de période
   deduced: Array<{
     eleveMatricule: number;
     competenceCode: string;
     cote: Cote;
     reason: 'homogene' | 'jurisprudence';
-    referenceEleves: number[]; // autres élèves avec le même pattern
+    referenceEleves: number[];
   }>;
-  // Warnings : élèves dont la cote déjà remplie diffère du pattern majoritaire
   warnings: Array<{
     eleveMatricule: number;
     competenceCode: string;
@@ -28,8 +19,8 @@ export interface JurisprudenceResult {
 
 /**
  * Construit le pattern complet de cotes pour un élève sur une compétence donnée.
- * Les évaluations sont triées par date_eval.
- * Retourne null pour les évals non notées (à ignorer dans la comparaison).
+ * Ne conserve que les évals de cette compétence, dans l'ordre des évals données.
+ * Retourne null pour les évals où l'élève n'a pas de cote.
  */
 export function buildPattern(
   eleveMatricule: number,
@@ -39,146 +30,66 @@ export function buildPattern(
 ): (Cote | null)[] {
   const compKey = competenceCode.toLowerCase() as keyof EvaluationResultat;
 
-  return evaluations.map(ev => {
-    // L'élève n'a peut-être pas cette compétence dans cette éval
-    if (!ev.competences.includes(competenceCode)) return undefined as any;
-
+  const out: (Cote | null)[] = [];
+  for (const ev of evaluations) {
+    if (!ev.competences.includes(competenceCode)) continue;
     const res = resultatsMap.get(`${ev.id}::${eleveMatricule}`);
-    if (!res) return null;
-
-    return res[compKey] as Cote;
-  }).filter(v => v !== undefined);
+    out.push(res ? (res[compKey] as Cote) : null);
+  }
+  return out;
 }
 
 /**
- * Vérifie si tous les patterns sont identiques.
- * Ignore les null (élèves non notés à certaines évals).
- * Retourne la cote commune ou null si patterns différents.
+ * Analyse un pattern de cotes (avec null pour non-évalué).
+ * - Ignore les null.
+ * - Retourne :
+ *   - 'empty' si aucune cote
+ *   - 'homogene' si une seule cote unique
+ *   - 'mixed' sinon, avec la liste des cotes non-null
  */
-export function detectHomogene(patterns: (Cote | null)[][]): Cote | 'different' | null {
-  if (patterns.length === 0) return null;
+function analysePattern(pattern: (Cote | null)[]): {
+  status: 'empty' | 'homogene' | 'mixed';
+  cotes: Cote[];
+  uniqueCote: Cote | null;
+} {
+  const cotes = pattern.filter((c): c is Cote => c !== null && c !== undefined);
 
-  // On filtre les null de chaque pattern pour ne comparer que les vraies valeurs
-  const normalized = patterns.map(p => p.filter(v => v !== null && v !== undefined) as Cote[]);
-
-  // Si aucun pattern n'a de valeurs, on ne peut rien déduire
-  if (normalized.every(p => p.length === 0)) return null;
-
-  // Si un élève n'a aucune cote et les autres en ont, on ne peut pas déduire
-  // (il n'a pas passé les évals)
-  if (normalized.some(p => p.length === 0)) return 'different';
-
-  // On compare les tableaux de cotes (une fois les null filtrés)
-  const first = normalized[0].join('|');
-  const allSame = normalized.every(p => p.join('|') === first);
-
-  if (!allSame) return 'different';
-
-  // Pattern uniforme → on regarde si toutes les cotes sont identiques
-  const cotesSet = new Set(normalized[0]);
-  if (cotesSet.size === 1) {
-    return normalized[0][0]; // Homogène
+  if (cotes.length === 0) {
+    return { status: 'empty', cotes: [], uniqueCote: null };
   }
 
-  // Pattern non-uniforme mais identique entre élèves → jurisprudence
-  return 'different'; // Sera traité par jurisprudence
+  const unique = new Set(cotes);
+  if (unique.size === 1) {
+    return { status: 'homogene', cotes, uniqueCote: cotes[0] };
+  }
+
+  return { status: 'mixed', cotes, uniqueCote: null };
 }
 
 /**
- * Calcule la cote de période selon l'algorithme principal.
+ * Sérialise un pattern pour comparaison.
+ */
+function serializePattern(pattern: (Cote | null)[]): string {
+  return pattern.map(c => c ?? '∅').join('|');
+}
+
+/**
+ * Calcule toutes les jurisprudences et homogénéités.
  *
  * Règles :
- * 1. Si toutes les cotes sont identiques (ex: A,A,A) → c'est cette cote.
- * 2. Sinon, on cherche d'autres élèves avec le même pattern exact → jurisprudence.
- * 3. Sinon, on ne peut pas déduire (retourne null).
- */
-export function computeJurisprudence(
-  eleveMatricule: number,
-  competenceCode: string,
-  evaluations: Evaluation[],
-  resultatsMap: Map<string, EvaluationResultat>,
-  allElevesMatricules: number[],
-  coteActuelle: Cote // cote déjà remplie manuellement (peut être null)
-): {
-  coteDeduite: Cote;
-  reason: 'homogene' | 'jurisprudence' | null;
-  referenceEleves: number[];
-  warning: boolean;
-} {
-  // 1. Construire tous les patterns
-  const patterns = allElevesMatricules.map(mat => ({
-    matricule: mat,
-    pattern: buildPattern(mat, competenceCode, evaluations, resultatsMap),
-  }));
-
-  // Filtrer les élèves qui ont au moins une cote (ont passé au moins une éval)
-  const patternParEleve = patterns.filter(p => p.pattern.some(c => c !== null));
-
-  if (patternParEleve.length === 0) {
-    return { coteDeduite: null, reason: null, referenceEleves: [], warning: false };
-  }
-
-  // ─── Cas 1 : Homogénéité globale ───
-  // On regarde si TOUTES les cotes de TOUS les élèves sur cette compétence sont identiques
-  const toutesLesCotes = patternParEleve.flatMap(p => p.pattern.filter(c => c !== null));
-  const cotesUniques = new Set(toutesLesCotes);
-
-  if (cotesUniques.size === 1 && toutesLesCotes.length > 0) {
-    const cote = toutesLesCotes[0];
-    return {
-      coteDeduite: cote,
-      reason: 'homogene',
-      referenceEleves: patternParEleve.map(p => p.matricule),
-      warning: coteActuelle !== null && coteActuelle !== cote,
-    };
-  }
-
-  // ─── Cas 2 : Jurisprudence ───
-  // On cherche les élèves qui ont EXACTEMENT le même pattern que l'élève cible
-  const monPattern = patternParEleve.find(p => p.matricule === eleveMatricule)?.pattern;
-  if (!monPattern) {
-    return { coteDeduite: null, reason: null, referenceEleves: [], warning: false };
-  }
-
-  // Sérialiser le pattern pour comparaison (ignore les null)
-  const serializePattern = (p: (Cote | null)[]) =>
-    p.map(c => c ?? '∅').join('|');
-
-  const monPatternStr = serializePattern(monPattern);
-  const elevesAvecMemePattern = patternParEleve.filter(p => {
-    if (p.matricule === eleveMatricule) return false;
-    return serializePattern(p.pattern) === monPatternStr;
-  });
-
-  if (elevesAvecMemePattern.length === 0) {
-    // Pas d'autre élève avec le même pattern → on ne peut rien déduire
-    return { coteDeduite: null, reason: null, referenceEleves: [], warning: false };
-  }
-
-  // On cherche la cote de période déjà remplie pour un des élèves de référence
-  // (ou une cote déjà remplie par le prof quelque part sur cette compétence)
-  // → on n'a pas accès ici aux itinéraires, donc on retourne juste l'info
-  //   que d'autres élèves ont le même pattern.
-  // C'est le composant appelant qui décidera en fonction de l'itinéraire existant.
-
-  return {
-    coteDeduite: null, // Sera déterminé par l'appelant en fonction des itinéraires
-    reason: 'jurisprudence',
-    referenceEleves: elevesAvecMemePattern.map(p => p.matricule),
-    warning: false,
-  };
-}
-
-/**
- * Algorithme global : parcourt toutes les compétences et tous les élèves,
- * et retourne les cotes à appliquer + les warnings.
+ * 1. Un élève dont toutes les cotes d'une compétence sont identiques
+ *    (même s'il n'a qu'une seule éval) → pré-remplir sa cote de période.
+ * 2. Si plusieurs élèves ont un pattern identique (non-homogène) et qu'un
+ *    d'entre eux a une cote de période déjà remplie, pré-remplir les autres.
+ * 3. Ne jamais écraser une cote déjà remplie. Générer un warning si elle
+ *    diffère de la suggestion.
  */
 export function computeAllJurisprudences(params: {
   evaluations: Evaluation[];
   resultats: EvaluationResultat[];
   elevesMatricules: number[];
   competencesCodes: string[];
-  itineraireActuel: Map<string, Cote>; // clé: `${matricule}::${competenceCode}`
+  itineraireActuel: Map<string, Cote>;
 }): JurisprudenceResult {
   const {
     evaluations,
@@ -189,121 +100,106 @@ export function computeAllJurisprudences(params: {
   } = params;
 
   const resultatsMap = new Map<string, EvaluationResultat>();
-  resultats.forEach(r => resultatsMap.set(`${r.evaluation_id}::${r.eleve_matricule}`, r));
+  resultats.forEach(r =>
+    resultatsMap.set(`${r.evaluation_id}::${r.eleve_matricule}`, r)
+  );
 
   const deduced: JurisprudenceResult['deduced'] = [];
   const warnings: JurisprudenceResult['warnings'] = [];
 
   for (const compCode of competencesCodes) {
-    // Ne considérer que les évals qui évaluent cette compétence
-    const evalsComp = evaluations.filter(ev => ev.competences.includes(compCode));
+    // Évals qui évaluent cette compétence
+    const evalsComp = evaluations.filter(ev =>
+      ev.competences.includes(compCode)
+    );
+    if (evalsComp.length === 0) continue;
 
-    // Construire les patterns
-    const patterns = elevesMatricules.map(mat => ({
+    // Construire les patterns de chaque élève
+    const elevesPatterns = elevesMatricules.map(mat => ({
       matricule: mat,
       pattern: buildPattern(mat, compCode, evalsComp, resultatsMap),
     }));
 
-    // Garder uniquement les élèves qui ont au moins une cote
-    const elevesActifs = patterns.filter(p => p.pattern.some(c => c !== null));
+    // ─── Étape 1 : homogénéité par élève ───
+    for (const e of elevesPatterns) {
+      const analyse = analysePattern(e.pattern);
+      if (analyse.status !== 'homogene') continue;
 
-    if (elevesActifs.length === 0) continue;
+      const cleItineraire = `${e.matricule}::${compCode}`;
+      const coteActuelle = itineraireActuel.get(cleItineraire) ?? null;
 
-    // ─── Cas 1 : Homogénéité ───
-    const toutesLesCotes = elevesActifs.flatMap(p => p.pattern.filter(c => c !== null));
-    const cotesUniques = new Set(toutesLesCotes);
-
-    let coteHomogene: Cote = null;
-    if (cotesUniques.size === 1 && toutesLesCotes.length > 0) {
-      coteHomogene = toutesLesCotes[0];
+      if (coteActuelle === null) {
+        // À pré-remplir
+        deduced.push({
+          eleveMatricule: e.matricule,
+          competenceCode: compCode,
+          cote: analyse.uniqueCote,
+          reason: 'homogene',
+          referenceEleves: [e.matricule],
+        });
+      } else if (coteActuelle !== analyse.uniqueCote) {
+        warnings.push({
+          eleveMatricule: e.matricule,
+          competenceCode: compCode,
+          coteActuelle,
+          coteSuggeree: analyse.uniqueCote,
+          pattern: serializePattern(e.pattern),
+        });
+      }
     }
 
-    // Sérialisation pour jurisprudence
-    const serializePattern = (p: (Cote | null)[]) =>
-      p.map(c => c ?? '∅').join('|');
-
-    // Grouper les élèves par pattern identique
-    const groupes = new Map<string, typeof elevesActifs>();
-    for (const e of elevesActifs) {
+    // ─── Étape 2 : jurisprudence sur patterns identiques non-homogènes ───
+    // Grouper les élèves par pattern sérialisé
+    const groupes = new Map<string, typeof elevesPatterns>();
+    for (const e of elevesPatterns) {
+      const analyse = analysePattern(e.pattern);
+      if (analyse.status !== 'mixed') continue; // on ne traite que le mixed ici
       const key = serializePattern(e.pattern);
       if (!groupes.has(key)) groupes.set(key, []);
       groupes.get(key)!.push(e);
     }
 
-    // ─── Pour chaque élève ───
-    for (const eleve of elevesActifs) {
-      const cleItineraire = `${eleve.matricule}::${compCode}`;
-      const coteActuelle = itineraireActuel.get(cleItineraire) ?? null;
+    // Pour chaque groupe, chercher une cote de période de référence
+    for (const [patternKey, groupe] of groupes) {
+      // Récupérer les cotes de période déjà remplies
+      const cotesRemplies = groupe
+        .map(g => ({
+          matricule: g.matricule,
+          cote: itineraireActuel.get(`${g.matricule}::${compCode}`) ?? null,
+        }))
+        .filter(x => x.cote !== null);
 
-      // Sous-cas A : homogénéité globale
-      if (coteHomogene !== null) {
-        if (coteActuelle === null) {
-          deduced.push({
-            eleveMatricule: eleve.matricule,
-            competenceCode: compCode,
-            cote: coteHomogene,
-            reason: 'homogene',
-            referenceEleves: elevesActifs.map(e => e.matricule),
-          });
-        } else if (coteActuelle !== coteHomogene) {
-          warnings.push({
-            eleveMatricule: eleve.matricule,
-            competenceCode: compCode,
-            coteActuelle,
-            coteSuggeree: coteHomogene,
-            pattern: serializePattern(eleve.pattern),
-          });
-        }
+      if (cotesRemplies.length === 0) continue;
+
+      const cotesDistinctes = new Set(cotesRemplies.map(c => c.cote));
+      if (cotesDistinctes.size > 1) {
+        // Conflit : plusieurs élèves du même groupe ont des cotes différentes
+        // On ne pré-remplit rien, pas de warning (ambigu)
         continue;
       }
 
-      // Sous-cas B : jurisprudence (pattern identique avec d'autres élèves)
-      const patternKey = serializePattern(eleve.pattern);
-      const groupe = groupes.get(patternKey) ?? [];
+      const coteReference = cotesRemplies[0].cote;
+      const referenceEleves = cotesRemplies.map(c => c.matricule);
 
-      // Il faut au moins 2 élèves avec le même pattern (dont lui)
-      if (groupe.length < 2) continue;
+      // Pré-remplir les autres élèves du groupe
+      for (const e of groupe) {
+        const cle = `${e.matricule}::${compCode}`;
+        const coteActuelle = itineraireActuel.get(cle) ?? null;
 
-      // Chercher dans le groupe une cote de période déjà remplie par un autre élève
-      let coteReference: Cote = null;
-      const elevesReference: number[] = [];
+        // Skip les élèves déjà référencés (qui ont servi de référence)
+        if (referenceEleves.includes(e.matricule)) continue;
 
-      for (const autre of groupe) {
-        if (autre.matricule === eleve.matricule) continue;
-        const autreCote = itineraireActuel.get(`${autre.matricule}::${compCode}`) ?? null;
-        if (autreCote !== null) {
-          coteReference = autreCote;
-          elevesReference.push(autre.matricule);
-        }
-      }
-
-      // Cas : plusieurs élèves avec le même pattern ont des cotes différentes → conflit
-      const cotesRefSet = new Set(
-        groupe
-          .filter(a => a.matricule !== eleve.matricule)
-          .map(a => itineraireActuel.get(`${a.matricule}::${compCode}`) ?? null)
-          .filter(c => c !== null)
-      );
-
-      if (cotesRefSet.size > 1) {
-        // Conflit : plusieurs cotes différentes parmi les références
-        // On ne pré-remplit rien, on n'avertit pas non plus (trop ambigu)
-        continue;
-      }
-
-      if (coteReference !== null) {
-        // On a une cote de référence à appliquer
         if (coteActuelle === null) {
           deduced.push({
-            eleveMatricule: eleve.matricule,
+            eleveMatricule: e.matricule,
             competenceCode: compCode,
             cote: coteReference,
             reason: 'jurisprudence',
-            referenceEleves: elevesReference,
+            referenceEleves,
           });
         } else if (coteActuelle !== coteReference) {
           warnings.push({
-            eleveMatricule: eleve.matricule,
+            eleveMatricule: e.matricule,
             competenceCode: compCode,
             coteActuelle,
             coteSuggeree: coteReference,
@@ -316,3 +212,87 @@ export function computeAllJurisprudences(params: {
 
   return { deduced, warnings };
 }
+
+/**
+ * Propage une cote modifiée manuellement aux autres élèves ayant le même pattern.
+ * Ne s'applique QU'À la compétence, la période et l'année scolaire en cours.
+ * N'écrase JAMAIS une cote déjà remplie.
+ *
+ * Retourne la liste des élèves dont la cote a été pré-remplie.
+ */
+export function propagerJurisprudence(params: {
+  evaluations: Evaluation[];
+  resultats: EvaluationResultat[];
+  elevesMatricules: number[];
+  competenceCode: string;
+  matriculeSource: number;
+  nouvelleCote: Cote;
+  itineraireActuel: Map<string, Cote>;
+}): Array<{
+  eleveMatricule: number;
+  competenceCode: string;
+  cote: Cote;
+}> {
+  const {
+    evaluations,
+    resultats,
+    elevesMatricules,
+    competenceCode,
+    matriculeSource,
+    nouvelleCote,
+    itineraireActuel,
+  } = params;
+
+  if (nouvelleCote === null) return [];
+
+  const resultatsMap = new Map<string, EvaluationResultat>();
+  resultats.forEach(r =>
+    resultatsMap.set(`${r.evaluation_id}::${r.eleve_matricule}`, r)
+  );
+
+  // Évals qui évaluent cette compétence
+  const evalsComp = evaluations.filter(ev =>
+    ev.competences.includes(competenceCode)
+  );
+  if (evalsComp.length === 0) return [];
+
+  // Pattern de l'élève source
+  const sourcePattern = buildPattern(
+    matriculeSource,
+    competenceCode,
+    evalsComp,
+    resultatsMap
+  );
+  const sourcePatternKey = serializePattern(sourcePattern);
+
+  // Analyser : on ne propage QUE si le pattern est "mixed" (non-homogène)
+  // (si homogène, c'est géré par le bouton global)
+  const sourceAnalyse = analysePattern(sourcePattern);
+  if (sourceAnalyse.status !== 'mixed') return [];
+
+  const aPropager: Array<{
+    eleveMatricule: number;
+    competenceCode: string;
+    cote: Cote;
+  }> = [];
+
+  for (const mat of elevesMatricules) {
+    if (mat === matriculeSource) continue;
+
+    const pattern = buildPattern(mat, competenceCode, evalsComp, resultatsMap);
+    if (serializePattern(pattern) !== sourcePatternKey) continue;
+
+    // Ne pas écraser une cote existante
+    const coteActuelle = itineraireActuel.get(`${mat}::${competenceCode}`) ?? null;
+    if (coteActuelle !== null) continue;
+
+    aPropager.push({
+      eleveMatricule: mat,
+      competenceCode,
+      cote: nouvelleCote,
+    });
+  }
+
+  return aPropager;
+}
+

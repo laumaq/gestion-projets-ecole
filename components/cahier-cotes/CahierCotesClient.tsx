@@ -18,7 +18,6 @@ import {
   syncResultatsForCoursLogique
 } from '@/lib/cahier-cotes/queries';
 import { CelluleNote, CelluleNoteHandle } from './CelluleNote';
-import { EnTeteEvaluation } from './EnTeteEvaluation';
 import { ModalNouvelleEval } from '@/components/cahier-cotes/ModalNouvelleEval';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
@@ -82,28 +81,34 @@ export function CahierCotesClient({
   }, [resultats]);
 
   // ─── Charger une période ───
-  const loadPeriode = useCallback(async (p: Periode) => {
-    setIsLoadingPeriode(true);
-    try {
-      const evals = await getEvaluations(initialData.coursLogique.id, p, anneeScolaire);
-      
-      // ⭐ Auto-sync : créer les lignes manquantes pour les élèves actuels
-      const res = await syncResultatsForCoursLogique({
-        coursLogiqueId: initialData.coursLogique.id,
-        periode: p,
-        anneeScolaire,
-        eleveMatricules: initialData.eleves.map(e => e.matricule),
-      });
-      
-      setEvaluations(evals);
-      setResultats(res);
-    } catch (e) {
-      console.error('Erreur chargement période :', e);
-    } finally {
-      setIsLoadingPeriode(false);
-    }
-  }, [initialData.coursLogique.id, initialData.eleves, anneeScolaire]);
-
+  const loadPeriode = useCallback(
+    async (p: Periode) => {
+      setIsLoadingPeriode(true);
+      try {
+        console.log('🔍 loadPeriode START', { p, coursLogiqueId: initialData.coursLogique.id, anneeScolaire });
+        
+        const evals = await getEvaluations(initialData.coursLogique.id, p, anneeScolaire);
+        console.log('📊 evals:', evals.length, evals);
+        
+        const res = await syncResultatsForCoursLogique({
+          coursLogiqueId: initialData.coursLogique.id,
+          periode: p,
+          anneeScolaire,
+          eleveMatricules: initialData.eleves.map(e => e.matricule),
+        });
+        console.log('📊 res:', res.length);
+        
+        setEvaluations(evals);
+        setResultats(res);
+      } catch (e) {
+        console.error('❌ Erreur chargement période :', e);
+      } finally {
+        setIsLoadingPeriode(false);
+      }
+    },
+    [initialData.coursLogique.id, initialData.eleves, anneeScolaire]
+  );
+    
   // ─── Changement de période ───
   const handlePeriodeChange = (p: Periode) => {
     if (p === periode) return;
@@ -298,28 +303,138 @@ export function CahierCotesClient({
         ) : (
           <table className="border-collapse text-xs">
             <thead className="sticky top-0 z-10 bg-white">
+              {/* Ligne 1 : titre de l'éval */}
               <tr>
-                {/* Colonne élève */}
-                <th className="border border-gray-300 px-2 py-1 bg-gray-100 sticky left-0 z-20 text-left min-w-[180px]">
+                <th
+                  rowSpan={3}
+                  className="border border-gray-300 px-2 py-1 bg-gray-100 sticky left-0 z-20 text-left min-w-[180px]"
+                >
                   Élève
                 </th>
+                {evaluations.map(ev => {
+                  const nbComps = competencesUtilisees.filter(c =>
+                    ev.competences.includes(c.code)
+                  ).length;
+                  return (
+                    <th
+                      key={`title-${ev.id}`}
+                      colSpan={nbComps}
+                      className="border border-gray-300 p-0 bg-blue-50 align-top"
+                    >
+                      {/* Ligne 1 : titre + bouton mode édition */}
+                      <div className="flex items-center justify-between gap-1 px-1 py-1 border-b border-gray-300">
+                        {editModeEvalId === ev.id ? (
+                          <input
+                            type="text"
+                            defaultValue={ev.nom}
+                            autoFocus
+                            onBlur={async e => {
+                              const newNom = e.target.value.trim();
+                              if (newNom && newNom !== ev.nom) {
+                                await handleUpdateEvaluation(ev.id, { nom: newNom });
+                              }
+                            }}
+                            onKeyDown={async e => {
+                              if (e.key === 'Enter') {
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            className="flex-1 text-xs font-semibold border border-blue-400 rounded px-1 py-0.5 bg-white outline-none"
+                          />
+                        ) : (
+                          <span
+                            className="flex-1 text-xs font-semibold truncate"
+                            title={ev.nom}
+                          >
+                            {ev.nom}
+                          </span>
+                        )}
+                        <button
+                          onClick={() =>
+                            setEditModeEvalId(editModeEvalId === ev.id ? null : ev.id)
+                          }
+                          className={`text-[10px] px-1 rounded ${
+                            editModeEvalId === ev.id
+                              ? 'bg-green-600 text-white hover:bg-green-700'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                          title={editModeEvalId === ev.id ? 'Terminer' : 'Mode édition'}
+                        >
+                          {editModeEvalId === ev.id ? '✓' : '✎'}
+                        </button>
+                      </div>
+                    </th>
+                  );
+                })}
+              </tr>
 
-                {/* Une colonne par évaluation */}
-                {evaluations.map(ev => (
-                  <EnTeteEvaluation
-                    key={ev.id}
-                    evaluation={ev}
-                    competences={competencesUtilisees.filter(c =>
-                      ev.competences.includes(c.code)
-                    )}
-                    isEditMode={editModeEvalId === ev.id}
-                    onToggleEditMode={() =>
-                      setEditModeEvalId(editModeEvalId === ev.id ? null : ev.id)
-                    }
-                    onUpdate={updates => handleUpdateEvaluation(ev.id, updates)}
-                    onDelete={() => handleDeleteEvaluation(ev.id)}
-                  />
-                ))}
+              {/* Ligne 2 : date + suppression */}
+              <tr>
+                {evaluations.map(ev => {
+                  const nbComps = competencesUtilisees.filter(c =>
+                    ev.competences.includes(c.code)
+                  ).length;
+                  return (
+                    <th
+                      key={`date-${ev.id}`}
+                      colSpan={nbComps}
+                      className="border border-gray-300 px-1 py-0.5 bg-blue-50/50"
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        {editModeEvalId === ev.id ? (
+                          <input
+                            type="date"
+                            defaultValue={ev.date_eval}
+                            onChange={async e => {
+                              await handleUpdateEvaluation(ev.id, {
+                                date_eval: e.target.value,
+                              });
+                            }}
+                            className="text-[10px] border border-blue-400 rounded px-0.5 py-0 bg-white outline-none"
+                          />
+                        ) : (
+                          <span className="text-[10px] text-gray-600">
+                            {new Date(ev.date_eval).toLocaleDateString('fr-BE', {
+                              day: '2-digit',
+                              month: '2-digit',
+                            })}
+                          </span>
+                        )}
+                        {editModeEvalId === ev.id && (
+                          <button
+                            onClick={() => {
+                              if (confirm(`Supprimer l'évaluation "${ev.nom}" ?`)) {
+                                handleDeleteEvaluation(ev.id);
+                              }
+                            }}
+                            className="text-[10px] text-red-600 hover:bg-red-50 px-1 rounded"
+                            title="Supprimer"
+                          >
+                            🗑
+                          </button>
+                        )}
+                      </div>
+                    </th>
+                  );
+                })}
+              </tr>
+
+              {/* Ligne 3 : compétences */}
+              <tr>
+                {evaluations.map(ev => {
+                  const compsForEval = competencesUtilisees.filter(c =>
+                    ev.competences.includes(c.code)
+                  );
+                  return compsForEval.map(comp => (
+                    <th
+                      key={`comp-${ev.id}-${comp.code}`}
+                      className="border border-gray-300 px-1 py-0.5 bg-blue-50 text-[10px] font-medium text-center w-[50px]"
+                      title={comp.libelle}
+                    >
+                      {comp.code}
+                    </th>
+                  ));
+                })}
               </tr>
             </thead>
             <tbody>
