@@ -104,37 +104,7 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
       await supabase.from('conseil_lutte_membres').delete().in('id', existant.map(e => e.id));
     }
 
-    // 2. Le groupe cible a-t-il déjà un élève manuel ?
-    const { data: manuelsDuGroupe } = await supabase
-      .from('conseil_lutte_membres')
-      .select('id, participant_id')
-      .eq('groupe_id', selectionGroupe)
-      .eq('participant_type', 'student')
-      .eq('manuel', true);
-
-    if (manuelsDuGroupe && manuelsDuGroupe.length >= 1) {
-      // Récupérer le nom de l'élève déjà manuel pour un message clair
-      const existantId = manuelsDuGroupe[0].participant_id;
-      const { data: eleveExistant } = await supabase
-        .from('students')
-        .select('nom, prenom')
-        .eq('matricule', parseInt(existantId))
-        .maybeSingle();
-
-      const nomExistant = eleveExistant
-        ? `${eleveExistant.prenom} ${eleveExistant.nom}`
-        : 'un autre élève';
-
-      if (!confirm(
-        `Ce groupe a déjà un élève marqué manuel : ${nomExistant}.\n\n` +
-        `Remplacer par ${student.prenom} ${student.nom} ?`
-      )) return;
-
-      // Supprimer l'ancien manuel
-      await supabase.from('conseil_lutte_membres').delete().in('id', manuelsDuGroupe.map(m => m.id));
-    }
-
-    // 3. Insertion
+    // 2. Insertion
     await supabase.from('conseil_lutte_membres').insert({
       groupe_id: selectionGroupe,
       participant_id: matriculeStr,

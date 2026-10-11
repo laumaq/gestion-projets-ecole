@@ -27,17 +27,18 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
       .order('nom');
 
     const ids = (gr || []).map(g => g.id);
-    const counts: Record<string, { eleves: number; employes: number }> = {};
-    ids.forEach(id => { counts[id] = { eleves: 0, employes: 0 }; });
+    const counts: Record<string, { eleves: number; employes: number; manuel: boolean }> = {};
+    ids.forEach(id => { counts[id] = { eleves: 0, employes: 0, manuel: false }; });
 
     if (ids.length > 0) {
       const { data: mbs } = await supabase
         .from('conseil_lutte_membres')
-        .select('groupe_id, participant_type')
+        .select('groupe_id, participant_type, manuel')
         .in('groupe_id', ids);
       (mbs || []).forEach(m => {
         if (m.participant_type === 'student') counts[m.groupe_id].eleves++;
         else counts[m.groupe_id].employes++;
+        if (m.manuel && m.participant_type === 'student') counts[m.groupe_id].manuel = true;
       });
     }
 
@@ -45,6 +46,7 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
       ...g,
       elevesCount: counts[g.id].eleves,
       employesCount: counts[g.id].employes,
+      aDejaUnManuel: counts[g.id].manuel,
     })));
     setLoading(false);
   };
@@ -70,8 +72,10 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
   const peutRejoindre = (g: any) => {
     if (userType === 'student') {
       if (!phase?.inscription_eleves_ouverte) return false;
+      if (g.aDejaUnManuel) return false; // ← un élève ne peut pas rejoindre un groupe qui a déjà son manuel
       return !g.capacite_max || g.elevesCount < g.capacite_max;
     }
+    // Employés : règle "fill équitable"
     return g.employesCount === minEncadrants;
   };
 
@@ -87,8 +91,13 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
                 : "Choisissez un groupe. Inscriptions ouvertes pour cette phase.")
             : "Les inscriptions pour cette phase ne sont pas ouvertes. Contactez un membre de la direction."}
         </p>
+        {userType === 'student' && (
+          <p className="text-xs text-blue-700 mt-1">
+            Vous ne pouvez pas rejoindre un groupe qui a déjà son animateur·rice.
+          </p>
+        )}
       </div>
-
+      
       {inscriptionOuverte && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {groupes.map(g => {
@@ -111,6 +120,11 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
                   <span>👤 {g.elevesCount}{g.capacite_max ? `/${g.capacite_max}` : ''}</span>
                   <span>👨‍🏫 {g.employesCount}</span>
                 </div>
+                {userType === 'student' && g.aDejaUnManuel && (
+                  <div className="mt-2 text-xs text-purple-700 bg-purple-50 border border-purple-200 rounded px-2 py-1">
+                    👑 Ce groupe a déjà son animateur·rice
+                  </div>
+                )}
                 {canJoin && (
                   <button
                     onClick={(e) => { e.stopPropagation(); rejoindre(g.id); }}
