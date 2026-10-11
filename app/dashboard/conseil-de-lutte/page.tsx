@@ -43,6 +43,7 @@ export default function ConseilDeLuttePage() {
   const [phaseActiveId, setPhaseActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<'participant' | 'admin'>('participant');
+  const [monGroupeId, setMonGroupeId] = useState<string | null>(null);
 
   const loadIdRef = useRef(0);
 
@@ -57,7 +58,18 @@ export default function ConseilDeLuttePage() {
     loadAll(type, id);
   }, []);
 
-  const loadAll = async (type: string, id: string) => {
+  const chargerMonGroupe = async (type: string, id: string, phaseId: string) => {
+    const { data } = await supabase
+      .from('conseil_lutte_membres')
+      .select(`groupe_id, conseil_lutte_groupes!inner(phase_id)`)
+      .eq('participant_id', id)
+      .eq('participant_type', type)
+      .eq('conseil_lutte_groupes.phase_id', phaseId)
+      .maybeSingle();
+    setMonGroupeId(data?.groupe_id ?? null);
+  };
+
+const loadAll = async (type: string, id: string) => {
     const myLoadId = ++loadIdRef.current;
     setLoading(true);
 
@@ -125,12 +137,21 @@ export default function ConseilDeLuttePage() {
 
     const phasesRecues = ph || [];
     const active = determinePhaseActive(phasesRecues);
-
     setConfig(cfg);
     setPhases(phasesRecues);
-    setPhaseActiveId(active?.id || phasesRecues[0]?.id || null);
+    const activeId = active?.id || phasesRecues[0]?.id || null;
+    setPhaseActiveId(activeId);
+
+    // Charge monGroupeId pour la phase active (pour l'admin : condition d'affichage du bouton "Mon groupe")
+    if (activeId) {
+      await chargerMonGroupe(type, id, activeId);
+    } else {
+      setMonGroupeId(null);
+    }
+
     setLoading(false);
   };
+
 
   if (loading || !userType) {
     return <div className="text-center py-12">Chargement...</div>;
@@ -199,7 +220,10 @@ export default function ConseilDeLuttePage() {
           {phases.map(p => (
             <button
               key={p.id}
-              onClick={() => setPhaseActiveId(p.id)}
+              onClick={() => {
+                setPhaseActiveId(p.id);
+                if (userType && userId) chargerMonGroupe(userType, userId, p.id);
+              }}
               className={`px-4 py-2 rounded-lg border-2 text-sm transition ${
                 phaseActiveId === p.id
                   ? 'border-red-500 bg-red-50 text-red-700 font-semibold'
@@ -222,9 +246,13 @@ export default function ConseilDeLuttePage() {
           onRefresh={() => loadAll(userType, userId)}
         />
       ) : effectivePhaseId ? (
-        userType === 'student' ? (
-          <MonGroupe phaseId={effectivePhaseId} userType={userType} userId={userId} />
-        ) : (
+        isEduc ? (
+          <VueEducatrices
+            phaseId={effectivePhaseId}
+            phase={effectivePhase}
+            userId={userId}
+          />
+        ) : isAdmin ? (
           <VueGlobale
             phaseId={effectivePhaseId}
             phase={effectivePhase}
@@ -232,6 +260,15 @@ export default function ConseilDeLuttePage() {
             userId={userId}
             isEduc={isEduc}
             isAdmin={isAdmin}
+            monGroupeId={monGroupeId}
+          />
+        ) : (
+          // Élèves et profs non-admin : toujours MonGroupe
+          // (MonGroupe affiche ChoisirGroupe si pas encore inscrit)
+          <MonGroupe
+            phaseId={effectivePhaseId}
+            userType={userType}
+            userId={userId}
           />
         )
       ) : (

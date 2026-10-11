@@ -33,6 +33,8 @@ export default function VueEducatrices({ phaseId, phase, userId }: Props) {
   const [niveauxOuverts, setNiveauxOuverts] = useState<Set<string>>(new Set());
   const [classesOuvertes, setClassesOuvertes] = useState<Set<string>>(new Set());
 
+  const [soutiensOuverts, setSoutiensOuverts] = useState<any[]>([]);
+
   // Modal de confirmation
   const [pendingChange, setPendingChange] = useState<{
     eleve: EleveAvecStatut;
@@ -43,6 +45,21 @@ export default function VueEducatrices({ phaseId, phase, userId }: Props) {
   const [recherche, setRecherche] = useState('');
 
   useEffect(() => { loadAll(); }, [phaseId]);
+
+  useEffect(() => {
+    loadSoutiens();
+
+    const channel = supabase
+      .channel(`vue-educ-soutiens-${phaseId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'conseil_lutte_soutiens' },
+        () => { loadSoutiens(); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [phaseId]);
 
   const loadAll = async () => {
     setLoading(true);
@@ -112,7 +129,7 @@ export default function VueEducatrices({ phaseId, phase, userId }: Props) {
         nom: s.nom,
         prenom: s.prenom,
         classe: s.classe || '—',
-        niveau: s.niveau || '—',
+        niveau: s.niveau != null ? String(s.niveau) : '—',   // ← ICI : cast en string
         groupeId: m?.groupe_id ?? null,
         groupeNom: m?.groupe_nom ?? null,
         localisationId: m?.localisation_id ?? null,
@@ -120,13 +137,79 @@ export default function VueEducatrices({ phaseId, phase, userId }: Props) {
         present,
       };
     }).sort((a, b) => {
-      if (a.niveau !== b.niveau) return a.niveau.localeCompare(b.niveau);
+      const na = String(a.niveau ?? '');
+      const nb = String(b.niveau ?? '');
+      if (na !== nb) return na.localeCompare(nb);
       if (a.classe !== b.classe) return a.classe.localeCompare(b.classe);
       return a.nom.localeCompare(b.nom);
     });
 
     setEleves(liste);
     setLoading(false);
+  };
+
+  const loadSoutiens = async () => {
+    // 1. Groupes de la phase
+    const { data: groupes } = await supabase
+      .from('conseil_lutte_groupes')
+      .select('id, nom, localisation_id')
+      .eq('phase_id', phaseId);
+
+    const groupeIds = (groupes || []).map(g => g.id);
+    if (groupeIds.length === 0) { setSoutiensOuverts([]); return; }
+
+    const groupesMap: Record<string, any> = {};
+    (groupes || []).forEach(g => { groupesMap[g.id] = g; });
+
+    // 2. Soutiens ouverts dans ces groupes
+    const { data: soutiens } = await supabase
+      .from('conseil_lutte_soutiens')
+      .select('*')
+      .in('groupe_id', groupeIds)
+      .eq('statut', 'ouvert')
+      .order('created_at', { ascending: false });
+
+    if (!soutiens || soutiens.length === 0) {
+      setSoutiensOuverts([]);
+      return;
+    }
+
+    // 3. Enrichir : nom du demandeur
+    const elevesIds = soutiens
+      .filter(s => s.demandeur_type === 'student')
+      .map(s => parseInt(s.demandeur_id));
+    const employesIds = soutiens
+      .filter(s => s.demandeur_type === 'employee')
+      .map(s => s.demandeur_id);
+
+    const [elevesRes, employesRes] = await Promise.all([
+      elevesIds.length > 0
+        ? supabase.from('students').select('matricule, nom, prenom, classe').in('matricule', elevesIds)
+        : Promise.resolve({ data: [] as any[] }),
+      employesIds.length > 0
+        ? supabase.from('employees').select('id, nom, prenom, job').in('id', employesIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+
+    const elevesMap: Record<number, any> = {};
+    (elevesRes.data || []).forEach((s: any) => { elevesMap[s.matricule] = s; });
+    const profsMap: Record<string, any> = {};
+    (employesRes.data || []).forEach((e: any) => { profsMap[e.id] = e; });
+
+    const enriched = soutiens.map(s => {
+      const dem = s.demandeur_type === 'student'
+        ? elevesMap[parseInt(s.demandeur_id)]
+        : profsMap[s.demandeur_id];
+      return {
+        ...s,
+        demandeur_nom: dem ? `${dem.prenom} ${dem.nom}` : '—',
+        demandeur_classe: dem?.classe || null,
+        groupe_nom: groupesMap[s.groupe_id]?.nom || '—',
+        groupe_local: groupesMap[s.groupe_id]?.localisation_id || null,
+      };
+    });
+
+    setSoutiensOuverts(enriched);
   };
 
   const demanderChangement = (eleve: EleveAvecStatut) => {
@@ -203,6 +286,51 @@ export default function VueEducatrices({ phaseId, phase, userId }: Props) {
 
   return (
     <div className="space-y-4">
+
+      {/* Bandeau soutiens ouverts */}
+      {soutiensOuverts.length > 0 && (
+        <div className="bg-red-50 border-2 border-red-400 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xl">🆘</span>
+            <h3 className="text-base font-bold text-red-800">
+              {soutiensOuverts.length} demande{soutiensOuverts.length > 1 ? 's' : ''} de soutien en cours
+            </h3>
+          </div>
+          <div className="space-y-2">
+            {soutiensOuverts.map(s => (
+              <div key={s.id} className="bg-white border border-red-200 rounded-lg p-3">
+                <div className="flex justify-between items-start gap-3 flex-wrap">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-gray-900">
+                      <span className="text-red-700">
+                        {s.demandeur_type === 'student' ? "🎓 Animateur·rice" : "👨‍🏫 Encadrant·e"}
+                      </span>
+                      {' '}— {s.demandeur_nom}
+                      {s.demandeur_classe && (
+                        <span className="text-gray-500 font-normal"> ({s.demandeur_classe})</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-600 mt-0.5">
+                      📍 {s.groupe_nom}
+                      {s.groupe_local && ` · Local ${s.groupe_local}`}
+                    </div>
+                    {s.message && (
+                      <div className="text-sm text-gray-700 mt-2 italic">
+                        « {s.message} »
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-400 whitespace-nowrap">
+                    {new Date(s.created_at).toLocaleTimeString('fr-FR', {
+                      hour: '2-digit', minute: '2-digit',
+                    })}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Barre d'info + recherche */}
       <div className="bg-white border rounded-lg p-4">

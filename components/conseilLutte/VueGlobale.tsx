@@ -8,6 +8,7 @@ import DetailGroupe from './DetailGroupe';
 import VuePresencesGlobale from './VuePresencesGlobale';
 import ChoisirGroupe from './ChoisirGroupe';
 import VueEducatrices from './VueEducatrices';
+import MonGroupe from './MonGroupe';
 
 const ORDRE_ETAGES: Record<string, number> = {
   '1': 1, '2': 2, '3': 3, '4': 4, '6': 6, 'Annexe': 7,
@@ -38,15 +39,15 @@ interface Props {
   userId: string;
   isEduc?: boolean;
   isAdmin?: boolean;
+  monGroupeId?: string | null;
 }
 
-export default function VueGlobale({ phaseId, phase, userType, userId, isEduc, isAdmin }: Props) {  const [groupes, setGroupes] = useState<any[]>([]);
+export default function VueGlobale({ phaseId, phase, userType, monGroupeId, userId, isEduc, isAdmin }: Props) {  const [groupes, setGroupes] = useState<any[]>([]);
   const [groupeSelectionneId, setGroupeSelectionneId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [vue, setVue] = useState<'cartes' | 'presences' | 'educ'>(
+  const [vue, setVue] = useState<'cartes' | 'presences' | 'educ' | 'monGroupe'>(
     isEduc ? 'educ' : 'cartes'
   );
-  const [monGroupeId, setMonGroupeId] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
   useEffect(() => { if (!groupeSelectionneId) loadGroupes(); }, [phaseId, groupeSelectionneId, tick]);
@@ -71,7 +72,6 @@ export default function VueGlobale({ phaseId, phase, userType, userId, isEduc, i
         if (m.participant_type === 'student') counts[m.groupe_id].eleves++;
         else counts[m.groupe_id].employes++;
         if (m.participant_type === 'employee' && m.participant_id === userId) {
-          setMonGroupeId(m.groupe_id);
         }
       });
     }
@@ -113,6 +113,7 @@ export default function VueGlobale({ phaseId, phase, userType, userId, isEduc, i
             {vue === 'cartes' && 'Cliquez sur un groupe pour voir le détail et prendre les présences.'}
             {vue === 'presences' && 'Vue combinée : tous les groupes et leurs présences sur une seule page.'}
             {vue === 'educ' && 'Vue par classe : retrouvez un élève et corrigez son statut de présence.'}
+            {vue === 'monGroupe' && 'Votre groupe : membres, étape Freinet, soutien, mandats.'}
           </p>
         </div>
         <div className="flex border rounded-lg overflow-hidden">
@@ -136,10 +137,24 @@ export default function VueGlobale({ phaseId, phase, userType, userId, isEduc, i
               }`}
             >Vue éduc</button>
           )}
+          {monGroupeId && (
+            <button
+              onClick={() => setVue('monGroupe')}
+              className={`px-3 py-1.5 text-sm ${
+                vue === 'monGroupe' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >Mon groupe</button>
+          )}
         </div>
       </div>
 
-      {vue === 'educ' && (isEduc || isAdmin) ? (
+      {vue === 'monGroupe' && monGroupeId ? (
+        <MonGroupe
+          phaseId={phaseId}
+          userType={userType}
+          userId={userId}
+        />
+      ) : vue === 'educ' && (isEduc || isAdmin) ? (
         <VueEducatrices
           phaseId={phaseId}
           phase={phase}
@@ -150,7 +165,7 @@ export default function VueGlobale({ phaseId, phase, userType, userId, isEduc, i
       ) : (
         <GroupesParEtage
           groupes={groupes}
-          monGroupeId={monGroupeId}
+          monGroupeId={monGroupeId ?? null}
           onSelect={setGroupeSelectionneId}
         />
       )}
