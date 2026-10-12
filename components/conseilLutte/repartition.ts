@@ -61,15 +61,37 @@ export async function repartirAuto({
     .eq('phase_id', phaseId);
   if (gErr || !groupes || groupes.length === 0) throw new Error('Aucun groupe dans cette phase.');
 
+  // Charger les animateurs déclarés
+  const { data: anims } = await supabase
+    .from('conseil_lutte_animateurs')
+    .select('student_matricule');
+  const animateursSet = new Set<number>((anims || []).map(a => a.student_matricule));
+
+  // Membres existants
   const { data: membresExistants } = await supabase
     .from('conseil_lutte_membres')
     .select('id, groupe_id, participant_id, manuel')
     .in('groupe_id', groupes.map(g => g.id))
     .eq('participant_type', 'student');
 
+  // SÉCURITÉ : forcer manuel=true pour tout animateur qui ne l'est pas encore
+  const aCorriger = (membresExistants || []).filter(m =>
+    !m.manuel && animateursSet.has(parseInt(m.participant_id))
+  );
+  if (aCorriger.length > 0) {
+    await supabase
+      .from('conseil_lutte_membres')
+      .update({ manuel: true })
+      .in('id', aCorriger.map(m => m.id));
+    // Mettre à jour localement pour la suite
+    aCorriger.forEach(m => { m.manuel = true; });
+  }
+
+  // Maintenant on peut filtrer proprement
   const manuels = (membresExistants || []).filter(m => m.manuel);
   const manuelsSet = new Set<number>(manuels.map(m => parseInt(m.participant_id)));
 
+  // Supprimer les non-manuels (les animateurs sont désormais manuels → préservés)
   const nonManuelsIds = (membresExistants || []).filter(m => !m.manuel).map(m => m.id);
   if (nonManuelsIds.length > 0) {
     for (let i = 0; i < nonManuelsIds.length; i += 500) {
@@ -78,12 +100,7 @@ export async function repartirAuto({
     }
   }
 
-  // Animateurs déclarés → exclus de la répartition
-  const { data: anims } = await supabase
-    .from('conseil_lutte_animateurs')
-    .select('student_matricule');
-  const animateursSet = new Set((anims || []).map(a => a.student_matricule));
-
+  // Charger les élèves convoqués (hors testeur, niveau 0, animateurs)
   const eleves: any[] = [];
   let from = 0;
   const PAGE = 500;
@@ -157,7 +174,6 @@ function dispatcher(
   return dispatcherDispersees(pool, groupeIds);
 }
 
-// Aléatoire pur : round-robin sur les groupes
 function dispatcherAleatoire(pool: any[], groupeIds: string[]) {
   const shuffled = shuffle(pool);
   return shuffled.map((e, i) => ({
@@ -166,7 +182,6 @@ function dispatcherAleatoire(pool: any[], groupeIds: string[]) {
   }));
 }
 
-// Classes groupées : on remplit les groupes un par un, classe par classe
 function dispatcherGroupees(pool: any[], groupeIds: string[]) {
   const parClasse: Record<string, any[]> = {};
   pool.forEach(e => {
@@ -187,7 +202,6 @@ function dispatcherGroupees(pool: any[], groupeIds: string[]) {
   return placements;
 }
 
-// Classes dispersées : chaque classe étalée sur tous les groupes
 function dispatcherDispersees(pool: any[], groupeIds: string[]) {
   const parClasse: Record<string, any[]> = {};
   pool.forEach(e => {
@@ -305,7 +319,6 @@ export async function assignerProfsAuto(params: AssignerProfsParams): Promise<As
     }
   }
 
-  // Exclure les admins dès le comptage
   const idsEligibles = Array.from(compteParProf.entries())
     .filter(([id, n]) => n >= minHeures && !CONSEIL_LUTTE_ADMINS.includes(id))
     .map(([id]) => id);
