@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import AdminGroupes from './AdminGroupes';
 import AffectationManuelle from './AffectationManuelle';
-import { repartirAuto, assignerProfsAuto } from './repartition';
+import { repartirAuto, assignerProfsAuto, repartirAnimateurs } from './repartition';
 
 interface Props {
   phase: any;
@@ -20,8 +20,8 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [workingProfs, setWorkingProfs] = useState(false);
+  const [workingAnims, setWorkingAnims] = useState(false);
 
-  // Édition des réglages phase
   const [edit, setEdit] = useState({
     nom: phase.nom,
     heure_debut: phase.heure_debut,
@@ -32,7 +32,6 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
     verrouille: phase.verrouille,
   });
 
-  // Répartition profs
   const [profMode, setProfMode] = useState<'phase' | 'manuel'>('phase');
   const [profMinHeures, setProfMinHeures] = useState(2);
   const [profDebut, setProfDebut] = useState(phase.heure_debut);
@@ -60,7 +59,7 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
   const lancerRepartition = async () => {
     if (!confirm(
       'Lancer la répartition automatique des élèves ?\n\n' +
-      'Les élèves marqués "manuel" seront préservés. Les autres seront répartis.'
+      'Les élèves marqués "manuel" (dont les animateurs) sont préservés. Les autres sont répartis.'
     )) return;
     setWorking(true);
     try {
@@ -73,7 +72,7 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
       alert(
         `Répartition effectuée.\n\n` +
         `${res.elevesPlaces} élèves placés.\n` +
-        `${res.elevesIgnores} ignorés (testeur / niveau 0 / non convoqués).`
+        `${res.elevesIgnores} ignorés (testeur / niveau 0 / animateurs / non convoqués).`
       );
       await supabase.from('conseil_lutte_phases')
         .update({ repartition_faite: true }).eq('id', phase.id);
@@ -125,6 +124,26 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
     setWorkingProfs(false);
   };
 
+  const lancerRepartitionAnims = async () => {
+    if (!confirm(
+      'Répartir les animateurs déclarés qui n\'ont pas encore de groupe ?\n\n' +
+      'Ils seront placés 1 par groupe (dans l\'ordre étage → numéro). ' +
+      'Les groupes ayant déjà un·e animateur·rice sont ignorés.'
+    )) return;
+    setWorkingAnims(true);
+    try {
+      const res = await repartirAnimateurs({ phaseId: phase.id });
+      alert(
+        `Animateurs placés : ${res.animateursPlaces}\n` +
+        `Restants (pas assez de groupes libres) : ${res.animateursRestants}`
+      );
+      load();
+    } catch (e: any) {
+      alert('Erreur : ' + (e?.message || e));
+    }
+    setWorkingAnims(false);
+  };
+
   const toggleVerrou = async () => {
     const next = !edit.verrouille;
     setEdit({ ...edit, verrouille: next });
@@ -149,7 +168,6 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
         </button>
       </div>
 
-      {/* Réglages de la phase */}
       <div className="bg-white border rounded-lg p-4">
         <h2 className="text-lg font-bold text-gray-900 mb-4">{phase.nom}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -202,7 +220,6 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
         </div>
       </div>
 
-      {/* Onglets */}
       <div className="flex gap-2 border-b">
         {[
           { id: 'groupes', label: `Groupes (${groupes.length})` },
@@ -221,7 +238,6 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
         ))}
       </div>
 
-      {/* Contenu */}
       {loading ? (
         <div className="text-center py-8">Chargement…</div>
       ) : tab === 'groupes' ? (
@@ -241,15 +257,14 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
       ) : (
         <div className="space-y-6">
 
-          {/* ════ RÉPARTITION ÉLÈVES ════ */}
+          {/* Répartition élèves */}
           <div className="bg-white border rounded-lg p-6">
             <h3 className="text-base font-semibold text-gray-900 mb-2">
               Répartition automatique des élèves
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              Répartit tous les élèves convoqués (hors « testeur » et niveau 0) dans les {groupes.length} groupes.
-              Les élèves placés manuellement sont <strong>préservés</strong>. Les autres sont (re)distribués
-              selon les règles de cette phase.
+              Répartit tous les élèves convoqués (hors « testeur », niveau 0 et animateur·rice·s) dans les {groupes.length} groupes.
+              Les élèves placés manuellement sont <strong>préservés</strong>.
             </p>
             <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4 text-xs text-yellow-800">
               ⚠️ Action destructive : les affectations non-manuelles existantes pour cette phase seront remplacées.
@@ -266,7 +281,29 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
             )}
           </div>
 
-          {/* ════ RÉPARTITION PROFS ════ */}
+          {/* Répartition animateurs */}
+          <div className="bg-white border rounded-lg p-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">
+              Répartition des animateur·rice·s
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Place les élèves qui ont déclaré vouloir être animateur·rice et qui n'ont pas encore de groupe.
+              <strong> 1 animateur·rice par groupe</strong>, dans l'ordre étage → numéro.
+              Les groupes ayant déjà un·e animateur·rice sont ignorés.
+            </p>
+            <button
+              onClick={lancerRepartitionAnims}
+              disabled={workingAnims || edit.verrouille || groupes.length === 0}
+              className="px-4 py-2 bg-emerald-600 text-white text-sm rounded hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {workingAnims ? 'Distribution…' : 'Répartir les animateur·rice·s'}
+            </button>
+            {edit.verrouille && (
+              <p className="text-xs text-red-600 mt-2">Phase verrouillée — déverrouillez d'abord.</p>
+            )}
+          </div>
+
+          {/* Répartition profs */}
           <div className="bg-white border rounded-lg p-6 space-y-4">
             <div>
               <h3 className="text-base font-semibold text-gray-900 mb-2">
@@ -356,11 +393,6 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
                 </span>
               </span>
             </label>
-
-            <div className="bg-blue-50 border border-blue-200 rounded p-3 text-xs text-blue-800">
-              Les profs déjà placés ne sont pas déplacés si « effacer » est décoché.
-              Un prof déjà affecté est ignoré pour éviter les doublons.
-            </div>
 
             <button
               onClick={lancerProfsAuto}

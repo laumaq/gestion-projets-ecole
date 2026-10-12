@@ -161,23 +161,17 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
 
   const quitterGroupe = async () => {
     if (!groupe) return;
-    if (!confirm(
-      'Quitter ce groupe ?\n\n' +
-      'Vous pourrez en rejoindre un autre en tant qu\'animateur·rice.'
-    )) return;
+    if (!confirm('Quitter ce groupe ? Vous pourrez en rejoindre un autre.')) return;
 
     setSaving(true);
     try {
-      // 1. Retirer la nomination animateur si elle existe
       if (estAnimateur) {
         await supabase
           .from('conseil_lutte_animateurs')
-          .delete()
-          .eq('groupe_id', groupe.id)
+          .update({ groupe_id: null })
           .eq('student_matricule', parseInt(userId));
       }
 
-      // 2. Retirer le membre
       await supabase
         .from('conseil_lutte_membres')
         .delete()
@@ -186,7 +180,7 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
         .eq('participant_type', userType);
 
       setSaving(false);
-      setTick(t => t + 1); // provoque un rechargement → ChoisirGroupe
+      setTick(t => t + 1);
     } catch (e: any) {
       alert('Erreur : ' + (e?.message || e));
       setSaving(false);

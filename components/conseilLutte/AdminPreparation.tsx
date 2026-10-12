@@ -184,16 +184,22 @@ export default function AdminPreparation({ config, phases, onRefresh }: Props) {
         return;
       }
 
-      // 5. Upsert
+      // 5. Insertion (nouveau schéma : PK = student_matricule)
       const rows = tousGroupes.map(g => ({
-        groupe_id: g.id,
         student_matricule: parseInt(parGroupe[g.id][0]),
+        groupe_id: g.id,
         nomme_par: 'admin',
       }));
 
+      const matricules = rows.map(r => r.student_matricule);
+      await supabase
+        .from('conseil_lutte_animateurs')
+        .delete()
+        .in('student_matricule', matricules);
+
       const { error } = await supabase
         .from('conseil_lutte_animateurs')
-        .upsert(rows, { onConflict: 'groupe_id' });
+        .insert(rows);
       if (error) throw error;
 
       alert(`${rows.length} animateur${rows.length > 1 ? 's' : ''} nommé${rows.length > 1 ? 's' : ''}.`);

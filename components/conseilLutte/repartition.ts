@@ -2,10 +2,6 @@
 
 import { supabase } from '@/lib/supabase';
 
-// ---------------------------------------------------------------------------
-// Helpers génériques
-// ---------------------------------------------------------------------------
-
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -30,7 +26,6 @@ function trierGroupesParLocal(groupes: any[]) {
   });
 }
 
-// "HH:MM" → minutes depuis minuit
 function hm2min(s: string): number {
   if (!s) return -1;
   const sep = s.includes(':') ? ':' : (s.includes('h') ? 'h' : null);
@@ -84,6 +79,12 @@ export async function repartirAuto({
     }
   }
 
+  // Charger les animateurs déclarés (pour les exclure)
+  const { data: anims } = await supabase
+    .from('conseil_lutte_animateurs')
+    .select('student_matricule');
+  const animateursSet = new Set((anims || []).map(a => a.student_matricule));
+
   const eleves: any[] = [];
   let from = 0;
   const PAGE = 500;
@@ -98,6 +99,7 @@ export async function repartirAuto({
     for (const s of data) {
       if (s.nom?.toLowerCase().includes('testeur')) continue;
       if (!s.niveau || s.niveau === '0') continue;
+      if (animateursSet.has(s.matricule)) continue;
       eleves.push(s);
     }
     if (data.length < PAGE) break;
@@ -286,25 +288,16 @@ function dispatcherDispersees(pool: any[], groupeIds: string[], capaciteDe: (id:
 // ---------------------------------------------------------------------------
 
 export interface FenetreHoraire {
-  debut: string; // 'HH:MM'
-  fin: string;   // 'HH:MM'
+  debut: string;
+  fin: string;
 }
 
 export interface AssignerProfsParams {
   phaseId: string;
   anneeScolaire: string;
-
-  // Combien d'heures minimum dans la fenêtre pour être éligible
   minHeures: number;
-
-  // Fenêtre : soit celle de la phase, soit manuelle (choix dans l'UI admin)
   fenetre: FenetreHoraire;
-
-  // Jour concerné ('mardi', 'lundi', ...) — cohérent avec courses.jour
   jour: string;
-
-  // Si true : efface les profs non-manuels déjà placés avant de recalculer.
-  // Si false : ajoute seulement aux groupes qui n'ont pas encore de prof.
   reset?: boolean;
 }
 
@@ -316,15 +309,9 @@ export interface AssignerProfsResult {
 
 export async function assignerProfsAuto(params: AssignerProfsParams): Promise<AssignerProfsResult> {
   const {
-    phaseId,
-    anneeScolaire,
-    minHeures,
-    fenetre,
-    jour,
-    reset = false,
+    phaseId, anneeScolaire, minHeures, fenetre, jour, reset = false,
   } = params;
 
-  // 1. Groupes de la phase, triés par local
   const { data: groupes, error: gErr } = await supabase
     .from('conseil_lutte_groupes')
     .select(`id, nom, localisation_fixe (id, etage)`)
@@ -334,7 +321,6 @@ export async function assignerProfsAuto(params: AssignerProfsParams): Promise<As
 
   const groupesTries = trierGroupesParLocal(groupes);
 
-  // 2. (Optionnel) Reset : supprimer tous les profs non-manuels des groupes de la phase
   if (reset) {
     const { data: existants } = await supabase
       .from('conseil_lutte_membres')
@@ -351,7 +337,6 @@ export async function assignerProfsAuto(params: AssignerProfsParams): Promise<As
     }
   }
 
-  // 3. Charger les cours du jour (pagination)
   const courses: any[] = [];
   let from = 0;
   const PAGE = 500;
@@ -373,7 +358,6 @@ export async function assignerProfsAuto(params: AssignerProfsParams): Promise<As
     from += data.length;
   }
 
-  // 4. Calculer, pour chaque prof, combien de plages chevauchent la fenêtre
   const fenD = hm2min(fenetre.debut);
   const fenF = hm2min(fenetre.fin);
   if (fenD < 0 || fenF < 0 || fenF <= fenD) throw new Error('Fenêtre horaire invalide.');
@@ -383,7 +367,6 @@ export async function assignerProfsAuto(params: AssignerProfsParams): Promise<As
     const d = hm2min(c.heure_debut);
     const f = hm2min(c.heure_fin);
     if (d < 0 || f < 0) continue;
-    // Chevauchement strict : [d, f[ ∩ [fenD, fenF[ ≠ ∅
     if (d >= fenF || f <= fenD) continue;
 
     let ids: any[] = [];
@@ -395,7 +378,6 @@ export async function assignerProfsAuto(params: AssignerProfsParams): Promise<As
     }
   }
 
-  // 5. Retenir les profs avec >= minHeures plages
   const idsEligibles = Array.from(compteParProf.entries())
     .filter(([_, n]) => n >= minHeures)
     .map(([id]) => id);
@@ -404,7 +386,6 @@ export async function assignerProfsAuto(params: AssignerProfsParams): Promise<As
     return { profsEligibles: 0, profsPlaces: 0, profsIgnores: 0 };
   }
 
-  // 6. Ne garder que les employees dont le job est 'prof'
   const { data: profs, error: pErr } = await supabase
     .from('employees')
     .select('id, nom, prenom')
@@ -414,7 +395,6 @@ export async function assignerProfsAuto(params: AssignerProfsParams): Promise<As
 
   const eligibles = profs || [];
 
-  // 7. Compter les profs déjà présents dans chaque groupe (manuels + auto existants)
   const { data: profsEnPlace } = await supabase
     .from('conseil_lutte_membres')
     .select('groupe_id, participant_id')
@@ -429,17 +409,13 @@ export async function assignerProfsAuto(params: AssignerProfsParams): Promise<As
     dejaAffectes.add(m.participant_id);
   });
 
-  // 8. Retirer les profs déjà placés (où qu'ils soient) — pour ne pas faire de doublons
   const aPlacer = eligibles.filter(p => !dejaAffectes.has(p.id));
   const profsIgnores = eligibles.length - aPlacer.length;
 
-  // 9. Distribution équitable : à chaque prof, on le met dans le groupe
-  //    qui a le MOINS de profs actuellement (avec l'ordre étage → numéro en cas d'égalité).
   const placements: any[] = [];
   const shuffled = shuffle(aPlacer);
 
   for (const prof of shuffled) {
-    // Trouver le groupe avec le minimum actuel
     let meilleur: any = groupesTries[0];
     let minCount = compteParGroupe[meilleur.id];
     for (const g of groupesTries) {
@@ -448,7 +424,6 @@ export async function assignerProfsAuto(params: AssignerProfsParams): Promise<As
         minCount = c;
         meilleur = g;
       }
-      // en cas d'égalité, on garde le premier (donc l'ordre étage → numéro est préservé)
     }
     placements.push({
       groupe_id: (meilleur as any).id,
@@ -472,5 +447,100 @@ export async function assignerProfsAuto(params: AssignerProfsParams): Promise<As
     profsEligibles: eligibles.length,
     profsPlaces: placements.length,
     profsIgnores,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// 3. Répartition des ANIMATEURS déclarés
+// ---------------------------------------------------------------------------
+
+export async function repartirAnimateurs(params: {
+  phaseId: string;
+}): Promise<{ animateursPlaces: number; animateursRestants: number }> {
+  const { phaseId } = params;
+
+  const { data: groupes, error: gErr } = await supabase
+    .from('conseil_lutte_groupes')
+    .select(`id, nom, localisation_fixe (id, etage)`)
+    .eq('phase_id', phaseId);
+  if (gErr) throw gErr;
+  if (!groupes || groupes.length === 0) throw new Error('Aucun groupe.');
+  const groupesTries = trierGroupesParLocal(groupes);
+
+  // Groupes qui ont déjà un animateur (toutes phases confondues)
+  const { data: groupesPris } = await supabase
+    .from('conseil_lutte_animateurs')
+    .select('groupe_id')
+    .not('groupe_id', 'is', null);
+  const groupesAvecAnim = new Set((groupesPris || []).map(a => a.groupe_id));
+
+  // Animateurs déclarés sans groupe
+  const { data: anims, error: aErr } = await supabase
+    .from('conseil_lutte_animateurs')
+    .select('student_matricule')
+    .is('groupe_id', null);
+  if (aErr) throw aErr;
+  if (!anims || anims.length === 0) {
+    return { animateursPlaces: 0, animateursRestants: 0 };
+  }
+
+  const { data: membres } = await supabase
+    .from('conseil_lutte_membres')
+    .select('participant_id')
+    .in('groupe_id', groupesTries.map((g: any) => g.id))
+    .eq('participant_type', 'student');
+  const dejaPlaces = new Set((membres || []).map(m => parseInt(m.participant_id)));
+
+  const matricules = anims
+    .map(a => a.student_matricule)
+    .filter(m => !dejaPlaces.has(m));
+  if (matricules.length === 0) {
+    return { animateursPlaces: 0, animateursRestants: 0 };
+  }
+
+  const { data: eleves } = await supabase
+    .from('students')
+    .select('matricule, nom, prenom, classe, niveau')
+    .in('matricule', matricules);
+
+  const eligibles = (eleves || []).filter(s =>
+    !s.nom?.toLowerCase().includes('testeur') &&
+    s.niveau && s.niveau !== '0'
+  );
+
+  const placements: any[] = [];
+  let idxAnim = 0;
+  for (const g of groupesTries) {
+    if (idxAnim >= eligibles.length) break;
+    if (groupesAvecAnim.has((g as any).id)) continue;
+    const eleve = eligibles[idxAnim];
+    placements.push({
+      groupe_id: (g as any).id,
+      participant_id: eleve.matricule.toString(),
+      participant_type: 'student',
+      manuel: true,
+    });
+    idxAnim++;
+  }
+
+  if (placements.length === 0) {
+    return { animateursPlaces: 0, animateursRestants: eligibles.length };
+  }
+
+  const { error: errIns } = await supabase
+    .from('conseil_lutte_membres')
+    .insert(placements);
+  if (errIns) throw errIns;
+
+  for (const p of placements) {
+    await supabase
+      .from('conseil_lutte_animateurs')
+      .update({ groupe_id: p.groupe_id })
+      .eq('student_matricule', parseInt(p.participant_id));
+  }
+
+  return {
+    animateursPlaces: placements.length,
+    animateursRestants: eligibles.length - placements.length,
   };
 }
