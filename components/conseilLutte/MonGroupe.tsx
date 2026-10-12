@@ -25,7 +25,7 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
   const [groupe, setGroupe] = useState<any>(null);
   const [local, setLocal] = useState<any>(null);
   const [membres, setMembres] = useState<any[]>([]);
-  const [animateurMatricule, setAnimateurMatricule] = useState<number | null>(null);
+  const [animateursMatricules, setAnimateursMatricules] = useState<number[]>([]);
   const [soutienOuvert, setSoutienOuvert] = useState<any>(null);
   const [mandats, setMandats] = useState<any[]>([]);
   const [presences, setPresences] = useState<Map<number, boolean>>(new Map());
@@ -118,13 +118,12 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
     });
     setMembres(tous);
 
-    // 4. Animateur
-    const { data: anim } = await supabase
+    // 4. Animateurs (peut y en avoir plusieurs)
+    const { data: anims } = await supabase
       .from('conseil_lutte_animateurs')
       .select('student_matricule')
-      .eq('groupe_id', groupeData.id)
-      .maybeSingle();
-    setAnimateurMatricule(anim?.student_matricule ?? null);
+      .eq('groupe_id', groupeData.id);
+    setAnimateursMatricules((anims || []).map(a => a.student_matricule));
 
     // 5. Soutien ouvert
     const { data: soutien } = await supabase
@@ -152,7 +151,7 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
       .eq('groupe_id', groupeData.id);
 
     const presenceMap = new Map<number, boolean>();
-    eleves.forEach(e => presenceMap.set(e.matricule, false)); // absent par défaut
+    eleves.forEach(e => presenceMap.set(e.matricule, false));
     (pres || []).forEach(p => presenceMap.set(p.student_matricule, p.present));
     setPresences(presenceMap);
 
@@ -319,7 +318,7 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
     );
   }
 
-  const estAnimateur = animateurMatricule !== null && String(animateurMatricule) === userId && userType === 'student';
+  const estAnimateur = userType === 'student' && animateursMatricules.includes(parseInt(userId));
   const phaseFreinetActuelle = groupe.phase_pedagogique || null;
   const infoPhase = PHASES_FREINET.find(p => p.key === phaseFreinetActuelle);
 
@@ -566,7 +565,7 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
             const isMe = m.id === userId &&
               ((userType === 'student' && m.type === 'student') ||
                (userType === 'employee' && m.type === 'employee'));
-            const isAnimateur = m.type === 'student' && m.matricule === animateurMatricule;
+            const isAnimateur = m.type === 'student' && animateursMatricules.includes(m.matricule);
             const present = m.type === 'student' ? (presences.get(m.matricule) || false) : false;
 
             return (
@@ -594,7 +593,6 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {/* Employés : bouton cliquable pour les élèves */}
                   {userType === 'employee' && m.type === 'student' && (
                     <button
                       onClick={() => togglePresence(m.matricule)}
@@ -609,7 +607,6 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
                       {present ? '✓' : '✕'}
                     </button>
                   )}
-                  {/* Élèves : pastille de statut non cliquable (RGPD, ils voient l'état mais ne modifient pas) */}
                   {userType === 'student' && m.type === 'student' && (
                     <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
                       present

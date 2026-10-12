@@ -1,4 +1,4 @@
-// /components\conseilLutte\AdminSuivi.tsx
+// /components/conseilLutte/AdminSuivi.tsx
 
 'use client';
 
@@ -63,14 +63,20 @@ export default function AdminSuivi({ config, phaseId }: Props) {
 
     const groupesIds = tousGroupes.map(g => g.id);
 
-    // Animateurs
+    // Animateurs — plusieurs par groupe possibles
     const { data: animateurs } = await supabase
       .from('conseil_lutte_animateurs')
       .select('groupe_id, student_matricule')
       .in('groupe_id', groupesIds);
-    const animMap: Record<string, number> = {};
-    (animateurs || []).forEach(a => { animMap[a.groupe_id] = a.student_matricule; });
-    const animMatricules = Object.values(animMap);
+
+    const animMap: Record<string, number[]> = {};
+    (animateurs || []).forEach(a => {
+      if (!a.groupe_id) return;
+      if (!animMap[a.groupe_id]) animMap[a.groupe_id] = [];
+      animMap[a.groupe_id].push(a.student_matricule);
+    });
+
+    const animMatricules = Array.from(new Set(Object.values(animMap).flat()));
     const { data: animEleves } = animMatricules.length > 0
       ? await supabase.from('students').select('matricule, nom, prenom, classe').in('matricule', animMatricules)
       : { data: [] as any[] };
@@ -110,8 +116,10 @@ export default function AdminSuivi({ config, phaseId }: Props) {
         .filter(Boolean);
       const elevesCount = (mbs || []).filter(m => m.groupe_id === g.id && m.participant_type === 'student').length;
 
-      const animMat = animMap[g.id];
-      const anim = animMat ? animInfo[animMat] : null;
+      const matriculesAnim = animMap[g.id] || [];
+      const animateursListe = matriculesAnim
+        .map(mat => animInfo[mat])
+        .filter(Boolean);
 
       const lf = Array.isArray(g.localisation_fixe) ? g.localisation_fixe[0] : g.localisation_fixe;
 
@@ -121,10 +129,9 @@ export default function AdminSuivi({ config, phaseId }: Props) {
         phase_nom: g.phase_nom,
         local: lf?.id,
         etage: lf?.etage,
-        animateur: anim,
+        animateurs: animateursListe,
         encadrants: encadsGroupe,
         eleves_count: elevesCount,
-        // Nouvelle valeur par défaut si NULL en base
         phase_pedagogique: g.phase_pedagogique || 'informer',
         soutien: soutienParGroupe[g.id] || null,
       };
@@ -171,7 +178,6 @@ export default function AdminSuivi({ config, phaseId }: Props) {
         </button>
       </div>
 
-      {/* 1. Soutiens ouverts (en haut, urgents) */}
       {groupesAvecSoutien.length > 0 && (
         <section>
           <div className="flex items-center gap-3 mb-3">
@@ -189,7 +195,6 @@ export default function AdminSuivi({ config, phaseId }: Props) {
         </section>
       )}
 
-      {/* 2. Phases I → V */}
       {PHASE_ORDRE.map(phaseKey => {
         const groupes = parPhase[phaseKey] || [];
         if (groupes.length === 0) return null;
@@ -245,8 +250,8 @@ function CarteGroupe({ d }: { d: any }) {
 
       <div className="text-xs text-gray-600 space-y-1 mb-2">
         <div>
-          👑 {d.animateur
-            ? `${d.animateur.prenom} ${d.animateur.nom} (${d.animateur.classe})`
+          👑 {d.animateurs.length > 0
+            ? d.animateurs.map((a: any) => `${a.prenom} ${a.nom}`).join(', ')
             : <span className="text-gray-400">Pas d'animateur</span>}
         </div>
         <div>
