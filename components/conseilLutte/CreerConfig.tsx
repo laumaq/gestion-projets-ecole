@@ -11,7 +11,7 @@ function todayLocal() {
 }
 
 export default function CreerConfig({ onCreated }: { onCreated: () => void }) {
-  const [nom, setNom] = useState('Conseil de lutte');
+  const [nom, setNom] = useState('Conseil de lutte citoyenne');
   const [date, setDate] = useState(todayLocal());
   const [intro, setIntro] = useState('');
   const [saving, setSaving] = useState(false);

@@ -165,7 +165,7 @@ const loadAll = async (type: string, id: string) => {
     return (
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-6 bg-gradient-to-r from-red-600 to-rose-600 rounded-lg p-6 text-white">
-          <h1 className="text-2xl font-bold">✊ Conseil de lutte — Config initiale</h1>
+          <h1 className="text-2xl font-bold">✊ Conseil de lutte citoyenne — Config initiale</h1>
           <p className="text-sm text-red-100">Aucune config pour aujourd'hui. Créez-en une.</p>
         </div>
         <CreerConfig onCreated={() => loadAll(userType, userId)} />
@@ -184,7 +184,7 @@ const loadAll = async (type: string, id: string) => {
       <div className="mb-6 bg-gradient-to-r from-red-600 to-rose-600 rounded-lg p-6 text-white">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold mb-1">✊ Conseil de lutte</h1>
+            <h1 className="text-2xl font-bold mb-1">✊ Conseil de lutte citoyenne</h1>
             <p className="text-sm text-red-100">
               {config.nom} — {new Date(config.date_evenement).toLocaleDateString('fr-FR', {
                 weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',

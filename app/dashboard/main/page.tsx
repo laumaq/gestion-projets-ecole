@@ -385,7 +385,7 @@ export default function DashboardPage() {
         <h2 className="text-lg font-semibold text-gray-700 mb-4">Outils disponibles</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
-          {/* Conseil de lutte */}
+          {/* Conseil de lutte  citoyenne*/}
           {conseilLutteVisible && (
             <Link href="/dashboard/conseil-de-lutte" className="block h-full">
               <div
@@ -408,7 +408,7 @@ export default function DashboardPage() {
                       <span className="text-lg leading-none">✊</span>
                     </div>
                     <h3 className="text-lg font-semibold text-white">
-                      Conseil de lutte
+                      Conseil de lutte citoyenne
                     </h3>
                   </div>
                   <p className="text-sm text-white/85 line-clamp-2 group-hover:line-clamp-none transition-all">

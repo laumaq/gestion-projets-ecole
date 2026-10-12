@@ -322,7 +322,7 @@ export default function AdminPreparation({ config, phases, onRefresh }: Props) {
             <div className="border-t pt-4">
               <h4 className="text-sm font-semibold text-gray-900 mb-2">Visibilité de la carte sur le dashboard</h4>
               <p className="text-xs text-gray-500 mb-3">
-                La carte « Conseil de lutte » apparaît sur le dashboard entre ces deux dates (incluses).
+                La carte « Conseil de lutte citoyenne » apparaît sur le dashboard entre ces deux dates (incluses).
                 Vide = toujours visible pour ceux qui ont accès.
               </p>
               <div className="grid grid-cols-2 gap-3">
