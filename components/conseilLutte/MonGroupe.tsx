@@ -337,20 +337,22 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
               Votre groupe
             </div>
             <h2 className="text-2xl font-bold text-gray-900">{groupe.nom}</h2>
-            {estAnimateur && (
-              <div className="mt-1 flex items-center gap-2">
-                <span className="inline-block text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-medium">
-                  👑 Vous êtes animateur·rice de ce groupe
-                </span>
-                <button
-                  onClick={quitterGroupe}
-                  disabled={saving}
-                  className="text-xs text-red-600 hover:text-red-800 underline disabled:opacity-50"
-                >
-                  Quitter le groupe
-                </button>
-              </div>
-            )}
+              {(estAnimateur || userType === 'employee') && (
+                <div className="mt-1 flex items-center gap-2 flex-wrap">
+                  {estAnimateur && (
+                    <span className="inline-block text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-medium">
+                      👑 Vous êtes animateur·rice de ce groupe
+                    </span>
+                  )}
+                  <button
+                    onClick={quitterGroupe}
+                    disabled={saving}
+                    className="text-xs text-red-600 hover:text-red-800 underline disabled:opacity-50"
+                  >
+                    Quitter le groupe
+                  </button>
+                </div>
+              )}
           </div>
           <div className="text-right">
             <div className="text-xs uppercase text-gray-500 font-semibold">Local</div>
