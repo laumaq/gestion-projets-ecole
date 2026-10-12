@@ -35,17 +35,53 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
   const doSearch = async () => {
     setSearching(true);
     const q = searchTerm.trim();
-    const { data } = await supabase
+
+    // Recherche élèves
+    const elevesP = supabase
       .from('students')
       .select('matricule, nom, prenom, classe, niveau')
       .or(`nom.ilike.%${q}%,prenom.ilike.%${q}%,classe.ilike.%${q}%`)
-      .ilike('nom', `%${q}%`) // évite les "testeur" plus bas on filtre en JS
       .not('niveau', 'eq', '0')
-      .limit(30);
+      .limit(20);
 
-    // Exclure Testeur explicitement
-    const filtrés = (data || []).filter(s => !s.nom.toLowerCase().includes('testeur'));
-    setResultats(filtrés);
+    // Recherche employés
+    const employesP = supabase
+      .from('employees')
+      .select('id, nom, prenom, job, initiale')
+      .or(`nom.ilike.%${q}%,prenom.ilike.%${q}%`)
+      .limit(20);
+
+    const [elevesRes, employesRes] = await Promise.all([elevesP, employesP]);
+
+    const eleves = (elevesRes.data || [])
+      .filter(s => !s.nom.toLowerCase().includes('testeur'))
+      .map(s => ({
+        id: s.matricule.toString(),
+        matricule: s.matricule,
+        nom: s.nom,
+        prenom: s.prenom,
+        classe: s.classe,
+        niveau: s.niveau,
+        type: 'student' as const,
+      }));
+
+    const employes = (employesRes.data || [])
+      .map(e => ({
+        id: e.id,
+        nom: e.nom,
+        prenom: e.prenom,
+        job: e.job,
+        initiale: e.initiale,
+        roleLabel: e.job === 'educ' ? 'Éducateur·rice' : (e.job === 'direction' ? 'Direction' : 'Prof'),
+        type: 'employee' as const,
+      }));
+
+    // Fusionner et trier alphabétiquement
+    const tous = [...eleves, ...employes].sort((a, b) => {
+      return (a.nom || '').localeCompare(b.nom || '');
+    });
+
+    setResultats(tous);
     setSearching(false);
   };
 
@@ -59,8 +95,12 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
     const employesIds = (mb || []).filter(m => m.participant_type === 'employee').map(m => m.participant_id);
 
     const [eRes, pRes] = await Promise.all([
-      elevesIds.length > 0 ? supabase.from('students').select('matricule, nom, prenom, classe').in('matricule', elevesIds) : Promise.resolve({ data: [] as any[] }),
-      employesIds.length > 0 ? supabase.from('employees').select('id, nom, prenom, job').in('id', employesIds) : Promise.resolve({ data: [] as any[] }),
+      elevesIds.length > 0
+        ? supabase.from('students').select('matricule, nom, prenom, classe').in('matricule', elevesIds)
+        : Promise.resolve({ data: [] as any[] }),
+      employesIds.length > 0
+        ? supabase.from('employees').select('id, nom, prenom, job').in('id', employesIds)
+        : Promise.resolve({ data: [] as any[] }),
     ]);
 
     const elevesMap: Record<string, any> = {};
@@ -74,7 +114,13 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
         return { ...m, nom: s?.nom, prenom: s?.prenom, classe: s?.classe, type: 'student' };
       } else {
         const p = profsMap[m.participant_id];
-        return { ...m, nom: p?.nom, prenom: p?.prenom, classe: p?.job === 'educ' ? 'Éducateur' : 'Prof', type: 'employee' };
+        return {
+          ...m,
+          nom: p?.nom,
+          prenom: p?.prenom,
+          classe: p?.job === 'educ' ? 'Éducateur' : (p?.job === 'direction' ? 'Direction' : 'Prof'),
+          type: 'employee',
+        };
       }
     }).sort((a, b) => {
       if (a.type === 'employee' && b.type !== 'employee') return -1;
@@ -85,30 +131,30 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
     setMembresParGroupe(prev => ({ ...prev, [groupeId]: enriched }));
   };
 
-  const assigner = async (student: any) => {
+  const assigner = async (item: any) => {
     if (verrouille) return;
     if (!selectionGroupe) { alert('Sélectionnez un groupe.'); return; }
 
-    const matriculeStr = student.matricule.toString();
+    const participantId = item.type === 'student' ? item.matricule.toString() : item.id;
 
-    // 1. L'élève est-il déjà dans un groupe de cette phase ?
+    // 1. L'élève/l'employé est-il déjà dans un groupe de cette phase ?
     const { data: existant } = await supabase
       .from('conseil_lutte_membres')
       .select(`id, groupe_id, manuel, conseil_lutte_groupes!inner(phase_id)`)
-      .eq('participant_id', matriculeStr)
-      .eq('participant_type', 'student')
+      .eq('participant_id', participantId)
+      .eq('participant_type', item.type)
       .eq('conseil_lutte_groupes.phase_id', phaseId);
 
     if (existant && existant.length > 0) {
-      if (!confirm(`${student.prenom} ${student.nom} est déjà dans un groupe de cette phase. Déplacer ?`)) return;
+      if (!confirm(`${item.prenom} ${item.nom} est déjà dans un groupe de cette phase. Déplacer ?`)) return;
       await supabase.from('conseil_lutte_membres').delete().in('id', existant.map(e => e.id));
     }
 
     // 2. Insertion
     await supabase.from('conseil_lutte_membres').insert({
       groupe_id: selectionGroupe,
-      participant_id: matriculeStr,
-      participant_type: 'student',
+      participant_id: participantId,
+      participant_type: item.type,
       manuel: true,
     });
 
@@ -134,25 +180,36 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Colonne gauche : recherche + résultats */}
       <div className="bg-white border rounded-lg p-4">
-        <h3 className="text-base font-semibold text-gray-900 mb-3">Rechercher un élève</h3>
+        <h3 className="text-base font-semibold text-gray-900 mb-3">
+          Rechercher un élève ou un membre du personnel
+        </h3>
         <input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Nom, prénom ou classe…"
+          placeholder="Nom, prénom, classe…"
           className="w-full px-3 py-2 border rounded-lg text-sm mb-3"
         />
         {searching && <div className="text-xs text-gray-400 mb-2">Recherche…</div>}
         <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-          {resultats.map(s => (
-            <div key={s.matricule} className="flex justify-between items-center p-2 bg-gray-50 rounded text-sm">
-              <div>
-                <div className="font-medium">{s.prenom} {s.nom}</div>
-                <div className="text-xs text-gray-500">{s.classe} • N{s.niveau}</div>
+          {resultats.map(r => (
+            <div
+              key={`${r.type}-${r.id}`}
+              className="flex justify-between items-center p-2 bg-gray-50 rounded text-sm"
+            >
+              <div className="min-w-0">
+                <div className="font-medium truncate">
+                  {r.type === 'employee' ? '👨‍🏫' : '👤'} {r.prenom} {r.nom}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {r.type === 'employee'
+                    ? r.roleLabel
+                    : `${r.classe} • N${r.niveau}`}
+                </div>
               </div>
               <button
-                onClick={() => assigner(s)}
+                onClick={() => assigner(r)}
                 disabled={verrouille || !selectionGroupe}
-                className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 flex-shrink-0 ml-2"
               >+ Ajouter</button>
             </div>
           ))}
@@ -180,15 +237,20 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
         </div>
         <div className="space-y-2 max-h-[60vh] overflow-y-auto">
           {(membresParGroupe[selectionGroupe] || []).map(m => (
-            <div key={m.id} className={`flex justify-between items-center p-2 rounded text-sm ${m.manuel ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'}`}>
-              <div>
-                <div className="font-medium">
+            <div
+              key={m.id}
+              className={`flex justify-between items-center p-2 rounded text-sm ${
+                m.manuel ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'
+              }`}
+            >
+              <div className="min-w-0">
+                <div className="font-medium truncate">
                   {m.type === 'employee' ? '👨‍🏫' : '👤'} {m.prenom} {m.nom}
                   {m.manuel && <span className="ml-2 text-xs text-purple-700">manuel</span>}
                 </div>
                 <div className="text-xs text-gray-500">{m.classe}</div>
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 flex-shrink-0">
                 <button
                   onClick={() => toggleManuel(m)}
                   disabled={verrouille}
