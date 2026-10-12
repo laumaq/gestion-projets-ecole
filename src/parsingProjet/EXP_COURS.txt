@@ -1,1458 +1,1400 @@
-﻿DUREE;MAT_CODE;MAT_LIBELLE;PROF_NOM;PROF_PRENOM;CLASSE;POND.;JOUR;H.DEBUT
-1h00;ALP Allemand;Activité Liée au Projet immersion allemande;RUESS;Céline;[3+4-LM1-DI];1;lundi;08h15
-2h00;ALP Allemand;Activité Liée au Projet immersion allemande;RUESS;Céline;[5+6-LM1-DI];1;mardi;11h00
-1h00;ALP Anglais;Activité Liée au Projet immersion anglaise;CARLYLE;Thomas;[3-LM1-AI];1;jeudi;16h10
-1h00;ALP Anglais;Activité Liée au Projet immersion anglaise;SACRE;Catherine;[4-LM1-AI];1;lundi;08h15
-1h00;ALP Anglais;Activité Liée au Projet immersion anglaise;SACRE;Catherine;[5-LM1-AI];1;vendredi;09h55
-2h00;ALP Anglais;Activité Liée au Projet immersion anglaise;SACRE;Catherine;[6-LM1-AI];1;vendredi;14h30
-1h00;ALP Anglais;Activité Liée au Projet immersion anglaise;SACRE;Catherine;<5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-E, <5PAT> <Option+LM1+LM2(+LM3)> SO4-AI-D, <5PAT> <Option+LM1+LM2(+LM3)> MA6-AI-D, <5PAT> <Option+LM1+LM2(+LM3)> MA6-AI-N, <5PAU> <Option+LM1+LM2(+LM3)> MA6-AI-N, <5PAU> <Option+LM1+LM2(+LM3)> MB4-AI-N, <5PAX> <Option+LM1+LM2(+LM3)> EC4-AI-N, <5PAX> <Option+LM1+LM2(+LM3)> SO4-AI-N, <5PAZ> <Option+LM1+LM2(+LM3)> MA6-AI-E, <5PAZ> <Option+LM1+LM2(+LM3)> ME4-AI-E, <5PAZ> <Option+LM1+LM2(+LM3)> EC4-AI-E, <5PAZ> <Option+LM1+LM2(+LM3)> SO4-AI-E, <5PAT> <Option+LM1+LM2(+LM3)> ML4-AI-E-D;1;mardi;16h10
-1h00;ALP Néerlandais;Activité Liée au Projet immersion néerlandaise;DONJEAN;Frederic;[3+4-LM1-NI];1;lundi;08h15
-1h00;ALP Néerlandais;Activité Liée au Projet immersion néerlandaise;DONJEAN;Frederic;[5+6-LM1-NI];1;vendredi;09h55
-1h00;ALP Néerlandais;Activité Liée au Projet immersion néerlandaise;DONJEAN;Frederic;[5+6-LM1-NI], <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC;1;mardi;11h50
-1h00;Imm. Allemand;Allemand immersion;DRECHSEL;Karoline;[1+3-LM1-DI];1;vendredi;11h50
-1h00;Imm. Allemand;Allemand immersion;DRECHSEL;Karoline;[1+3-LM1-DI];1;mardi;13h40
-1h00;Imm. Allemand;Allemand immersion;DRECHSEL;Karoline;[1+3-LM1-DI];1;mardi;14h30
-1h00;Imm. Allemand;Allemand immersion;DRECHSEL;Karoline;[1+3-LM1-DI];1;mardi;15h20
-1h00;Imm. Allemand;Allemand immersion;RUESS;Céline;[4+5+6-LM1-DI];1;lundi;09h05
-1h00;Imm. Allemand;Allemand immersion;RUESS;Céline;[4+5+6-LM1-DI];1;mercredi;09h55
-1h00;Imm. Allemand;Allemand immersion;RUESS;Céline;[4+5+6-LM1-DI];1;mercredi;11h00
-1h00;Imm. Allemand;Allemand immersion;RUESS;Céline;[4+5+6-LM1-DI];1;jeudi;11h00
-1h00;ALLEMAND LM2;Allemand LM2;HOLLENFELTZ;Olivier;[3+4-LM2-D];1;mercredi;08h15
-1h00;ALLEMAND LM2;Allemand LM2;HOLLENFELTZ;Olivier;[3+4-LM2-D];1;vendredi;09h05
-1h00;ALLEMAND LM2;Allemand LM2;HOLLENFELTZ;Olivier;[3+4-LM2-D];1;lundi;09h55
-1h00;ALLEMAND LM2;Allemand LM2;HOLLENFELTZ;Olivier;[3+4-LM2-D];1;vendredi;09h55
-1h00;ALLEMAND LM2;Allemand LM2;HOLLENFELTZ;Olivier;[5+6-LM2-D];1;mercredi;09h05
-1h00;ALLEMAND LM2;Allemand LM2;HOLLENFELTZ;Olivier;[5+6-LM2-D];1;lundi;13h40
-1h00;ALLEMAND LM2;Allemand LM2;HOLLENFELTZ;Olivier;[5+6-LM2-D];1;lundi;14h30
-1h00;ALLEMAND LM2;Allemand LM2;HOLLENFELTZ;Olivier;[5+6-LM2-D];1;jeudi;14h30
-2h00;ALLEMAND LM3;Allemand LM3;HOLLENFELTZ;Olivier;[5+6-LM3-D];1;vendredi;11h00
-1h00;ALLEMAND LM3;Allemand LM3;HOLLENFELTZ;Olivier;[5+6-LM3-D];1;lundi;15h20
-1h00;ALLEMAND LM3;Allemand LM3;HOLLENFELTZ;Olivier;[5+6-LM3-D];1;jeudi;15h20
-1h00;Imm. Anglais;Anglais immersion;CARLYLE;Thomas;[1-LM1-AI];1;mercredi;08h15
-1h00;Imm. Anglais;Anglais immersion;CARLYLE;Thomas;[1-LM1-AI];1;jeudi;08h15
-1h00;Imm. Anglais;Anglais immersion;CARLYLE;Thomas;[1-LM1-AI];1;vendredi;09h05
-1h00;Imm. Anglais;Anglais immersion;CARLYLE;Thomas;[1-LM1-AI];1;vendredi;09h55
-1h00;Imm. Anglais;Anglais immersion;CARLYLE;Thomas;[2-LM1-AI];1;lundi;09h05
-1h00;Imm. Anglais;Anglais immersion;CARLYLE;Thomas;[2-LM1-AI];1;lundi;11h00
-1h00;Imm. Anglais;Anglais immersion;CARLYLE;Thomas;[2-LM1-AI];1;mercredi;11h00
-1h00;Imm. Anglais;Anglais immersion;CARLYLE;Thomas;[2-LM1-AI];1;jeudi;11h00
-1h00;Imm. Anglais;Anglais immersion;CARLYLE;Thomas;[3-LM1-AI];1;jeudi;09h05
-1h00;Imm. Anglais;Anglais immersion;CARLYLE;Thomas;[3-LM1-AI];1;jeudi;09h55
-1h00;Imm. Anglais;Anglais immersion;CARLYLE;Thomas;[3-LM1-AI];1;mardi;15h20
-1h00;Imm. Anglais;Anglais immersion;CARLYLE;Thomas;[3-LM1-AI];1;mardi;16h10
-1h00;Imm. Anglais;Anglais immersion;SACRE;Catherine;[4-LM1-AI];1;jeudi;09h05
-1h00;Imm. Anglais;Anglais immersion;SACRE;Catherine;[4-LM1-AI];1;jeudi;09h55
-1h00;Imm. Anglais;Anglais immersion;SACRE;Catherine;[4-LM1-AI];1;vendredi;13h40
-1h00;Imm. Anglais;Anglais immersion;SACRE;Catherine;[4-LM1-AI];1;mardi;15h20
-1h00;Imm. Anglais;Anglais immersion;SACRE;Catherine;[5-LM1-AI];1;lundi;09h05
-1h00;Imm. Anglais;Anglais immersion;SACRE;Catherine;[5-LM1-AI];1;mercredi;09h55
-1h00;Imm. Anglais;Anglais immersion;SACRE;Catherine;[5-LM1-AI];1;mercredi;11h00
-1h00;Imm. Anglais;Anglais immersion;SACRE;Catherine;[5-LM1-AI];1;jeudi;11h00
-2h00;Imm. Anglais;Anglais immersion;SACRE;Catherine;[6-LM1-AI];1;lundi;11h00
-1h00;Imm. Anglais;Anglais immersion;SACRE;Catherine;[6-LM1-AI];1;jeudi;11h50
-1h00;Imm. Anglais;Anglais immersion;SACRE;Catherine;[6-LM1-AI];1;jeudi;13h40
-1h00;ANGLAIS LM1;Anglais LM1;BROUNS;Marie;[4-LM1-A2];1;mardi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;BROUNS;Marie;[4-LM1-A2];1;mercredi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;BROUNS;Marie;[4-LM1-A2];1;mercredi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;BROUNS;Marie;[4-LM1-A2];1;jeudi;16h10
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[1-LM1-A2];1;mercredi;08h15
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[1-LM1-A2];1;mercredi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[1-LM1-A2];1;vendredi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[1-LM1-A2];1;vendredi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[1-LM1-A3];1;mardi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[1-LM1-A3];1;mercredi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[1-LM1-A3];1;jeudi;13h40
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[1-LM1-A3];1;jeudi;15h20
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[1-LM1-A4];1;mardi;08h15
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[1-LM1-A4];1;mercredi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[1-LM1-A4];1;vendredi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[1-LM1-A4];1;mardi;11h50
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[2-LM1-A1];1;jeudi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[2-LM1-A1];1;jeudi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[2-LM1-A1];1;mardi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[2-LM1-A1];1;mardi;14h30
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[2-LM1-A2];1;vendredi;11h50
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[2-LM1-A2];1;mardi;13h40
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[2-LM1-A3];1;vendredi;08h15
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[2-LM1-A3];1;mardi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[2-LM1-A3];1;jeudi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;DI GERONIMO;Giuseppina;[2-LM1-A3];1;jeudi;11h50
-1h00;ANGLAIS LM1;Anglais LM1;HOLLENFELTZ;Olivier;[5-LM1-A5];1;lundi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;HOLLENFELTZ;Olivier;[5-LM1-A5];1;jeudi;11h00
-2h00;ANGLAIS LM1;Anglais LM1;HOLLENFELTZ;Olivier;[6-LM1-A3];1;lundi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;HOLLENFELTZ;Olivier;[6-LM1-A3];1;jeudi;11h50
-1h00;ANGLAIS LM1;Anglais LM1;HOLLENFELTZ;Olivier;[6-LM1-A3];1;jeudi;13h40
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[4-LM1-A3];1;jeudi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[4-LM1-A3];1;jeudi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[4-LM1-A3];1;lundi;13h40
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[4-LM1-A3];1;mardi;14h30
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[5-LM1-A1];1;jeudi;08h15
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[5-LM1-A1];1;mardi;13h40
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[5-LM1-A4];1;lundi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[5-LM1-A4];1;mercredi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[5-LM1-A4];1;mercredi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[5-LM1-A4];1;jeudi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[5-LM2-A2];1;mercredi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[5-LM2-A2];1;lundi;14h30
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[5-LM2-A2];1;jeudi;14h30
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[5-LM2-A2];1;lundi;15h20
-2h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[6-LM1-A5];1;lundi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[6-LM1-A5];1;jeudi;11h50
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS;Laetitia;[6-LM1-A5];1;jeudi;13h40
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS, RECKMANS;Laetitia, Sandy;[6-LM1-A1];1;mercredi;08h15
-2h00;ANGLAIS LM1;Anglais LM1;KEVERS, RECKMANS;Laetitia, Sandy;[6-LM1-A1];1;mardi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;KEVERS, RECKMANS;Laetitia, Sandy;[6-LM1-A1];1;jeudi;16h10
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[4-LM1-A1];1;mardi;13h40
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[4-LM1-A1];1;mardi;14h30
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[4-LM1-A1];1;jeudi;15h20
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[4-LM1-A1];1;jeudi;16h10
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[4-LM1-A5];1;jeudi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[4-LM1-A5];1;jeudi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[4-LM1-A5];1;mardi;15h20
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[4-LM1-A5];1;mardi;16h10
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[5-LM1-A1];1;lundi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[5-LM1-A1];1;lundi;15h20
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[5-LM1-A3];1;lundi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[5-LM1-A3];1;mercredi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[5-LM1-A3];1;mercredi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[5-LM1-A3];1;jeudi;11h00
-2h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[6-LM1-A4];1;lundi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[6-LM1-A4];1;jeudi;11h50
-1h00;ANGLAIS LM1;Anglais LM1;NOLF;Caroline;[6-LM1-A4];1;jeudi;13h40
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[1-LM1-A1];1;jeudi;08h15
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[1-LM1-A1];1;vendredi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[1-LM1-A1];1;vendredi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[1-LM1-A1];1;jeudi;11h50
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[2-LM1-A2];1;vendredi;08h15
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[2-LM1-A2];1;mardi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[2-LM1-A4];1;mardi;08h15
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[2-LM1-A4];1;mardi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[2-LM1-A4];1;jeudi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[2-LM1-A4];1;jeudi;13h40
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[3-LM1-A2];1;mardi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[3-LM1-A2];1;mardi;14h30
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[3-LM1-A2];1;jeudi;14h30
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[3-LM1-A2];1;jeudi;15h20
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[3-LM1-A4];1;jeudi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[3-LM1-A4];1;jeudi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[3-LM1-A4];1;mardi;15h20
-1h00;ANGLAIS LM1;Anglais LM1;THONNARD;Dominique;[3-LM1-A4];1;mardi;16h10
-1h00;ANGLAIS LM1;Anglais LM1;VANHERLE;Camille;[4-LM1-A4];1;jeudi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;VANHERLE;Camille;[4-LM1-A4];1;jeudi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;VANHERLE;Camille;[4-LM1-A4];1;mardi;15h20
-1h00;ANGLAIS LM1;Anglais LM1;VANHERLE;Camille;[4-LM1-A4];1;mardi;16h10
-1h00;ANGLAIS LM1;Anglais LM1;VANHERLE;Camille;[5-LM1-A2];1;mercredi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;VANHERLE;Camille;[5-LM1-A2];1;mardi;13h40
-1h00;ANGLAIS LM1;Anglais LM1;VANHERLE;Camille;[5-LM1-A2];1;mardi;14h30
-1h00;ANGLAIS LM1;Anglais LM1;VANHERLE;Camille;[5-LM1-A2];1;lundi;15h20
-1h00;ANGLAIS LM1;Anglais LM1;VANHERLE;Camille;[5-LM1-A5];1;mercredi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;VANHERLE;Camille;[5-LM1-A5];1;vendredi;11h00
-2h00;ANGLAIS LM1;Anglais LM1;VANHERLE;Camille;[6-LM1-A2];1;lundi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;VANHERLE;Camille;[6-LM1-A2];1;jeudi;11h50
-1h00;ANGLAIS LM1;Anglais LM1;VANHERLE;Camille;[6-LM1-A2];1;jeudi;13h40
-1h00;ANGLAIS LM1;Anglais LM1;ZOES;Dyonissis;[3-LM1-A1];1;lundi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;ZOES;Dyonissis;[3-LM1-A1];1;vendredi;11h00
-1h00;ANGLAIS LM1;Anglais LM1;ZOES;Dyonissis;[3-LM1-A1];1;lundi;11h50
-1h00;ANGLAIS LM1;Anglais LM1;ZOES;Dyonissis;[3-LM1-A1];1;mardi;14h30
-1h00;ANGLAIS LM1;Anglais LM1;ZOES;Dyonissis;[3-LM1-A3];1;jeudi;09h05
-1h00;ANGLAIS LM1;Anglais LM1;ZOES;Dyonissis;[3-LM1-A3];1;jeudi;09h55
-1h00;ANGLAIS LM1;Anglais LM1;ZOES;Dyonissis;[3-LM1-A3];1;mardi;15h20
-1h00;ANGLAIS LM1;Anglais LM1;ZOES;Dyonissis;[3-LM1-A3];1;mardi;16h10
-1h00;ANGLAIS LM2;Anglais LM2;NOLF;Caroline;[5-LM2-A1];1;mercredi;09h05
-1h00;ANGLAIS LM2;Anglais LM2;NOLF;Caroline;[5-LM2-A1];1;lundi;13h40
-1h00;ANGLAIS LM2;Anglais LM2;NOLF;Caroline;[5-LM2-A1];1;lundi;14h30
-1h00;ANGLAIS LM2;Anglais LM2;NOLF;Caroline;[5-LM2-A1];1;jeudi;14h30
-1h00;ANGLAIS LM2;Anglais LM2;VANHERLE;Camille;[4-LM2-A];1;mercredi;08h15
-1h00;ANGLAIS LM2;Anglais LM2;VANHERLE;Camille;[4-LM2-A];1;vendredi;09h05
-1h00;ANGLAIS LM2;Anglais LM2;VANHERLE;Camille;[4-LM2-A];1;lundi;09h55
-1h00;ANGLAIS LM2;Anglais LM2;VANHERLE;Camille;[4-LM2-A];1;vendredi;09h55
-1h00;ANGLAIS LM2;Anglais LM2;VANHERLE;Camille;[6-LM2-A];1;lundi;08h15
-2h00;ANGLAIS LM2;Anglais LM2;VANHERLE;Camille;[6-LM2-A];1;mardi;08h15
-1h00;ANGLAIS LM2;Anglais LM2;VANHERLE;Camille;[6-LM2-A];1;lundi;16h10
-1h00;ANGLAIS LM2;Anglais LM2;ZOES;Dyonissis;[3-LM2-A];1;mercredi;08h15
-1h00;ANGLAIS LM2;Anglais LM2;ZOES;Dyonissis;[3-LM2-A];1;vendredi;09h05
-1h00;ANGLAIS LM2;Anglais LM2;ZOES;Dyonissis;[3-LM2-A];1;lundi;09h55
-1h00;ANGLAIS LM2;Anglais LM2;ZOES;Dyonissis;[3-LM2-A];1;vendredi;09h55
-10h00;AUTRE ECOLE;Autre école;HERVELLE;Wendy;;0;jeudi;08h15
-4h00;AUTRE ECOLE;Autre école;HERVELLE;Wendy;;0;mardi;13h40
-4h00;ACADEMIE;Autre école Académie;ALASMAWY;Ahmed;;0;mercredi;08h15
-3h00;ACADEMIE;Autre école Académie;ALASMAWY;Ahmed;;0;lundi;09h55
-4h00;ACADEMIE;Autre école Académie;ALASMAWY;Ahmed;;0;lundi;13h40
-2h00;ACADEMIE;Autre école Académie;GERARD;Vincent;;0;mercredi;08h15
-2h00;ACADEMIE;Autre école Académie;GERARD;Vincent;;0;lundi;13h40
-2h00;ACADEMIE;Autre école Académie;GERARD;Vincent;;0;jeudi;13h40
-2h00;ACADEMIE;Autre école Académie;PIRSON;Axelle;;0;jeudi;08h15
-2h00;ACADEMIE;Autre école Académie;PIRSON;Axelle;;0;mardi;11h00
-2h00;ACADEMIE;Autre école Académie;PIRSON;Axelle;;0;jeudi;15h20
-2h00;DESTENAY;Autre école AMD;BEBRONNE;Romain;;0;lundi;08h15
-5h00;DESTENAY;Autre école AMD;BEBRONNE;Romain;;0;mardi;08h15
-3h00;DESTENAY;Autre école AMD;BEBRONNE;Romain;;0;mercredi;08h15
-4h00;DESTENAY;Autre école AMD;BEBRONNE;Romain;;0;vendredi;08h15
-3h00;DESTENAY;Autre école AMD;BEBRONNE;Romain;;0;jeudi;09h55
-2h00;DESTENAY;Autre école AMD;BEBRONNE;Romain;;0;mardi;13h40
-2h00;DESTENAY;Autre école AMD;BEBRONNE;Romain;;0;jeudi;13h40
-5h00;DESTENAY;Autre école AMD;BORLEE;Philippe;;0;lundi;08h15
-5h00;DESTENAY;Autre école AMD;BORLEE;Philippe;;0;mardi;08h15
-5h00;DESTENAY;Autre école AMD;BORLEE;Philippe;;0;mercredi;08h15
-2h00;DESTENAY;Autre école AMD;BORLEE;Philippe;;0;jeudi;08h15
-2h00;DESTENAY;Autre école AMD;DULLIER;Cyrielle;;0;jeudi;08h15
-2h00;DESTENAY;Autre école AMD;FOMETIO MBOO;Idelette;;1;mardi;08h15
-5h00;DESTENAY;Autre école AMD;GRIBOMONT;Antoine;;1;vendredi;08h15
-2h00;DESTENAY;Autre école AMD;GRIBOMONT;Antoine;;1;mardi;09h55
-2h00;DESTENAY;Autre école AMD;GRIBOMONT;Antoine;;1;jeudi;12h40
-3h00;DESTENAY;Autre école AMD;GRIBOMONT;Antoine;;1;vendredi;13h40
-2h00;DESTENAY;Autre école AMD;JEANGILLE;Lionel;;0;lundi;11h00
-3h00;DESTENAY;Autre école AMD;JEANGILLE;Lionel;;0;mardi;13h40
-2h00;DESTENAY;Autre école AMD;JEANGILLE;Lionel;;0;jeudi;13h40
-2h00;DESTENAY;Autre école AMD;MARECHAL;Anthony;;0;mardi;08h15
-3h00;DESTENAY;Autre école AMD;MARECHAL;Anthony;;0;vendredi;09h55
-2h00;DESTENAY;Autre école AMD;MARECHAL;Anthony;;0;mercredi;11h50
-3h00;DESTENAY;Autre école AMD;MARECHAL;Anthony;;0;jeudi;13h40
-3h00;DESTENAY;Autre école AMD;MARECHAL;Anthony;;0;vendredi;13h40
-2h00;DESTENAY;Autre école AMD;RECKMANS;Sandy;;0;jeudi;09h55
-2h00;DESTENAY;Autre école AMD;RECKMANS;Sandy;;0;mercredi;11h00
-2h00;DESTENAY;Autre école AMD;RECKMANS;Sandy;;0;lundi;14h30
-2h00;DESTENAY;Autre école AMD;RECKMANS;Sandy;;0;vendredi;14h30
-3h00;DESTENAY;Autre école AMD;SEDRY;Jamal;;0;lundi;09h55
-3h00;DESTENAY;Autre école AMD;SEDRY;Jamal;;0;mercredi;09h55
-3h00;DESTENAY;Autre école AMD;SEDRY;Jamal;;0;lundi;13h40
-1h00;DESTENAY;Autre école AMD;SEDRY;Jamal;;0;vendredi;15h20
-1h00;DESTENAY;Autre école AMD;TSHIMANGA;Jean-Bell;;1;vendredi;13h40
-2h00;DESTENAY;Autre école AMD;ZOES;Dyonissis;;0;mardi;09h55
-2h00;DESTENAY;Autre école AMD;ZOES;Dyonissis;;0;mercredi;09h55
-2h00;DESTENAY;Autre école AMD;ZOES;Dyonissis;;0;lundi;13h40
-2h00;DESTENAY;Autre école AMD;ZOES;Dyonissis;;0;jeudi;14h30
-5h00;CESLM;Autre école CESLM;FINCKEN;Caroline;;0;mardi;08h15
-6h00;CESLM;Autre école CESLM;FINCKEN;Caroline;;0;mercredi;08h15
-2h00;CESLM;Autre école CESLM;FINCKEN;Caroline;;0;vendredi;09h05
-2h00;CESLM;Autre école CESLM;FINCKEN;Caroline;;0;lundi;09h55
-3h00;CESLM;Autre école CESLM;FINCKEN;Caroline;;0;mardi;13h40
-5h00;CESLM;Autre école CESLM;FOMETIO MBOO;Idelette;;1;lundi;08h15
-1h00;CESLM;Autre école CESLM;FOMETIO MBOO;Idelette;;1;vendredi;09h55
-3h00;CESLM;Autre école CESLM;FOMETIO MBOO;Idelette;;1;lundi;13h40
-2h00;CESLM;Autre école CESLM;GOIN;Emilie;;0;mercredi;08h15
-5h00;CESLM;Autre école CESLM;GOIN;Emilie;;0;vendredi;08h15
-1h00;CESLM;Autre école CESLM;GOIN;Emilie;;0;mercredi;11h00
-4h00;CESLM;Autre école CESLM;GOIN;Emilie;;0;vendredi;13h40
-2h00;CESLM;Autre école CESLM;GOIN;Emilie;;0;jeudi;15h20
-5h00;CESLM;Autre école CESLM;KERRELS;Arnaud;;0;mardi;08h15
-2h00;CESLM;Autre école CESLM;KERRELS;Arnaud;;0;mercredi;08h15
-4h00;CESLM;Autre école CESLM;KERRELS;Arnaud;;0;jeudi;08h15
-1h00;CESLM;Autre école CESLM;KERRELS;Arnaud;;0;vendredi;09h05
-1h00;CESLM;Autre école CESLM;KERRELS;Arnaud;;0;mercredi;11h50
-1h00;CESLM;Autre école CESLM;KERRELS;Arnaud;;0;vendredi;11h50
-1h00;CESLM;Autre école CESLM;NDZENGUE;Louis;;0;mercredi;08h15
-5h00;CESLM;Autre école CESLM;NDZENGUE;Louis;;0;lundi;12h40
-1h00;CESLM;Autre école CESLM;NDZENGUE;Louis;;0;mardi;13h40
-3h00;CESLM;Autre école CESLM;NDZENGUE;Louis;;0;jeudi;13h40
-4h00;CESLM;Autre école CESLM;OUAHABI;Ghania;;0;mercredi;12h40
-5h00;CESLM;Autre école CESLM;TUTTOBENE;Estelle;;0;jeudi;08h15
-2h00;CESLM;Autre école CESLM;TUTTOBENE;Estelle;;0;mardi;13h40
-2h00;CESLM;Autre école CESLM;TUTTOBENE;Estelle;;0;jeudi;13h40
-4h00;PITTEURS;Autre école Coiffure;BASTIN;Mireille;;0;lundi;08h15
-2h00;PITTEURS;Autre école Coiffure;BRACONNIER;Simon;;0;lundi;08h15
-4h00;PITTEURS;Autre école Coiffure;GENOT;Anne;;1;mardi;09h05
-4h00;PITTEURS;Autre école Coiffure;GENOT;Anne;;1;vendredi;09h05
-3h00;PITTEURS;Autre école Coiffure;GENOT;Anne;;1;jeudi;09h55
-2h00;PITTEURS;Autre école Coiffure;GENOT;Anne;;1;lundi;13h40
-2h00;PITTEURS;Autre école Coiffure;GENOT;Anne;;1;mardi;13h40
-4h00;PITTEURS;Autre école Coiffure;GENOT;Anne;;1;jeudi;13h40
-2h00;PITTEURS;Autre école Coiffure;GENOT;Anne;;1;vendredi;13h40
-2h00;PITTEURS;Autre école Coiffure;GERARD;Vincent;;0;lundi;08h15
-5h00;PITTEURS;Autre école Coiffure;LEGSSYER;Rachida;;0;lundi;08h15
-4h00;PITTEURS;Autre école Coiffure;LEGSSYER;Rachida;;0;lundi;13h40
-2h00;PITTEURS;Autre école Coiffure;MARECHAL;Anthony;;0;mardi;13h40
-5h00;PITTEURS;Autre école Coiffure;SNYDERS;Véronique;;0;lundi;08h15
-4h00;PITTEURS;Autre école Coiffure;SNYDERS;Véronique;;0;lundi;13h40
-2h00;DE BEAUVOIR;Autre école De Beauvoir;GRIBOMONT;Antoine;;1;lundi;09h55
-3h00;DE BEAUVOIR;Autre école De Beauvoir;NDZENGUE;Louis;;0;vendredi;08h15
-1h00;DE BEAUVOIR;Autre école De Beauvoir;NDZENGUE;Louis;;0;vendredi;11h50
-1h00;DE BEAUVOIR;Autre école De Beauvoir;NDZENGUE;Louis;;0;mercredi;12h40
-1h00;DE BEAUVOIR;Autre école De Beauvoir;NDZENGUE;Louis;;0;mardi;15h20
-2h00;DE BEAUVOIR;Autre école De Beauvoir;NDZENGUE;Louis;;0;vendredi;15h20
-1h00;DE BEAUVOIR;Autre école De Beauvoir;SEDRY;Jamal;;0;mercredi;08h15
-2h00;DE BEAUVOIR;Autre école De Beauvoir;SEDRY;Jamal;;0;jeudi;08h15
-1h00;DE BEAUVOIR;Autre école De Beauvoir;SEDRY;Jamal;;0;jeudi;11h50
-3h00;DE BEAUVOIR;Autre école De Beauvoir;SEDRY;Jamal;;0;mardi;14h30
-3h00;DE BEAUVOIR;Autre école De Beauvoir;SEDRY;Jamal;;0;jeudi;14h30
-1h00;DE BEAUVOIR;Autre école De Beauvoir;SEDRY;Jamal;;0;lundi;16h10
-2h00;HOTELLERIE;Autre école EHT;BACCUS;Baptiste;;1;lundi;14h30
-2h00;HOTELLERIE;Autre école EHT;BASTIN;Mireille;;0;vendredi;08h15
-1h00;HOTELLERIE;Autre école EHT;BORLEE;Philippe;;0;vendredi;11h00
-3h00;HOTELLERIE;Autre école EHT;BORLEE;Philippe;;0;lundi;13h40
-4h00;HOTELLERIE;Autre école EHT;GRIBOMONT;Antoine;;1;lundi;13h40
-1h00;HOTELLERIE;Autre école EHT;NDZENGUE;Louis;;0;mercredi;11h00
-1h00;HOTELLERIE;Autre école EHT;NDZENGUE;Louis;;0;jeudi;16h10
-1h00;HOTELLERIE;Autre école EHT;OCAL;Pinar;;0;lundi;12h40
-2h00;HOTELLERIE;Autre école EHT;OUAHABI;Ghania;;0;mardi;11h50
-2h00;HOTELLERIE;Autre école EHT;SNYDERS;Véronique;;0;mardi;13h40
-2h00;HORTI;Autre école Horticulture;GENOT;Anne;;1;mercredi;08h15
-2h00;HORTI;Autre école Horticulture;NOTTET;Tristant;;0;lundi;11h00
-2h00;HORTI;Autre école Horticulture;NOTTET;Tristant;;0;lundi;13h40
-6h00;HORTI;Autre école Horticulture;OCAL;Pinar;;1;mercredi;08h15
-2h00;HORTI;Autre école Horticulture;OCAL;Pinar;;1;lundi;09h05
-4h00;HORTI;Autre école Horticulture;OCAL;Pinar;;1;mardi;09h05
-2h00;HORTI;Autre école Horticulture;OCAL;Pinar;;1;vendredi;09h05
-2h00;HORTI;Autre école Horticulture;OCAL;Pinar;;1;lundi;15h20
-5h00;IRHOV;Autre école IRHOV;LEGSSYER;Rachida;;0;mardi;08h15
-6h00;IRHOV;Autre école IRHOV;LEGSSYER;Rachida;;0;mercredi;08h15
-1h00;IRHOV;Autre école IRHOV;LEGSSYER;Rachida;;0;mardi;13h40
-5h00;MOTTET;Autre école Léopold Mottet;BASTIN;Mireille;;0;mardi;08h15
-5h00;MOTTET;Autre école Léopold Mottet;BASTIN;Mireille;;0;mercredi;08h15
-4h00;MOTTET;Autre école Léopold Mottet;BASTIN;Mireille;;0;mardi;13h40
-2h00;MAGHIN;Autre école Maghin;PIRSON;Axelle;;0;mardi;08h15
-2h00;MAGHIN;Autre école Maghin;PIRSON;Axelle;;0;mercredi;08h15
-3h00;MAGHIN;Autre école Maghin;PIRSON;Axelle;;0;vendredi;09h05
-2h00;MAGHIN;Autre école Maghin;PIRSON;Axelle;;0;jeudi;12h40
-2h00;MAGHIN;Autre école Maghin;PIRSON;Axelle;;0;mardi;14h30
-6h00;PS ECI;Autre école Promotion sociale ECI;CHAPEAU;Vincent;;0;mercredi;08h15
-5h00;PS ECI;Autre école Promotion sociale ECI;CHAPEAU;Vincent;;0;jeudi;08h15
-4h00;PS ECI;Autre école Promotion sociale ECI;CHAPEAU;Vincent;;0;jeudi;13h40
-5h00;ULg;Autre école Université de Liège;MAESEN;Valentin;;0;lundi;08h15
-5h00;ULg;Autre école Université de Liège;MAESEN;Valentin;;0;mardi;08h15
-5h00;ULg;Autre école Université de Liège;MAESEN;Valentin;;0;vendredi;08h15
-6h00;ULg;Autre école Université de Liège;MAESEN;Valentin;;0;mercredi;11h50
-4h00;ULg;Autre école Université de Liège;MAESEN;Valentin;;0;mardi;13h40
-4h00;ULg;Autre école Université de Liège;MAESEN;Valentin;;0;vendredi;13h40
-1h00;ULg;Autre école Université de Liège;MAESEN;Valentin;;0;lundi;16h10
-1h00;BIO;Biologie;JEANGILLE;Lionel;[4-Sc1];1;jeudi;11h00
-1h00;BIO;Biologie;JEANGILLE;Lionel;[5-Sc4];1;jeudi;09h05
-1h00;BIO;Biologie;JEANGILLE;Lionel;[6-Sc1];1;mardi;11h50
-1h00;BIO;Biologie;YILDIRIM, BACCUS;Héline, Baptiste;[3-Sc1];1;mercredi;08h15
-1h00;BIO;Biologie;YILDIRIM, BACCUS;Héline, Baptiste;[3-Sc4];1;mercredi;11h00
-1h00;BIO;Biologie;ZANOL;Marie-Sophie;[3-Sc2];1;vendredi;08h15
-1h00;BIO;Biologie;ZANOL;Marie-Sophie;[3-Sc3];1;mercredi;11h00
-1h00;BIO;Biologie;ZENTHNER;Fabienne;[4-Sc2];1;jeudi;09h55
-1h00;BIO;Biologie;ZENTHNER;Fabienne;[4-Sc3];1;jeudi;11h50
-1h00;BIO;Biologie;ZENTHNER;Fabienne;[4-Sc4];1;vendredi;15h20
-1h00;BIO;Biologie;ZENTHNER;Fabienne;[5-Sc1];1;lundi;11h50
-1h00;BIO;Biologie;ZENTHNER;Fabienne;[5-Sc2];1;jeudi;09h05
-1h00;BIO;Biologie;ZENTHNER;Fabienne;[5-Sc3];1;vendredi;09h05
-1h00;BIO;Biologie;ZENTHNER;Fabienne;[6-Sc2];1;jeudi;11h00
-1h00;BIO;Biologie;ZENTHNER;Fabienne;[6-Sc3];1;jeudi;14h30
-1h00;BIO;Biologie;ZENTHNER;Fabienne;[6-Sc4];1;vendredi;09h55
-1h00;BIO;Biologie;ZENTHNER;Fabienne;[6-Sc5];1;vendredi;08h15
-1h00;BIO opt.;Biologie option;JEANGILLE;Lionel;[4-ScOp3];1;mercredi;09h05
-2h00;BIO opt.;Biologie option;JEANGILLE;Lionel;[5-ScOp2];1;mardi;08h15
-1h00;BIO opt.;Biologie option;JEANGILLE;Lionel;[6-ScOp1];1;vendredi;08h15
-1h00;BIO opt.;Biologie option;JEANGILLE;Lionel;[6-ScOp1];1;vendredi;09h55
-1h00;BIO opt.;Biologie option;YILDIRIM, BACCUS;Héline, Baptiste;[3-ScOp2];1;lundi;11h50
-1h00;BIO opt.;Biologie option;YILDIRIM, BACCUS;Héline, Baptiste;[3-ScOp2];1;jeudi;11h50
-1h00;BIO opt.;Biologie option;ZANOL;Marie-Sophie;[3-ScOp1];1;mercredi;09h05
-1h00;BIO opt.;Biologie option;ZANOL;Marie-Sophie;[3-ScOp1];1;mercredi;09h55
-1h00;BIO opt.;Biologie option;ZENTHNER;Fabienne;[4-ScOp1];1;vendredi;14h30
-1h00;BIO opt.;Biologie option;ZENTHNER;Fabienne;[4-ScOp2];1;lundi;13h40
-1h00;BIO opt.;Biologie option;ZENTHNER;Fabienne;[5-ScOp1];1;jeudi;15h20
-1h00;BIO opt.;Biologie option;ZENTHNER;Fabienne;[5-ScOp1];1;lundi;16h10
-1h00;BIO opt.;Biologie option;ZENTHNER;Fabienne;[6-ScOp2];1;mardi;13h40
-1h00;BIO opt.;Biologie option;ZENTHNER;Fabienne;[6-ScOp2];1;lundi;15h20
-1h00;CHIMIE;Chimie;JEANGILLE;Lionel;[6-Sc1];1;lundi;14h30
-1h00;CHIMIE;Chimie;YAHIA;Lina;[4-Sc1];1;lundi;11h50
-1h00;CHIMIE;Chimie;YAHIA;Lina;[4-Sc2];1;lundi;09h55
-1h00;CHIMIE;Chimie;YAHIA;Lina;[4-Sc3];1;lundi;13h40
-1h00;CHIMIE;Chimie;YAHIA;Lina;[4-Sc4];1;jeudi;11h50
-1h00;CHIMIE;Chimie;YAHIA;Lina;[5-Sc1];1;jeudi;09h05
-1h00;CHIMIE;Chimie;YAHIA;Lina;[5-Sc2];1;jeudi;09h55
-1h00;CHIMIE;Chimie;YAHIA;Lina;[5-Sc3];1;jeudi;15h20
-1h00;CHIMIE;Chimie;YAHIA;Lina;[5-Sc4];1;vendredi;15h20
-1h00;CHIMIE;Chimie;YAHIA;Lina;[6-Sc2];1;jeudi;14h30
-1h00;CHIMIE;Chimie;YAHIA;Lina;[6-Sc3];1;vendredi;08h15
-1h00;CHIMIE;Chimie;YAHIA;Lina;[6-Sc4];1;mardi;13h40
-1h00;CHIMIE;Chimie;YAHIA;Lina;[6-Sc5];1;vendredi;09h55
-1h00;CHIMIE;Chimie;ZOLLER;Céline;[3-Sc1];1;jeudi;09h05
-1h00;CHIMIE;Chimie;ZOLLER;Céline;[3-Sc2];1;lundi;11h00
-1h00;CHIMIE;Chimie;ZOLLER;Céline;[3-Sc3];1;mardi;09h55
-1h00;CHIMIE;Chimie;ZOLLER;Céline;[3-Sc4];1;mardi;09h05
-1h00;CHIMIE opt.;Chimie option;JEANGILLE;Lionel;[4-ScOp3];1;mardi;11h00
-1h00;CHIMIE opt.;Chimie option;JEANGILLE;Lionel;[4-ScOp3];1;jeudi;11h50
-1h00;CHIMIE opt.;Chimie option;JEANGILLE;Lionel;[5-ScOp2];1;vendredi;09h05
-1h00;CHIMIE opt.;Chimie option;JEANGILLE;Lionel;[5-ScOp2];1;jeudi;09h55
-1h00;CHIMIE opt.;Chimie option;YAHIA;Lina;[4-ScOp1];1;lundi;11h00
-1h00;CHIMIE opt.;Chimie option;YAHIA;Lina;[4-ScOp1];1;vendredi;11h50
-1h00;CHIMIE opt.;Chimie option;YAHIA;Lina;[4-ScOp2];1;vendredi;11h00
-1h00;CHIMIE opt.;Chimie option;YAHIA;Lina;[4-ScOp2];1;lundi;14h30
-1h00;CHIMIE opt.;Chimie option;YAHIA;Lina;[5-ScOp1];1;mardi;14h30
-1h00;CHIMIE opt.;Chimie option;YAHIA;Lina;[5-ScOp1];1;vendredi;14h30
-1h00;CHIMIE opt.;Chimie option;YAHIA;Lina;[6-ScOp1];1;vendredi;13h40
-1h00;CHIMIE opt.;Chimie option;YAHIA;Lina;[6-ScOp1];1;lundi;15h20
-1h00;CHIMIE opt.;Chimie option;YAHIA;Lina;[6-ScOp2];1;mardi;15h20
-1h00;CHIMIE opt.;Chimie option;YAHIA;Lina;[6-ScOp2];1;mardi;16h10
-1h00;CHIMIE opt.;Chimie option;ZOLLER;Céline;[3-ScOp1];1;vendredi;08h15
-1h00;CHIMIE opt.;Chimie option;ZOLLER;Céline;[3-ScOp2];1;mardi;11h00
-2h00;COMMU;Communication;CHAPEAU;Manu;[5-Commu1];1;lundi;09h55
-1h00;COMMU;Communication;CHAPEAU;Manu;[5-Commu1];1;mardi;13h40
-1h00;COMMU;Communication;CHAPEAU;Manu;[5-Commu1];1;mardi;14h30
-2h00;COMMU;Communication;CHAPEAU;Manu;[5-Commu2];1;mardi;08h15
-1h00;COMMU;Communication;CHAPEAU;Manu;[5-Commu2];1;mercredi;08h15
-1h00;COMMU;Communication;CHAPEAU;Manu;[5-Commu2];1;vendredi;14h30
-2h00;COMMU;Communication;CHAPEAU;Manu;[6-Commu1];1;jeudi;09h05
-1h00;COMMU;Communication;CHAPEAU;Manu;[6-Commu1];1;lundi;15h20
-1h00;COMMU;Communication;CHAPEAU;Manu;[6-Commu1];1;mardi;15h20
-1h00;COMMU;Communication;CHAPEAU;Manu;[6-Commu2];1;jeudi;08h15
-1h00;COMMU;Communication;CHAPEAU;Manu;[6-Commu2];1;mardi;09h55
-2h00;COMMU;Communication;CHAPEAU;Manu;[6-Commu2];1;vendredi;11h00
-1h00;CONSEIL;Conseil de la classe;BAIZAN;Noémie;1PAC;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;BAKHTI;Youssef;4PAW;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;BAUWENS;Sarah;2PAB;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;BRACONNIER;Simon;2PAC;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;BROOS;Carine;3PAW;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;BROUNS;Marie;6PAY;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;CESA;Alexandre;4PAT;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;CHAPEAU;Manu;5PAW;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;DEGEY;Anne-Marie;1PAF;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;DI GERONIMO;Giuseppina;2PAA;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;DJELIL;Samira;1PAA;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;DULLIER;Cyrielle;4PAZ;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;DZIRI;Soraya;3PAU;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;HAFNAOUI;Imane;5PAX;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;HOLLENFELTZ;Olivier;6PAT;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;HUCHANT;Louise;5PAV;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;JEANGILLE;Lionel;6PAZ;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;JUDONG;Sylvie;5PAZ;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;KEVERS;Laetitia;4PAV;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;KREIT;Amélie;1PAE;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;LUCA;Pablo;4PAU;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;MANAP;Cihan;1PAD;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;MAQUET;Laurent;6PAV;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;MEERT;David;5PAU;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;MEUNIER;Benjamin;4PAY;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;NOLF;Caroline;6PAW;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;NOTTET;Tristant;4PAX;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;PAQUAY;Maxime;2PAE;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;POPOVICS;Vanessa;2PAF;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;ROLIN;Gérald;1PAB;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;SACRE;Catherine;5PAT;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;SITKO;Cynthia;2PAD;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;VAN DE VLOET;Jennifer;3PAY;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;VAN DEN BERGHE;Sylviane;6PAX;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;VANHERLE;Camille;5PAY;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;WERA;Tanguy;6PAU;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;YILDIRIM, BACCUS;Héline, Baptiste;3PAX;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;ZANOL;Marie-Sophie;3PAV;0;mercredi;11h50
-1h00;CONSEIL;Conseil de la classe;ZOLLER;Céline;3PAZ;0;mercredi;11h50
-1h00;CPC1;CPC1;CHOLEWKA;Tom;6PAT;1;vendredi;16h10
-1h00;CPC1;CPC1;CHOLEWKA;Tom;6PAU;1;lundi;09h05
-1h00;CPC1;CPC1;CHOLEWKA;Tom;6PAV;1;vendredi;14h30
-1h00;CPC1;CPC1;CHOLEWKA;Tom;6PAW;1;lundi;14h30
-1h00;CPC1;CPC1;CHOLEWKA;Tom;6PAX;1;jeudi;09h05
-1h00;CPC1;CPC1;CHOLEWKA;Tom;6PAY;1;lundi;09h55
-1h00;CPC1;CPC1;CHOLEWKA;Tom;6PAZ;1;lundi;13h40
-1h00;CPC1;CPC1;KERRELS;Arnaud;3PAX;1;lundi;13h40
-1h00;CPC1;CPC1;LUCA;Pablo;[5-5PAT-CPC1 ML D], 5PAY;1;vendredi;15h20
-1h00;CPC1;CPC1;LUCA;Pablo;[5-5PAT-CPC1 ML E], 5PAU;1;jeudi;15h20
-1h00;CPC1;CPC1;LUCA;Pablo;[5-5PAT-CPC1 sauf ML];1;vendredi;11h00
-1h00;CPC1;CPC1;LUCA;Pablo;4PAT;1;lundi;11h00
-1h00;CPC1;CPC1;LUCA;Pablo;4PAU;1;lundi;09h05
-1h00;CPC1;CPC1;LUCA;Pablo;4PAV;1;vendredi;14h30
-1h00;CPC1;CPC1;LUCA;Pablo;4PAW;1;lundi;09h55
-1h00;CPC1;CPC1;LUCA;Pablo;4PAX;1;mardi;11h00
-1h00;CPC1;CPC1;LUCA;Pablo;4PAY;1;mardi;09h05
-1h00;CPC1;CPC1;LUCA;Pablo;4PAZ;1;mercredi;11h00
-1h00;CPC1;CPC1;LUCA;Pablo;5PAV;1;mercredi;09h55
-1h00;CPC1;CPC1;LUCA;Pablo;5PAW;1;vendredi;08h15
-1h00;CPC1;CPC1;LUCA;Pablo;5PAX;1;vendredi;09h05
-1h00;CPC1;CPC1;LUCA;Pablo;5PAZ;1;jeudi;16h10
-1h00;CPC1;CPC1;MANAP;Cihan;1PAA;1;lundi;09h55
-1h00;CPC1;CPC1;MANAP;Cihan;1PAB;1;jeudi;11h00
-1h00;CPC1;CPC1;MANAP;Cihan;1PAC;1;lundi;15h20
-1h00;CPC1;CPC1;MANAP;Cihan;1PAD;1;lundi;14h30
-1h00;CPC1;CPC1;MANAP;Cihan;1PAE;1;mercredi;09h55
-1h00;CPC1;CPC1;MANAP;Cihan;1PAF;1;jeudi;11h50
-1h00;CPC1;CPC1;MANAP;Cihan;2PAA;1;lundi;11h50
-1h00;CPC1;CPC1;MANAP;Cihan;2PAB;1;lundi;08h15
-1h00;CPC1;CPC1;MANAP;Cihan;2PAC;1;mardi;11h50
-1h00;CPC1;CPC1;MANAP;Cihan;2PAD;1;mardi;11h00
-1h00;CPC1;CPC1;MANAP;Cihan;2PAE;1;jeudi;09h05
-1h00;CPC1;CPC1;MANAP;Cihan;2PAF;1;mardi;09h05
-1h00;CPC1;CPC1;MANAP;Cihan;3PAU;1;jeudi;08h15
-1h00;CPC1;CPC1;MANAP;Cihan;3PAV;1;mercredi;09h05
-1h00;CPC1;CPC1;MANAP;Cihan;3PAW;1;lundi;09h05
-1h00;CPC1;CPC1;MANAP;Cihan;3PAY;1;lundi;13h40
-1h00;CPC1;CPC1;MANAP;Cihan;3PAZ;1;mardi;09h55
-1h00;CPC2;CPC2;CHOLEWKA;Tom;[4-CPC3];1;jeudi;08h15
-1h00;CPC2;CPC2;CHOLEWKA;Tom;[5-CPC3];1;jeudi;11h50
-1h00;CPC2;CPC2;CHOLEWKA;Tom;[6-CPC3];1;lundi;08h15
-1h00;CPC2;CPC2;CHOLEWKA;Tom;[6-CPC4];1;vendredi;13h40
-1h00;CPC2;CPC2;KERRELS;Arnaud;[1-CPC2];1;jeudi;14h30
-1h00;CPC2;CPC2;KERRELS;Arnaud;[1-CPC3];1;lundi;09h55
-1h00;CPC2;CPC2;KERRELS;Arnaud;[2-CPC3];1;jeudi;15h20
-1h00;CPC2;CPC2;KERRELS;Arnaud;[2-CPC4];1;lundi;08h15
-1h00;CPC2;CPC2;KERRELS;Arnaud;[3-CPC1];1;lundi;09h05
-1h00;CPC2;CPC2;KERRELS;Arnaud;[3-CPC3];1;jeudi;13h40
-1h00;CPC2;CPC2;KERRELS;Arnaud;[3-CPC5];1;lundi;14h30
-1h00;CPC2;CPC2;LUCA;Pablo;[4-CPC1];1;jeudi;08h15
-1h00;CPC2;CPC2;LUCA;Pablo;[4-CPC2];1;mardi;08h15
-1h00;CPC2;CPC2;LUCA;Pablo;[5-CPC1];1;mardi;15h20
-1h00;CPC2;CPC2;LUCA;Pablo;[5-CPC2];1;vendredi;11h50
-1h00;CPC2;CPC2;LUCA;Pablo;[5-CPC5];1;jeudi;11h50
-1h00;CPC2;CPC2;LUCA;Pablo;[6-CPC1];1;vendredi;13h40
-1h00;CPC2;CPC2;LUCA;Pablo;[6-CPC2];1;jeudi;14h30
-1h00;CPC2;CPC2;LUCA;Pablo;[6-CPC5];1;vendredi;09h55
-1h00;CPC2;CPC2;MANAP;Cihan;[1-CPC1];1;jeudi;14h30
-1h00;CPC2;CPC2;MANAP;Cihan;[2-CPC1];1;mercredi;08h15
-1h00;CPC2;CPC2;MANAP;Cihan;[2-CPC2];1;jeudi;15h20
-1h00;CPC2;CPC2;MANAP;Cihan;[3-CPC2];1;jeudi;13h40
-1h00;CPC2;CPC2;MANAP;Cihan;[3-CPC4];1;mardi;08h15
-1h00;CPC2;CPC2;NDZENGUE;Louis;[4-CPC4];1;jeudi;08h15
-1h00;CPC2;CPC2;NDZENGUE;Louis;[5-CPC4];1;jeudi;11h50
-1h00;CPC2;CPC2;NDZENGUE;Louis;[6-CPC6];1;vendredi;13h40
-1h00;EducTECH;Education à la Technologie;FINCKEN;Caroline;2PAA;1;vendredi;15h20
-1h00;EducTECH;Education à la Technologie;FINCKEN;Caroline;2PAB;1;lundi;14h30
-1h00;EducTECH;Education à la Technologie;FINCKEN;Caroline;2PAC;1;lundi;15h20
-1h00;EducTECH;Education à la Technologie;FINCKEN;Caroline;2PAD;1;lundi;08h15
-1h00;EducTECH;Education à la Technologie;ZANOL;Marie-Sophie;2PAE;1;jeudi;14h30
-1h00;EducTECH;Education à la Technologie;ZANOL;Marie-Sophie;2PAF;1;vendredi;14h30
-1h00;ECA;Education culturelle et artistique;DEPUIS;Pierre;1PAA;1;lundi;08h15
-1h00;ECA;Education culturelle et artistique;DEPUIS;Pierre;1PAB;1;mardi;09h55
-1h00;ECA;Education culturelle et artistique;DEPUIS;Pierre;1PAC;1;mardi;13h40
-1h00;ECA;Education culturelle et artistique;DEPUIS;Pierre;1PAD;1;mardi;14h30
-1h00;ECA;Education culturelle et artistique;DEPUIS;Pierre;1PAE;1;lundi;13h40
-1h00;ECA;Education culturelle et artistique;DEPUIS;Pierre;1PAF;1;lundi;11h00
-1h00;ECA;Education culturelle et artistique;X07_ECA_DI;;1PAA;1;vendredi;13h40
-1h00;ECA;Education culturelle et artistique;X07_ECA_DI;;1PAB;1;mardi;13h40
-1h00;ECA;Education culturelle et artistique;X07_ECA_DI;;1PAC;1;lundi;14h30
-1h00;ECA;Education culturelle et artistique;X07_ECA_DI;;1PAD;1;lundi;13h40
-1h00;ECA;Education culturelle et artistique;X07_ECA_DI;;1PAE;1;vendredi;14h30
-1h00;ECA;Education culturelle et artistique;X07_ECA_DI;;1PAF;1;mardi;15h20
-1h00;MUSIQUE;Education musicale;DEPUIS;Pierre;2PAA;1;lundi;14h30
-1h00;MUSIQUE;Education musicale;DEPUIS;Pierre;2PAB;1;lundi;09h05
-1h00;MUSIQUE;Education musicale;DEPUIS;Pierre;2PAC;1;mardi;09h05
-1h00;MUSIQUE;Education musicale;DEPUIS;Pierre;2PAD;1;lundi;09h55
-1h00;MUSIQUE;Education musicale;DEPUIS;Pierre;2PAE;1;lundi;11h50
-1h00;MUSIQUE;Education musicale;DEPUIS;Pierre;2PAF;1;mardi;11h50
-2h00;GYM;Education Physique;DULLIER;Cyrielle;4PAT;1;mercredi;09h55
-2h00;GYM;Education Physique;DULLIER;Cyrielle;4PAU;1;lundi;11h00
-2h00;GYM;Education Physique;DULLIER;Cyrielle;4PAZ;1;jeudi;11h00
-2h00;GYM;Education Physique;DULLIER;Cyrielle;5PAT;1;mardi;13h40
-2h00;GYM;Education Physique;DULLIER;Cyrielle;5PAU;1;lundi;15h20
-2h00;GYM;Education Physique;DULLIER;Cyrielle;5PAV;1;lundi;08h15
-2h00;GYM;Education Physique;DULLIER;Cyrielle;6PAT;1;lundi;13h40
-2h00;GYM;Education Physique;DULLIER;Cyrielle;6PAU;1;mardi;08h15
-2h00;GYM;Education Physique;DULLIER;Cyrielle;6PAV;1;mercredi;08h15
-2h00;GYM;Education Physique;DULLIER;Cyrielle;6PAW;1;mardi;11h00
-2h00;GYM;Education Physique;GENOT;Anne;3PAY;1;lundi;08h15
-2h00;GYM;Education Physique;GRIBOMONT;Antoine;6PAY;1;jeudi;08h15
-2h00;GYM;Education Physique;MEUNIER;Benjamin;4PAV;1;lundi;09h05
-2h00;GYM;Education Physique;MEUNIER;Benjamin;4PAW;1;mardi;09h05
-2h00;GYM;Education Physique;MEUNIER;Benjamin;4PAX;1;jeudi;11h00
-2h00;GYM;Education Physique;MEUNIER;Benjamin;4PAY;1;jeudi;13h40
-2h00;GYM;Education Physique;MEUNIER;Benjamin;5PAW;1;mardi;11h00
-2h00;GYM;Education Physique;MEUNIER;Benjamin;5PAX;1;lundi;11h00
-2h00;GYM;Education Physique;MEUNIER;Benjamin;5PAY;1;mardi;15h20
-2h00;GYM;Education Physique;MEUNIER;Benjamin;5PAZ;1;lundi;15h20
-2h00;GYM;Education Physique;MEUNIER;Benjamin;6PAX;1;mardi;13h40
-2h00;GYM;Education Physique;MEUNIER;Benjamin;6PAZ;1;mercredi;09h55
-2h00;GYM;Education Physique;PIRSON;Axelle;[3-EP1];1;vendredi;13h40
-2h00;GYM;Education Physique;PIRSON;Axelle;3PAZ;1;vendredi;15h20
-2h00;GYM;Education Physique;ROLIN;Gérald;[3-EP2];1;vendredi;13h40
-1h00;GYM;Education Physique;ROLIN;Gérald;1PAA;1;lundi;09h05
-2h00;GYM;Education Physique;ROLIN;Gérald;1PAA;1;mercredi;09h05
-2h00;GYM;Education Physique;ROLIN;Gérald;1PAB;1;lundi;11h00
-1h00;GYM;Education Physique;ROLIN;Gérald;1PAB;1;vendredi;15h20
-2h00;GYM;Education Physique;ROLIN;Gérald;1PAC;1;mardi;11h00
-1h00;GYM;Education Physique;ROLIN;Gérald;1PAC;1;lundi;13h40
-1h00;GYM;Education Physique;ROLIN;Gérald;2PAA;1;mercredi;11h00
-2h00;GYM;Education Physique;ROLIN;Gérald;2PAA;1;vendredi;11h00
-2h00;GYM;Education Physique;ROLIN;Gérald;2PAB;1;mardi;09h05
-1h00;GYM;Education Physique;ROLIN;Gérald;2PAB;1;vendredi;09h55
-1h00;GYM;Education Physique;ROLIN;Gérald;2PAC;1;lundi;08h15
-2h00;GYM;Education Physique;ROLIN;Gérald;2PAC;1;mardi;13h40
-2h00;GYM;Education Physique;ROLIN;Gérald;3PAX;1;lundi;14h30
-2h00;GYM;Education Physique;SITKO;Cynthia;[3-EP3];1;vendredi;13h40
-2h00;GYM;Education Physique;SITKO;Cynthia;1PAD;1;lundi;08h15
-1h00;GYM;Education Physique;SITKO;Cynthia;1PAD;1;mercredi;11h00
-2h00;GYM;Education Physique;SITKO;Cynthia;1PAE;1;lundi;11h00
-1h00;GYM;Education Physique;SITKO;Cynthia;1PAE;1;mardi;11h50
-2h00;GYM;Education Physique;SITKO;Cynthia;1PAF;1;vendredi;09h05
-1h00;GYM;Education Physique;SITKO;Cynthia;1PAF;1;mardi;14h30
-2h00;GYM;Education Physique;SITKO;Cynthia;2PAD;1;mardi;08h15
-1h00;GYM;Education Physique;SITKO;Cynthia;2PAD;1;mercredi;08h15
-1h00;GYM;Education Physique;SITKO;Cynthia;2PAE;1;mardi;11h00
-2h00;GYM;Education Physique;SITKO;Cynthia;2PAE;1;vendredi;11h00
-2h00;GYM;Education Physique;SITKO;Cynthia;2PAF;1;lundi;13h40
-1h00;GYM;Education Physique;SITKO;Cynthia;2PAF;1;mardi;13h40
-2h00;GYM;Education Physique;SITKO;Cynthia;3PAW;1;vendredi;15h20
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[3-LM2-E1];1;vendredi;08h15
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[3-LM2-E1];1;lundi;09h05
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[3-LM2-E1];1;vendredi;11h50
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[3-LM2-E1];1;mardi;13h40
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[3-LM2-E2];1;mercredi;09h55
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[3-LM2-E2];1;mercredi;11h00
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[3-LM2-E2];1;lundi;15h20
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[3-LM2-E2];1;mardi;15h20
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[3-LM2-E3];1;mercredi;08h15
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[3-LM2-E3];1;vendredi;09h05
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[3-LM2-E3];1;lundi;09h55
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[3-LM2-E3];1;vendredi;09h55
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[5-LM2-E1];1;lundi;11h00
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[5-LM2-E1];1;vendredi;13h40
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[5-LM2-E4];1;mercredi;09h05
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[5-LM2-E4];1;lundi;13h40
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[5-LM2-E4];1;lundi;14h30
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[5-LM2-E4];1;mardi;16h10
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[6-LM2-E1];1;lundi;08h15
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[6-LM2-E1];1;mardi;08h15
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[6-LM2-E1];1;mardi;09h05
-1h00;ESPAGNOL LM2;Espagnol LM2;DZIRI;Soraya;[6-LM2-E1];1;lundi;16h10
-1h00;ESPAGNOL LM2;Espagnol LM2;HERVELLE;Wendy;[4-LM2-E3];1;mercredi;08h15
-1h00;ESPAGNOL LM2;Espagnol LM2;HERVELLE;Wendy;[4-LM2-E3];1;lundi;09h55
-1h00;ESPAGNOL LM2;Espagnol LM2;HERVELLE;Wendy;[5-LM2-E3];1;mercredi;09h05
-1h00;ESPAGNOL LM2;Espagnol LM2;HERVELLE;Wendy;[5-LM2-E3];1;lundi;13h40
-1h00;ESPAGNOL LM2;Espagnol LM2;HERVELLE;Wendy;[5-LM2-E3];1;lundi;14h30
-1h00;ESPAGNOL LM2;Espagnol LM2;HERVELLE;Wendy;[6-LM2-E2];1;lundi;08h15
-2h00;ESPAGNOL LM2;Espagnol LM2;HERVELLE;Wendy;[6-LM2-E2];1;mardi;08h15
-1h00;ESPAGNOL LM2;Espagnol LM2;HERVELLE;Wendy;[6-LM2-E2];1;lundi;16h10
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[4-LM2-E1];1;lundi;11h00
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[4-LM2-E1];1;lundi;11h50
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[4-LM2-E1];1;vendredi;13h40
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[4-LM2-E1];1;vendredi;14h30
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[4-LM2-E4];1;mercredi;08h15
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[4-LM2-E4];1;vendredi;09h05
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[4-LM2-E4];1;lundi;09h55
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[4-LM2-E4];1;vendredi;09h55
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[5-LM2-E1];1;mardi;11h50
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[5-LM2-E1];1;lundi;13h40
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[5-LM2-E2];1;mercredi;09h05
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[5-LM2-E2];1;mardi;13h40
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[5-LM2-E2];1;mardi;14h30
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[5-LM2-E2];1;vendredi;16h10
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[6-LM2-E3];1;lundi;08h15
-2h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[6-LM2-E3];1;mardi;08h15
-1h00;ESPAGNOL LM2;Espagnol LM2;JUDONG;Sylvie;[6-LM2-E3];1;lundi;16h10
-1h00;ESPAGNOL LM2;Espagnol LM2;RECKMANS;Sandy;[4-LM2-E2];1;vendredi;08h15
-1h00;ESPAGNOL LM2;Espagnol LM2;RECKMANS;Sandy;[4-LM2-E2];1;mardi;09h55
-1h00;ESPAGNOL LM2;Espagnol LM2;RECKMANS;Sandy;[4-LM2-E2];1;jeudi;13h40
-1h00;ESPAGNOL LM2;Espagnol LM2;RECKMANS;Sandy;[4-LM2-E2];1;mardi;15h20
-1h00;ESPAGNOL LM2;Espagnol LM2;RECKMANS;Sandy;[5-LM2-E3];1;jeudi;14h30
-1h00;ESPAGNOL LM2;Espagnol LM2;X0 - Espagnol;;[4-LM2-E3];1;vendredi;09h05
-1h00;ESPAGNOL LM2;Espagnol LM2;X0 - Espagnol;;[4-LM2-E3];1;vendredi;09h55
-2h00;ESPAGNOL LM3;Espagnol LM3;JUDONG;Sylvie;[5+6-LM3-E];1;vendredi;11h00
-1h00;ESPAGNOL LM3;Espagnol LM3;JUDONG;Sylvie;[5+6-LM3-E];1;lundi;15h20
-1h00;ESPAGNOL LM3;Espagnol LM3;JUDONG;Sylvie;[5+6-LM3-E];1;mardi;16h10
-1h00;FHGES;FHGES;BOURGEOIS;Maxime;[1-SF2];1;lundi;08h15
-1h00;FHGES;FHGES;BOURGEOIS;Maxime;[1-SF2];1;jeudi;08h15
-1h00;FHGES;FHGES;BOURGEOIS;Maxime;[1-SF2];1;mardi;09h05
-1h00;FHGES;FHGES;BOURGEOIS;Maxime;[1-SF2];1;vendredi;09h05
-1h00;FHGES;FHGES;BOURGEOIS;Maxime;[1-SF3];1;vendredi;08h15
-1h00;FHGES;FHGES;BOURGEOIS;Maxime;[1-SF3];1;mardi;09h55
-1h00;FHGES;FHGES;BOURGEOIS;Maxime;[1-SF3];1;jeudi;11h00
-1h00;FHGES;FHGES;BOURGEOIS;Maxime;[1-SF3];1;jeudi;11h50
-1h00;FHGES;FHGES;PAQUAY;Maxime;[1-SF1];1;vendredi;08h15
-1h00;FHGES;FHGES;PAQUAY;Maxime;[1-SF1];1;mardi;09h55
-1h00;FHGES;FHGES;PAQUAY;Maxime;[1-SF1];1;jeudi;11h00
-1h00;FHGES;FHGES;PAQUAY;Maxime;[1-SF1];1;jeudi;13h40
-1h00;FHGES;FHGES;PAQUAY;Maxime;[1-SF4];1;mardi;08h15
-1h00;FHGES;FHGES;PAQUAY;Maxime;[1-SF4];1;jeudi;09h05
-1h00;FHGES;FHGES;PAQUAY;Maxime;[1-SF4];1;jeudi;09h55
-1h00;FHGES;FHGES;PAQUAY;Maxime;[1-SF4];1;mardi;11h50
-1h00;FHGES DI;FHGES immersion allemande;DRECHSEL;Karoline;[1-SF-DI];1;mardi;09h55
-1h00;FHGES DI;FHGES immersion allemande;DRECHSEL;Karoline;[1-SF-DI];1;jeudi;11h00
-1h00;FHGES DI;FHGES immersion allemande;DRECHSEL;Karoline;[1-SF-DI];1;vendredi;11h00
-1h00;FHGES DI;FHGES immersion allemande;DRECHSEL;Karoline;[1-SF-DI];1;jeudi;11h50
-1h00;FHGES AI;FHGES immersion anglaise;CARLYLE;Thomas;[1-LM1-AI];1;jeudi;11h50
-1h00;FHGES AI;FHGES immersion anglaise;CARLYLE;Thomas;[1-LM1-AI];1;jeudi;13h40
-1h00;FHGES AI;FHGES immersion anglaise;CARLYLE;Thomas;[1-LM1-AI];1;vendredi;14h30
-1h00;FHGES AI;FHGES immersion anglaise;CARLYLE;Thomas;[1-LM1-AI];1;vendredi;15h20
-1h00;FHGES NI;FHGES immersion néerlandaise;HENDRIKS;Cédric;[1-SF-NI];1;mercredi;09h05
-1h00;FHGES NI;FHGES immersion néerlandaise;HENDRIKS;Cédric;[1-SF-NI];1;lundi;09h55
-1h00;FHGES NI;FHGES immersion néerlandaise;HENDRIKS;Cédric;[1-SF-NI];1;mardi;14h30
-1h00;FHGES NI;FHGES immersion néerlandaise;HENDRIKS;Cédric;[1-SF-NI];1;mardi;15h20
-1h00;FMTT;Formation Manuelle Technique et Technologique;ZANOL;Marie-Sophie;1PAA;1;jeudi;15h20
-1h00;FMTT;Formation Manuelle Technique et Technologique;ZANOL;Marie-Sophie;1PAB;1;jeudi;11h50
-1h00;FMTT;Formation Manuelle Technique et Technologique;ZANOL;Marie-Sophie;1PAC;1;vendredi;13h40
-1h00;FMTT;Formation Manuelle Technique et Technologique;ZANOL;Marie-Sophie;1PAD;1;jeudi;09h05
-1h00;FMTT;Formation Manuelle Technique et Technologique;ZANOL;Marie-Sophie;1PAE;1;jeudi;09h55
-1h00;FMTT;Formation Manuelle Technique et Technologique;ZANOL;Marie-Sophie;1PAF;1;mercredi;08h15
-1h00;FN;Formation Numérique;KIS;Julie;1PAA;1;mardi;14h30
-1h00;FN;Formation Numérique;KIS;Julie;1PAA;1;mardi;15h20
-1h00;FN;Formation Numérique;KIS;Julie;1PAB;1;lundi;09h05
-1h00;FN;Formation Numérique;KIS;Julie;1PAB;1;jeudi;09h05
-1h00;FN;Formation Numérique;KIS;Julie;1PAC;1;lundi;09h55
-1h00;FN;Formation Numérique;KIS;Julie;1PAC;1;lundi;11h00
-1h00;FN;Formation Numérique;KIS;Julie;1PAD;1;mardi;08h15
-1h00;FN;Formation Numérique;KIS;Julie;1PAD;1;mardi;09h05
-1h00;FN;Formation Numérique;KIS;Julie;1PAE;1;jeudi;08h15
-1h00;FN;Formation Numérique;KIS;Julie;1PAE;1;mardi;11h00
-1h00;FN;Formation Numérique;KIS;Julie;1PAF;1;lundi;11h50
-1h00;FN;Formation Numérique;KIS;Julie;1PAF;1;mardi;13h40
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;1PAC;1;mardi;08h15
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;1PAC;1;mardi;09h05
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;1PAC;1;mercredi;09h05
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;1PAC;1;mercredi;11h00
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;1PAC;1;lundi;11h50
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;1PAC;1;mardi;14h30
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;2PAC;1;jeudi;09h05
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;2PAC;1;jeudi;09h55
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;2PAC;1;vendredi;11h00
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;2PAC;1;lundi;14h30
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;2PAC;1;mardi;15h20
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;3PAV;1;lundi;09h05
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;3PAV;1;lundi;09h55
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;3PAV;1;mardi;09h55
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;3PAV;1;vendredi;09h55
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;3PAV;1;mardi;13h40
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;3PAZ;1;mercredi;09h55
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;3PAZ;1;lundi;13h40
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;3PAZ;1;vendredi;13h40
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;3PAZ;1;vendredi;14h30
-1h00;FRANÇAIS;Français;BAIZAN;Noémie;3PAZ;1;lundi;15h20
-2h00;FRANÇAIS;Français;BROOS;Carine;3PAW;1;mardi;08h15
-1h00;FRANÇAIS;Français;BROOS;Carine;3PAW;1;lundi;13h40
-1h00;FRANÇAIS;Français;BROOS;Carine;3PAW;1;vendredi;13h40
-1h00;FRANÇAIS;Français;BROOS;Carine;3PAW;1;lundi;14h30
-1h00;FRANÇAIS;Français;CHAPEAU;Manu;6PAZ;1;lundi;09h05
-1h00;FRANÇAIS;Français;CHAPEAU;Manu;6PAZ;1;mardi;11h00
-1h00;FRANÇAIS;Français;CHAPEAU;Manu;6PAZ;1;jeudi;11h00
-1h00;FRANÇAIS;Français;CHAPEAU;Manu;6PAZ;1;lundi;14h30
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;1PAF;1;lundi;08h15
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;1PAF;1;jeudi;08h15
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;1PAF;1;lundi;09h05
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;1PAF;1;mercredi;09h55
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;1PAF;1;mardi;11h00
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;1PAF;1;vendredi;13h40
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;2PAD;1;mercredi;09h05
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;2PAD;1;lundi;11h50
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;2PAD;1;jeudi;14h30
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;2PAD;1;vendredi;14h30
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;2PAD;1;vendredi;15h20
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;3PAU;1;lundi;09h55
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;3PAU;1;mardi;09h55
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;3PAU;1;jeudi;09h55
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;3PAU;1;mercredi;11h00
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;3PAU;1;lundi;13h40
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;3PAX;1;jeudi;11h00
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;3PAX;1;vendredi;11h00
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;3PAX;1;mardi;11h50
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;3PAX;1;jeudi;11h50
-1h00;FRANÇAIS;Français;DEGEY;Anne-Marie;3PAX;1;vendredi;11h50
-1h00;FRANÇAIS;Français;DJELIL;Samira;1PAA;1;jeudi;09h05
-1h00;FRANÇAIS;Français;DJELIL;Samira;1PAA;1;lundi;11h00
-1h00;FRANÇAIS;Français;DJELIL;Samira;1PAA;1;mardi;11h00
-1h00;FRANÇAIS;Français;DJELIL;Samira;1PAA;1;mercredi;11h00
-1h00;FRANÇAIS;Français;DJELIL;Samira;1PAA;1;lundi;11h50
-1h00;FRANÇAIS;Français;DJELIL;Samira;1PAA;1;mardi;13h40
-1h00;FRANÇAIS;Français;DJELIL;Samira;1PAB;1;jeudi;09h55
-1h00;FRANÇAIS;Français;DJELIL;Samira;1PAB;1;vendredi;09h55
-1h00;FRANÇAIS;Français;DJELIL;Samira;1PAB;1;vendredi;11h50
-1h00;FRANÇAIS;Français;DJELIL;Samira;1PAB;1;jeudi;13h40
-1h00;FRANÇAIS;Français;DJELIL;Samira;1PAB;1;lundi;14h30
-1h00;FRANÇAIS;Français;DJELIL;Samira;1PAB;1;mardi;14h30
-1h00;FRANÇAIS;Français;DJELIL;Samira;2PAA;1;vendredi;08h15
-1h00;FRANÇAIS;Français;DJELIL;Samira;2PAA;1;mercredi;09h05
-1h00;FRANÇAIS;Français;DJELIL;Samira;2PAA;1;mercredi;09h55
-1h00;FRANÇAIS;Français;DJELIL;Samira;2PAA;1;mardi;11h50
-1h00;FRANÇAIS;Français;DJELIL;Samira;2PAA;1;jeudi;14h30
-1h00;FRANÇAIS;Français;DJELIL;Samira;2PAB;1;vendredi;09h05
-1h00;FRANÇAIS;Français;DJELIL;Samira;2PAB;1;jeudi;11h00
-1h00;FRANÇAIS;Français;DJELIL;Samira;2PAB;1;vendredi;11h00
-1h00;FRANÇAIS;Français;DJELIL;Samira;2PAB;1;jeudi;11h50
-1h00;FRANÇAIS;Français;DJELIL;Samira;2PAB;1;lundi;13h40
-1h00;FRANÇAIS;Français;GOIN;Emilie;4PAV;1;mardi;11h50
-1h00;FRANÇAIS;Français;GOIN;Emilie;4PAV;1;mardi;13h40
-1h00;FRANÇAIS;Français;GOIN;Emilie;4PAX;1;mardi;08h15
-1h00;FRANÇAIS;Français;GOIN;Emilie;4PAX;1;mardi;09h55
-1h00;FRANÇAIS;Français;GOIN;Emilie;4PAX;1;lundi;13h40
-1h00;FRANÇAIS;Français;GOIN;Emilie;4PAX;1;jeudi;13h40
-1h00;FRANÇAIS;Français;GOIN;Emilie;4PAX;1;lundi;15h20
-1h00;FRANÇAIS;Français;GOIN;Emilie;4PAZ;1;mardi;09h05
-1h00;FRANÇAIS;Français;HUCHANT;Louise;4PAT;1;vendredi;08h15
-1h00;FRANÇAIS;Français;HUCHANT;Louise;4PAT;1;mardi;09h55
-1h00;FRANÇAIS;Français;HUCHANT;Louise;4PAT;1;lundi;11h50
-1h00;FRANÇAIS;Français;HUCHANT;Louise;4PAT;1;jeudi;13h40
-1h00;FRANÇAIS;Français;HUCHANT;Louise;4PAT;1;lundi;15h20
-1h00;FRANÇAIS;Français;HUCHANT;Louise;4PAW;1;mercredi;08h15
-1h00;FRANÇAIS;Français;HUCHANT;Louise;4PAW;1;lundi;09h05
-1h00;FRANÇAIS;Français;HUCHANT;Louise;5PAU;1;lundi;08h15
-1h00;FRANÇAIS;Français;HUCHANT;Louise;5PAU;1;jeudi;08h15
-1h00;FRANÇAIS;Français;HUCHANT;Louise;5PAU;1;lundi;09h55
-1h00;FRANÇAIS;Français;HUCHANT;Louise;5PAU;1;vendredi;11h50
-1h00;FRANÇAIS;Français;HUCHANT;Louise;5PAU;1;mardi;14h30
-1h00;FRANÇAIS;Français;HUCHANT;Louise;5PAV;1;mardi;09h05
-1h00;FRANÇAIS;Français;HUCHANT;Louise;5PAV;1;jeudi;09h05
-1h00;FRANÇAIS;Français;HUCHANT;Louise;5PAV;1;jeudi;11h00
-1h00;FRANÇAIS;Français;HUCHANT;Louise;5PAV;1;mardi;15h20
-1h00;FRANÇAIS;Français;HUCHANT;Louise;5PAV;1;mardi;16h10
-1h00;FRANÇAIS;Français;HUCHANT;Louise;6PAY;1;mercredi;09h05
-1h00;FRANÇAIS;Français;HUCHANT;Louise;6PAY;1;lundi;13h40
-1h00;FRANÇAIS;Français;HUCHANT;Louise;6PAY;1;mardi;13h40
-1h00;FRANÇAIS;Français;HUCHANT;Louise;6PAY;1;lundi;14h30
-1h00;FRANÇAIS;Français;HUCHANT;Louise;6PAY;1;jeudi;15h20
-1h00;FRANÇAIS;Français;JOBKENNE;Sarah;5PAX;1;lundi;08h15
-1h00;FRANÇAIS;Français;JOBKENNE;Sarah;5PAX;1;lundi;09h55
-1h00;FRANÇAIS;Français;JOBKENNE;Sarah;5PAX;1;mardi;13h40
-1h00;FRANÇAIS;Français;JOBKENNE;Sarah;5PAX;1;jeudi;13h40
-1h00;FRANÇAIS;Français;JOBKENNE;Sarah;5PAX;1;mardi;14h30
-1h00;FRANÇAIS;Français;JOBKENNE;Sarah;6PAV;1;lundi;09h05
-1h00;FRANÇAIS;Français;JOBKENNE;Sarah;6PAV;1;mardi;09h55
-1h00;FRANÇAIS;Français;JOBKENNE;Sarah;6PAV;1;mardi;11h00
-1h00;FRANÇAIS;Français;JOBKENNE;Sarah;6PAV;1;lundi;13h40
-1h00;FRANÇAIS;Français;JOBKENNE;Sarah;6PAV;1;jeudi;14h30
-1h00;FRANÇAIS;Français;JOBKENNE;Sarah;6PAZ;1;mardi;11h50
-1h00;FRANÇAIS;Français;MAESEN;Valentin;4PAZ;1;lundi;15h20
-1h00;FRANÇAIS;Français;MAESEN;Valentin;6PAW;1;jeudi;09h05
-1h00;FRANÇAIS;Français;MAESEN;Valentin;6PAW;1;mercredi;09h55
-1h00;FRANÇAIS;Français;MAESEN;Valentin;6PAW;1;jeudi;09h55
-1h00;FRANÇAIS;Français;MAESEN;Valentin;6PAW;1;mercredi;11h00
-1h00;FRANÇAIS;Français;MAESEN;Valentin;6PAW;1;lundi;13h40
-1h00;FRANÇAIS;Français;MAESEN;Valentin;6PAX;1;mercredi;08h15
-1h00;FRANÇAIS;Français;MAESEN;Valentin;6PAX;1;jeudi;08h15
-1h00;FRANÇAIS;Français;MAESEN;Valentin;6PAX;1;mercredi;09h05
-1h00;FRANÇAIS;Français;MAESEN;Valentin;6PAX;1;jeudi;11h00
-1h00;FRANÇAIS;Français;MAESEN;Valentin;6PAX;1;lundi;14h30
-1h00;FRANÇAIS;Français;NAVARRO;Angela;3PAY;1;mardi;09h05
-2h00;FRANÇAIS;Français;NAVARRO;Angela;3PAY;1;lundi;11h00
-1h00;FRANÇAIS;Français;NAVARRO;Angela;3PAY;1;mardi;11h00
-1h00;FRANÇAIS;Français;NAVARRO;Angela;3PAY;1;vendredi;11h50
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;1PAD;1;mercredi;09h55
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;1PAD;1;jeudi;09h55
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;1PAD;1;mardi;11h00
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;1PAD;1;lundi;11h50
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;1PAD;1;mardi;11h50
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;1PAD;1;jeudi;15h20
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;1PAE;1;mardi;08h15
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;1PAE;1;mardi;09h05
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;1PAE;1;vendredi;13h40
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;1PAE;1;lundi;14h30
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;1PAE;1;lundi;15h20
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;1PAE;1;vendredi;15h20
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;2PAE;1;lundi;09h55
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;2PAE;1;lundi;13h40
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;2PAE;1;mardi;13h40
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;2PAE;1;vendredi;14h30
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;2PAE;1;mardi;15h20
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;2PAF;1;jeudi;09h05
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;2PAF;1;vendredi;11h00
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;2PAF;1;vendredi;11h50
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;2PAF;1;mardi;14h30
-1h00;FRANÇAIS;Français;POPOVICS;Vanessa;2PAF;1;jeudi;14h30
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;4PAU;1;vendredi;08h15
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;4PAU;1;mercredi;09h55
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;4PAU;1;mercredi;11h00
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;4PAU;1;jeudi;11h00
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;4PAU;1;lundi;15h20
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;4PAW;1;vendredi;09h05
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;4PAW;1;vendredi;09h55
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;4PAW;1;lundi;14h30
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;5PAW;1;lundi;08h15
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;5PAW;1;mercredi;08h15
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;5PAW;1;jeudi;08h15
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;5PAW;1;vendredi;11h50
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;5PAW;1;jeudi;15h20
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;6PAT;1;mercredi;09h05
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;6PAT;1;lundi;11h00
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;6PAT;1;lundi;11h50
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;6PAT;1;jeudi;11h50
-1h00;FRANÇAIS;Français;VAN BRABANT;Laura;6PAT;1;jeudi;13h40
-1h00;FRANÇAIS;Français;WERA;Tanguy;4PAZ;1;lundi;09h05
-1h00;FRANÇAIS;Français;WERA;Tanguy;4PAZ;1;jeudi;09h05
-1h00;FRANÇAIS;Français;WERA;Tanguy;4PAZ;1;vendredi;11h00
-1h00;FRANÇAIS;Français;WERA;Tanguy;5PAY;1;mercredi;09h05
-1h00;FRANÇAIS;Français;WERA;Tanguy;5PAY;1;jeudi;11h00
-1h00;FRANÇAIS;Français;WERA;Tanguy;5PAY;1;lundi;11h50
-1h00;FRANÇAIS;Français;WERA;Tanguy;5PAY;1;jeudi;13h40
-1h00;FRANÇAIS;Français;WERA;Tanguy;5PAY;1;lundi;14h30
-1h00;FRANÇAIS;Français;WERA;Tanguy;5PAZ;1;jeudi;08h15
-1h00;FRANÇAIS;Français;WERA;Tanguy;5PAZ;1;lundi;09h55
-1h00;FRANÇAIS;Français;WERA;Tanguy;5PAZ;1;vendredi;11h50
-1h00;FRANÇAIS;Français;WERA;Tanguy;5PAZ;1;lundi;13h40
-1h00;FRANÇAIS;Français;WERA;Tanguy;5PAZ;1;jeudi;14h30
-1h00;FRANÇAIS;Français;WERA;Tanguy;6PAU;1;mercredi;08h15
-1h00;FRANÇAIS;Français;WERA;Tanguy;6PAU;1;mercredi;09h55
-1h00;FRANÇAIS;Français;WERA;Tanguy;6PAU;1;mercredi;11h00
-1h00;FRANÇAIS;Français;WERA;Tanguy;6PAU;1;jeudi;15h20
-1h00;FRANÇAIS;Français;WERA;Tanguy;6PAU;1;lundi;16h10
-1h00;FRANÇAIS;Français;ZAMBUTO;Stéphanie;4PAV;1;lundi;14h30
-1h00;FRANÇAIS;Français;ZAMBUTO;Stéphanie;4PAV;1;jeudi;15h20
-1h00;FRANÇAIS;Français;ZAMBUTO;Stéphanie;4PAV;1;vendredi;15h20
-1h00;FRANÇAIS;Français;ZAMBUTO;Stéphanie;4PAY;1;lundi;11h00
-1h00;FRANÇAIS;Français;ZAMBUTO;Stéphanie;4PAY;1;lundi;11h50
-1h00;FRANÇAIS;Français;ZAMBUTO;Stéphanie;4PAY;1;mardi;13h40
-1h00;FRANÇAIS;Français;ZAMBUTO;Stéphanie;4PAY;1;vendredi;13h40
-1h00;FRANÇAIS;Français;ZAMBUTO;Stéphanie;4PAY;1;mardi;14h30
-1h00;FRANÇAIS;Français;ZAMBUTO;Stéphanie;5PAT;1;lundi;08h15
-1h00;FRANÇAIS;Français;ZAMBUTO;Stéphanie;5PAT;1;mardi;15h20
-1h00;FRANÇAIS;Français;ZAMBUTO;Stéphanie;5PAT;1;lundi;16h10
-1h00;FRANÇAIS;Français;ZAMBUTO;Stéphanie;5PAT;1;jeudi;16h10
-1h00;FRANÇAIS;Français;ZAMBUTO;Stéphanie;5PAT;1;vendredi;16h10
-1h00;GÉO;Géographie;FRANCOIS;Ariane;[2-HGS3];1;mercredi;11h00
-1h00;GÉO;Géographie;FRANCOIS;Ariane;[2-HGS3];1;jeudi;13h40
-1h00;GÉO;Géographie;MEERT;David;[4-HG1];1;mercredi;08h15
-1h00;GÉO;Géographie;MEERT;David;[4-HG1];1;vendredi;11h50
-2h00;GÉO;Géographie;MEERT;David;[4-HG5];1;jeudi;14h30
-2h00;GÉO;Géographie;MEERT;David;[4-HG6];1;mardi;13h40
-1h00;GÉO;Géographie;MEERT;David;5PAT;1;jeudi;08h15
-1h00;GÉO;Géographie;MEERT;David;5PAT;1;vendredi;08h15
-1h00;GÉO;Géographie;MEERT;David;5PAU;1;mardi;15h20
-1h00;GÉO;Géographie;MEERT;David;5PAU;1;jeudi;16h10
-1h00;GÉO;Géographie;MEERT;David;5PAV;1;vendredi;09h05
-1h00;GÉO;Géographie;MEERT;David;5PAV;1;jeudi;09h55
-1h00;GÉO;Géographie;MEERT;David;5PAW;1;jeudi;11h50
-1h00;GÉO;Géographie;MEERT;David;5PAW;1;jeudi;13h40
-2h00;GÉO;Géographie;MEERT;David;6PAT;1;vendredi;14h30
-2h00;GÉO;Géographie;MEERT;David;6PAU;1;mardi;11h00
-2h00;GÉO;Géographie;MEERT;David;6PAV;1;mercredi;09h55
-2h00;GÉO;Géographie;MEERT;David;6PAW;1;lundi;09h05
-1h00;GÉO;Géographie;NOTTET;Tristant;[4-HG2];1;mardi;08h15
-1h00;GÉO;Géographie;NOTTET;Tristant;[4-HG2];1;vendredi;09h05
-1h00;GÉO;Géographie;NOTTET;Tristant;[4-HG3];1;lundi;09h05
-1h00;GÉO;Géographie;NOTTET;Tristant;[4-HG3];1;vendredi;11h50
-2h00;GÉO;Géographie;NOTTET;Tristant;[4-HG4];1;mardi;13h40
-1h00;GÉO;Géographie;NOTTET;Tristant;5PAX;1;vendredi;13h40
-1h00;GÉO;Géographie;NOTTET;Tristant;5PAX;1;mardi;15h20
-1h00;GÉO;Géographie;NOTTET;Tristant;5PAY;1;vendredi;08h15
-1h00;GÉO;Géographie;NOTTET;Tristant;5PAY;1;vendredi;09h55
-1h00;GÉO;Géographie;NOTTET;Tristant;5PAZ;1;lundi;08h15
-1h00;GÉO;Géographie;NOTTET;Tristant;5PAZ;1;mardi;09h55
-2h00;GÉO;Géographie;NOTTET;Tristant;6PAX;1;mercredi;09h55
-2h00;GÉO;Géographie;NOTTET;Tristant;6PAY;1;mardi;11h00
-2h00;GÉO;Géographie;NOTTET;Tristant;6PAZ;1;mercredi;08h15
-1h00;GÉO;Géographie;PAQUAY;Maxime;[2-HGS1];1;mardi;09h05
-1h00;GÉO;Géographie;PAQUAY;Maxime;[2-HGS1];1;lundi;13h40
-1h00;GÉO;Géographie;PAQUAY;Maxime;[2-HGS2];1;mercredi;09h05
-1h00;GÉO;Géographie;PAQUAY;Maxime;[2-HGS2];1;mercredi;11h00
-1h00;GÉO;Géographie;PAQUAY;Maxime;[2-HGS4];1;jeudi;08h15
-1h00;GÉO;Géographie;PAQUAY;Maxime;[2-HGS4];1;jeudi;11h50
-1h00;GÉO;Géographie;PAQUAY;Maxime;[3-HG1];1;lundi;14h30
-1h00;GÉO;Géographie;PAQUAY;Maxime;[3-HG1];1;lundi;15h20
-1h00;GÉO;Géographie;PAQUAY;Maxime;[3-HG2];1;mercredi;08h15
-1h00;GÉO;Géographie;PAQUAY;Maxime;[3-HG2];1;vendredi;09h05
-2h00;GÉO;Géographie;PAQUAY;Maxime;[3-HG3];1;jeudi;14h30
-2h00;GÉO;Géographie;PAQUAY;Maxime;[3-HG4];1;mardi;13h40
-1h00;GÉO DI;Géographie immersion allemande;DRECHSEL;Karoline;[3-HG-DI];1;jeudi;09h05
-1h00;GÉO DI;Géographie immersion allemande;DRECHSEL;Karoline;[3-HG-DI];1;jeudi;09h55
-1h00;GÉO DI;Géographie immersion allemande;RUESS;Céline;[4-G-DI];1;mardi;09h55
-1h00;GÉO DI;Géographie immersion allemande;RUESS;Céline;[4-G-DI];1;jeudi;09h55
-1h00;GÉO AI;Géographie immersion anglaise;BORLEE;Philippe;[2-LM1-AI];1;jeudi;11h50
-1h00;GÉO AI;Géographie immersion anglaise;BORLEE;Philippe;[2-LM1-AI];1;jeudi;13h40
-2h00;GÉO AI;Géographie immersion anglaise;BORLEE;Philippe;[3-LM1-AI];1;mardi;13h40
-2h00;GÉO AI;Géographie immersion anglaise;BORLEE;Philippe;[4-LM1-AI];1;jeudi;14h30
-1h00;GÉO NI;Géographie immersion néerlandaise;HENDRIKS;Cédric;[2-HGS-NI];1;jeudi;08h15
-1h00;GÉO NI;Géographie immersion néerlandaise;HENDRIKS;Cédric;[2-HGS-NI];1;mercredi;11h00
-1h00;GÉO NI;Géographie immersion néerlandaise;MORAUX;Laurence;[3+4-LM1-NI];1;jeudi;14h30
-1h00;GÉO NI;Géographie immersion néerlandaise;MORAUX;Laurence;[3+4-LM1-NI];1;jeudi;15h20
-1h00;HIST;Histoire;BOURGEOIS;Maxime;[2-HGS2];1;jeudi;09h55
-1h00;HIST;Histoire;BOURGEOIS;Maxime;[2-HGS3];1;lundi;09h05
-1h00;HIST;Histoire;BOURGEOIS;Maxime;[2-HGS3];1;lundi;11h00
-1h00;HIST;Histoire;BRUGMANS;Nathanael;[4-HG2];1;mercredi;09h05
-1h00;HIST;Histoire;BRUGMANS;Nathanael;[4-HG2];1;mardi;11h00
-2h00;HIST;Histoire;BRUGMANS;Nathanael;[4-HG4];1;jeudi;14h30
-1h00;HIST;Histoire;BRUGMANS;Nathanael;[5-H1];1;vendredi;15h20
-1h00;HIST;Histoire;BRUGMANS;Nathanael;[5-H1];1;vendredi;16h10
-1h00;HIST;Histoire;BRUGMANS;Nathanael;[5-H2];1;mardi;09h55
-1h00;HIST;Histoire;BRUGMANS;Nathanael;[5-H2];1;vendredi;11h00
-1h00;HIST;Histoire;BRUGMANS;Nathanael;[5-H4];1;vendredi;09h55
-1h00;HIST;Histoire;BRUGMANS;Nathanael;[5-H4];1;mardi;11h50
-1h00;HIST;Histoire;BRUGMANS;Nathanael;[6-H1];1;mercredi;09h55
-1h00;HIST;Histoire;BRUGMANS;Nathanael;[6-H1];1;mercredi;11h00
-1h00;HIST;Histoire;BRUGMANS;Nathanael;[6-H4];1;vendredi;09h05
-1h00;HIST;Histoire;BRUGMANS;Nathanael;[6-H4];1;jeudi;16h10
-1h00;HIST;Histoire;FRANCOIS;Ariane;[2-HGS1];1;vendredi;09h55
-1h00;HIST;Histoire;FRANCOIS;Ariane;[2-HGS1];1;vendredi;13h40
-1h00;HIST;Histoire;FRANCOIS;Ariane;[2-HGS2];1;vendredi;14h30
-1h00;HIST;Histoire;FRANCOIS;Ariane;[2-HGS4];1;vendredi;09h05
-1h00;HIST;Histoire;FRANCOIS;Ariane;[2-HGS4];1;vendredi;15h20
-1h00;HIST;Histoire;FRANCOIS;Ariane;[3-HG1];1;mardi;08h15
-1h00;HIST;Histoire;FRANCOIS;Ariane;[3-HG1];1;mardi;09h05
-1h00;HIST;Histoire;FRANCOIS;Ariane;[3-HG2];1;jeudi;09h55
-1h00;HIST;Histoire;FRANCOIS;Ariane;[3-HG2];1;vendredi;11h00
-2h00;HIST;Histoire;FRANCOIS;Ariane;[3-HG3];1;mardi;13h40
-2h00;HIST;Histoire;FRANCOIS;Ariane;[3-HG4];1;jeudi;14h30
-1h00;HIST;Histoire;MEDART;Fanny;[4-HG1];1;mardi;08h15
-1h00;HIST;Histoire;MEDART;Fanny;[4-HG1];1;vendredi;09h55
-2h00;HIST;Histoire;MEDART;Fanny;[4-HG5];1;mardi;13h40
-1h00;HIST;Histoire;MEDART;Fanny;[5-H3];1;mardi;09h55
-1h00;HIST;Histoire;MEDART;Fanny;[5-H3];1;vendredi;13h40
-1h00;HIST;Histoire;MEDART;Fanny;[5-H5];1;mardi;11h00
-1h00;HIST;Histoire;MEDART;Fanny;[5-H5];1;mardi;11h50
-1h00;HIST;Histoire;MEDART;Fanny;[6-H2];1;jeudi;08h15
-1h00;HIST;Histoire;MEDART;Fanny;[6-H2];1;vendredi;15h20
-1h00;HIST;Histoire;MEDART;Fanny;[6-H3];1;jeudi;11h00
-1h00;HIST;Histoire;MEDART;Fanny;[6-H3];1;vendredi;16h10
-1h00;HIST;Histoire;MEDART;Fanny;[6-H5];1;vendredi;09h05
-1h00;HIST;Histoire;MEDART;Fanny;[6-H5];1;jeudi;09h55
-1h00;HIST;Histoire;THOMAS;Adrian;[4-HG3];1;jeudi;09h55
-1h00;HIST;Histoire;THOMAS;Adrian;[4-HG3];1;jeudi;11h00
-2h00;HIST;Histoire;THOMAS;Adrian;[4-HG6];1;jeudi;14h30
-1h00;HIST;Histoire;THOMAS;Adrian;[5-H6];1;vendredi;09h55
-1h00;HIST;Histoire;THOMAS;Adrian;[5-H6];1;mardi;16h10
-1h00;HIST;Histoire;THOMAS;Adrian;[6-H6];1;jeudi;16h10
-1h00;HIST;Histoire;THOMAS;Adrian;[6-H6];1;vendredi;16h10
-1h00;HIST DI;Histoire immersion allemande;DRECHSEL;Karoline;[3-HG-DI];1;jeudi;14h30
-1h00;HIST DI;Histoire immersion allemande;DRECHSEL;Karoline;[3-HG-DI];1;jeudi;15h20
-1h00;HIST DI;Histoire immersion allemande;RUESS;Céline;[4+5+6-H-DI];1;;
-1h00;HIST DI;Histoire immersion allemande;RUESS;Céline;[4+5+6-H-DI];1;;
-1h00;HIST AI;Histoire immersion anglaise;CARLYLE;Thomas;[2-LM1-AI];1;vendredi;08h15
-1h00;HIST AI;Histoire immersion anglaise;CARLYLE;Thomas;[2-LM1-AI];1;mardi;09h55
-2h00;HIST AI;Histoire immersion anglaise;CARLYLE;Thomas;[3-LM1-AI];1;jeudi;14h30
-1h00;HIST AI;Histoire immersion anglaise;CARLYLE;Thomas;[4-LM1-AI];1;mardi;13h40
-1h00;HIST AI;Histoire immersion anglaise;SACRE;Catherine;[4-LM1-AI];1;mardi;14h30
-2h00;HIST AI;Histoire immersion anglaise;SACRE;Catherine;[5-LM1-AI];1;mardi;11h00
-1h00;HIST AI;Histoire immersion anglaise;SACRE;Catherine;[6-LM1-AI];1;jeudi;16h10
-1h00;HIST AI;Histoire immersion anglaise;SACRE;Catherine;[6-LM1-AI];1;vendredi;16h10
-1h00;HIST NI;Histoire immersion néerlandaise;HENDRIKS;Cédric;[2-HGS-NI];1;lundi;09h05
-1h00;HIST NI;Histoire immersion néerlandaise;HENDRIKS;Cédric;[2-HGS-NI];1;lundi;11h00
-1h00;HIST NI;Histoire immersion néerlandaise;HENDRIKS;Cédric;[3+4-LM1-NI];1;jeudi;09h05
-1h00;HIST NI;Histoire immersion néerlandaise;HENDRIKS;Cédric;[3+4-LM1-NI];1;jeudi;09h55
-1h00;HIST NI;Histoire immersion néerlandaise;HENDRIKS;Cédric;[5+6-LM1-NI], <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC;1;jeudi;11h00
-1h00;HIST NI;Histoire immersion néerlandaise;HENDRIKS;Cédric;[5+6-LM1-NI], <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC;1;mardi;13h40
-2h00;HIST opt.;Histoire option;BRUGMANS;Nathanael;[5-HOp];1;mardi;08h15
-1h00;HIST opt.;Histoire option;BRUGMANS;Nathanael;[5-HOp];1;mercredi;08h15
-1h00;HIST opt.;Histoire option;BRUGMANS;Nathanael;[5-HOp];1;vendredi;14h30
-2h00;HIST opt.;Histoire option;MEDART;Fanny;[6-HOp];1;vendredi;11h00
-1h00;HIST opt.;Histoire option;MEDART;Fanny;[6-HOp];1;mardi;15h20
-1h00;HIST opt.;Histoire option;MEDART;Fanny;[6-HOp];1;mardi;16h10
-1h00;ITALIEN LM2;Italien LM2;LAINO;Daniele;[3-LM2-I];1;mercredi;08h15
-1h00;ITALIEN LM2;Italien LM2;LAINO;Daniele;[3-LM2-I];1;vendredi;09h05
-1h00;ITALIEN LM2;Italien LM2;LAINO;Daniele;[3-LM2-I];1;lundi;09h55
-1h00;ITALIEN LM2;Italien LM2;LAINO;Daniele;[3-LM2-I];1;vendredi;09h55
-1h00;ITALIEN LM2;Italien LM2;LAINO;Daniele;[5+6-LM2-I];1;lundi;13h40
-1h00;ITALIEN LM2;Italien LM2;LAINO;Daniele;[5+6-LM2-I];1;lundi;14h30
-1h00;ITALIEN LM2;Italien LM2;ZAMBUTO;Stéphanie;[4-LM2-I];1;mercredi;08h15
-1h00;ITALIEN LM2;Italien LM2;ZAMBUTO;Stéphanie;[4-LM2-I];1;vendredi;09h05
-1h00;ITALIEN LM2;Italien LM2;ZAMBUTO;Stéphanie;[4-LM2-I];1;lundi;09h55
-1h00;ITALIEN LM2;Italien LM2;ZAMBUTO;Stéphanie;[4-LM2-I];1;vendredi;09h55
-1h00;ITALIEN LM2;Italien LM2;ZAMBUTO;Stéphanie;[5+6-LM2-I];1;mercredi;09h05
-1h00;ITALIEN LM2;Italien LM2;ZAMBUTO;Stéphanie;[5+6-LM2-I];1;jeudi;14h30
-2h00;LABO Bio;Laboratoire Biologie;JEANGILLE;Lionel;[6-Labo2];1;vendredi;11h00
-2h00;LABO Bio;Laboratoire Biologie;ZENTHNER;Fabienne;[5-Labo];1;mardi;11h00
-2h00;LABO Bio;Laboratoire Biologie;ZENTHNER;Fabienne;[6-Labo1];1;vendredi;11h00
-1h00;LATIN;Latin;DEPAIX;Françoise;2PAA;1;lundi;08h15
-1h00;LATIN;Latin;DEPAIX;Françoise;2PAA;1;lundi;09h05
-1h00;LATIN;Latin;DEPAIX;Françoise;2PAA;1;jeudi;13h40
-1h00;LATIN;Latin;DEPAIX;Françoise;2PAB;1;lundi;11h00
-1h00;LATIN;Latin;DEPAIX;Françoise;2PAB;1;jeudi;14h30
-1h00;LATIN;Latin;DEPAIX;Françoise;2PAB;1;jeudi;15h20
-1h00;LATIN;Latin;LACASSE;Anne;[3+4-La];1;mardi;11h50
-1h00;LATIN;Latin;LACASSE;Anne;[3+4-La];1;vendredi;14h30
-1h00;LATIN;Latin;LACASSE;Anne;[3+4-La];1;lundi;15h20
-1h00;LATIN;Latin;LACASSE;Anne;[3+4-La];1;lundi;16h10
-1h00;LATIN;Latin;LACASSE;Anne;[5+6-La];1;mardi;08h15
-1h00;LATIN;Latin;LACASSE;Anne;[5+6-La];1;mardi;12h40
-1h00;LATIN;Latin;LACASSE;Anne;[5+6-La];1;vendredi;12h40
-1h00;LATIN;Latin;LACASSE;Anne;<6PAW> <Option+LM1+LM2(+LM3)> LH4-A-/;1;mardi;09h05
-1h00;LATIN;Latin;LACASSE;Anne;2PAC;1;mercredi;09h05
-1h00;LATIN;Latin;LACASSE;Anne;2PAC;1;mercredi;09h55
-1h00;LATIN;Latin;LACASSE;Anne;2PAC;1;lundi;13h40
-1h00;LATIN;Latin;LACASSE;Anne;2PAD;1;vendredi;11h00
-1h00;LATIN;Latin;LACASSE;Anne;2PAD;1;vendredi;11h50
-1h00;LATIN;Latin;LACASSE;Anne;2PAD;1;mardi;13h40
-1h00;LATIN;Latin;LACASSE;Anne;2PAE;1;vendredi;13h40
-1h00;LATIN;Latin;LACASSE;Anne;2PAE;1;lundi;14h30
-1h00;LATIN;Latin;LACASSE;Anne;2PAE;1;mardi;14h30
-1h00;LATIN;Latin;LACASSE;Anne;2PAF;1;mercredi;08h15
-1h00;LATIN;Latin;LACASSE;Anne;2PAF;1;mardi;11h00
-1h00;LATIN;Latin;LACASSE;Anne;2PAF;1;mardi;15h20
-1h00;LECTURE;Lecture;BAIZAN;Noémie;2PAC;1;vendredi;11h50
-1h00;LECTURE;Lecture;BROOS;Carine;2PAA;1;vendredi;14h30
-1h00;LECTURE;Lecture;BROOS;Carine;2PAB;1;lundi;15h20
-1h00;LECTURE;Lecture;CHAPEAU;Manu;2PAE;1;mercredi;09h55
-1h00;LECTURE;Lecture;CHAPEAU;Manu;2PAF;1;vendredi;13h40
-1h00;LECTURE;Lecture;DEGEY;Anne-Marie;2PAD;1;jeudi;09h05
-1h00;MATH;Mathématiques;ALASMAWY;Ahmed;4PAU;1;jeudi;08h15
-1h00;MATH;Mathématiques;ALASMAWY;Ahmed;4PAU;1;mardi;09h05
-1h00;MATH;Mathématiques;ALASMAWY;Ahmed;4PAU;1;mardi;09h55
-1h00;MATH;Mathématiques;ALASMAWY;Ahmed;4PAU;1;vendredi;11h50
-1h00;MATH;Mathématiques;ALASMAWY;Ahmed;4PAU;1;jeudi;13h40
-1h00;MATH;Mathématiques;ALASMAWY;Ahmed;4PAY;1;mardi;08h15
-1h00;MATH;Mathématiques;ALASMAWY;Ahmed;4PAY;1;vendredi;08h15
-1h00;MATH;Mathématiques;ALASMAWY;Ahmed;4PAY;1;jeudi;09h05
-1h00;MATH;Mathématiques;ALASMAWY;Ahmed;4PAY;1;mardi;15h20
-1h00;MATH;Mathématiques;ALASMAWY;Ahmed;4PAY;1;jeudi;15h20
-1h00;MATH;Mathématiques;BAKHTI;Youssef;4PAW;1;mardi;08h15
-1h00;MATH;Mathématiques;BAKHTI;Youssef;4PAW;1;mercredi;09h55
-1h00;MATH;Mathématiques;BAKHTI;Youssef;4PAW;1;mercredi;11h00
-1h00;MATH;Mathématiques;BAKHTI;Youssef;4PAW;1;jeudi;11h00
-1h00;MATH;Mathématiques;BAKHTI;Youssef;4PAW;1;vendredi;11h50
-1h00;MATH;Mathématiques;BAUWENS;Sarah;1PAB;1;mercredi;09h05
-1h00;MATH;Mathématiques;BAUWENS;Sarah;1PAB;1;lundi;09h55
-1h00;MATH;Mathématiques;BAUWENS;Sarah;1PAB;1;mardi;11h00
-1h00;MATH;Mathématiques;BAUWENS;Sarah;1PAB;1;mercredi;11h00
-1h00;MATH;Mathématiques;BAUWENS;Sarah;1PAB;1;mardi;15h20
-1h00;MATH;Mathématiques;BAUWENS;Sarah;1PAC;1;lundi;08h15
-1h00;MATH;Mathématiques;BAUWENS;Sarah;1PAC;1;lundi;09h05
-1h00;MATH;Mathématiques;BAUWENS;Sarah;1PAC;1;jeudi;09h05
-1h00;MATH;Mathématiques;BAUWENS;Sarah;1PAC;1;mercredi;09h55
-1h00;MATH;Mathématiques;BAUWENS;Sarah;1PAC;1;jeudi;09h55
-1h00;MATH;Mathématiques;BAUWENS;Sarah;2PAA;1;mardi;09h55
-1h00;MATH;Mathématiques;BAUWENS;Sarah;2PAA;1;lundi;11h00
-1h00;MATH;Mathématiques;BAUWENS;Sarah;2PAA;1;jeudi;11h00
-1h00;MATH;Mathématiques;BAUWENS;Sarah;2PAA;1;jeudi;11h50
-1h00;MATH;Mathématiques;BAUWENS;Sarah;2PAA;1;mardi;13h40
-1h00;MATH;Mathématiques;BAUWENS;Sarah;2PAB;1;jeudi;08h15
-1h00;MATH;Mathématiques;BAUWENS;Sarah;2PAB;1;lundi;11h50
-1h00;MATH;Mathématiques;BAUWENS;Sarah;2PAB;1;mardi;11h50
-1h00;MATH;Mathématiques;BAUWENS;Sarah;2PAB;1;jeudi;13h40
-1h00;MATH;Mathématiques;BAUWENS;Sarah;2PAB;1;mardi;14h30
-1h00;MATH;Mathématiques;BEBRONNE;Romain;4PAZ;1;lundi;13h40
-1h00;MATH;Mathématiques;BEBRONNE;Romain;4PAZ;1;lundi;14h30
-1h00;MATH;Mathématiques;CESA;Alexandre;4PAT;1;mardi;08h15
-1h00;MATH;Mathématiques;CESA;Alexandre;4PAT;1;lundi;09h05
-1h00;MATH;Mathématiques;CESA;Alexandre;4PAT;1;mardi;09h05
-1h00;MATH;Mathématiques;CESA;Alexandre;4PAT;1;jeudi;11h00
-1h00;MATH;Mathématiques;CESA;Alexandre;4PAT;1;vendredi;11h50
-1h00;MATH;Mathématiques;CESA;Alexandre;4PAX;1;mercredi;09h05
-1h00;MATH;Mathématiques;CESA;Alexandre;4PAX;1;mercredi;11h00
-1h00;MATH;Mathématiques;CESA;Alexandre;4PAX;1;vendredi;11h00
-1h00;MATH;Mathématiques;CESA;Alexandre;4PAX;1;lundi;11h50
-1h00;MATH;Mathématiques;CESA;Alexandre;4PAX;1;mardi;11h50
-1h00;MATH;Mathématiques;CHAPEAU;Vincent;4PAV;1;lundi;08h15
-1h00;MATH;Mathématiques;CHAPEAU;Vincent;4PAV;1;mardi;09h05
-1h00;MATH;Mathématiques;CHAPEAU;Vincent;4PAV;1;vendredi;09h55
-1h00;MATH;Mathématiques;CHAPEAU;Vincent;4PAV;1;lundi;11h00
-1h00;MATH;Mathématiques;CHAPEAU;Vincent;4PAV;1;vendredi;11h00
-1h00;MATH;Mathématiques;CHAPEAU;Vincent;4PAZ;1;vendredi;08h15
-1h00;MATH;Mathématiques;CHAPEAU;Vincent;4PAZ;1;mardi;11h00
-1h00;MATH;Mathématiques;CHAPEAU;Vincent;4PAZ;1;mardi;11h50
-1h00;MATH;Mathématiques;KREIT;Amélie;1PAD;1;mardi;13h40
-1h00;MATH;Mathématiques;KREIT;Amélie;1PAD;1;mardi;15h20
-1h00;MATH;Mathématiques;KREIT;Amélie;1PAE;1;lundi;08h15
-1h00;MATH;Mathématiques;KREIT;Amélie;1PAE;1;lundi;09h05
-1h00;MATH;Mathématiques;KREIT;Amélie;1PAE;1;jeudi;09h05
-1h00;MATH;Mathématiques;KREIT;Amélie;1PAE;1;mercredi;11h00
-1h00;MATH;Mathématiques;KREIT;Amélie;1PAE;1;jeudi;15h20
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAC;1;mardi;08h15
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAC;1;lundi;09h55
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAC;1;mardi;11h00
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAC;1;lundi;11h50
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAC;1;jeudi;14h30
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAD;1;mercredi;09h55
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAD;1;jeudi;09h55
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAD;1;lundi;13h40
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAD;1;lundi;14h30
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAD;1;mardi;14h30
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAE;1;mercredi;08h15
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAE;1;mardi;09h05
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAE;1;mercredi;09h05
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAE;1;mardi;11h50
-1h00;MATH;Mathématiques;KREIT;Amélie;2PAE;1;lundi;15h20
-1h00;MATH;Mathématiques;OUAHABI;Ghania;1PAF;1;mardi;09h55
-1h00;MATH;Mathématiques;OUAHABI;Ghania;1PAF;1;jeudi;11h00
-1h00;MATH;Mathématiques;OUAHABI;Ghania;1PAF;1;lundi;13h40
-1h00;MATH;Mathématiques;OUAHABI;Ghania;1PAF;1;lundi;14h30
-1h00;MATH;Mathématiques;OUAHABI;Ghania;1PAF;1;vendredi;14h30
-1h00;MATH;Mathématiques;OUAHABI;Ghania;2PAF;1;mercredi;09h05
-1h00;MATH;Mathématiques;OUAHABI;Ghania;2PAF;1;lundi;09h55
-1h00;MATH;Mathématiques;OUAHABI;Ghania;2PAF;1;mercredi;09h55
-1h00;MATH;Mathématiques;OUAHABI;Ghania;2PAF;1;jeudi;09h55
-1h00;MATH;Mathématiques;OUAHABI;Ghania;2PAF;1;lundi;11h50
-1h00;MATH;Mathématiques;OUAHABI;Ghania;3PAV;1;vendredi;11h50
-1h00;MATH;Mathématiques;OUAHABI, ZOUGGAGHI;Ghania, Mohammed;1PAD;1;lundi;11h00
-1h00;MATH;Mathématiques;OUAHABI, ZOUGGAGHI;Ghania, Mohammed;1PAD;1;vendredi;13h40
-1h00;MATH;Mathématiques;OUAHABI, ZOUGGAGHI;Ghania, Mohammed;1PAD;1;lundi;15h20
-1h00;MATH;Mathématiques;STAFFE;Joséphine;1PAA;1;mardi;09h05
-1h00;MATH;Mathématiques;STAFFE;Joséphine;1PAA;1;jeudi;09h55
-1h00;MATH;Mathématiques;STAFFE;Joséphine;1PAA;1;mardi;11h50
-1h00;MATH;Mathématiques;STAFFE;Joséphine;1PAA;1;lundi;13h40
-1h00;MATH;Mathématiques;STAFFE;Joséphine;1PAA;1;lundi;14h30
-1h00;MATH;Mathématiques;STAFFE;Joséphine;3PAV;1;jeudi;08h15
-1h00;MATH;Mathématiques;STAFFE;Joséphine;3PAV;1;jeudi;09h05
-1h00;MATH;Mathématiques;STAFFE;Joséphine;3PAW;1;lundi;11h00
-1h00;MATH;Mathématiques;STAFFE;Joséphine;3PAW;1;mardi;11h00
-1h00;MATH;Mathématiques;STAFFE;Joséphine;3PAW;1;jeudi;11h00
-1h00;MATH;Mathématiques;STAFFE;Joséphine;3PAW;1;lundi;11h50
-1h00;MATH;Mathématiques;STAFFE;Joséphine;3PAW;1;jeudi;11h50
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAU;1;vendredi;09h05
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAU;1;mercredi;09h55
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAU;1;vendredi;09h55
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAU;1;jeudi;14h30
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAU;1;jeudi;15h20
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAV;1;lundi;13h40
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAV;1;lundi;14h30
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAX;1;mardi;09h55
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAX;1;lundi;11h00
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAX;1;mardi;11h00
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAX;1;lundi;11h50
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAX;1;jeudi;13h40
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAY;1;mardi;08h15
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAY;1;jeudi;11h00
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAY;1;mardi;11h50
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAY;1;jeudi;11h50
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAY;1;vendredi;13h40
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAZ;1;lundi;08h15
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAZ;1;lundi;09h05
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAZ;1;mardi;09h05
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAZ;1;mercredi;11h00
-1h00;MATH;Mathématiques;VAN DE VLOET;Jennifer;3PAZ;1;vendredi;11h50
-1h00;MATH4;Mathématiques 4h;BAKHTI;Youssef;[5-M4h3];1;lundi;11h50
-1h00;MATH4;Mathématiques 4h;BAKHTI;Youssef;[5-M4h3];1;lundi;14h30
-1h00;MATH4;Mathématiques 4h;BAKHTI;Youssef;[5-M4h3];1;mardi;15h20
-1h00;MATH4;Mathématiques 4h;BAKHTI;Youssef;[5-M4h3];1;jeudi;15h20
-1h00;MATH4;Mathématiques 4h;BAKHTI;Youssef;[5-M4h5];1;mardi;09h55
-1h00;MATH4;Mathématiques 4h;BAKHTI;Youssef;[5-M4h5];1;lundi;11h00
-1h00;MATH4;Mathématiques 4h;BAKHTI;Youssef;[5-M4h5];1;jeudi;13h40
-1h00;MATH4;Mathématiques 4h;BAKHTI;Youssef;[5-M4h5];1;vendredi;13h40
-1h00;MATH4;Mathématiques 4h;BAKHTI;Youssef;[6-M4h1];1;jeudi;09h05
-1h00;MATH4;Mathématiques 4h;BAKHTI;Youssef;[6-M4h1];1;lundi;09h55
-1h00;MATH4;Mathématiques 4h;BAKHTI;Youssef;[6-M4h1];1;jeudi;09h55
-1h00;MATH4;Mathématiques 4h;BAKHTI;Youssef;[6-M4h1];1;mardi;14h30
-1h00;MATH4;Mathématiques 4h;CESA;Alexandre;[5-M4h4];1;mercredi;09h55
-1h00;MATH4;Mathématiques 4h;CESA;Alexandre;[5-M4h4];1;jeudi;09h55
-1h00;MATH4;Mathématiques 4h;CESA;Alexandre;[5-M4h4];1;mardi;11h00
-1h00;MATH4;Mathématiques 4h;CESA;Alexandre;[5-M4h4];1;jeudi;11h50
-1h00;MATH4;Mathématiques 4h;CESA;Alexandre;[5-M4h6];1;mardi;09h55
-1h00;MATH4;Mathématiques 4h;CESA;Alexandre;[5-M4h6];1;lundi;11h00
-1h00;MATH4;Mathématiques 4h;CESA;Alexandre;[5-M4h6];1;jeudi;13h40
-1h00;MATH4;Mathématiques 4h;CESA;Alexandre;[5-M4h6];1;vendredi;13h40
-1h00;MATH4;Mathématiques 4h;CESA;Alexandre;[6-M4h5];1;vendredi;09h05
-1h00;MATH4;Mathématiques 4h;CESA;Alexandre;[6-M4h5];1;lundi;09h55
-1h00;MATH4;Mathématiques 4h;CESA;Alexandre;[6-M4h5];1;mardi;13h40
-1h00;MATH4;Mathématiques 4h;CESA;Alexandre;[6-M4h5];1;mardi;14h30
-1h00;MATH4;Mathématiques 4h;CHAPEAU;Vincent;[6-M4h4];1;vendredi;09h05
-1h00;MATH4;Mathématiques 4h;CHAPEAU;Vincent;[6-M4h4];1;lundi;09h55
-1h00;MATH4;Mathématiques 4h;CHAPEAU;Vincent;[6-M4h4];1;mardi;09h55
-1h00;MATH4;Mathématiques 4h;CHAPEAU;Vincent;[6-M4h4];1;mardi;14h30
-1h00;MATH4;Mathématiques 4h;HAFNAOUI;Imane;[5-M4h2];1;jeudi;08h15
-1h00;MATH4;Mathématiques 4h;HAFNAOUI;Imane;[5-M4h2];1;mercredi;09h05
-1h00;MATH4;Mathématiques 4h;HAFNAOUI;Imane;[5-M4h2];1;vendredi;11h50
-1h00;MATH4;Mathématiques 4h;HAFNAOUI;Imane;[5-M4h2];1;jeudi;14h30
-1h00;MATH4;Mathématiques 4h;HAFNAOUI;Imane;[6-M4h3];1;lundi;09h05
-1h00;MATH4;Mathématiques 4h;HAFNAOUI;Imane;[6-M4h3];1;mercredi;09h55
-1h00;MATH4;Mathématiques 4h;HAFNAOUI;Imane;[6-M4h3];1;vendredi;09h55
-1h00;MATH4;Mathématiques 4h;HAFNAOUI;Imane;[6-M4h3];1;mercredi;11h00
-1h00;MATH4;Mathématiques 4h;VAN DEN BERGHE;Sylviane;[5-M4h1];1;mardi;08h15
-1h00;MATH4;Mathématiques 4h;VAN DEN BERGHE;Sylviane;[5-M4h1];1;mardi;09h05
-1h00;MATH4;Mathématiques 4h;VAN DEN BERGHE;Sylviane;[5-M4h1];1;vendredi;09h05
-1h00;MATH4;Mathématiques 4h;VAN DEN BERGHE;Sylviane;[5-M4h1];1;vendredi;09h55
-1h00;MATH4;Mathématiques 4h;VAN DEN BERGHE;Sylviane;[6-M4h2];1;mercredi;08h15
-1h00;MATH4;Mathématiques 4h;VAN DEN BERGHE;Sylviane;[6-M4h2];1;mercredi;09h05
-1h00;MATH4;Mathématiques 4h;VAN DEN BERGHE;Sylviane;[6-M4h2];1;jeudi;11h00
-1h00;MATH4;Mathématiques 4h;VAN DEN BERGHE;Sylviane;[6-M4h2];1;mardi;14h30
-1h00;MATH6;Mathématiques 6h;HAFNAOUI;Imane;[5-M6h2];1;vendredi;08h15
-2h00;MATH6;Mathématiques 6h;HAFNAOUI;Imane;[5-M6h2];1;lundi;11h00
-1h00;MATH6;Mathématiques 6h;HAFNAOUI;Imane;[5-M6h2];1;vendredi;11h00
-1h00;MATH6;Mathématiques 6h;HAFNAOUI;Imane;[5-M6h2];1;jeudi;13h40
-1h00;MATH6;Mathématiques 6h;HAFNAOUI;Imane;[5-M6h2];1;vendredi;13h40
-2h00;MATH6;Mathématiques 6h;HAFNAOUI;Imane;[6-M6h2];1;jeudi;09h05
-1h00;MATH6;Mathématiques 6h;HAFNAOUI;Imane;[6-M6h2];1;vendredi;09h05
-1h00;MATH6;Mathématiques 6h;HAFNAOUI;Imane;[6-M6h2];1;lundi;09h55
-1h00;MATH6;Mathématiques 6h;HAFNAOUI;Imane;[6-M6h2];1;mardi;09h55
-1h00;MATH6;Mathématiques 6h;HAFNAOUI;Imane;[6-M6h2];1;mardi;14h30
-1h00;MATH6;Mathématiques 6h;VAN DEN BERGHE;Sylviane;[5-M6h1];1;lundi;09h55
-1h00;MATH6;Mathématiques 6h;VAN DEN BERGHE;Sylviane;[5-M6h1];1;mardi;09h55
-2h00;MATH6;Mathématiques 6h;VAN DEN BERGHE;Sylviane;[5-M6h1];1;lundi;11h00
-1h00;MATH6;Mathématiques 6h;VAN DEN BERGHE;Sylviane;[5-M6h1];1;jeudi;13h40
-1h00;MATH6;Mathématiques 6h;VAN DEN BERGHE;Sylviane;[5-M6h1];1;vendredi;13h40
-1h00;MATH6;Mathématiques 6h;VAN DEN BERGHE;Sylviane;[6-M6h1];1;lundi;09h05
-2h00;MATH6;Mathématiques 6h;VAN DEN BERGHE;Sylviane;[6-M6h1];1;mardi;11h00
-1h00;MATH6;Mathématiques 6h;VAN DEN BERGHE;Sylviane;[6-M6h1];1;vendredi;11h00
-1h00;MATH6;Mathématiques 6h;VAN DEN BERGHE;Sylviane;[6-M6h1];1;vendredi;11h50
-1h00;MATH6;Mathématiques 6h;VAN DEN BERGHE;Sylviane;[6-M6h1];1;jeudi;15h20
-1h00;MORALE;Morale;BASTIN;Mireille;[1-M];1;jeudi;14h30
-1h00;MORALE;Morale;BASTIN;Mireille;[2-M];1;jeudi;15h20
-1h00;MORALE;Morale;BASTIN;Mireille;[3-M];1;jeudi;13h40
-1h00;MORALE;Morale;THOMAS;Adrian;[4-M];1;jeudi;08h15
-1h00;MORALE;Morale;THOMAS;Adrian;[5-M];1;jeudi;11h50
-1h00;MORALE;Morale;THOMAS;Adrian;[6-M];1;vendredi;13h40
-2h00;Imm. Néerlandais;Néerlandais immersion;DONJEAN;Frederic;[3+4-LM1-NI];1;mardi;13h40
-1h00;Imm. Néerlandais;Néerlandais immersion;DONJEAN;Frederic;[3+4-LM1-NI];1;mardi;15h20
-1h00;Imm. Néerlandais;Néerlandais immersion;DONJEAN;Frederic;[3+4-LM1-NI];1;mardi;16h10
-1h00;Imm. Néerlandais;Néerlandais immersion;DONJEAN;Frederic;[5+6-LM1-NI], <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC;1;lundi;09h05
-1h00;Imm. Néerlandais;Néerlandais immersion;DONJEAN;Frederic;[5+6-LM1-NI], <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC;1;mercredi;09h55
-1h00;Imm. Néerlandais;Néerlandais immersion;DONJEAN;Frederic;[5+6-LM1-NI], <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC;1;mardi;11h00
-1h00;Imm. Néerlandais;Néerlandais immersion;DONJEAN;Frederic;[5+6-LM1-NI], <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC;1;mercredi;11h00
-1h00;Imm. Néerlandais;Néerlandais immersion;HENDRIKS;Cédric;[1+2-LM1-NI];1;mercredi;08h15
-1h00;Imm. Néerlandais;Néerlandais immersion;HENDRIKS;Cédric;[1+2-LM1-NI];1;mardi;09h55
-1h00;Imm. Néerlandais;Néerlandais immersion;HENDRIKS;Cédric;[1+2-LM1-NI];1;jeudi;11h50
-1h00;Imm. Néerlandais;Néerlandais immersion;HENDRIKS;Cédric;[1+2-LM1-NI];1;jeudi;13h40
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;BRACONNIER;Simon;[1-LM1-N];1;vendredi;08h15
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;BRACONNIER;Simon;[1-LM1-N];1;mardi;09h05
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;BRACONNIER;Simon;[1-LM1-N];1;mercredi;11h00
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;BRACONNIER;Simon;[1-LM1-N];1;jeudi;13h40
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;BRACONNIER;Simon;[2-LM1-N];1;mardi;09h55
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;BRACONNIER;Simon;[2-LM1-N];1;jeudi;11h00
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;BRACONNIER;Simon;[2-LM1-N];1;mardi;11h50
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;BRACONNIER;Simon;[2-LM1-N];1;jeudi;11h50
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;BRACONNIER;Simon;[3-LM1-N];1;jeudi;09h05
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;BRACONNIER;Simon;[3-LM1-N];1;jeudi;09h55
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;BRACONNIER;Simon;[3-LM1-N];1;mardi;15h20
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;BRACONNIER;Simon;[3-LM1-N];1;mardi;16h10
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;GERARD;Vincent;[5-LM1-N];1;jeudi;11h00
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;MORAUX;Laurence;[4-LM1-N];1;jeudi;09h05
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;MORAUX;Laurence;[4-LM1-N];1;jeudi;09h55
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;MORAUX;Laurence;[4-LM1-N];1;lundi;14h30
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;MORAUX;Laurence;[4-LM1-N];1;jeudi;16h10
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;MORAUX;Laurence;[5-LM1-N];1;lundi;09h05
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;MORAUX;Laurence;[5-LM1-N];1;mercredi;09h55
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;MORAUX;Laurence;[5-LM1-N];1;mercredi;11h00
-2h00;NÉERLANDAIS LM1;Néerlandais LM1;MORAUX;Laurence;[6-LM1-N];1;lundi;11h00
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;MORAUX;Laurence;[6-LM1-N];1;jeudi;11h50
-1h00;NÉERLANDAIS LM1;Néerlandais LM1;MORAUX;Laurence;[6-LM1-N];1;jeudi;13h40
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BRACONNIER;Simon;[3-LM2-N1];1;mardi;08h15
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BRACONNIER;Simon;[3-LM2-N1];1;jeudi;08h15
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BRACONNIER;Simon;[3-LM2-N1];1;mercredi;09h05
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BRACONNIER;Simon;[3-LM2-N1];1;vendredi;11h00
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BRACONNIER;Simon;[3-LM2-N2];1;mercredi;08h15
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BRACONNIER;Simon;[3-LM2-N2];1;vendredi;09h05
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BRACONNIER;Simon;[3-LM2-N2];1;lundi;09h55
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BRACONNIER;Simon;[3-LM2-N2];1;vendredi;09h55
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[4-LM2-N1];1;vendredi;08h15
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[4-LM2-N1];1;lundi;11h00
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[4-LM2-N1];1;lundi;11h50
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[4-LM2-N1];1;jeudi;13h40
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[4-LM2-N2];1;mercredi;08h15
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[4-LM2-N2];1;vendredi;09h05
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[4-LM2-N2];1;lundi;09h55
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[4-LM2-N2];1;vendredi;09h55
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[5-LM2-N1];1;vendredi;11h00
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[5-LM2-N1];1;jeudi;15h20
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[5-LM2-N2];1;mercredi;09h05
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[5-LM2-N2];1;lundi;13h40
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[5-LM2-N2];1;lundi;14h30
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[5-LM2-N2];1;jeudi;14h30
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[6-LM2-N2];1;lundi;08h15
-2h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[6-LM2-N2];1;mardi;08h15
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;BROUNS;Marie;[6-LM2-N2];1;lundi;16h10
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;DONJEAN;Frederic;[5-LM2-N1];1;vendredi;08h15
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;DONJEAN;Frederic;[5-LM2-N1];1;mardi;09h55
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;MORAUX;Laurence;[6-LM2-N1];1;lundi;08h15
-2h00;NÉERLANDAIS LM2;Néerlandais LM2;MORAUX;Laurence;[6-LM2-N1];1;mardi;08h15
-1h00;NÉERLANDAIS LM2;Néerlandais LM2;MORAUX;Laurence;[6-LM2-N1];1;lundi;16h10
-1h00;PHYSIQUE;Physique;MAQUET;Laurent;[5-Sc1];1;jeudi;09h55
-1h00;PHYSIQUE;Physique;MAQUET;Laurent;[5-Sc2];1;vendredi;15h20
-1h00;PHYSIQUE;Physique;MAQUET;Laurent;[6-Sc1];1;jeudi;11h00
-1h00;PHYSIQUE;Physique;MAQUET;Laurent;[6-Sc2];1;mardi;14h30
-1h00;PHYSIQUE;Physique;MAQUET;Laurent;[6-Sc3];1;vendredi;09h05
-1h00;PHYSIQUE;Physique;PILATE;Sarah;[4-Sc1];1;jeudi;11h50
-1h00;PHYSIQUE;Physique;PILATE;Sarah;[4-Sc2];1;jeudi;13h40
-1h00;PHYSIQUE;Physique;PILATE;Sarah;[4-Sc3];1;vendredi;15h20
-1h00;PHYSIQUE;Physique;PILATE;Sarah;[4-Sc4];1;lundi;13h40
-1h00;PHYSIQUE;Physique;PILATE;Sarah;[5-Sc3];1;jeudi;09h05
-1h00;PHYSIQUE;Physique;PILATE;Sarah;[5-Sc4];1;jeudi;09h55
-1h00;PHYSIQUE;Physique;PILATE;Sarah;[6-Sc4];1;vendredi;08h15
-1h00;PHYSIQUE;Physique;PILATE;Sarah;[6-Sc5];1;jeudi;14h30
-1h00;PHYSIQUE;Physique;ZOLLER;Céline;[3-Sc1];1;mercredi;09h05
-1h00;PHYSIQUE;Physique;ZOLLER;Céline;[3-Sc2];1;lundi;11h50
-1h00;PHYSIQUE;Physique;ZOLLER;Céline;[3-Sc3];1;vendredi;11h00
-1h00;PHYSIQUE;Physique;ZOLLER;Céline;[3-Sc4];1;vendredi;13h40
-1h00;PHY opt.;Physique option;BAKHTI;Youssef;[5-ScOp2];1;vendredi;14h30
-1h00;PHY opt.;Physique option;BAKHTI;Youssef;[5-ScOp2];1;vendredi;15h20
-1h00;PHY opt.;Physique option;BAKHTI;Youssef;[6-ScOp2];1;vendredi;08h15
-1h00;PHY opt.;Physique option;BAKHTI;Youssef;[6-ScOp2];1;vendredi;09h55
-1h00;PHY opt.;Physique option;MAQUET;Laurent;[4-ScOp1];1;mardi;09h05
-1h00;PHY opt.;Physique option;MAQUET;Laurent;[4-ScOp1];1;mercredi;09h55
-1h00;PHY opt.;Physique option;MAQUET;Laurent;[4-ScOp2];1;mardi;11h00
-1h00;PHY opt.;Physique option;MAQUET;Laurent;[4-ScOp2];1;jeudi;11h50
-1h00;PHY opt.;Physique option;MAQUET;Laurent;[4-ScOp3];1;vendredi;11h00
-1h00;PHY opt.;Physique option;MAQUET;Laurent;[4-ScOp3];1;mardi;11h50
-1h00;PHY opt.;Physique option;MAQUET;Laurent;[5-ScOp1];1;vendredi;09h55
-1h00;PHY opt.;Physique option;MAQUET;Laurent;[5-ScOp1];1;vendredi;11h50
-1h00;PHY opt.;Physique option;MAQUET;Laurent;[6-ScOp1];1;mardi;15h20
-1h00;PHY opt.;Physique option;MAQUET;Laurent;[6-ScOp1];1;mardi;16h10
-1h00;PHY opt.;Physique option;ZOLLER;Céline;[3-ScOp1];1;jeudi;08h15
-1h00;PHY opt.;Physique option;ZOLLER;Céline;[3-ScOp1];1;mercredi;11h00
-1h00;PHY opt.;Physique option;ZOLLER;Céline;[3-ScOp2];1;jeudi;11h00
-1h00;PHY opt.;Physique option;ZOLLER;Céline;[3-ScOp2];1;mardi;11h50
-1h00;Rel. Cath.;Religion Catholique;X16_RC_DI;;[1-RC];1;jeudi;14h30
-1h00;Rel. Cath.;Religion Catholique;X16_RC_DI;;[2-RC];1;jeudi;15h20
-1h00;Rel. Cath.;Religion Catholique;X16_RC_DI;;[3-RC];1;jeudi;13h40
-1h00;Rel. Cath.;Religion Catholique;X17_RC_DS;;[4-RC];1;jeudi;08h15
-1h00;Rel. Cath.;Religion Catholique;X17_RC_DS;;[5-RC];1;jeudi;11h50
-1h00;Rel. Cath.;Religion Catholique;X17_RC_DS;;[6-RC];1;vendredi;13h40
-1h00;Rel. Islam.;Religion Islamique;LEGSSYER;Rachida;[1-RI];1;jeudi;14h30
-1h00;Rel. Islam.;Religion Islamique;LEGSSYER;Rachida;[2-RI];1;jeudi;15h20
-1h00;Rel. Islam.;Religion Islamique;LEGSSYER;Rachida;[4-RI];1;jeudi;08h15
-1h00;Rel. Islam.;Religion Islamique;LEGSSYER;Rachida;[5-RI];1;jeudi;11h50
-1h00;Rel. Islam.;Religion Islamique;SEDRY;Jamal;[6-RI];1;vendredi;13h40
-1h00;Rel. Islam.;Religion Islamique;X12_RI_DI;;[3-RI];1;jeudi;13h40
-1h00;Rel. Ortho.;Religion orthodoxhe;X13_RO_DS;;[4-RO];1;mardi;08h15
-1h00;Rel. Prot.;Religion Protestante;X14_RP_DI;;[1-RP];1;jeudi;14h30
-1h00;Rel. Prot.;Religion Protestante;X14_RP_DI;;[2-RP];1;jeudi;15h20
-1h00;Rel. Prot.;Religion Protestante;X14_RP_DI;;[3-RP];1;jeudi;13h40
-1h00;Rel. Prot.;Religion Protestante;X15_RP_DS;;[4-RP];1;jeudi;08h15
-1h00;Rel. Prot.;Religion Protestante;X15_RP_DS;;[5-RP];1;jeudi;11h50
-1h00;Rel. Prot.;Religion Protestante;X15_RP_DS;;[6-RP];1;vendredi;13h40
-1h00;Rem. ANG.;Remédiation anglais;ZOES;Dyonissis;;1;;
-1h00;Rem. ANG.;Remédiation anglais;ZOES;Dyonissis;;1;;
-1h00;Rem. FR.;Remédiation Français;NAVARRO;Angela;;1;;
-1h00;Rem. FR.;Remédiation Français;NAVARRO;Angela;;1;;
-1h00;Rem. MATH;Remédiation Math;BAUWENS;Sarah;;1;;
-1h00;Rem. MATH;Remédiation Math;BAUWENS;Sarah;;1;;
-1h00;Rem. SCI.;Remédiation Sciences;ZOLLER;Céline;;1;;
-1h00;Rem. SCI.;Remédiation Sciences;ZOLLER;Céline;;1;;
-1h00;SCIENCES;Sciences;FINCKEN, YILDIRIM;Caroline, Héline;[1-SF2];1;lundi;13h40
-1h00;SCIENCES;Sciences;FINCKEN, YILDIRIM;Caroline, Héline;[1-SF2];1;vendredi;13h40
-1h00;SCIENCES;Sciences;FINCKEN, YILDIRIM;Caroline, Héline;[1-SF2];1;vendredi;14h30
-1h00;SCIENCES;Sciences;FINCKEN, YILDIRIM;Caroline, Héline;[1-SF4];1;vendredi;11h50
-1h00;SCIENCES;Sciences;YILDIRIM, BACCUS;Héline, Baptiste;[1-SF4];1;mercredi;09h05
-1h00;SCIENCES;Sciences;YILDIRIM, BACCUS;Héline, Baptiste;[1-SF4];1;vendredi;11h00
-1h00;SCIENCES;Sciences;YILDIRIM, BACCUS;Héline, Baptiste;[2-HGS2];1;jeudi;09h05
-1h00;SCIENCES;Sciences;YILDIRIM, BACCUS;Héline, Baptiste;[2-HGS2];1;lundi;09h55
-1h00;SCIENCES;Sciences;YILDIRIM, BACCUS;Héline, Baptiste;[2-HGS2];1;mercredi;09h55
-1h00;SCIENCES;Sciences;YILDIRIM, BACCUS;Héline, Baptiste;[2-HGS4];1;lundi;09h05
-1h00;SCIENCES;Sciences;YILDIRIM, BACCUS;Héline, Baptiste;[2-HGS4];1;vendredi;09h55
-1h00;SCIENCES;Sciences;YILDIRIM, BACCUS;Héline, Baptiste;[2-HGS4];1;lundi;11h00
-1h00;SCIENCES;Sciences;ZANOL;Marie-Sophie;[1-SF3];1;vendredi;11h00
-1h00;SCIENCES;Sciences;ZANOL;Marie-Sophie;[1-SF3];1;vendredi;11h50
-1h00;SCIENCES;Sciences;ZANOL;Marie-Sophie;[1-SF3];1;jeudi;13h40
-1h00;SCIENCES;Sciences;ZANOL;Marie-Sophie;[2-HGS3];1;jeudi;08h15
-1h00;SCIENCES;Sciences;ZANOL;Marie-Sophie;[2-HGS3];1;vendredi;09h05
-1h00;SCIENCES;Sciences;ZANOL;Marie-Sophie;[2-HGS3];1;vendredi;09h55
-1h00;SCIENCES;Sciences;ZOLLER;Céline;[1-SF1];1;mercredi;08h15
-1h00;SCIENCES;Sciences;ZOLLER;Céline;[1-SF1];1;vendredi;11h50
-1h00;SCIENCES;Sciences;ZOLLER;Céline;[1-SF1];1;vendredi;14h30
-1h00;SCIENCES;Sciences;ZOLLER;Céline;[2-HGS1];1;mardi;08h15
-1h00;SCIENCES;Sciences;ZOLLER;Céline;[2-HGS1];1;vendredi;09h05
-1h00;SCIENCES;Sciences;ZOLLER;Céline;[2-HGS1];1;lundi;09h55
-1h00;SC. ECO.;Sciences Economiques;FOMETIO MBOO;Idelette;[4-EC1];1;mercredi;09h05
-1h00;SC. ECO.;Sciences Economiques;FOMETIO MBOO;Idelette;[4-EC1];1;mardi;11h00
-1h00;SC. ECO.;Sciences Economiques;FOMETIO MBOO;Idelette;[4-EC1];1;vendredi;11h00
-1h00;SC. ECO.;Sciences Economiques;FOMETIO MBOO;Idelette;[4-EC1];1;mardi;11h50
-1h00;SC. ECO.;Sciences Economiques;FOMETIO MBOO;Idelette;[4-EC2];1;mercredi;09h55
-1h00;SC. ECO.;Sciences Economiques;FOMETIO MBOO;Idelette;[4-EC2];1;mercredi;11h00
-1h00;SC. ECO.;Sciences Economiques;FOMETIO MBOO;Idelette;[4-EC2];1;vendredi;11h50
-1h00;SC. ECO.;Sciences Economiques;FOMETIO MBOO;Idelette;[4-EC2];1;vendredi;13h40
-1h00;SC. ECO.;Sciences Economiques;FOMETIO MBOO;Idelette;[5-EC];1;mercredi;08h15
-1h00;SC. ECO.;Sciences Economiques;FOMETIO MBOO;Idelette;[5-EC];1;vendredi;14h30
-1h00;SC. ECO.;Sciences Economiques;MARECHAL;Anthony;[3-EC1];1;mardi;11h00
-1h00;SC. ECO.;Sciences Economiques;MARECHAL;Anthony;[3-EC1];1;jeudi;11h00
-1h00;SC. ECO.;Sciences Economiques;MARECHAL;Anthony;[3-EC1];1;mardi;11h50
-1h00;SC. ECO.;Sciences Economiques;MARECHAL;Anthony;[3-EC1];1;jeudi;11h50
-1h00;SC. ECO.;Sciences Economiques;MARECHAL;Anthony;[3-EC2];1;jeudi;08h15
-1h00;SC. ECO.;Sciences Economiques;MARECHAL;Anthony;[3-EC2];1;vendredi;08h15
-1h00;SC. ECO.;Sciences Economiques;MARECHAL;Anthony;[3-EC2];1;mercredi;09h05
-1h00;SC. ECO.;Sciences Economiques;MARECHAL;Anthony;[3-EC2];1;mercredi;09h55
-2h00;SC. ECO.;Sciences Economiques;OCAL;Pinar;[6-EC];1;vendredi;11h00
-1h00;SC. ECO.;Sciences Economiques;OCAL;Pinar;[6-EC];1;mardi;15h20
-1h00;SC. ECO.;Sciences Economiques;OCAL;Pinar;[6-EC];1;mardi;16h10
-2h00;SC. ECO.;Sciences Economiques;TSHIMANGA;Jean-Bell;[5-EC];1;mardi;08h15
-1h00;SCI DI;Sciences immersion allemande;BACCUS;Baptiste;[1-SF-DI];1;vendredi;08h15
-1h00;SCI DI;Sciences immersion allemande;BACCUS;Baptiste;[1-SF-DI];1;vendredi;09h05
-1h00;SCI DI;Sciences immersion allemande;BACCUS;Baptiste;[1-SF-DI];1;jeudi;13h40
-1h00;SCI AI;Sciences immersion anglaise;SWINYARD;Alicia;[1-LM1-AI];1;jeudi;11h00
-1h00;SCI AI;Sciences immersion anglaise;SWINYARD;Alicia;[1-LM1-AI];1;vendredi;11h00
-1h00;SCI AI;Sciences immersion anglaise;SWINYARD;Alicia;[1-LM1-AI];1;vendredi;11h50
-1h00;SCI AI;Sciences immersion anglaise;SWINYARD;Alicia;[2-LM1-AI];1;jeudi;08h15
-1h00;SCI AI;Sciences immersion anglaise;SWINYARD;Alicia;[2-LM1-AI];1;vendredi;09h05
-1h00;SCI AI;Sciences immersion anglaise;SWINYARD;Alicia;[2-LM1-AI];1;vendredi;09h55
-1h00;SCI NI;Sciences immersion néelandaise;PILATE;Sarah;[1+2-LM1-NI];1;vendredi;09h05
-1h00;SCI NI;Sciences immersion néelandaise;PILATE;Sarah;[1+2-LM1-NI];1;vendredi;09h55
-1h00;SCI NI;Sciences immersion néelandaise;PILATE;Sarah;[1+2-LM1-NI];1;jeudi;11h00
-1h00;SC. SOC.;Sciences Sociales;FRANCOIS;Ariane;[3-SO1];1;mardi;11h00
-1h00;SC. SOC.;Sciences Sociales;FRANCOIS;Ariane;[3-SO1];1;jeudi;11h00
-1h00;SC. SOC.;Sciences Sociales;FRANCOIS;Ariane;[3-SO1];1;jeudi;11h50
-1h00;SC. SOC.;Sciences Sociales;FRANCOIS;Ariane;[3-SO2];1;jeudi;08h15
-1h00;SC. SOC.;Sciences Sociales;FRANCOIS;Ariane;[3-SO2];1;vendredi;08h15
-1h00;SC. SOC.;Sciences Sociales;FRANCOIS;Ariane;[3-SO2];1;mercredi;09h05
-1h00;SC. SOC.;Sciences Sociales;FRANCOIS;Ariane;[3-SO2];1;mercredi;09h55
-1h00;SC. SOC.;Sciences Sociales;SNYDERS;Véronique;[3-SO1];1;mardi;11h50
-1h00;SC. SOC.;Sciences Sociales;SNYDERS;Véronique;[4-SO1];1;mercredi;09h05
-1h00;SC. SOC.;Sciences Sociales;SNYDERS;Véronique;[4-SO1];1;mardi;09h55
-1h00;SC. SOC.;Sciences Sociales;SNYDERS;Véronique;[4-SO1];1;mercredi;09h55
-1h00;SC. SOC.;Sciences Sociales;SNYDERS;Véronique;[4-SO1];1;vendredi;15h20
-2h00;SC. SOC.;Sciences Sociales;SNYDERS;Véronique;[5-SO];1;mardi;08h15
-1h00;SC. SOC.;Sciences Sociales;SNYDERS;Véronique;[5-SO];1;mercredi;08h15
-1h00;SC. SOC.;Sciences Sociales;SNYDERS;Véronique;[5-SO];1;vendredi;14h30
-1h00;SC. SOC.;Sciences Sociales;TUTTOBENE;Estelle;[4-SO2];1;mercredi;09h05
-1h00;SC. SOC.;Sciences Sociales;TUTTOBENE;Estelle;[4-SO2];1;mardi;11h00
-1h00;SC. SOC.;Sciences Sociales;TUTTOBENE;Estelle;[4-SO2];1;mardi;11h50
-1h00;SC. SOC.;Sciences Sociales;TUTTOBENE;Estelle;[4-SO2];1;vendredi;14h30
-1h00;SC. SOC.;Sciences Sociales;TUTTOBENE;Estelle;[6-SO];1;mercredi;08h15
-1h00;SC. SOC.;Sciences Sociales;TUTTOBENE;Estelle;[6-SO];1;mardi;09h55
-2h00;SC. SOC.;Sciences Sociales;TUTTOBENE;Estelle;[6-SO];1;vendredi;11h00
-1h00;PESM;Spéciale Mathématiques +2;HAFNAOUI;Imane;[5-PESM];1;mercredi;08h15
-1h00;PESM;Spéciale Mathématiques +2;HAFNAOUI;Imane;[5-PESM];1;mardi;11h00
-2h00;PESM;Spéciale Mathématiques +2;VAN DEN BERGHE;Sylviane;[6-PESM];1;vendredi;14h30
-1h00;Acph;Spéciale Physique +1;BAKHTI;Youssef;[6-ScOp Acph2];1;jeudi;08h15
-1h00;Acph;Spéciale Physique +1;MAQUET;Laurent;[5-ScOp1];1;mercredi;11h00
-1h00;Acph;Spéciale Physique +1;MAQUET;Laurent;[5-ScOp2];1;jeudi;09h05
-1h00;Acph;Spéciale Physique +1;MAQUET;Laurent;[6-ScOp Acph1];1;mardi;09h55
+﻿NUMERO;CLASSE;PROF_NOM;MAT_CODE;SALLE;JOUR;H.DEBUT;DUREE
+1;;MAESEN;ULg;;lundi;08h15;5h00
+2;2PAC;BAIZAN;FRANCAIS;;lundi;08h15;1h00
+3;5PAW;VAN BRABANT;FRANCAIS;;lundi;08h15;1h00
+4;5PAU;HUCHANT;FRANCAIS;;lundi;08h15;1h00
+5;5PAT;ZAMBUTO;FRANCAIS;;lundi;08h15;1h00
+6;5PAX;JOBKENNE;FRANCAIS;;lundi;08h15;1h00
+7;1PAC;BAUWENS;MATH;;lundi;08h15;1h00
+8;3PAZ;VAN DE VLOET;MATH;;lundi;08h15;1h00
+9;2PAD;KREIT;MATH;;lundi;08h15;1h00
+10;4PAV;CHAPEAU V;MATH;;lundi;08h15;1h00
+11;2PAA;DEPAIX;LATIN;;lundi;08h15;1h00
+12;1PAD;SITKO;GYM;;lundi;08h15;2h00
+13;3PAY;ROLIN;GYM;;lundi;08h15;2h00
+14;5PAV;DULLIER;GYM;;lundi;08h15;2h00
+15;[1-SF2];BOURGEOIS;FHGES;;lundi;08h15;1h00
+16;5PAZ;MEERT;GÉO;;lundi;08h15;1h00
+17;5PAY;NOTTET;GÉO;;lundi;08h15;1h00
+18;[6-LM2-N1];MORAUX;NÉERLANDAIS LM2;;lundi;08h15;1h00
+19;[3-LM1-N];BRACONNIER;NÉERLANDAIS LM1;;lundi;08h15;1h00
+20;[6-LM2-E2];HERVELLE;ESPAGNOL LM2;;lundi;08h15;1h00
+21;[6-LM2-E1];DZIRI;ESPAGNOL LM2;;lundi;08h15;1h00
+22;1PAE;FINCKEN;FN;;lundi;08h15;1h00
+23;1PAA;DEPUIS;ECA;;lundi;08h15;1h00
+24;[3et4-LM1-DI-ALP];RUESS;ALP Allemand;;lundi;08h15;1h00
+25;[3et4-LM1-NI];DONJEAN;ALP Néerlandais;;lundi;08h15;1h00
+26;[4-LM1-AI];SACRE;ALP Anglais;;lundi;08h15;1h00
+27;2PAB;MANAP;CPC1;;lundi;08h15;1h00
+28;[2-CPC4];KERRELS;CPC2;;lundi;08h15;1h00
+29;[6-CPC3];CHOLEWKA;CPC2;;lundi;08h15;1h00
+30;[3-Sc1];"YILDIRIM; BACCUS";BIO;;lundi;08h15;1h00
+31;;BORLEE;DESTENAY;;lundi;08h15;2h00
+32;;LEGSSYER;PITTEURS;;lundi;08h15;5h00
+33;;SNYDERS;PITTEURS;;lundi;08h15;5h00
+34;[6-LM2-A];VANHERLE;ANGLAIS LM2;;lundi;08h15;1h00
+35;[6-LM2-N2];BROUNS;NÉERLANDAIS LM2;;lundi;08h15;1h00
+36;[6-LM2-E3];JUDONG;ESPAGNOL LM2;;lundi;08h15;1h00
+37;[6-LM2-E4];RECKMANS;ESPAGNOL LM2;;lundi;08h15;1h00
+38;;BASTIN;HOTELLERIE;;lundi;08h15;1h00
+39;;KAMGA;PITTEURS;;lundi;08h15;5h00
+40;;LUPO;DESTENAY;;lundi;08h15;4h00
+41;;SPINA;DE BEAUVOIR;;lundi;08h15;4h00
+42;1PAF;DEGEY;FRANCAIS;;lundi;09h05;1h00
+43;1PAE;POPOVICS;FRANCAIS;;lundi;09h05;1h00
+44;3PAV;BAIZAN;FRANCAIS;;lundi;09h05;1h00
+45;4PAU;VAN BRABANT;FRANCAIS;;lundi;09h05;1h00
+46;4PAW;HUCHANT;FRANCAIS;;lundi;09h05;1h00
+47;4PAY;ZAMBUTO;FRANCAIS;;lundi;09h05;1h00
+48;6PAV;JOBKENNE;FRANCAIS;;lundi;09h05;1h00
+49;6PAZ;CHAPEAU;FRANCAIS;;lundi;09h05;1h00
+50;1PAC;BAUWENS;MATH;;lundi;09h05;1h00
+51;3PAZ;VAN DE VLOET;MATH;;lundi;09h05;1h00
+52;3PAW;STAFFE;MATH;;lundi;09h05;1h00
+53;4PAT;CESA;MATH;;lundi;09h05;1h00
+54;[6-M6h1];VAN DEN BERGHE;MATH6;;lundi;09h05;1h00
+55;[6-M4h3];HAFNAOUI;MATH4;;lundi;09h05;1h00
+56;2PAA;DEPAIX;LATIN;;lundi;09h05;1h00
+57;2PAB;DEPUIS;MUSIQUE;;lundi;09h05;1h00
+58;[2-HGS3];BOURGEOIS;HIST;;lundi;09h05;1h00
+59;6PAW;MEERT;GÉO;;lundi;09h05;2h00
+60;[5-LM1-A3];"NOLF; HAVART";ANGLAIS LM1;;lundi;09h05;1h00
+61;[5-LM1-A4];KEVERS;ANGLAIS LM1;;lundi;09h05;1h00
+62;[5-LM1-A5];HOLLENFELTZ;ANGLAIS LM1;;lundi;09h05;1h00
+63;[5-LM1-N];MORAUX;NÉERLANDAIS LM1;;lundi;09h05;1h00
+64;[3-LM2-E1];DZIRI;ESPAGNOL LM2;;lundi;09h05;1h00
+65;1PAB;FINCKEN;FN;;lundi;09h05;1h00
+66;[5et6-LM1-DI];RUESS;Imm. Allemand;;lundi;09h05;1h00
+67;[2-HGS-NI];HENDRIKS;HIST NI;;lundi;09h05;1h00
+68;"[5et6-LM1-NI]; <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC";DONJEAN;Imm. Néerlandais;;lundi;09h05;1h00
+69;[2-LM1-AI];CARLYLE;Imm. Anglais;;lundi;09h05;1h00
+70;[5-LM1-AI];SACRE;Imm. Anglais;;lundi;09h05;1h00
+71;1PAA;MANAP;CPC1;;lundi;09h05;1h00
+72;[3-CPC1];KERRELS;CPC2;;lundi;09h05;1h00
+73;6PAU;CHOLEWKA;CPC1;;lundi;09h05;1h00
+74;[2-HGS4];"YILDIRIM; BACCUS";SCIENCES;;lundi;09h05;1h00
+75;[4-LM2-E2];JUDONG;ESPAGNOL LM2;;lundi;09h05;1h00
+76;[5-SO2];BALON;SC. SOC.;;lundi;09h05;2h00
+77;;DEFOURNY;HORTI;;lundi;09h05;2h00
+78;;MAGOUE;DESTENAY;;lundi;09h05;4h00
+79;1PAF;DEGEY;FRANCAIS;;lundi;09h55;1h00
+80;2PAE;POPOVICS;FRANCAIS;;lundi;09h55;1h00
+81;3PAV;BAIZAN;FRANCAIS;;lundi;09h55;1h00
+82;5PAU;HUCHANT;FRANCAIS;;lundi;09h55;1h00
+83;[5-Commu1];CHAPEAU;COMMU;;lundi;09h55;2h00
+84;5PAX;JOBKENNE;FRANCAIS;;lundi;09h55;1h00
+85;5PAZ;WERA;FRANCAIS;;lundi;09h55;1h00
+86;3PAU;VAN DE VLOET;MATH;;lundi;09h55;1h00
+87;2PAC;KREIT;MATH;;lundi;09h55;1h00
+88;1PAA;STAFFE;MATH;;lundi;09h55;1h00
+89;[6-M6h2];HAFNAOUI;MATH6;;lundi;09h55;1h00
+90;[6-M6h1];VAN DEN BERGHE;MATH6;;lundi;09h55;1h00
+91;[6-M4h5];CESA;MATH4;;lundi;09h55;1h00
+92;[6-M4h1];BAKHTI;MATH4;;lundi;09h55;1h00
+93;[6-M4h4];CHAPEAU V;MATH4;;lundi;09h55;1h00
+94;2PAF;LACASSE;LATIN;;lundi;09h55;1h00
+95;2PAD;DEPUIS;MUSIQUE;;lundi;09h55;1h00
+96;5PAT;NOTTET;GÉO;;lundi;09h55;1h00
+97;[3et4-LM2-D];HOLLENFELTZ;ALLEMAND LM2;;lundi;09h55;1h00
+98;[3-LM2-A];ZOES;ANGLAIS LM2;;lundi;09h55;1h00
+99;[5-LM1-A1];"NOLF; HAVART";ANGLAIS LM1;;lundi;09h55;1h00
+100;[4-LM1-A3];KEVERS;ANGLAIS LM1;;lundi;09h55;1h00
+101;[4-LM2-A];VANHERLE;ANGLAIS LM2;;lundi;09h55;1h00
+102;[4-LM2-N2];BROUNS;NÉERLANDAIS LM2;;lundi;09h55;1h00
+103;[3-LM2-N];BRACONNIER;NÉERLANDAIS LM2;;lundi;09h55;1h00
+104;"[3-LM2-I]; <3PAW> <Opt+LM1+LM2+Philo> L-A-I-CPC";LAINO;ITALIEN LM2;;lundi;09h55;1h00
+105;[4-LM2-I];ZAMBUTO;ITALIEN LM2;;lundi;09h55;1h00
+106;[3-LM2-E3];DZIRI;ESPAGNOL LM2;;lundi;09h55;1h00
+107;[4-LM2-E3];HERVELLE;ESPAGNOL LM2;;lundi;09h55;1h00
+108;1PAC;FINCKEN;FN;;lundi;09h55;1h00
+109;1PAD;X05_ECA_DI;ECA;;lundi;09h55;1h00
+110;[1-SF-NI];HENDRIKS;FHGES NI;;lundi;09h55;1h00
+111;[1-CPC2];KERRELS;CPC2;;lundi;09h55;1h00
+112;4PAW;LUCA;CPC1;;lundi;09h55;1h00
+113;6PAY;CHOLEWKA;CPC1;;lundi;09h55;1h00
+114;[2-HGS1];ZOLLER;SCIENCES;;lundi;09h55;1h00
+115;[2-HGS2];"YILDIRIM; BACCUS";SCIENCES;;lundi;09h55;1h00
+116;;BASTIN;PITTEURS;;lundi;09h55;2h00
+117;;SEDRY;DESTENAY;;lundi;09h55;3h00
+118;;GRIBOMONT;DE BEAUVOIR;;lundi;09h55;2h00
+119;1PAA;DJELIL;FRANCAIS;;lundi;11h00;1h00
+120;1PAD;POPOVICS;FRANCAIS;;lundi;11h00;1h00
+121;3PAZ;BAIZAN;FRANCAIS;;lundi;11h00;1h00
+122;6PAT;VAN BRABANT;FRANCAIS;;lundi;11h00;1h00
+123;4PAX;DERCLAYE;FRANCAIS;;lundi;11h00;1h00
+124;4PAY;ZAMBUTO;FRANCAIS;;lundi;11h00;1h00
+125;2PAA;BAUWENS;MATH;;lundi;11h00;1h00
+126;4PAV;CHAPEAU V;MATH;;lundi;11h00;1h00
+127;[5-M4h6];CESA;MATH4;;lundi;11h00;1h00
+128;[5-M4h5];BAKHTI;MATH4;;lundi;11h00;1h00
+129;[5-M6h];VAN DEN BERGHE;MATH6;;lundi;11h00;2h00
+130;2PAB;LACASSE;LATIN;;lundi;11h00;1h00
+131;1PAB;ROLIN;GYM;;lundi;11h00;2h00
+132;1PAE;SITKO;GYM;;lundi;11h00;2h00
+133;5PAX;MEUNIER;GYM;;lundi;11h00;2h00
+134;4PAU;DULLIER;GYM;;lundi;11h00;2h00
+135;[2-HGS3];BOURGEOIS;HIST;;lundi;11h00;1h00
+136;[3-LM1-A1];ZOES;ANGLAIS LM1;;lundi;11h00;1h00
+137;[6-LM1-A4];"NOLF; HAVART";ANGLAIS LM1;;lundi;11h00;2h00
+138;[6-LM1-A5];KEVERS;ANGLAIS LM1;;lundi;11h00;2h00
+139;[6-LM1-A3];HOLLENFELTZ;ANGLAIS LM1;;lundi;11h00;2h00
+140;[6-LM1-A2];VANHERLE;ANGLAIS LM1;;lundi;11h00;2h00
+141;[4-LM2-N1];BROUNS;NÉERLANDAIS LM2;;lundi;11h00;1h00
+142;[6-LM1-N];MORAUX;NÉERLANDAIS LM1;;lundi;11h00;2h00
+143;"[3-LM2-I]; <3PAW> <Opt+LM1+LM2+Philo> L-A-I-CPC";LAINO;ITALIEN LM2;;lundi;11h00;1h00
+144;[4-LM2-E1];JUDONG;ESPAGNOL LM2;;lundi;11h00;1h00
+145;[5-LM2-E1];DZIRI;ESPAGNOL LM2;;lundi;11h00;1h00
+146;1PAC;FINCKEN;FN;;lundi;11h00;1h00
+147;1PAF;DEPUIS;ECA;;lundi;11h00;1h00
+148;[2-HGS-NI];HENDRIKS;HIST NI;;lundi;11h00;1h00
+149;[2-LM1-AI];CARLYLE;Imm. Anglais;;lundi;11h00;1h00
+150;[6-LM1-AI];SACRE;Imm. Anglais;;lundi;11h00;2h00
+151;[3-CPC4];KERRELS;CPC2;;lundi;11h00;1h00
+152;4PAT;LUCA;CPC1;;lundi;11h00;1h00
+153;[2-HGS4];"YILDIRIM; BACCUS";SCIENCES;;lundi;11h00;1h00
+154;;OUAHABI;MAGHIN;;lundi;11h00;1h00
+155;[5-M4h3];HAFNAOUI;MATH4;;lundi;11h00;1h00
+156;3PAY;NAVARRO;FRANCAIS;;lundi;11h50;1h00
+157;1PAA;DJELIL;FRANCAIS;;lundi;11h50;1h00
+158;2PAD;DEGEY;FRANCAIS;;lundi;11h50;1h00
+159;1PAD;POPOVICS;FRANCAIS;;lundi;11h50;1h00
+160;1PAC;BAIZAN;FRANCAIS;;lundi;11h50;1h00
+161;6PAT;VAN BRABANT;FRANCAIS;;lundi;11h50;1h00
+162;4PAT;HUCHANT;FRANCAIS;;lundi;11h50;1h00
+163;4PAV;ZAMBUTO;FRANCAIS;;lundi;11h50;1h00
+164;5PAY;WERA;FRANCAIS;;lundi;11h50;1h00
+165;3PAX;VAN DE VLOET;MATH;;lundi;11h50;1h00
+166;2PAC;KREIT;MATH;;lundi;11h50;1h00
+167;3PAW;STAFFE;MATH;;lundi;11h50;1h00
+168;4PAX;CESA;MATH;;lundi;11h50;1h00
+169;4PAZ;CHAPEAU V;MATH;;lundi;11h50;1h00
+170;[5-M4h3];HAFNAOUI;MATH4;;lundi;11h50;1h00
+171;2PAE;LACASSE;LATIN;;lundi;11h50;1h00
+172;2PAF;DEPUIS;MUSIQUE;;lundi;11h50;1h00
+173;[3-LM1-A1];ZOES;ANGLAIS LM1;;lundi;11h50;1h00
+174;[4-LM1-A2];RECKMANS;ANGLAIS LM1;;lundi;11h50;1h00
+175;[4-LM2-N1];BROUNS;NÉERLANDAIS LM2;;lundi;11h50;1h00
+176;1PAF;FINCKEN;FN;;lundi;11h50;1h00
+177;2PAA;MANAP;CPC1;;lundi;11h50;1h00
+178;[2-CPC1];KERRELS;CPC2;;lundi;11h50;1h00
+179;[5-Sc1];ZENTHNER;BIO;;lundi;11h50;1h00
+180;[3-Sc2];ZOLLER;PHYSIQUE;;lundi;11h50;1h00
+181;[3-ScOp2];"YILDIRIM; BACCUS";BIO opt.;;lundi;11h50;1h00
+182;;BORLEE;HOTELLERIE;;lundi;11h50;1h00
+183;[5-Sc5];JEANGILLE;CHIMIE;;lundi;11h50;1h00
+184;;DEFOURNY;DESTENAY;;lundi;12h40;4h00
+185;6PAW;MAESEN;FRANCAIS;;lundi;13h40;1h00
+186;2PAB;DJELIL;FRANCAIS;;lundi;13h40;1h00
+187;3PAX;DEGEY;FRANCAIS;;lundi;13h40;1h00
+188;2PAE;POPOVICS;FRANCAIS;;lundi;13h40;1h00
+189;3PAZ;BAIZAN;FRANCAIS;;lundi;13h40;1h00
+190;6PAY;HUCHANT;FRANCAIS;;lundi;13h40;1h00
+191;4PAX;DERCLAYE;FRANCAIS;;lundi;13h40;1h00
+192;6PAV;JOBKENNE;FRANCAIS;;lundi;13h40;1h00
+193;5PAZ;WERA;FRANCAIS;;lundi;13h40;1h00
+194;1PAF;OUAHABI;MATH;;lundi;13h40;1h00
+195;3PAV;VAN DE VLOET;MATH;;lundi;13h40;1h00
+196;1PAD;SPINA;MATH;;lundi;13h40;1h00
+197;4PAZ;CHAPEAU V;MATH;;lundi;13h40;1h00
+198;[5-M4h2];HAFNAOUI;MATH4;;lundi;13h40;1h00
+199;2PAC;LACASSE;LATIN;;lundi;13h40;1h00
+200;1PAC;ROLIN;GYM;;lundi;13h40;1h00
+201;2PAF;SITKO;GYM;;lundi;13h40;2h00
+202;4PAV;MEUNIER;GYM;;lundi;13h40;2h00
+203;6PAT;DULLIER;GYM;;lundi;13h40;2h00
+204;[2-HGS1];PAQUAY;GÉO;;lundi;13h40;1h00
+205;5PAY;NOTTET;GÉO;;lundi;13h40;1h00
+206;1PAB;FINCKEN;FN;;lundi;13h40;1h00
+207;1PAA;X05_ECA_DI;ECA;;lundi;13h40;1h00
+208;1PAE;DEPUIS;ECA;;lundi;13h40;1h00
+209;2PAD;MANAP;CPC1;;lundi;13h40;1h00
+210;6PAZ;CHOLEWKA;CPC1;;lundi;13h40;1h00
+211;[4-ScOp2];ZENTHNER;BIO opt.;;lundi;13h40;1h00
+212;[4-Sc3];YAHIA;CHIMIE;;lundi;13h40;1h00
+213;[4-Sc4];PILATE;PHYSIQUE;;lundi;13h40;1h00
+214;[3-Sc3];ZOLLER;CHIMIE;;lundi;13h40;1h00
+215;;LEGSSYER;PITTEURS;;lundi;13h40;4h00
+216;;SEDRY;DESTENAY;;lundi;13h40;3h00
+217;;BORLEE;HOTELLERIE;;lundi;13h40;4h00
+218;;SNYDERS;PITTEURS;;lundi;13h40;4h00
+219;[5et6-LM2-D];HOLLENFELTZ;ALLEMAND LM2;;lundi;13h40;1h00
+220;[5-LM2-A];"NOLF; HAVART";ANGLAIS LM2;;lundi;13h40;1h00
+221;[5-LM2-N2];BROUNS;NÉERLANDAIS LM2;;lundi;13h40;1h00
+222;[5et6-LM2-I];LAINO;ITALIEN LM2;;lundi;13h40;1h00
+223;[5-LM2-E3];HERVELLE;ESPAGNOL LM2;;lundi;13h40;1h00
+224;[5-LM2-E4];DZIRI;ESPAGNOL LM2;;lundi;13h40;1h00
+225;;KAMGA;PITTEURS;;lundi;13h40;4h00
+226;;THOMAS;DESTENAY;;lundi;13h40;2h00
+227;[6-ScOp3];JEANGILLE;BIO opt.;;lundi;13h40;1h00
+228;;GRIBOMONT;DE BEAUVOIR;;lundi;13h40;4h00
+229;6PAX;MAESEN;FRANCAIS;;lundi;14h30;1h00
+230;3PAW;BROOS;FRANCAIS;;lundi;14h30;1h00
+231;1PAB;DJELIL;FRANCAIS;;lundi;14h30;1h00
+232;2PAD;DEGEY;FRANCAIS;;lundi;14h30;1h00
+233;2PAC;BAIZAN;FRANCAIS;;lundi;14h30;1h00
+234;2PAE;DERCLAYE;LECTURE;;lundi;14h30;1h00
+235;4PAW;VAN BRABANT;FRANCAIS;;lundi;14h30;1h00
+236;6PAY;HUCHANT;FRANCAIS;;lundi;14h30;1h00
+237;5PAY;WERA;FRANCAIS;;lundi;14h30;1h00
+238;6PAZ;CHAPEAU;FRANCAIS;;lundi;14h30;1h00
+239;1PAE;KREIT;MATH;;lundi;14h30;1h00
+240;1PAF;OUAHABI;MATH;;lundi;14h30;1h00
+241;3PAV;VAN DE VLOET;MATH;;lundi;14h30;1h00
+242;1PAD;SPINA;MATH;;lundi;14h30;1h00
+243;[5-M4h2];HAFNAOUI;MATH4;;lundi;14h30;1h00
+244;3PAX;ROLIN;GYM;;lundi;14h30;2h00
+245;2PAA;DEPUIS;MUSIQUE;;lundi;14h30;1h00
+246;[3-HG1];PAQUAY;GÉO;;lundi;14h30;1h00
+247;[4-LM1-N];MORAUX;NÉERLANDAIS LM1;;lundi;14h30;1h00
+248;[5-LM2-E2];JUDONG;ESPAGNOL LM2;;lundi;14h30;1h00
+249;1PAC;MANAP;CPC1;;lundi;14h30;1h00
+250;[3-CPC5];KERRELS;CPC2;;lundi;14h30;1h00
+251;6PAW;CHOLEWKA;CPC1;;lundi;14h30;1h00
+252;[6-Sc1];JEANGILLE;CHIMIE;;lundi;14h30;1h00
+253;[4-ScOp2];YAHIA;CHIMIE opt.;;lundi;14h30;1h00
+254;[4-Sc2];PILATE;PHYSIQUE;;lundi;14h30;1h00
+255;2PAB;FINCKEN;EducTECH;;lundi;14h30;1h00
+256;[5et6-LM2-D];HOLLENFELTZ;ALLEMAND LM2;;lundi;14h30;1h00
+257;[5-LM2-A];"NOLF; HAVART";ANGLAIS LM2;;lundi;14h30;1h00
+258;[5-LM2-N2];BROUNS;NÉERLANDAIS LM2;;lundi;14h30;1h00
+259;[5et6-LM2-I];LAINO;ITALIEN LM2;;lundi;14h30;1h00
+260;[5-LM2-E3];HERVELLE;ESPAGNOL LM2;;lundi;14h30;1h00
+261;[5-LM2-E4];DZIRI;ESPAGNOL LM2;;lundi;14h30;1h00
+262;4PAZ;MAESEN;FRANCAIS;;lundi;15h20;1h00
+263;3PAW;BROOS;FRANCAIS;;lundi;15h20;1h00
+264;2PAB;DERCLAYE;LECTURE;;lundi;15h20;1h00
+265;1PAE;POPOVICS;FRANCAIS;;lundi;15h20;1h00
+266;4PAU;VAN BRABANT;FRANCAIS;;lundi;15h20;1h00
+267;4PAT;HUCHANT;FRANCAIS;;lundi;15h20;1h00
+268;3PAY;VAN DE VLOET;MATH;;lundi;15h20;1h00
+269;2PAE;KREIT;MATH;;lundi;15h20;1h00
+270;2PAD;LACASSE;LATIN;;lundi;15h20;1h00
+271;5PAZ;MEUNIER;GYM;;lundi;15h20;2h00
+272;5PAU;DULLIER;GYM;;lundi;15h20;2h00
+273;[6-EC];MARECHAL;SC. ECO.;;lundi;15h20;1h00
+274;[3-HG1];PAQUAY;GÉO;;lundi;15h20;1h00
+275;5PAX;NOTTET;GÉO;;lundi;15h20;1h00
+276;[5et6-LM3-D];HOLLENFELTZ;ALLEMAND LM3;;lundi;15h20;1h00
+277;[5-LM1-A1];"NOLF; HAVART";ANGLAIS LM1;;lundi;15h20;1h00
+278;[5-LM1-A2];VANHERLE;ANGLAIS LM1;;lundi;15h20;1h00
+279;[4-LM1-A2];"KEVERS; RECKMANS";ANGLAIS LM1;;lundi;15h20;1h00
+280;[3-LM2-E2];DZIRI;ESPAGNOL LM2;;lundi;15h20;1h00
+281;[5et6-LM3-E];JUDONG;ESPAGNOL LM3;;lundi;15h20;1h00
+282;1PAB;X05_ECA_DI;ECA;;lundi;15h20;1h00
+283;3PAZ;KERRELS;CPC1;;lundi;15h20;1h00
+284;[6-ScOp1];YAHIA;CHIMIE opt.;;lundi;15h20;1h00
+285;[6-ScOp2];ZENTHNER;BIO opt.;;lundi;15h20;1h00
+286;[6-Sc2];PILATE;PHYSIQUE;;lundi;15h20;1h00
+287;2PAC;FINCKEN;EducTECH;;lundi;15h20;1h00
+288;[6-Commu1];CHAPEAU;COMMU;;lundi;15h20;1h00
+289;;BASTIN;HOTELLERIE;;lundi;15h20;2h00
+290;;LUPO;ACADEMIE;;lundi;15h20;2h00
+291;[6-ScOp3];JEANGILLE;BIO opt.;;lundi;15h20;1h00
+292;;MAGOUE;HORTI;;lundi;15h20;1h00
+293;;MAESEN;ULg;;lundi;16h10;1h00
+294;5PAT;DERCLAYE;FRANCAIS;;lundi;16h10;1h00
+295;6PAU;WERA;FRANCAIS;;lundi;16h10;1h00
+296;3PAY;VAN DE VLOET;MATH;;lundi;16h10;1h00
+297;[3-La];LACASSE;LATIN;;lundi;16h10;1h00
+298;[4-EC1];MARECHAL;SC. ECO.;;lundi;16h10;1h00
+299;[6-LM2-A];VANHERLE;ANGLAIS LM2;;lundi;16h10;1h00
+300;[6-LM2-N2];BROUNS;NÉERLANDAIS LM2;;lundi;16h10;1h00
+301;[6-LM2-E1];DZIRI;ESPAGNOL LM2;;lundi;16h10;1h00
+302;[6-LM2-E3];JUDONG;ESPAGNOL LM2;;lundi;16h10;1h00
+303;"[3-3PAW-CPC1-DI-SO]; 3PAX";KERRELS;CPC1;;lundi;16h10;1h00
+304;[5-ScOp1];ZENTHNER;BIO opt.;;lundi;16h10;1h00
+305;[6-LM2-N1];MORAUX;NÉERLANDAIS LM2;;lundi;16h10;1h00
+306;[6-LM2-E2];HERVELLE;ESPAGNOL LM2;;lundi;16h10;1h00
+307;[6-LM2-E4];RECKMANS;ESPAGNOL LM2;;lundi;16h10;1h00
+308;;MAESEN;ULg;;mardi;08h15;5h00
+309;3PAX;DEGEY;FRANCAIS;;mardi;08h15;1h00
+310;1PAD;POPOVICS;FRANCAIS;;mardi;08h15;1h00
+311;1PAC;BAIZAN;FRANCAIS;;mardi;08h15;1h00
+312;[5-Commu2];CHAPEAU;COMMU;;mardi;08h15;2h00
+313;4PAX;DERCLAYE;FRANCAIS;;mardi;08h15;1h00
+314;3PAY;VAN DE VLOET;MATH;;mardi;08h15;1h00
+315;1PAE;KREIT;MATH;;mardi;08h15;1h00
+316;3PAV;SPINA;MATH;;mardi;08h15;1h00
+317;4PAT;CESA;MATH;;mardi;08h15;1h00
+318;4PAW;BAKHTI;MATH;;mardi;08h15;1h00
+319;4PAY;KAMGA;MATH;;mardi;08h15;1h00
+320;4PAZ;CHAPEAU V;MATH;;mardi;08h15;1h00
+321;[5et6-La];LACASSE;LATIN;;mardi;08h15;1h00
+322;1PAA;ROLIN;GYM;;mardi;08h15;1h00
+323;3PAW;SITKO;GYM;;mardi;08h15;2h00
+324;6PAU;DULLIER;GYM;;mardi;08h15;2h00
+325;[5-SO1];BALON;SC. SOC.;;mardi;08h15;2h00
+326;[5-EC];MARECHAL;SC. ECO.;;mardi;08h15;2h00
+327;[1-SF4];PAQUAY;FHGES;;mardi;08h15;1h00
+328;[5-HOp];BRUGMANS;HIST opt.;;mardi;08h15;2h00
+329;[5-H3];MEDART;HIST;;mardi;08h15;1h00
+330;[1-LM1-A4];DI GERONIMO;ANGLAIS LM1;;mardi;08h15;1h00
+331;[4-LM1-A3];KEVERS;ANGLAIS LM1;;mardi;08h15;1h00
+332;[6-LM2-A];VANHERLE;ANGLAIS LM2;;mardi;08h15;2h00
+333;[6-LM2-N2];BROUNS;NÉERLANDAIS LM2;;mardi;08h15;2h00
+334;[6-LM2-N1];MORAUX;NÉERLANDAIS LM2;;mardi;08h15;2h00
+335;[6-LM2-E2];HERVELLE;ESPAGNOL LM2;;mardi;08h15;2h00
+336;[6-LM2-E1];DZIRI;ESPAGNOL LM2;;mardi;08h15;1h00
+337;[6-LM2-E3];JUDONG;ESPAGNOL LM2;;mardi;08h15;2h00
+338;[4-CPC2];LUCA;CPC2;;mardi;08h15;1h00
+339;[2-RI];SEDRY;Rel. Islam.;;mardi;08h15;1h00
+340;[4-RO];X06_RO_DS;Rel. Ortho.;;mardi;08h15;1h00
+341;[5-ScOp2];JEANGILLE;BIO opt.;;mardi;08h15;2h00
+342;[3-Sc1];ZOLLER;PHYSIQUE;;mardi;08h15;1h00
+343;;BORLEE;DESTENAY;;mardi;08h15;5h00
+344;;KERRELS;CESLM;;mardi;08h15;5h00
+345;[6-LM2-E4];RECKMANS;ESPAGNOL LM2;;mardi;08h15;2h00
+346;;LUPO;HOTELLERIE;;mardi;08h15;5h00
+347;;MAGOUE;ACADEMIE;;mardi;08h15;1h00
+348;;OUAHABI;CESLM;;mardi;08h15;4h00
+349;;TUTTOBENE;CESLM;;mardi;08h15;5h00
+350;3PAY;NAVARRO;FRANCAIS;;mardi;09h05;2h00
+351;2PAD;DEGEY;FRANCAIS;;mardi;09h05;1h00
+352;1PAE;POPOVICS;FRANCAIS;;mardi;09h05;1h00
+353;1PAC;BAIZAN;FRANCAIS;;mardi;09h05;1h00
+354;4PAV;DERCLAYE;FRANCAIS;;mardi;09h05;1h00
+355;3PAZ;VAN DE VLOET;MATH;;mardi;09h05;1h00
+356;2PAE;KREIT;MATH;;mardi;09h05;1h00
+357;1PAA;STAFFE;MATH;;mardi;09h05;1h00
+358;3PAV;SPINA;MATH;;mardi;09h05;1h00
+359;4PAT;CESA;MATH;;mardi;09h05;1h00
+360;4PAY;HAFNAOUI;MATH;;mardi;09h05;1h00
+361;4PAU;KAMGA;MATH;;mardi;09h05;1h00
+362;[5-M4h1];VAN DEN BERGHE;MATH4;;mardi;09h05;1h00
+363;2PAB;ROLIN;GYM;;mardi;09h05;2h00
+364;4PAW;MEUNIER;GYM;;mardi;09h05;2h00
+365;2PAC;DEPUIS;MUSIQUE;;mardi;09h05;1h00
+366;[1-SF2];BOURGEOIS;FHGES;;mardi;09h05;1h00
+367;[2-HGS1];PAQUAY;GÉO;;mardi;09h05;1h00
+368;[3-HG1];FRANCOIS;HIST;;mardi;09h05;1h00
+369;[4-HG1];MEDART;HIST;;mardi;09h05;1h00
+370;[1-LM1-A3];DI GERONIMO;ANGLAIS LM1;;mardi;09h05;1h00
+371;[5-LM1-A1];KEVERS;ANGLAIS LM1;;mardi;09h05;1h00
+372;[1-LM1-N];BRACONNIER;NÉERLANDAIS LM1;;mardi;09h05;1h00
+373;[6-LM2-E1];DZIRI;ESPAGNOL LM2;;mardi;09h05;1h00
+374;1PAD;FINCKEN;FN;;mardi;09h05;1h00
+375;2PAF;MANAP;CPC1;;mardi;09h05;1h00
+376;[4-ScOp1];MAQUET;PHY opt.;;mardi;09h05;1h00
+377;[3-Sc4];ZOLLER;CHIMIE;;mardi;09h05;1h00
+378;;"YILDIRIM; BACCUS";CESLM;;mardi;09h05;2h00
+379;3PAU;DEGEY;FRANCAIS;;mardi;09h55;1h00
+380;3PAZ;BAIZAN;FRANCAIS;;mardi;09h55;1h00
+381;4PAT;HUCHANT;FRANCAIS;;mardi;09h55;1h00
+382;[6-Commu2];CHAPEAU;COMMU;;mardi;09h55;1h00
+383;4PAX;DERCLAYE;FRANCAIS;;mardi;09h55;1h00
+384;6PAV;JOBKENNE;FRANCAIS;;mardi;09h55;1h00
+385;2PAA;BAUWENS;MATH;;mardi;09h55;1h00
+386;3PAX;VAN DE VLOET;MATH;;mardi;09h55;1h00
+387;4PAU;KAMGA;MATH;;mardi;09h55;1h00
+388;[5-M4h6];CESA;MATH4;;mardi;09h55;1h00
+389;[5-M4h5];BAKHTI;MATH4;;mardi;09h55;1h00
+390;[5-M4h1];VAN DEN BERGHE;MATH4;;mardi;09h55;1h00
+391;[6-M6h2];HAFNAOUI;MATH6;;mardi;09h55;1h00
+392;[6-M4h4];CHAPEAU V;MATH4;;mardi;09h55;1h00
+393;1PAF;SITKO;GYM;;mardi;09h55;1h00
+394;[6-SO];BALON;SC. SOC.;;mardi;09h55;1h00
+395;[4-EC2];MARECHAL;SC. ECO.;;mardi;09h55;1h00
+396;[1-SF1];PAQUAY;FHGES;;mardi;09h55;1h00
+397;[1-SF3];BOURGEOIS;FHGES;;mardi;09h55;1h00
+398;5PAZ;MEERT;GÉO;;mardi;09h55;1h00
+399;[2-LM1-A4];THONNARD;ANGLAIS LM1;;mardi;09h55;1h00
+400;[2-LM1-A3];DI GERONIMO;ANGLAIS LM1;;mardi;09h55;1h00
+401;[5-LM2-N1];BROUNS;NÉERLANDAIS LM2;;mardi;09h55;1h00
+402;[2-LM1-N];BRACONNIER;NÉERLANDAIS LM1;;mardi;09h55;1h00
+403;[4-LM2-E1];JUDONG;ESPAGNOL LM2;;mardi;09h55;1h00
+404;[5-LM2-E1];DZIRI;ESPAGNOL LM2;;mardi;09h55;1h00
+405;1PAB;DEPUIS;ECA;;mardi;09h55;1h00
+406;[1et2-LM1-NI];HENDRIKS;Imm. Néerlandais;;mardi;09h55;1h00
+407;[2-LM1-AI];CARLYLE;HIST AI;;mardi;09h55;1h00
+408;3PAV;MANAP;CPC1;;mardi;09h55;1h00
+409;4PAY;LUCA;CPC1;;mardi;09h55;1h00
+410;[6-ScOp-Acph1];MAQUET;Acph;;mardi;09h55;1h00
+411;;GRIBOMONT;DESTENAY;;mardi;09h55;2h00
+412;3PAW;BROOS;FRANCAIS;;mardi;09h55;1h00
+413;[6-ScOp3];YAHIA;CHIMIE opt.;;mardi;09h55;1h00
+414;1PAA;DJELIL;FRANCAIS;;mardi;11h00;1h00
+415;1PAF;DEGEY;FRANCAIS;;mardi;11h00;1h00
+416;1PAD;POPOVICS;FRANCAIS;;mardi;11h00;1h00
+417;3PAZ;BAIZAN;FRANCAIS;;mardi;11h00;1h00
+418;6PAV;JOBKENNE;FRANCAIS;;mardi;11h00;1h00
+419;6PAZ;CHAPEAU;FRANCAIS;;mardi;11h00;1h00
+420;4PAV;DERCLAYE;FRANCAIS;;mardi;11h00;1h00
+421;1PAB;BAUWENS;MATH;;mardi;11h00;1h00
+422;3PAX;VAN DE VLOET;MATH;;mardi;11h00;1h00
+423;2PAC;KREIT;MATH;;mardi;11h00;1h00
+424;3PAW;STAFFE;MATH;;mardi;11h00;1h00
+425;4PAZ;CHAPEAU V;MATH;;mardi;11h00;1h00
+426;[5-M4h4];CESA;MATH4;;mardi;11h00;1h00
+427;[6-M6h1];VAN DEN BERGHE;MATH6;;mardi;11h00;2h00
+428;[5-PESM];BAKHTI;PESM;;mardi;11h00;1h00
+429;2PAF;LACASSE;LATIN;;mardi;11h00;1h00
+430;1PAC;ROLIN;GYM;;mardi;11h00;2h00
+431;2PAD;SITKO;GYM;;mardi;11h00;2h00
+432;5PAW;MEUNIER;GYM;;mardi;11h00;2h00
+433;6PAW;DULLIER;GYM;;mardi;11h00;2h00
+434;2PAE;DEPUIS;MUSIQUE;;mardi;11h00;1h00
+435;[3-SO1];SNYDERS;SC. SOC.;;mardi;11h00;1h00
+436;[4-SO2];BALON;SC. SOC.;;mardi;11h00;1h00
+437;[4-EC1];MARECHAL;SC. ECO.;;mardi;11h00;1h00
+438;[5-H5];MEDART;HIST;;mardi;11h00;1h00
+439;6PAU;MEERT;GÉO;;mardi;11h00;2h00
+440;6PAY;NOTTET;GÉO;;mardi;11h00;2h00
+441;[2-LM1-A2];THONNARD;ANGLAIS LM1;;mardi;11h00;1h00
+442;[2-LM1-A1];DI GERONIMO;ANGLAIS LM1;;mardi;11h00;1h00
+443;[6-LM1-A1];KEVERS;ANGLAIS LM1;;mardi;11h00;2h00
+444;[3-LM2-E2];DZIRI;ESPAGNOL LM2;;mardi;11h00;1h00
+445;[5et6-LM1-DI];RUESS;Imm. Allemand;;mardi;11h00;2h00
+446;[1-LM1-DI];DRECHSEL;Imm. Allemand;;mardi;11h00;1h00
+447;[1-SF-NI];HENDRIKS;FHGES NI;;mardi;11h00;1h00
+448;"[5et6-LM1-NI]; <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC";DONJEAN;Imm. Néerlandais;;mardi;11h00;1h00
+449;[5-LM1-AI];SACRE;HIST AI;;mardi;11h00;2h00
+450;3PAY;MANAP;CPC1;;mardi;11h00;1h00
+451;4PAX;LUCA;CPC1;;mardi;11h00;1h00
+452;[5-Labo1];ZENTHNER;LABO Bio;;mardi;11h00;1h00
+453;[4-ScOp2];MAQUET;PHY opt.;;mardi;11h00;1h00
+454;[5-Labo2];JEANGILLE;LABO Bio;;mardi;11h00;2h00
+455;3PAW;BROOS;FRANCAIS;;mardi;11h50;1h00
+456;2PAA;DJELIL;FRANCAIS;;mardi;11h50;1h00
+457;3PAX;DEGEY;FRANCAIS;;mardi;11h50;1h00
+458;1PAE;POPOVICS;FRANCAIS;;mardi;11h50;1h00
+459;3PAV;BAIZAN;FRANCAIS;;mardi;11h50;1h00
+460;6PAZ;JOBKENNE;FRANCAIS;;mardi;11h50;1h00
+461;4PAZ;DERCLAYE;FRANCAIS;;mardi;11h50;1h00
+462;2PAB;BAUWENS;MATH;;mardi;11h50;1h00
+463;3PAY;VAN DE VLOET;MATH;;mardi;11h50;1h00
+464;2PAE;KREIT;MATH;;mardi;11h50;1h00
+465;1PAA;STAFFE;MATH;;mardi;11h50;1h00
+466;2PAF;SPINA;MATH;;mardi;11h50;1h00
+467;4PAV;CHAPEAU V;MATH;;mardi;11h50;1h00
+468;4PAX;CESA;MATH;;mardi;11h50;1h00
+469;[3-SO1];SNYDERS;SC. SOC.;;mardi;11h50;1h00
+470;[4-SO2];BALON;SC. SOC.;;mardi;11h50;1h00
+471;[4-EC1];MARECHAL;SC. ECO.;;mardi;11h50;1h00
+472;[1-SF4];PAQUAY;FHGES;;mardi;11h50;1h00
+473;[5-H4];BRUGMANS;HIST;;mardi;11h50;1h00
+474;[1-LM1-A4];DI GERONIMO;ANGLAIS LM1;;mardi;11h50;1h00
+475;[5-LM2-E1];JUDONG;ESPAGNOL LM2;;mardi;11h50;1h00
+476;1PAD;FINCKEN;FN;;mardi;11h50;1h00
+477;2PAC;MANAP;CPC1;;mardi;11h50;1h00
+478;[4-ScOp2];YAHIA;CHIMIE opt.;;mardi;11h50;1h00
+479;[4-ScOp3];MAQUET;PHY opt.;;mardi;11h50;1h00
+480;;SEDRY;DE BEAUVOIR;;mardi;11h50;1h00
+481;[5-H5];MEDART;HIST;;mardi;11h50;1h00
+482;"[5et6-LM1-NI]; <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC";DONJEAN;ALP Néerlandais;;mardi;11h50;1h00
+483;[5-Labo1];ZENTHNER;LABO Bio;;mardi;11h50;1h00
+484;[5et6-La];LACASSE;LATIN;;mardi;12h40;1h00
+485;;KAMGA;PITTEURS;;mardi;12h40;5h00
+486;;OUAHABI;MAGHIN;;mardi;12h40;1h00
+487;;ZAMBUTO;DESTENAY;;mardi;12h40;1h00
+488;;MAESEN;ULg;;mardi;13h40;4h00
+489;1PAA;DJELIL;FRANCAIS;;mardi;13h40;1h00
+490;2PAE;POPOVICS;FRANCAIS;;mardi;13h40;1h00
+491;3PAV;BAIZAN;FRANCAIS;;mardi;13h40;1h00
+492;6PAY;HUCHANT;FRANCAIS;;mardi;13h40;1h00
+493;[5-Commu1];CHAPEAU;COMMU;;mardi;13h40;1h00
+494;5PAX;JOBKENNE;FRANCAIS;;mardi;13h40;1h00
+495;2PAA;BAUWENS;MATH;;mardi;13h40;1h00
+496;1PAE;KREIT;MATH;;mardi;13h40;1h00
+497;1PAD;SPINA;MATH;;mardi;13h40;1h00
+498;[6-M4h5];CESA;MATH4;;mardi;13h40;1h00
+499;2PAD;LACASSE;LATIN;;mardi;13h40;1h00
+500;2PAC;ROLIN;GYM;;mardi;13h40;2h00
+501;2PAF;SITKO;GYM;;mardi;13h40;1h00
+502;6PAX;MEUNIER;GYM;;mardi;13h40;2h00
+503;5PAT;DULLIER;GYM;;mardi;13h40;2h00
+504;[3-HG4];PAQUAY;GÉO;;mardi;13h40;2h00
+505;[3-HG3];FRANCOIS;HIST;;mardi;13h40;2h00
+506;[4-HG5];MEDART;HIST;;mardi;13h40;2h00
+507;[4-HG4];MEERT;GÉO;;mardi;13h40;1h00
+508;[4-HG3];NOTTET;GÉO;;mardi;13h40;2h00
+509;[2-LM1-A2];DI GERONIMO;ANGLAIS LM1;;mardi;13h40;1h00
+510;[4-LM1-A1];"NOLF; HAVART";ANGLAIS LM1;;mardi;13h40;1h00
+511;[5-LM1-A2];VANHERLE;ANGLAIS LM1;;mardi;13h40;1h00
+512;[3-LM2-E1];DZIRI;ESPAGNOL LM2;;mardi;13h40;1h00
+513;1PAF;FINCKEN;FN;;mardi;13h40;1h00
+514;1PAC;DEPUIS;ECA;;mardi;13h40;1h00
+515;"[5et6-LM1-NI]; <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC";MORAUX;HIST NI;;mardi;13h40;1h00
+516;[3et4-LM1-NI];DONJEAN;Imm. Néerlandais;;mardi;13h40;2h00
+517;[4-LM1-AI];CARLYLE;HIST AI;;mardi;13h40;1h00
+518;[3-LM1-AI];BORLEE;GÉO AI;;mardi;13h40;2h00
+519;"[5-5PAU-CPC1-DI]; [5-5PAV-CPC1-sauf-LB]";LUCA;CPC1;;mardi;13h40;1h00
+520;[6-ScOp2];ZENTHNER;BIO opt.;;mardi;13h40;1h00
+521;;MARECHAL;PITTEURS;;mardi;13h40;2h00
+522;[5-H6];THOMAS;HIST;;mardi;13h40;1h00
+523;[4-LM1-A2];"KEVERS; RECKMANS";ANGLAIS LM1;;mardi;13h40;1h00
+524;;HERVELLE;AUTRE ECOLE;;mardi;13h40;4h00
+525;;TUTTOBENE;CESLM;;mardi;13h40;2h00
+526;[3et4-LM1-DI];DRECHSEL;Imm. Allemand;;mardi;13h40;1h00
+527;;DEFOURNY;DESTENAY;;mardi;13h40;3h00
+528;;LUPO;HOTELLERIE;;mardi;13h40;3h00
+529;;MAGOUE;DESTENAY;;mardi;13h40;3h00
+530;1PAB;DJELIL;FRANCAIS;;mardi;14h30;1h00
+531;1PAE;POPOVICS;FRANCAIS;;mardi;14h30;1h00
+532;1PAC;BAIZAN;FRANCAIS;;mardi;14h30;1h00
+533;5PAU;HUCHANT;FRANCAIS;;mardi;14h30;1h00
+534;5PAX;JOBKENNE;FRANCAIS;;mardi;14h30;1h00
+535;2PAB;BAUWENS;MATH;;mardi;14h30;1h00
+536;2PAD;KREIT;MATH;;mardi;14h30;1h00
+537;[6-M6h2];HAFNAOUI;MATH6;;mardi;14h30;1h00
+538;[6-M4h2];VAN DEN BERGHE;MATH4;;mardi;14h30;1h00
+539;[6-M4h5];CESA;MATH4;;mardi;14h30;1h00
+540;[6-M4h1];BAKHTI;MATH4;;mardi;14h30;1h00
+541;[6-M4h4];CHAPEAU V;MATH4;;mardi;14h30;1h00
+542;2PAF;LACASSE;LATIN;;mardi;14h30;1h00
+543;2PAE;SITKO;GYM;;mardi;14h30;1h00
+544;[3-LM1-A2];THONNARD;ANGLAIS LM1;;mardi;14h30;1h00
+545;[2-LM1-A1];DI GERONIMO;ANGLAIS LM1;;mardi;14h30;1h00
+546;[3-LM1-A1];ZOES;ANGLAIS LM1;;mardi;14h30;1h00
+547;[4-LM1-A1];"NOLF; HAVART";ANGLAIS LM1;;mardi;14h30;1h00
+548;[5-LM1-A2];VANHERLE;ANGLAIS LM1;;mardi;14h30;1h00
+549;[4-LM1-A2];"KEVERS; RECKMANS";ANGLAIS LM1;;mardi;14h30;1h00
+550;[5-LM2-E2];JUDONG;ESPAGNOL LM2;;mardi;14h30;1h00
+551;1PAA;FINCKEN;FN;;mardi;14h30;1h00
+552;1PAD;DEPUIS;ECA;;mardi;14h30;1h00
+553;1PAF;X05_ECA_DI;ECA;;mardi;14h30;1h00
+554;[3et4-HG-DI];DRECHSEL;GÉO DI;;mardi;14h30;1h00
+555;[4-LM1-AI];SACRE;HIST AI;;mardi;14h30;1h00
+556;[5-ScOp1];YAHIA;CHIMIE opt.;;mardi;14h30;1h00
+557;;SEDRY;DE BEAUVOIR;;mardi;14h30;3h00
+558;[5-Commu1];CHAPEAU;COMMU;;mardi;14h30;1h00
+559;[4-HG4];MEERT;GÉO;;mardi;14h30;1h00
+560;2PAF;POPOVICS;FRANCAIS;;mardi;15h20;1h00
+561;2PAC;BAIZAN;FRANCAIS;;mardi;15h20;1h00
+562;5PAV;HUCHANT;FRANCAIS;;mardi;15h20;1h00
+563;[6-Commu1];CHAPEAU;COMMU;;mardi;15h20;1h00
+564;5PAT;DERCLAYE;FRANCAIS;;mardi;15h20;1h00
+565;1PAB;BAUWENS;MATH;;mardi;15h20;1h00
+566;2PAD;KREIT;MATH;;mardi;15h20;1h00
+567;2PAE;LACASSE;LATIN;;mardi;15h20;1h00
+568;5PAY;MEUNIER;GYM;;mardi;15h20;2h00
+569;[6-HOp];MEDART;HIST opt.;;mardi;15h20;1h00
+570;5PAU;MEERT;GÉO;;mardi;15h20;1h00
+571;5PAX;NOTTET;GÉO;;mardi;15h20;1h00
+572;[3-LM1-A4];THONNARD;ANGLAIS LM1;;mardi;15h20;1h00
+573;[1-LM1-A2];DI GERONIMO;ANGLAIS LM1;;mardi;15h20;1h00
+574;[3-LM1-A3];ZOES;ANGLAIS LM1;;mardi;15h20;1h00
+575;[4-LM1-A5];"NOLF; HAVART";ANGLAIS LM1;;mardi;15h20;1h00
+576;[4-LM1-A4];VANHERLE;ANGLAIS LM1;;mardi;15h20;1h00
+577;[3-LM1-N];BRACONNIER;NÉERLANDAIS LM1;;mardi;15h20;1h00
+578;[3-LM2-E2];DZIRI;ESPAGNOL LM2;;mardi;15h20;1h00
+579;[5-LM2-E2];JUDONG;ESPAGNOL LM2;;mardi;15h20;1h00
+580;1PAA;FINCKEN;FN;;mardi;15h20;1h00
+581;1PAC;X05_ECA_DI;ECA;;mardi;15h20;1h00
+582;[1-SF-NI];HENDRIKS;FHGES NI;;mardi;15h20;1h00
+583;[3et4-LM1-NI];DONJEAN;Imm. Néerlandais;;mardi;15h20;1h00
+584;[3-LM1-AI];CARLYLE;Imm. Anglais;;mardi;15h20;1h00
+585;[4-LM1-AI];SACRE;Imm. Anglais;;mardi;15h20;1h00
+586;[5-CPC1];LUCA;CPC2;;mardi;15h20;1h00
+587;[6-ScOp2];YAHIA;CHIMIE opt.;;mardi;15h20;1h00
+588;[6-ScOp1];MAQUET;PHY opt.;;mardi;15h20;1h00
+589;[3et4-LM1-DI];DRECHSEL;Imm. Allemand;;mardi;15h20;1h00
+590;;OUAHABI;MAGHIN;;mardi;15h20;1h00
+591;;SPINA;ACADEMIE;;mardi;15h20;2h00
+592;[6-ScOp3];BAKHTI;PHY opt.;;mardi;15h20;1h00
+593;5PAV;HUCHANT;FRANCAIS;;mardi;16h10;1h00
+594;[6-EC];MARECHAL;SC. ECO.;;mardi;16h10;1h00
+595;[6-HOp];MEDART;HIST opt.;;mardi;16h10;1h00
+596;[3-LM1-A4];THONNARD;ANGLAIS LM1;;mardi;16h10;1h00
+597;[3-LM1-A3];ZOES;ANGLAIS LM1;;mardi;16h10;1h00
+598;[4-LM1-A5];"NOLF; HAVART";ANGLAIS LM1;;mardi;16h10;1h00
+599;[4-LM1-A4];VANHERLE;ANGLAIS LM1;;mardi;16h10;1h00
+600;[3et4-LM1-DI];DRECHSEL;Imm. Allemand;;mardi;16h10;1h00
+601;[3et4-LM1-NI];DONJEAN;Imm. Néerlandais;;mardi;16h10;1h00
+602;[3-LM1-AI];CARLYLE;Imm. Anglais;;mardi;16h10;1h00
+603;[6-ScOp1];MAQUET;PHY opt.;;mardi;16h10;1h00
+604;[5et6-LM3-E];JUDONG;ESPAGNOL LM3;;mardi;16h10;1h00
+605;"<5PAT> <Option+LM1+LM2(+LM3)> MA6-AI-D; <5PAT> <Option+LM1+LM2(+LM3)> MA6-AI-N; <5PAU> <Option+LM1+LM2(+LM3)> MA6-AI-N; <5PAU> <Option+LM1+LM2(+LM3)> MB4-AI-N; <5PAX> <Option+LM1+LM2(+LM3)> EC4-AI-N; <5PAX> <Option+LM1+LM2(+LM3)> SO4-AI-N; <5PAZ> <Option+LM1+LM2(+LM3)> MA6-AI-E; <5PAZ> <Option+LM1+LM2(+LM3)> ME4-AI-E; <5PAZ> <Option+LM1+LM2(+LM3)> EC4-AI-E; <5PAZ> <Option+LM1+LM2(+LM3)> SO4-AI-E; <5PAZ> <Option+LM1+LM2(+LM3)> MB4-AI-E; <5PAT> <Option+LM1+LM2(+LM3)> SO4-AI-D";SACRE;ALP Anglais;;mardi;16h10;1h00
+606;[6-ScOp3];BAKHTI;PHY opt.;;mardi;16h10;1h00
+607;6PAX;MAESEN;FRANCAIS;;mercredi;08h15;1h00
+608;;CHAPEAU V;PS ECI;;mercredi;08h15;6h00
+609;3PAU;DEGEY;FRANCAIS;;mercredi;08h15;1h00
+610;5PAW;VAN BRABANT;FRANCAIS;;mercredi;08h15;1h00
+611;4PAW;HUCHANT;FRANCAIS;;mercredi;08h15;1h00
+612;[5-Commu2];CHAPEAU;COMMU;;mercredi;08h15;1h00
+613;6PAU;WERA;FRANCAIS;;mercredi;08h15;1h00
+614;2PAB;BAUWENS;MATH;;mercredi;08h15;1h00
+615;2PAE;KREIT;MATH;;mercredi;08h15;1h00
+616;2PAF;SPINA;MATH;;mercredi;08h15;1h00
+617;[6-M4h2];VAN DEN BERGHE;MATH4;;mercredi;08h15;1h00
+618;1PAB;ROLIN;GYM;;mercredi;08h15;1h00
+619;2PAD;SITKO;GYM;;mercredi;08h15;1h00
+620;6PAV;DULLIER;GYM;;mercredi;08h15;2h00
+621;[6-SO];TUTTOBENE;SC. SOC.;;mercredi;08h15;1h00
+622;[5-SO1];BALON;SC. SOC.;;mercredi;08h15;1h00
+623;[5-EC];MARECHAL;SC. ECO.;;mercredi;08h15;1h00
+624;[3-HG2];PAQUAY;GÉO;;mercredi;08h15;1h00
+625;[5-HOp];BRUGMANS;HIST opt.;;mercredi;08h15;1h00
+626;6PAZ;NOTTET;GÉO;;mercredi;08h15;2h00
+627;[3et4-LM2-D];HOLLENFELTZ;ALLEMAND LM2;;mercredi;08h15;1h00
+628;[1-LM1-A2];DI GERONIMO;ANGLAIS LM1;;mercredi;08h15;1h00
+629;[3-LM2-A];ZOES;ANGLAIS LM2;;mercredi;08h15;1h00
+630;[4-LM2-A];VANHERLE;ANGLAIS LM2;;mercredi;08h15;1h00
+631;[6-LM1-A1];KEVERS;ANGLAIS LM1;;mercredi;08h15;1h00
+632;[4-LM2-N2];BROUNS;NÉERLANDAIS LM2;;mercredi;08h15;1h00
+633;[3-LM2-N];BRACONNIER;NÉERLANDAIS LM2;;mercredi;08h15;1h00
+634;[4-LM2-I];ZAMBUTO;ITALIEN LM2;;mercredi;08h15;1h00
+635;[3-LM2-E3];DZIRI;ESPAGNOL LM2;;mercredi;08h15;1h00
+636;[4-LM2-E3];HERVELLE;ESPAGNOL LM2;;mercredi;08h15;1h00
+637;1PAF;ZANOL;FMTT;;mercredi;08h15;1h00
+638;[1-LM1-DI];DRECHSEL;Imm. Allemand;;mercredi;08h15;1h00
+639;[1et2-LM1-NI];HENDRIKS;Imm. Néerlandais;;mercredi;08h15;1h00
+640;[1-LM1-AI];CARLYLE;Imm. Anglais;;mercredi;08h15;1h00
+641;[4-Sc2];JEANGILLE;CHIMIE;;mercredi;08h15;1h00
+642;[2-HGS1];ZOLLER;SCIENCES;;mercredi;08h15;1h00
+643;[1-SF1];X03_Sciences_DI;SCIENCES;;mercredi;08h15;1h00
+644;;BORLEE;DESTENAY;;mercredi;08h15;5h00
+645;;FINCKEN;CESLM;;mercredi;08h15;6h00
+646;;KERRELS;CESLM;;mercredi;08h15;6h00
+647;;LEGSSYER;IRHOV;;mercredi;08h15;6h00
+648;[4-LM2-E2];JUDONG;ESPAGNOL LM2;;mercredi;08h15;1h00
+649;[5-PESM];BAKHTI;PESM;;mercredi;08h15;1h00
+650;<5PAV> <Option+LM1+LM2(+LM3)> LB4-A-/;LACASSE;LATIN;;mercredi;08h15;1h00
+651;;DEFOURNY;HORTI;;mercredi;08h15;2h00
+652;6PAX;MAESEN;FRANCAIS;;mercredi;09h05;1h00
+653;2PAA;DJELIL;FRANCAIS;;mercredi;09h05;1h00
+654;2PAD;DEGEY;FRANCAIS;;mercredi;09h05;1h00
+655;2PAF;POPOVICS;FRANCAIS;;mercredi;09h05;1h00
+656;1PAC;BAIZAN;FRANCAIS;;mercredi;09h05;1h00
+657;6PAT;VAN BRABANT;FRANCAIS;;mercredi;09h05;1h00
+658;6PAY;HUCHANT;FRANCAIS;;mercredi;09h05;1h00
+659;4PAX;DERCLAYE;FRANCAIS;;mercredi;09h05;1h00
+660;5PAY;WERA;FRANCAIS;;mercredi;09h05;1h00
+661;1PAB;BAUWENS;MATH;;mercredi;09h05;1h00
+662;2PAE;KREIT;MATH;;mercredi;09h05;1h00
+663;1PAD;SPINA;MATH;;mercredi;09h05;1h00
+664;[5-M4h2];HAFNAOUI;MATH4;;mercredi;09h05;1h00
+665;[6-M4h2];VAN DEN BERGHE;MATH4;;mercredi;09h05;1h00
+666;2PAC;LACASSE;LATIN;;mercredi;09h05;1h00
+667;1PAA;ROLIN;GYM;;mercredi;09h05;2h00
+668;[3-SO2];SNYDERS;SC. SOC.;;mercredi;09h05;1h00
+669;[4-SO2];TUTTOBENE;SC. SOC.;;mercredi;09h05;1h00
+670;[4-SO1];BALON;SC. SOC.;;mercredi;09h05;1h00
+671;[4-EC1];MARECHAL;SC. ECO.;;mercredi;09h05;1h00
+672;[2-HGS2];PAQUAY;GÉO;;mercredi;09h05;1h00
+673;[5et6-LM2-D];HOLLENFELTZ;ALLEMAND LM2;;mercredi;09h05;1h00
+674;[5-LM2-A];"NOLF; HAVART";ANGLAIS LM2;;mercredi;09h05;1h00
+675;[4-LM1-A3];KEVERS;ANGLAIS LM1;;mercredi;09h05;1h00
+676;[5-LM2-N2];BROUNS;NÉERLANDAIS LM2;;mercredi;09h05;1h00
+677;[5et6-LM2-I];ZAMBUTO;ITALIEN LM2;;mercredi;09h05;1h00
+678;[5-LM2-E3];HERVELLE;ESPAGNOL LM2;;mercredi;09h05;1h00
+679;[5-LM2-E2];JUDONG;ESPAGNOL LM2;;mercredi;09h05;1h00
+680;[5-LM2-E4];DZIRI;ESPAGNOL LM2;;mercredi;09h05;1h00
+681;[1-LM1-DI];DRECHSEL;Imm. Allemand;;mercredi;09h05;1h00
+682;[1-SF-NI];HENDRIKS;FHGES NI;;mercredi;09h05;1h00
+683;"[3-3PAW-CPC1-DI-L]; 3PAU";MANAP;CPC1;;mercredi;09h05;1h00
+684;[4-ScOp3];JEANGILLE;CHIMIE opt.;;mercredi;09h05;1h00
+685;[3-ScOp2];ZOLLER;CHIMIE opt.;;mercredi;09h05;1h00
+686;[3-ScOp1];ZANOL;BIO opt.;;mercredi;09h05;1h00
+687;[1-SF4];"YILDIRIM; BACCUS";SCIENCES;;mercredi;09h05;1h00
+688;6PAW;MAESEN;FRANCAIS;;mercredi;09h55;1h00
+689;2PAA;DJELIL;FRANCAIS;;mercredi;09h55;1h00
+690;1PAF;DEGEY;FRANCAIS;;mercredi;09h55;1h00
+691;2PAE;POPOVICS;FRANCAIS;;mercredi;09h55;1h00
+692;4PAU;VAN BRABANT;FRANCAIS;;mercredi;09h55;1h00
+693;5PAV;HUCHANT;FRANCAIS;;mercredi;09h55;1h00
+694;4PAY;ZAMBUTO;FRANCAIS;;mercredi;09h55;1h00
+695;6PAU;WERA;FRANCAIS;;mercredi;09h55;1h00
+696;4PAV;DERCLAYE;FRANCAIS;;mercredi;09h55;1h00
+697;1PAC;BAUWENS;MATH;;mercredi;09h55;1h00
+698;3PAU;VAN DE VLOET;MATH;;mercredi;09h55;1h00
+699;2PAD;KREIT;MATH;;mercredi;09h55;1h00
+700;2PAF;SPINA;MATH;;mercredi;09h55;1h00
+701;4PAW;BAKHTI;MATH;;mercredi;09h55;1h00
+702;[5-M4h4];CESA;MATH4;;mercredi;09h55;1h00
+703;[6-M4h3];HAFNAOUI;MATH4;;mercredi;09h55;1h00
+704;2PAC;LACASSE;LATIN;;mercredi;09h55;1h00
+705;6PAZ;MEUNIER;GYM;;mercredi;09h55;2h00
+706;4PAT;DULLIER;GYM;;mercredi;09h55;2h00
+707;[3-SO2];SNYDERS;SC. SOC.;;mercredi;09h55;1h00
+708;[4-SO1];TUTTOBENE;SC. SOC.;;mercredi;09h55;1h00
+709;[3-EC];MARECHAL;SC. ECO.;;mercredi;09h55;1h00
+710;[6-H1];BRUGMANS;HIST;;mercredi;09h55;1h00
+711;6PAV;MEERT;GÉO;;mercredi;09h55;2h00
+712;6PAX;NOTTET;GÉO;;mercredi;09h55;2h00
+713;[1-LM1-A4];DI GERONIMO;ANGLAIS LM1;;mercredi;09h55;1h00
+714;[5-LM1-A3];"NOLF; HAVART";ANGLAIS LM1;;mercredi;09h55;1h00
+715;[5-LM1-A4];KEVERS;ANGLAIS LM1;;mercredi;09h55;1h00
+716;[5-LM1-A5];VANHERLE;ANGLAIS LM1;;mercredi;09h55;1h00
+717;[5-LM1-N];BROUNS;NÉERLANDAIS LM1;;mercredi;09h55;1h00
+718;[5et6-H-DI];RUESS;HIST DI;;mercredi;09h55;1h00
+719;"[5et6-LM1-NI]; <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC";DONJEAN;Imm. Néerlandais;;mercredi;09h55;1h00
+720;[5-LM1-AI];SACRE;Imm. Anglais;;mercredi;09h55;1h00
+721;1PAE;MANAP;CPC1;;mercredi;09h55;1h00
+722;[4-ScOp1];MAQUET;PHY opt.;;mercredi;09h55;1h00
+723;[3-ScOp2];ZOLLER;PHY opt.;;mercredi;09h55;1h00
+724;[3-ScOp1];ZANOL;BIO opt.;;mercredi;09h55;1h00
+725;[2-HGS2];"YILDIRIM; BACCUS";SCIENCES;;mercredi;09h55;1h00
+726;;SEDRY;DESTENAY;;mercredi;09h55;3h00
+727;1PAD;SITKO;GYM;;mercredi;09h55;1h00
+728;;LUPO;ACADEMIE;;mercredi;09h55;4h00
+729;;MAGOUE;PITTEURS;;mercredi;09h55;2h00
+730;6PAW;MAESEN;FRANCAIS;;mercredi;11h00;1h00
+731;1PAA;DJELIL;FRANCAIS;;mercredi;11h00;1h00
+732;3PAU;DEGEY;FRANCAIS;;mercredi;11h00;1h00
+733;1PAD;POPOVICS;FRANCAIS;;mercredi;11h00;1h00
+734;1PAC;BAIZAN;FRANCAIS;;mercredi;11h00;1h00
+735;4PAU;VAN BRABANT;FRANCAIS;;mercredi;11h00;1h00
+736;4PAY;ZAMBUTO;FRANCAIS;;mercredi;11h00;1h00
+737;6PAU;WERA;FRANCAIS;;mercredi;11h00;1h00
+738;1PAB;BAUWENS;MATH;;mercredi;11h00;1h00
+739;3PAZ;VAN DE VLOET;MATH;;mercredi;11h00;1h00
+740;1PAE;KREIT;MATH;;mercredi;11h00;1h00
+741;3PAV;SPINA;MATH;;mercredi;11h00;1h00
+742;4PAX;CESA;MATH;;mercredi;11h00;1h00
+743;4PAW;BAKHTI;MATH;;mercredi;11h00;1h00
+744;[6-M4h3];HAFNAOUI;MATH4;;mercredi;11h00;1h00
+745;2PAA;ROLIN;GYM;;mercredi;11h00;1h00
+746;[4-EC2];MARECHAL;SC. ECO.;;mercredi;11h00;1h00
+747;[2-HGS3];FRANCOIS;GÉO;;mercredi;11h00;1h00
+748;[2-HGS2];PAQUAY;GÉO;;mercredi;11h00;1h00
+749;[6-H1];BRUGMANS;HIST;;mercredi;11h00;1h00
+750;[1-LM1-A3];DI GERONIMO;ANGLAIS LM1;;mercredi;11h00;1h00
+751;[5-LM1-A3];"NOLF; HAVART";ANGLAIS LM1;;mercredi;11h00;1h00
+752;[5-LM1-A4];KEVERS;ANGLAIS LM1;;mercredi;11h00;1h00
+753;[5-LM1-A2];VANHERLE;ANGLAIS LM1;;mercredi;11h00;1h00
+754;[1-LM1-N];BRACONNIER;NÉERLANDAIS LM1;;mercredi;11h00;1h00
+755;[5et6-H-DI];RUESS;HIST DI;;mercredi;11h00;1h00
+756;[2-HGS-NI];HENDRIKS;GÉO NI;;mercredi;11h00;1h00
+757;"[5et6-LM1-NI]; <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC";DONJEAN;Imm. Néerlandais;;mercredi;11h00;1h00
+758;[2-LM1-AI];CARLYLE;Imm. Anglais;;mercredi;11h00;1h00
+759;[5-LM1-AI];SACRE;Imm. Anglais;;mercredi;11h00;1h00
+760;4PAZ;LUCA;CPC1;;mercredi;11h00;1h00
+761;[5-ScOp1];MAQUET;Acph;;mercredi;11h00;1h00
+762;[3-ScOp1];ZOLLER;PHY opt.;;mercredi;11h00;1h00
+763;[3-Sc4];"YILDIRIM; BACCUS";BIO;;mercredi;11h00;1h00
+764;[3-Sc3];ZANOL;BIO;;mercredi;11h00;1h00
+765;[5-LM1-N];BROUNS;NÉERLANDAIS LM1;;mercredi;11h00;1h00
+766;;MAESEN;ULg;;mercredi;11h50;6h00
+767.1;1PAA;DJELIL;CONSEIL;;mercredi;11h50;1h00
+767.2;1PAB;ROLIN;CONSEIL;;mercredi;11h50;1h00
+767.3;1PAC;BAIZAN;CONSEIL;;mercredi;11h50;1h00
+767.4;1PAD;MANAP;CONSEIL;;mercredi;11h50;1h00
+767.5;1PAE;KREIT;CONSEIL;;mercredi;11h50;1h00
+767.6;1PAF;DEGEY;CONSEIL;;mercredi;11h50;1h00
+767.7;2PAA;DI GERONIMO;CONSEIL;;mercredi;11h50;1h00
+767.8;2PAB;BAUWENS;CONSEIL;;mercredi;11h50;1h00
+767.9;2PAC;BRACONNIER;CONSEIL;;mercredi;11h50;1h00
+767.10;2PAD;SITKO;CONSEIL;;mercredi;11h50;1h00
+767.11;2PAE;PAQUAY;CONSEIL;;mercredi;11h50;1h00
+767.12;2PAF;POPOVICS;CONSEIL;;mercredi;11h50;1h00
+767.13;3PAU;DZIRI;CONSEIL;;mercredi;11h50;1h00
+767.14;3PAV;ZANOL;CONSEIL;;mercredi;11h50;1h00
+767.15;3PAW;BROOS;CONSEIL;;mercredi;11h50;1h00
+767.16;3PAX;"YILDIRIM; BACCUS";CONSEIL;;mercredi;11h50;1h00
+767.17;3PAY;VAN DE VLOET;CONSEIL;;mercredi;11h50;1h00
+767.18;3PAZ;ZOLLER;CONSEIL;;mercredi;11h50;1h00
+767.19;4PAT;CESA;CONSEIL;;mercredi;11h50;1h00
+767.20;4PAU;LUCA;CONSEIL;;mercredi;11h50;1h00
+767.21;4PAV;KEVERS;CONSEIL;;mercredi;11h50;1h00
+767.22;4PAW;BAKHTI;CONSEIL;;mercredi;11h50;1h00
+767.23;4PAX;NOTTET;CONSEIL;;mercredi;11h50;1h00
+767.24;4PAY;MEUNIER;CONSEIL;;mercredi;11h50;1h00
+767.25;4PAZ;DULLIER;CONSEIL;;mercredi;11h50;1h00
+767.26;5PAU;MEERT;CONSEIL;;mercredi;11h50;1h00
+767.27;5PAV;HUCHANT;CONSEIL;;mercredi;11h50;1h00
+767.28;5PAW;CHAPEAU;CONSEIL;;mercredi;11h50;1h00
+767.29;5PAX;HAFNAOUI;CONSEIL;;mercredi;11h50;1h00
+767.30;5PAY;VANHERLE;CONSEIL;;mercredi;11h50;1h00
+767.31;5PAZ;JUDONG;CONSEIL;;mercredi;11h50;1h00
+767.32;6PAT;HOLLENFELTZ;CONSEIL;;mercredi;11h50;1h00
+767.33;6PAU;WERA;CONSEIL;;mercredi;11h50;1h00
+767.34;6PAV;MAQUET;CONSEIL;;mercredi;11h50;1h00
+767.35;6PAW;"NOLF; HAVART";CONSEIL;;mercredi;11h50;1h00
+767.36;6PAX;VAN DEN BERGHE;CONSEIL;;mercredi;11h50;1h00
+767.37;6PAY;BROUNS;CONSEIL;;mercredi;11h50;1h00
+767.38;6PAZ;JEANGILLE;CONSEIL;;mercredi;11h50;1h00
+767.39;5PAT;SACRE;CONSEIL;;mercredi;11h50;1h00
+768;;OUAHABI;CESLM;;mercredi;13h40;4h00
+769;;BORLEE;HOTELLERIE;;mercredi;13h40;3h00
+770;6PAX;MAESEN;FRANCAIS;;jeudi;08h15;1h00
+771;;CHAPEAU V;PS ECI;;jeudi;08h15;5h00
+772;1PAF;DEGEY;FRANCAIS;;jeudi;08h15;1h00
+773;5PAW;VAN BRABANT;FRANCAIS;;jeudi;08h15;1h00
+774;5PAU;HUCHANT;FRANCAIS;;jeudi;08h15;1h00
+775;5PAZ;WERA;FRANCAIS;;jeudi;08h15;1h00
+776;2PAB;BAUWENS;MATH;;jeudi;08h15;1h00
+777;4PAU;KAMGA;MATH;;jeudi;08h15;1h00
+778;6PAY;"MEUNIER; GRIBOMONT";GYM;;jeudi;08h15;2h00
+779;[3-SO2];SNYDERS;SC. SOC.;;jeudi;08h15;1h00
+780;[3-EC];MARECHAL;SC. ECO.;;jeudi;08h15;1h00
+781;[2-HGS4];PAQUAY;GÉO;;jeudi;08h15;1h00
+782;[3-HG1];FRANCOIS;HIST;;jeudi;08h15;1h00
+783;[5-H2];BRUGMANS;HIST;;jeudi;08h15;1h00
+784;5PAT;NOTTET;GÉO;;jeudi;08h15;1h00
+785;[1-LM1-A1];THONNARD;ANGLAIS LM1;;jeudi;08h15;1h00
+786;[2-HGS-NI];HENDRIKS;GÉO NI;;jeudi;08h15;1h00
+787;[1-LM1-AI];CARLYLE;Imm. Anglais;;jeudi;08h15;1h00
+788;[2-LM1-AI];SWINYARD;SCI AI;;jeudi;08h15;1h00
+789;[4-CPC1];LUCA;CPC2;;jeudi;08h15;1h00
+790;[5-ScOp1];ZENTHNER;BIO opt.;;jeudi;08h15;1h00
+791;[6-Sc1];MAGOUE;BIO;;jeudi;08h15;1h00
+792;[6-Sc4];JEANGILLE;CHIMIE;;jeudi;08h15;1h00
+793;[6-ScOp-Acph2];BAKHTI;Acph;;jeudi;08h15;1h00
+794;[3-ScOp1];ZOLLER;PHY opt.;;jeudi;08h15;1h00
+795;[2-HGS3];ZANOL;SCIENCES;;jeudi;08h15;1h00
+796;[1-SF2];"YILDIRIM; BACCUS";SCIENCES;;jeudi;08h15;1h00
+797;;BORLEE;DESTENAY;;jeudi;08h15;2h00
+798;;DULLIER;DESTENAY;;jeudi;08h15;2h00
+799.1;[4-CPC3];CHOLEWKA;CPC2;;jeudi;08h15;1h00
+799.2;[4-CPC4];DEFOURNY;CPC2;;jeudi;08h15;1h00
+799.3;[4-M];THOMAS;MORALE;;jeudi;08h15;1h00
+799.4;[4-RI];LEGSSYER;Rel. Islam.;;jeudi;08h15;1h00
+799.5;[4-RP];X08_RP_DS;Rel. Prot.;;jeudi;08h15;1h00
+799.6;[4-RC];X10_RC_DS;Rel. Cath.;;jeudi;08h15;1h00
+800;[6-Commu2];CHAPEAU;COMMU;;jeudi;08h15;1h00
+801;;HERVELLE;AUTRE ECOLE;;jeudi;08h15;10h00
+802;;KERRELS;CESLM;;jeudi;08h15;3h00
+803;;LUPO;DESTENAY;;jeudi;08h15;1h00
+804;;SEDRY;DE BEAUVOIR;;jeudi;08h15;1h00
+805;6PAW;MAESEN;FRANCAIS;;jeudi;09h05;1h00
+806;2PAD;DEGEY;FRANCAIS;;jeudi;09h05;1h00
+807;[6-Commu1];CHAPEAU;COMMU;;jeudi;09h05;2h00
+808;4PAZ;WERA;FRANCAIS;;jeudi;09h05;1h00
+809;1PAC;BAUWENS;MATH;;jeudi;09h05;1h00
+810;2PAC;KREIT;MATH;;jeudi;09h05;1h00
+811;1PAA;STAFFE;MATH;;jeudi;09h05;1h00
+812;2PAF;SPINA;MATH;;jeudi;09h05;1h00
+813;[6-M6h2];HAFNAOUI;MATH6;;jeudi;09h05;2h00
+814;[6-M4h1];BAKHTI;MATH4;;jeudi;09h05;1h00
+815;[4-EC2];MARECHAL;SC. ECO.;;jeudi;09h05;1h00
+816;[1-SF4];PAQUAY;FHGES;;jeudi;09h05;1h00
+817;[1-SF2];BOURGEOIS;FHGES;;jeudi;09h05;1h00
+818;[3-HG2];FRANCOIS;HIST;;jeudi;09h05;1h00
+819;[4-HG2];BRUGMANS;HIST;;jeudi;09h05;1h00
+820;[3-LM1-A4];THONNARD;ANGLAIS LM1;;jeudi;09h05;1h00
+821;[2-LM1-A1];DI GERONIMO;ANGLAIS LM1;;jeudi;09h05;1h00
+822;[3-LM1-A3];ZOES;ANGLAIS LM1;;jeudi;09h05;1h00
+823;[5-LM1-A1];KEVERS;ANGLAIS LM1;;jeudi;09h05;1h00
+824;[4-LM1-A5];"NOLF; HAVART";ANGLAIS LM1;;jeudi;09h05;1h00
+825;[4-LM1-A4];VANHERLE;ANGLAIS LM1;;jeudi;09h05;1h00
+826;[4-LM1-N];MORAUX;NÉERLANDAIS LM1;;jeudi;09h05;1h00
+827;[3-LM1-N];BRACONNIER;NÉERLANDAIS LM1;;jeudi;09h05;1h00
+828;1PAD;ZANOL;FMTT;;jeudi;09h05;1h00
+829;1PAE;X05_ECA_DI;ECA;;jeudi;09h05;1h00
+830;[3et4-HG-DI];RUESS;HIST DI;;jeudi;09h05;1h00
+831;[3et4-LM1-NI];HENDRIKS;HIST NI;;jeudi;09h05;1h00
+832;[3-LM1-AI];CARLYLE;Imm. Anglais;;jeudi;09h05;1h00
+833;[4-LM1-AI];SACRE;Imm. Anglais;;jeudi;09h05;1h00
+834;2PAE;MANAP;CPC1;;jeudi;09h05;1h00
+835;6PAX;CHOLEWKA;CPC1;;jeudi;09h05;1h00
+836;[5-CPC2];LUCA;CPC2;;jeudi;09h05;1h00
+837;[5-Sc4];MAGOUE;BIO;;jeudi;09h05;1h00
+838;[5-Sc2];ZENTHNER;BIO;;jeudi;09h05;1h00
+839;[5-Sc1];JEANGILLE;CHIMIE;;jeudi;09h05;1h00
+840;[5-ScOp2];MAQUET;Acph;;jeudi;09h05;1h00
+841;[3-Sc1];ZOLLER;CHIMIE;;jeudi;09h05;1h00
+842;[2-HGS2];"YILDIRIM; BACCUS";SCIENCES;;jeudi;09h05;1h00
+843;6PAW;MAESEN;FRANCAIS;;jeudi;09h55;1h00
+844;1PAB;DJELIL;FRANCAIS;;jeudi;09h55;1h00
+845;3PAU;DEGEY;FRANCAIS;;jeudi;09h55;1h00
+846;5PAV;HUCHANT;FRANCAIS;;jeudi;09h55;1h00
+847;4PAZ;WERA;FRANCAIS;;jeudi;09h55;1h00
+848;1PAC;BAUWENS;MATH;;jeudi;09h55;1h00
+849;2PAD;KREIT;MATH;;jeudi;09h55;1h00
+850;1PAA;STAFFE;MATH;;jeudi;09h55;1h00
+851;2PAF;SPINA;MATH;;jeudi;09h55;1h00
+852;[5-M4h4];CESA;MATH4;;jeudi;09h55;1h00
+853;[6-M4h1];BAKHTI;MATH4;;jeudi;09h55;1h00
+854;[1-SF4];PAQUAY;FHGES;;jeudi;09h55;1h00
+855;[2-HGS2];BOURGEOIS;HIST;;jeudi;09h55;1h00
+856;[3-HG2];FRANCOIS;HIST;;jeudi;09h55;1h00
+857;[6-H5];MEDART;HIST;;jeudi;09h55;1h00
+858;[4-HG2];BRUGMANS;HIST;;jeudi;09h55;1h00
+859;[3-LM1-A4];THONNARD;ANGLAIS LM1;;jeudi;09h55;1h00
+860;[2-LM1-A1];DI GERONIMO;ANGLAIS LM1;;jeudi;09h55;1h00
+861;[3-LM1-A3];ZOES;ANGLAIS LM1;;jeudi;09h55;1h00
+862;[4-LM1-A5];"NOLF; HAVART";ANGLAIS LM1;;jeudi;09h55;1h00
+863;[4-LM1-A3];KEVERS;ANGLAIS LM1;;jeudi;09h55;1h00
+864;[4-LM1-A4];VANHERLE;ANGLAIS LM1;;jeudi;09h55;1h00
+865;[4-LM1-N];MORAUX;NÉERLANDAIS LM1;;jeudi;09h55;1h00
+866;[3-LM1-N];BRACONNIER;NÉERLANDAIS LM1;;jeudi;09h55;1h00
+867;1PAE;ZANOL;FMTT;;jeudi;09h55;1h00
+868;[3et4-HG-DI];RUESS;HIST DI;;jeudi;09h55;1h00
+869;[3et4-LM1-NI];HENDRIKS;HIST NI;;jeudi;09h55;1h00
+870;[3-LM1-AI];CARLYLE;Imm. Anglais;;jeudi;09h55;1h00
+871;[4-LM1-AI];SACRE;Imm. Anglais;;jeudi;09h55;1h00
+872;1PAD;MANAP;CPC1;;jeudi;09h55;1h00
+873;[5-Sc2];YAHIA;CHIMIE;;jeudi;09h55;1h00
+874;[5-ScOp2];JEANGILLE;CHIMIE opt.;;jeudi;09h55;1h00
+875;[5-Sc4];PILATE;PHYSIQUE;;jeudi;09h55;1h00
+876;[5-Sc1];MAQUET;PHYSIQUE;;jeudi;09h55;1h00
+877;;TUTTOBENE;CESLM;;jeudi;09h55;3h00
+878;[5-Sc5];MAGOUE;BIO;;jeudi;09h55;1h00
+879;6PAX;MAESEN;FRANCAIS;;jeudi;11h00;1h00
+880;3PAY;NAVARRO;FRANCAIS;;jeudi;11h00;1h00
+881;2PAB;DJELIL;FRANCAIS;;jeudi;11h00;1h00
+882;3PAX;DEGEY;FRANCAIS;;jeudi;11h00;1h00
+883;4PAU;VAN BRABANT;FRANCAIS;;jeudi;11h00;1h00
+884;5PAV;HUCHANT;FRANCAIS;;jeudi;11h00;1h00
+885;5PAY;WERA;FRANCAIS;;jeudi;11h00;1h00
+886;6PAZ;CHAPEAU;FRANCAIS;;jeudi;11h00;1h00
+887;2PAA;BAUWENS;MATH;;jeudi;11h00;1h00
+888;3PAW;STAFFE;MATH;;jeudi;11h00;1h00
+889;1PAF;OUAHABI;MATH;;jeudi;11h00;1h00
+890;4PAT;CESA;MATH;;jeudi;11h00;1h00
+891;4PAW;BAKHTI;MATH;;jeudi;11h00;1h00
+892;4PAY;HAFNAOUI;MATH;;jeudi;11h00;1h00
+893;[6-M4h2];VAN DEN BERGHE;MATH4;;jeudi;11h00;1h00
+894;4PAZ;DULLIER;GYM;;jeudi;11h00;2h00
+895;4PAX;"MEUNIER; GRIBOMONT";GYM;;jeudi;11h00;2h00
+896;[3-SO1];SNYDERS;SC. SOC.;;jeudi;11h00;1h00
+897;[1-SF1];PAQUAY;FHGES;;jeudi;11h00;1h00
+898;[1-SF3];BOURGEOIS;FHGES;;jeudi;11h00;1h00
+899;[6-H3];MEDART;HIST;;jeudi;11h00;1h00
+900;[2-LM1-A3];DI GERONIMO;ANGLAIS LM1;;jeudi;11h00;1h00
+901;[5-LM1-A3];"NOLF; HAVART";ANGLAIS LM1;;jeudi;11h00;1h00
+902;[5-LM1-A4];KEVERS;ANGLAIS LM1;;jeudi;11h00;1h00
+903;[5-LM1-A5];HOLLENFELTZ;ANGLAIS LM1;;jeudi;11h00;1h00
+904;[5-LM1-N];MORAUX;NÉERLANDAIS LM1;;jeudi;11h00;1h00
+905;[2-LM1-N];BRACONNIER;NÉERLANDAIS LM1;;jeudi;11h00;1h00
+906;[5et6-LM1-DI];RUESS;Imm. Allemand;;jeudi;11h00;1h00
+907;[1-SF-DI];DRECHSEL;FHGES DI;;jeudi;11h00;1h00
+908;[1et2-LM1-NI];PILATE;SCI NI;;jeudi;11h00;1h00
+909;"[5et6-LM1-NI]; <6PAT> <Option+LM1+LM2(+LM3)> MA6-NI-A + CPC";HENDRIKS;HIST NI;;jeudi;11h00;1h00
+910;[5-LM1-AI];SACRE;Imm. Anglais;;jeudi;11h00;1h00
+911;[1-LM1-AI];SWINYARD;SCI AI;;jeudi;11h00;1h00
+912;[2-LM1-AI];CARLYLE;Imm. Anglais;;jeudi;11h00;1h00
+913;1PAB;MANAP;CPC1;;jeudi;11h00;1h00
+914;4PAV;LUCA;CPC1;;jeudi;11h00;1h00
+915;[6-Sc2];ZENTHNER;BIO;;jeudi;11h00;1h00
+916;[6-Sc1];MAQUET;PHYSIQUE;;jeudi;11h00;1h00
+917;[3-ScOp2];ZOLLER;PHY opt.;;jeudi;11h00;1h00
+918;[3-Sc2];ZANOL;BIO;;jeudi;11h00;1h00
+919;[2-HGS4];"YILDIRIM; BACCUS";SCIENCES;;jeudi;11h00;1h00
+920;3PAY;NAVARRO;FRANCAIS;;jeudi;11h50;1h00
+921;2PAB;DJELIL;FRANCAIS;;jeudi;11h50;1h00
+922;3PAX;DEGEY;FRANCAIS;;jeudi;11h50;1h00
+923;6PAT;VAN BRABANT;FRANCAIS;;jeudi;11h50;1h00
+924;2PAA;BAUWENS;MATH;;jeudi;11h50;1h00
+925;3PAW;STAFFE;MATH;;jeudi;11h50;1h00
+926;[5-M4h4];CESA;MATH4;;jeudi;11h50;1h00
+927;[5-M4h1];VAN DEN BERGHE;MATH4;;jeudi;11h50;1h00
+928;[3-SO1];SNYDERS;SC. SOC.;;jeudi;11h50;1h00
+929;[1-SF3];BOURGEOIS;FHGES;;jeudi;11h50;1h00
+930;[2-HGS4];PAQUAY;GÉO;;jeudi;11h50;1h00
+931;[1-LM1-A1];THONNARD;ANGLAIS LM1;;jeudi;11h50;1h00
+932;[2-LM1-A3];DI GERONIMO;ANGLAIS LM1;;jeudi;11h50;1h00
+933;[6-LM1-A4];"NOLF; HAVART";ANGLAIS LM1;;jeudi;11h50;1h00
+934;[6-LM1-A5];KEVERS;ANGLAIS LM1;;jeudi;11h50;1h00
+935;[6-LM1-A3];HOLLENFELTZ;ANGLAIS LM1;;jeudi;11h50;1h00
+936;[6-LM1-A2];VANHERLE;ANGLAIS LM1;;jeudi;11h50;1h00
+937;[6-LM1-N];MORAUX;NÉERLANDAIS LM1;;jeudi;11h50;1h00
+938;[2-LM1-N];BRACONNIER;NÉERLANDAIS LM1;;jeudi;11h50;1h00
+939;1PAB;ZANOL;FMTT;;jeudi;11h50;1h00
+940;[1-SF-DI];DRECHSEL;FHGES DI;;jeudi;11h50;1h00
+941;[1et2-LM1-NI];HENDRIKS;Imm. Néerlandais;;jeudi;11h50;1h00
+942;[6-LM1-AI];SACRE;Imm. Anglais;;jeudi;11h50;1h00
+943;[1-LM1-AI];CARLYLE;FHGES AI;;jeudi;11h50;1h00
+944;[2-LM1-AI];BORLEE;GÉO AI;;jeudi;11h50;1h00
+945;1PAF;KERRELS;CPC1;;jeudi;11h50;1h00
+946;[4-Sc3];ZENTHNER;BIO;;jeudi;11h50;1h00
+947;[4-Sc4];YAHIA;CHIMIE;;jeudi;11h50;1h00
+948;[4-ScOp3];JEANGILLE;CHIMIE opt.;;jeudi;11h50;1h00
+949;[4-Sc1];PILATE;PHYSIQUE;;jeudi;11h50;1h00
+950;[4-ScOp2];MAQUET;PHY opt.;;jeudi;11h50;1h00
+951;[3-Sc2];ZOLLER;CHIMIE;;jeudi;11h50;1h00
+952;[3-ScOp2];"YILDIRIM; BACCUS";BIO opt.;;jeudi;11h50;1h00
+953.1;[5-CPC3];CHOLEWKA;CPC2;;jeudi;11h50;1h00
+953.2;[5-CPC5];LUCA;CPC2;;jeudi;11h50;1h00
+953.3;[5-CPC4];DEFOURNY;CPC2;;jeudi;11h50;1h00
+953.4;[5-M];THOMAS;MORALE;;jeudi;11h50;1h00
+953.5;[5-RI];SEDRY;Rel. Islam.;;jeudi;11h50;1h00
+953.6;[5-RP];X08_RP_DS;Rel. Prot.;;jeudi;11h50;1h00
+953.7;[5-RC];X10_RC_DS;Rel. Cath.;;jeudi;11h50;1h00
+954;;GRIBOMONT;DESTENAY;;jeudi;12h40;2h00
+955;;CHAPEAU V;PS ECI;;jeudi;13h40;4h00
+956;1PAB;DJELIL;FRANCAIS;;jeudi;13h40;1h00
+957;6PAT;VAN BRABANT;FRANCAIS;;jeudi;13h40;1h00
+958;4PAT;HUCHANT;FRANCAIS;;jeudi;13h40;1h00
+959;5PAX;JOBKENNE;FRANCAIS;;jeudi;13h40;1h00
+960;5PAY;WERA;FRANCAIS;;jeudi;13h40;1h00
+961;2PAB;BAUWENS;MATH;;jeudi;13h40;1h00
+962;3PAX;VAN DE VLOET;MATH;;jeudi;13h40;1h00
+963;[5-M4h6];CESA;MATH4;;jeudi;13h40;1h00
+964;[5-M4h3];HAFNAOUI;MATH4;;jeudi;13h40;1h00
+965;[5-M4h5];BAKHTI;MATH4;;jeudi;13h40;1h00
+966;[5-M6h];VAN DEN BERGHE;MATH6;;jeudi;13h40;1h00
+967;2PAA;DEPAIX;LATIN;;jeudi;13h40;1h00
+968;4PAY;MEUNIER;GYM;;jeudi;13h40;2h00
+969;[1-SF1];PAQUAY;FHGES;;jeudi;13h40;1h00
+970;[2-HGS3];FRANCOIS;GÉO;;jeudi;13h40;1h00
+971;5PAW;MEERT;GÉO;;jeudi;13h40;1h00
+972;[2-LM1-A4];THONNARD;ANGLAIS LM1;;jeudi;13h40;1h00
+973;[1-LM1-A3];DI GERONIMO;ANGLAIS LM1;;jeudi;13h40;1h00
+974;[6-LM1-A4];"NOLF; HAVART";ANGLAIS LM1;;jeudi;13h40;1h00
+975;[6-LM1-A5];KEVERS;ANGLAIS LM1;;jeudi;13h40;1h00
+976;[6-LM1-A3];HOLLENFELTZ;ANGLAIS LM1;;jeudi;13h40;1h00
+977;[6-LM1-A2];VANHERLE;ANGLAIS LM1;;jeudi;13h40;1h00
+978;[4-LM2-N1];BROUNS;NÉERLANDAIS LM2;;jeudi;13h40;1h00
+979;[6-LM1-N];MORAUX;NÉERLANDAIS LM1;;jeudi;13h40;1h00
+980;[1-LM1-N];BRACONNIER;NÉERLANDAIS LM1;;jeudi;13h40;1h00
+981;[1-SF-DI];X04_Sciences imm All;SCI DI;;jeudi;13h40;1h00
+982;[1et2-LM1-NI];HENDRIKS;Imm. Néerlandais;;jeudi;13h40;1h00
+983;[2-LM1-AI];BORLEE;GÉO AI;;jeudi;13h40;1h00
+984;[6-LM1-AI];SACRE;Imm. Anglais;;jeudi;13h40;1h00
+985;[1-LM1-AI];CARLYLE;FHGES AI;;jeudi;13h40;1h00
+986;4PAU;LUCA;CPC1;;jeudi;13h40;1h00
+987;[4-Sc2];ZENTHNER;BIO;;jeudi;13h40;1h00
+988;[4-Sc1];JEANGILLE;CHIMIE;;jeudi;13h40;1h00
+989;[4-ScOp1];YAHIA;CHIMIE opt.;;jeudi;13h40;1h00
+990;[1-SF3];ZANOL;SCIENCES;;jeudi;13h40;1h00
+991;;SEDRY;DE BEAUVOIR;;jeudi;13h40;4h00
+992;;TUTTOBENE;CESLM;;jeudi;13h40;2h00
+993.1;[3-CPC2];MANAP;CPC2;;jeudi;13h40;1h00
+993.2;[3-CPC3];KERRELS;CPC2;;jeudi;13h40;1h00
+993.3;[3-M];BASTIN;MORALE;;jeudi;13h40;1h00
+993.4;[3-RI];LEGSSYER;Rel. Islam.;;jeudi;13h40;1h00
+993.5;[3-RP];X07_RP_DI;Rel. Prot.;;jeudi;13h40;1h00
+993.6;[3-RC];X09_RC_DI;Rel. Cath.;;jeudi;13h40;1h00
+994;;DEFOURNY;HORTI;;jeudi;13h40;2h00
+995;;MAGOUE;DESTENAY;;jeudi;13h40;3h00
+996;;OUAHABI;MAGHIN;;jeudi;13h40;3h00
+997;2PAA;DJELIL;FRANCAIS;;jeudi;14h30;1h00
+998;2PAD;DEGEY;LECTURE;;jeudi;14h30;1h00
+999;2PAF;POPOVICS;FRANCAIS;;jeudi;14h30;1h00
+1000;6PAV;JOBKENNE;FRANCAIS;;jeudi;14h30;1h00
+1001;5PAZ;WERA;FRANCAIS;;jeudi;14h30;1h00
+1002;1PAB;BAUWENS;MATH;;jeudi;14h30;1h00
+1003;3PAU;VAN DE VLOET;MATH;;jeudi;14h30;1h00
+1004;2PAC;KREIT;MATH;;jeudi;14h30;1h00
+1005;[5-M4h2];HAFNAOUI;MATH4;;jeudi;14h30;1h00
+1006;2PAB;DEPAIX;LATIN;;jeudi;14h30;1h00
+1007;[3-HG3];PAQUAY;GÉO;;jeudi;14h30;2h00
+1008;[3-HG4];FRANCOIS;HIST;;jeudi;14h30;1h00
+1009;[4-HG4];BRUGMANS;HIST;;jeudi;14h30;2h00
+1010;[4-HG3];THOMAS;HIST;;jeudi;14h30;1h00
+1011;[4-HG1];MEERT;GÉO;;jeudi;14h30;1h00
+1012;[4-HG5];NOTTET;GÉO;;jeudi;14h30;2h00
+1013;[5et6-LM2-D];HOLLENFELTZ;ALLEMAND LM2;;jeudi;14h30;1h00
+1014;[3-LM1-A2];THONNARD;ANGLAIS LM1;;jeudi;14h30;1h00
+1015;[5-LM2-A];"NOLF; HAVART";ANGLAIS LM2;;jeudi;14h30;1h00
+1016;[5-LM2-N2];BROUNS;NÉERLANDAIS LM2;;jeudi;14h30;1h00
+1017;[5et6-LM2-I];ZAMBUTO;ITALIEN LM2;;jeudi;14h30;1h00
+1018;[5-LM2-E3];DION;ESPAGNOL LM2;;jeudi;14h30;1h00
+1019;[5-LM2-E4];DZIRI;ESPAGNOL LM2;;jeudi;14h30;1h00
+1020;[3et4-LM1-NI];MORAUX;GÉO NI;;jeudi;14h30;1h00
+1021;[3-LM1-AI];CARLYLE;HIST AI;;jeudi;14h30;2h00
+1022;[4-LM1-AI];BORLEE;GÉO AI;;jeudi;14h30;2h00
+1023;[6-CPC2];LUCA;CPC2;;jeudi;14h30;1h00
+1024;[6-Sc3];ZENTHNER;BIO;;jeudi;14h30;1h00
+1025;[6-Sc2];JEANGILLE;CHIMIE;;jeudi;14h30;1h00
+1026;[6-ScOp2];YAHIA;CHIMIE opt.;;jeudi;14h30;1h00
+1027;[6-Sc5];PILATE;PHYSIQUE;;jeudi;14h30;1h00
+1028;2PAE;ZANOL;EducTECH;;jeudi;14h30;1h00
+1029.1;[1-CPC1];MANAP;CPC2;;jeudi;14h30;1h00
+1029.2;[1-CPC3];KERRELS;CPC2;;jeudi;14h30;1h00
+1029.3;[1-M];BASTIN;MORALE;;jeudi;14h30;1h00
+1029.4;[1-RI];LEGSSYER;Rel. Islam.;;jeudi;14h30;1h00
+1029.5;[1-RP];X07_RP_DI;Rel. Prot.;;jeudi;14h30;1h00
+1029.6;[1-RC];X09_RC_DI;Rel. Cath.;;jeudi;14h30;1h00
+1030;1PAD;POPOVICS;FRANCAIS;;jeudi;15h20;1h00
+1031;6PAY;HUCHANT;FRANCAIS;;jeudi;15h20;1h00
+1032;6PAU;WERA;FRANCAIS;;jeudi;15h20;1h00
+1033;1PAE;KREIT;MATH;;jeudi;15h20;1h00
+1034;[5-M4h3];HAFNAOUI;MATH4;;jeudi;15h20;1h00
+1035;[5-M6h];VAN DEN BERGHE;MATH6;;jeudi;15h20;1h00
+1036;2PAB;DEPAIX;LATIN;;jeudi;15h20;1h00
+1037;[4-HG3];THOMAS;HIST;;jeudi;15h20;1h00
+1038;[4-HG2];MEERT;GÉO;;jeudi;15h20;1h00
+1039;[5et6-LM3-D];HOLLENFELTZ;ALLEMAND LM3;;jeudi;15h20;1h00
+1040;[3-LM1-A2];THONNARD;ANGLAIS LM1;;jeudi;15h20;1h00
+1041;[1-LM1-A3];DI GERONIMO;ANGLAIS LM1;;jeudi;15h20;1h00
+1042;[4-LM1-A1];"NOLF; HAVART";ANGLAIS LM1;;jeudi;15h20;1h00
+1043;[5-LM2-N1];BROUNS;NÉERLANDAIS LM2;;jeudi;15h20;1h00
+1044;[3-LM2-E1];DZIRI;ESPAGNOL LM2;;jeudi;15h20;1h00
+1045;1PAA;ZANOL;FMTT;;jeudi;15h20;1h00
+1046;[3et4-HG-DI];DRECHSEL;GÉO DI;;jeudi;15h20;1h00
+1047;[5-Sc3];JEANGILLE;CHIMIE;;jeudi;15h20;1h00
+1048.1;[2-CPC2];MANAP;CPC2;;jeudi;15h20;1h00
+1048.2;[2-CPC3];KERRELS;CPC2;;jeudi;15h20;1h00
+1048.3;[2-M];BASTIN;MORALE;;jeudi;15h20;1h00
+1048.4;[2-RP];X07_RP_DI;Rel. Prot.;;jeudi;15h20;1h00
+1048.5;[2-RC];X09_RC_DI;Rel. Cath.;;jeudi;15h20;1h00
+1049;[5et6-LM1-DI-ALP];RUESS;ALP Allemand;;jeudi;15h20;1h00
+1050;[3et4-LM1-NI];MORAUX;GÉO NI;;jeudi;15h20;1h00
+1051;[3-HG4];FRANCOIS;HIST;;jeudi;15h20;1h00
+1052;;KAMGA;PITTEURS;;jeudi;15h20;2h00
+1053;5PAT;ZAMBUTO;FRANCAIS;;jeudi;16h10;1h00
+1054;[6-H4];BRUGMANS;HIST;;jeudi;16h10;1h00
+1055;[6-H6];THOMAS;HIST;;jeudi;16h10;1h00
+1056;[4-LM1-A1];"NOLF; HAVART";ANGLAIS LM1;;jeudi;16h10;1h00
+1057;[4-LM1-N];MORAUX;NÉERLANDAIS LM1;;jeudi;16h10;1h00
+1058;[5et6-LM1-DI-ALP];RUESS;ALP Allemand;;jeudi;16h10;1h00
+1059;[3et4-LM1-DI];DRECHSEL;Imm. Allemand;;jeudi;16h10;1h00
+1060;[3-LM1-AI];CARLYLE;ALP Anglais;;jeudi;16h10;1h00
+1061;[6-LM1-AI];SACRE;HIST AI;;jeudi;16h10;1h00
+1062;[3-3PAW-CPC1-sauf-DI];MANAP;CPC1;;jeudi;16h10;1h00
+1063;"5PAZ; <5PAV> <Option+LM1+LM2(+LM3)> LB4-A-/";LUCA;CPC1;;jeudi;16h10;1h00
+1064;[6-LM1-A1];KEVERS;ANGLAIS LM1;;jeudi;16h10;1h00
+1065;;MAESEN;ULg;;vendredi;08h15;5h00
+1066;2PAA;DJELIL;FRANCAIS;;vendredi;08h15;1h00
+1067;5PAW;VAN BRABANT;FRANCAIS;;vendredi;08h15;1h00
+1068;4PAT;HUCHANT;FRANCAIS;;vendredi;08h15;1h00
+1069;4PAX;CESA;MATH;;vendredi;08h15;1h00
+1070;4PAU;KAMGA;MATH;;vendredi;08h15;1h00
+1071;4PAZ;CHAPEAU V;MATH;;vendredi;08h15;1h00
+1072;[5-M6h];VAN DEN BERGHE;MATH6;;vendredi;08h15;1h00
+1073;[3-SO2];SNYDERS;SC. SOC.;;vendredi;08h15;1h00
+1074;[3-EC];MARECHAL;SC. ECO.;;vendredi;08h15;1h00
+1075;[1-SF1];PAQUAY;FHGES;;vendredi;08h15;1h00
+1076;[1-SF3];BOURGEOIS;FHGES;;vendredi;08h15;1h00
+1077;[2-HGS4];FRANCOIS;HIST;;vendredi;08h15;1h00
+1078;[6-H2];MEDART;HIST;;vendredi;08h15;1h00
+1079;[4-HG2];MEERT;GÉO;;vendredi;08h15;1h00
+1080;[2-LM1-A3];DI GERONIMO;ANGLAIS LM1;;vendredi;08h15;1h00
+1081;[4-LM2-N1];BROUNS;NÉERLANDAIS LM2;;vendredi;08h15;1h00
+1082;[2-LM1-N];BRACONNIER;NÉERLANDAIS LM1;;vendredi;08h15;1h00
+1083;[5-LM2-E1];JUDONG;ESPAGNOL LM2;;vendredi;08h15;1h00
+1084;[1-LM1-DI];DRECHSEL;Imm. Allemand;;vendredi;08h15;1h00
+1085;[2-LM1-AI];CARLYLE;HIST AI;;vendredi;08h15;1h00
+1086;[6-Sc5];ZENTHNER;BIO;;vendredi;08h15;1h00
+1087;[6-Sc3];YAHIA;CHIMIE;;vendredi;08h15;1h00
+1088;[6-ScOp1];JEANGILLE;BIO opt.;;vendredi;08h15;1h00
+1089;[5-Sc2];MAQUET;PHYSIQUE;;vendredi;08h15;1h00
+1090;[6-Sc4];PILATE;PHYSIQUE;;vendredi;08h15;1h00
+1091;[6-ScOp2];BAKHTI;PHY opt.;;vendredi;08h15;1h00
+1092;[3-ScOp1];ZOLLER;CHIMIE opt.;;vendredi;08h15;1h00
+1093;[1-SF4];X03_Sciences_DI;SCIENCES;;vendredi;08h15;1h00
+1094;3PAU;LUPO;GYM;;vendredi;08h15;2h00
+1095;;GRIBOMONT;DESTENAY;;vendredi;08h15;4h00
+1096;;MAGOUE;DESTENAY;;vendredi;08h15;4h00
+1097;;DEFOURNY;HORTI;;vendredi;08h15;5h00
+1098;;ZAMBUTO;DESTENAY;;vendredi;08h15;1h00
+1099;2PAB;DJELIL;FRANCAIS;;vendredi;09h05;1h00
+1100;4PAW;VAN BRABANT;FRANCAIS;;vendredi;09h05;1h00
+1101;[5-M4h1];VAN DEN BERGHE;MATH4;;vendredi;09h05;1h00
+1102;[6-M6h2];HAFNAOUI;MATH6;;vendredi;09h05;1h00
+1103;[6-M4h5];CESA;MATH4;;vendredi;09h05;1h00
+1104;[6-M4h4];CHAPEAU V;MATH4;;vendredi;09h05;1h00
+1105;1PAF;SITKO;GYM;;vendredi;09h05;2h00
+1106;[4-SO1];BALON;SC. SOC.;;vendredi;09h05;1h00
+1107;[1-SF2];BOURGEOIS;FHGES;;vendredi;09h05;1h00
+1108;[2-HGS4];FRANCOIS;HIST;;vendredi;09h05;1h00
+1109;[3-HG2];PAQUAY;GÉO;;vendredi;09h05;1h00
+1110;[6-H4];BRUGMANS;HIST;;vendredi;09h05;1h00
+1111;[6-H5];MEDART;HIST;;vendredi;09h05;1h00
+1112;5PAV;MEERT;GÉO;;vendredi;09h05;1h00
+1113;[3et4-LM2-D];HOLLENFELTZ;ALLEMAND LM2;;vendredi;09h05;1h00
+1114;[1-LM1-A1];THONNARD;ANGLAIS LM1;;vendredi;09h05;1h00
+1115;[1-LM1-A2];DI GERONIMO;ANGLAIS LM1;;vendredi;09h05;1h00
+1116;[3-LM2-A];ZOES;ANGLAIS LM2;;vendredi;09h05;1h00
+1117;[4-LM2-A];VANHERLE;ANGLAIS LM2;;vendredi;09h05;1h00
+1118;[4-LM2-N2];BROUNS;NÉERLANDAIS LM2;;vendredi;09h05;1h00
+1119;[3-LM2-N];BRACONNIER;NÉERLANDAIS LM2;;vendredi;09h05;1h00
+1120;[4-LM2-I];ZAMBUTO;ITALIEN LM2;;vendredi;09h05;1h00
+1121;[3-LM2-E3];DZIRI;ESPAGNOL LM2;;vendredi;09h05;1h00
+1122;[4-LM2-E3];DION;ESPAGNOL LM2;;vendredi;09h05;1h00
+1123;[4-LM2-E2];JUDONG;ESPAGNOL LM2;;vendredi;09h05;1h00
+1124;[1-SF-DI];DRECHSEL;FHGES DI;;vendredi;09h05;1h00
+1125;[1et2-LM1-NI];PILATE;SCI NI;;vendredi;09h05;1h00
+1126;[1-LM1-AI];CARLYLE;Imm. Anglais;;vendredi;09h05;1h00
+1127;[2-LM1-AI];SWINYARD;SCI AI;;vendredi;09h05;1h00
+1128;5PAX;LUCA;CPC1;;vendredi;09h05;1h00
+1129;[5-Sc3];ZENTHNER;BIO;;vendredi;09h05;1h00
+1130;[5-Sc4];YAHIA;CHIMIE;;vendredi;09h05;1h00
+1131;[5-ScOp2];JEANGILLE;CHIMIE opt.;;vendredi;09h05;1h00
+1132;[6-Sc3];MAQUET;PHYSIQUE;;vendredi;09h05;1h00
+1133;[2-HGS1];ZOLLER;SCIENCES;;vendredi;09h05;1h00
+1134;[2-HGS3];ZANOL;SCIENCES;;vendredi;09h05;1h00
+1135;;"YILDIRIM; BACCUS";CESLM;;vendredi;09h05;2h00
+1136;;OUAHABI;CESLM;;vendredi;09h05;2h00
+1137;;SEDRY;DE BEAUVOIR;;vendredi;09h05;4h00
+1138;1PAB;DJELIL;FRANCAIS;;vendredi;09h55;1h00
+1139;3PAV;BAIZAN;FRANCAIS;;vendredi;09h55;1h00
+1140;4PAW;VAN BRABANT;FRANCAIS;;vendredi;09h55;1h00
+1141;3PAU;VAN DE VLOET;MATH;;vendredi;09h55;1h00
+1142;[6-M6h1];VAN DEN BERGHE;MATH6;;vendredi;09h55;1h00
+1143;[6-M4h3];HAFNAOUI;MATH4;;vendredi;09h55;1h00
+1144;2PAB;ROLIN;GYM;;vendredi;09h55;1h00
+1145;[2-HGS1];FRANCOIS;HIST;;vendredi;09h55;1h00
+1146;[4-HG1];MEDART;HIST;;vendredi;09h55;1h00
+1147;[5-H6];THOMAS;HIST;;vendredi;09h55;1h00
+1148;5PAW;MEERT;GÉO;;vendredi;09h55;1h00
+1149;[3et4-LM2-D];HOLLENFELTZ;ALLEMAND LM2;;vendredi;09h55;1h00
+1150;[2-LM1-A4];THONNARD;ANGLAIS LM1;;vendredi;09h55;1h00
+1151;[1-LM1-A2];DI GERONIMO;ANGLAIS LM1;;vendredi;09h55;1h00
+1152;[3-LM2-A];ZOES;ANGLAIS LM2;;vendredi;09h55;1h00
+1153;[4-LM2-A];VANHERLE;ANGLAIS LM2;;vendredi;09h55;1h00
+1154;[4-LM2-N2];BROUNS;NÉERLANDAIS LM2;;vendredi;09h55;1h00
+1155;[3-LM2-N];BRACONNIER;NÉERLANDAIS LM2;;vendredi;09h55;1h00
+1156;[4-LM2-I];ZAMBUTO;ITALIEN LM2;;vendredi;09h55;1h00
+1157;[3-LM2-E3];DZIRI;ESPAGNOL LM2;;vendredi;09h55;1h00
+1158;[4-LM2-E3];DION;ESPAGNOL LM2;;vendredi;09h55;1h00
+1159;[1-SF-DI];DRECHSEL;FHGES DI;;vendredi;09h55;1h00
+1160;[1et2-LM1-NI];PILATE;SCI NI;;vendredi;09h55;1h00
+1161;[1-LM1-AI];CARLYLE;Imm. Anglais;;vendredi;09h55;1h00
+1162;[5-LM1-AI];SACRE;ALP Anglais;;vendredi;09h55;1h00
+1163;[2-LM1-AI];SWINYARD;SCI AI;;vendredi;09h55;1h00
+1164;[6-CPC5];LUCA;CPC2;;vendredi;09h55;1h00
+1165;[6-Sc4];ZENTHNER;BIO;;vendredi;09h55;1h00
+1166;[6-ScOp1];JEANGILLE;BIO opt.;;vendredi;09h55;1h00
+1167;[6-Sc5];YAHIA;CHIMIE;;vendredi;09h55;1h00
+1168;[5-ScOp1];MAQUET;PHY opt.;;vendredi;09h55;1h00
+1169;[6-ScOp2];BAKHTI;PHY opt.;;vendredi;09h55;1h00
+1170;[2-HGS3];ZANOL;SCIENCES;;vendredi;09h55;1h00
+1171;;LEGSSYER;IRHOV;;vendredi;09h55;3h00
+1172;[5-H4];BRUGMANS;HIST;;vendredi;09h55;1h00
+1173;[5et6-LM1-NI];DONJEAN;ALP Néerlandais;;vendredi;09h55;1h00
+1174;[4-LM2-E2];JUDONG;ESPAGNOL LM2;;vendredi;09h55;1h00
+1175;[5-SO2];BALON;SC. SOC.;;vendredi;09h55;1h00
+1176;2PAB;DJELIL;FRANCAIS;;vendredi;11h00;1h00
+1177;2PAF;POPOVICS;FRANCAIS;;vendredi;11h00;1h00
+1178;2PAC;BAIZAN;FRANCAIS;;vendredi;11h00;1h00
+1179;[6-Commu2];CHAPEAU;COMMU;;vendredi;11h00;2h00
+1180;4PAZ;WERA;FRANCAIS;;vendredi;11h00;1h00
+1181;3PAX;VAN DE VLOET;MATH;;vendredi;11h00;1h00
+1182;4PAV;CHAPEAU V;MATH;;vendredi;11h00;1h00
+1183;4PAX;CESA;MATH;;vendredi;11h00;1h00
+1184;4PAY;HAFNAOUI;MATH;;vendredi;11h00;1h00
+1185;2PAD;LACASSE;LATIN;;vendredi;11h00;1h00
+1186;2PAA;ROLIN;GYM;;vendredi;11h00;2h00
+1187;2PAE;SITKO;GYM;;vendredi;11h00;2h00
+1188;3PAZ;LUPO;GYM;;vendredi;11h00;2h00
+1189;[6-SO];TUTTOBENE;SC. SOC.;;vendredi;11h00;2h00
+1190;[6-EC];MARECHAL;SC. ECO.;;vendredi;11h00;2h00
+1191;[6-HOp];MEDART;HIST opt.;;vendredi;11h00;2h00
+1192;[5-H2];BRUGMANS;HIST;;vendredi;11h00;1h00
+1193;5PAV;MEERT;GÉO;;vendredi;11h00;1h00
+1194;[5et6-LM3-D];HOLLENFELTZ;ALLEMAND LM3;;vendredi;11h00;2h00
+1195;[1-LM1-A4];DI GERONIMO;ANGLAIS LM1;;vendredi;11h00;1h00
+1196;[3-LM1-A1];ZOES;ANGLAIS LM1;;vendredi;11h00;1h00
+1197;[5-LM1-A5];VANHERLE;ANGLAIS LM1;;vendredi;11h00;1h00
+1198;[5-LM2-N1];BROUNS;NÉERLANDAIS LM2;;vendredi;11h00;1h00
+1199;[1-LM1-N];BRACONNIER;NÉERLANDAIS LM1;;vendredi;11h00;1h00
+1200;[3-LM2-E2];DZIRI;ESPAGNOL LM2;;vendredi;11h00;1h00
+1201;[5et6-LM3-E];JUDONG;ESPAGNOL LM3;;vendredi;11h00;2h00
+1202;[1-SF-DI];X04_Sciences imm All;SCI DI;;vendredi;11h00;1h00
+1203;[1-LM1-AI];SWINYARD;SCI AI;;vendredi;11h00;1h00
+1204;[5-5PAU-CPC1-sauf-DI];LUCA;CPC1;;vendredi;11h00;1h00
+1205;[6-Labo1];ZENTHNER;LABO Bio;;vendredi;11h00;2h00
+1206;[6-Labo2];JEANGILLE;LABO Bio;;vendredi;11h00;2h00
+1207;[4-ScOp3];MAQUET;PHY opt.;;vendredi;11h00;1h00
+1208;[4-Sc3];PILATE;PHYSIQUE;;vendredi;11h00;1h00
+1209;[3-Sc3];ZOLLER;PHYSIQUE;;vendredi;11h00;1h00
+1210;[1-SF1];X03_Sciences_DI;SCIENCES;;vendredi;11h00;1h00
+1211;[1-SF3];ZANOL;SCIENCES;;vendredi;11h00;1h00
+1212;[6-ScOp3];YAHIA;CHIMIE opt.;;vendredi;11h00;1h00
+1213;3PAW;BROOS;FRANCAIS;;vendredi;11h50;1h00
+1214;1PAB;DJELIL;FRANCAIS;;vendredi;11h50;1h00
+1215;2PAF;POPOVICS;FRANCAIS;;vendredi;11h50;1h00
+1216;2PAC;BAIZAN;FRANCAIS;;vendredi;11h50;1h00
+1217;5PAW;VAN BRABANT;FRANCAIS;;vendredi;11h50;1h00
+1218;5PAU;HUCHANT;FRANCAIS;;vendredi;11h50;1h00
+1219;5PAZ;WERA;FRANCAIS;;vendredi;11h50;1h00
+1220;3PAY;VAN DE VLOET;MATH;;vendredi;11h50;1h00
+1221;1PAF;OUAHABI;MATH;;vendredi;11h50;1h00
+1222;4PAV;CHAPEAU V;MATH;;vendredi;11h50;1h00
+1223;4PAT;CESA;MATH;;vendredi;11h50;1h00
+1224;4PAW;BAKHTI;MATH;;vendredi;11h50;1h00
+1225;4PAY;HAFNAOUI;MATH;;vendredi;11h50;1h00
+1226;4PAU;KAMGA;MATH;;vendredi;11h50;1h00
+1227;[6-M6h1];VAN DEN BERGHE;MATH6;;vendredi;11h50;1h00
+1228;[4-HG1];MEERT;GÉO;;vendredi;11h50;1h00
+1229;[3-LM1-A2];THONNARD;ANGLAIS LM1;;vendredi;11h50;1h00
+1230;[2-LM1-A2];DI GERONIMO;ANGLAIS LM1;;vendredi;11h50;1h00
+1231;[5-LM2-N1];BROUNS;NÉERLANDAIS LM2;;vendredi;11h50;1h00
+1232;[3-LM2-E1];DZIRI;ESPAGNOL LM2;;vendredi;11h50;1h00
+1233;[1-SF-DI];X04_Sciences imm All;SCI DI;;vendredi;11h50;1h00
+1234;[1-LM1-AI];SWINYARD;SCI AI;;vendredi;11h50;1h00
+1235;[5-5PAT-CPC1-sauf-ML];LUCA;CPC1;;vendredi;11h50;1h00
+1236;[4-ScOp1];YAHIA;CHIMIE opt.;;vendredi;11h50;1h00
+1237;[5-Sc3];PILATE;PHYSIQUE;;vendredi;11h50;1h00
+1238;[5-ScOp1];MAQUET;PHY opt.;;vendredi;11h50;1h00
+1239;[3-Sc4];ZOLLER;PHYSIQUE;;vendredi;11h50;1h00
+1240;[1-SF1];X03_Sciences_DI;SCIENCES;;vendredi;11h50;1h00
+1241;[1-SF3];ZANOL;SCIENCES;;vendredi;11h50;1h00
+1242;2PAD;FINCKEN;EducTECH;;vendredi;11h50;1h00
+1243;[5et6-La];LACASSE;LATIN;;vendredi;12h40;1h00
+1244;[6-M];THOMAS;MORALE;;vendredi;12h40;1h00
+1245;;BASTIN;HOTELLERIE;;vendredi;12h40;4h00
+1246;;MAESEN;ULg;;vendredi;13h40;4h00
+1247;1PAA;DJELIL;FRANCAIS;;vendredi;13h40;1h00
+1248;1PAF;DEGEY;FRANCAIS;;vendredi;13h40;1h00
+1249;1PAE;POPOVICS;FRANCAIS;;vendredi;13h40;1h00
+1250;3PAZ;BAIZAN;FRANCAIS;;vendredi;13h40;1h00
+1251;2PAF;DERCLAYE;LECTURE;;vendredi;13h40;1h00
+1252;4PAY;ZAMBUTO;FRANCAIS;;vendredi;13h40;1h00
+1253;3PAU;VAN DE VLOET;MATH;;vendredi;13h40;1h00
+1254;1PAD;OUAHABI;MATH;;vendredi;13h40;1h00
+1255;[5-M4h6];CESA;MATH4;;vendredi;13h40;1h00
+1256;[5-M4h5];BAKHTI;MATH4;;vendredi;13h40;1h00
+1257;[5-M6h];VAN DEN BERGHE;MATH6;;vendredi;13h40;1h00
+1258;2PAE;LACASSE;LATIN;;vendredi;13h40;1h00
+1259;2PAC;ROLIN;GYM;;vendredi;13h40;1h00
+1260;[4-EC2];MARECHAL;SC. ECO.;;vendredi;13h40;1h00
+1261;[2-HGS1];FRANCOIS;HIST;;vendredi;13h40;1h00
+1262;[5-H3];MEDART;HIST;;vendredi;13h40;1h00
+1263;[2-LM1-A2];THONNARD;ANGLAIS LM1;;vendredi;13h40;1h00
+1264;"[3-LM2-I]; <3PAW> <Opt+LM1+LM2+Philo> L-A-I-CPC";LAINO;ITALIEN LM2;;vendredi;13h40;1h00
+1265;[4-LM2-E1];JUDONG;ESPAGNOL LM2;;vendredi;13h40;1h00
+1266;1PAC;ZANOL;FMTT;;vendredi;13h40;1h00
+1267;[4-LM1-AI];SACRE;Imm. Anglais;;vendredi;13h40;1h00
+1268;[6-CPC1];LUCA;CPC2;;vendredi;13h40;1h00
+1269;[6-ScOp1];YAHIA;CHIMIE opt.;;vendredi;13h40;1h00
+1270;[1-SF2];"YILDIRIM; BACCUS";SCIENCES;;vendredi;13h40;1h00
+1271.1;[6-CPC4];CHOLEWKA;CPC2;;vendredi;13h40;1h00
+1271.2;[6-CPC6];DEFOURNY;CPC2;;vendredi;13h40;1h00
+1271.3;[6-RI];SEDRY;Rel. Islam.;;vendredi;13h40;1h00
+1271.4;[6-RP];X08_RP_DS;Rel. Prot.;;vendredi;13h40;1h00
+1271.5;[6-RC];X10_RC_DS;Rel. Cath.;;vendredi;13h40;1h00
+1272;3PAV;SITKO;GYM;;vendredi;13h40;2h00
+1273;[5-SO2];BALON;SC. SOC.;;vendredi;13h40;1h00
+1274;;KAMGA;PITTEURS;;vendredi;13h40;3h00
+1275;;LEGSSYER;IRHOV;;vendredi;13h40;3h00
+1276;;LUPO;DESTENAY;;vendredi;13h40;3h00
+1277;[6-ScOp-Acph3];MAQUET;Acph;;vendredi;13h40;1h00
+1278;2PAA;DERCLAYE;LECTURE;;vendredi;14h30;1h00
+1279;2PAE;POPOVICS;FRANCAIS;;vendredi;14h30;1h00
+1280;2PAC;BAIZAN;LECTURE;;vendredi;14h30;1h00
+1281;4PAV;ZAMBUTO;FRANCAIS;;vendredi;14h30;1h00
+1282;3PAZ;VAN DE VLOET;MATH;;vendredi;14h30;1h00
+1283;1PAF;OUAHABI;MATH;;vendredi;14h30;1h00
+1284;[6-PESM];VAN DEN BERGHE;PESM;;vendredi;14h30;2h00
+1285;[3-La];LACASSE;LATIN;;vendredi;14h30;1h00
+1286;[4-SO2];TUTTOBENE;SC. SOC.;;vendredi;14h30;1h00
+1287;[2-HGS2];FRANCOIS;HIST;;vendredi;14h30;1h00
+1288;6PAT;MEERT;GÉO;;vendredi;14h30;2h00
+1289;[1-LM1-A1];THONNARD;ANGLAIS LM1;;vendredi;14h30;1h00
+1290;[3-LM2-I];LAINO;ITALIEN LM2;;vendredi;14h30;1h00
+1291;[4-LM2-E1];JUDONG;ESPAGNOL LM2;;vendredi;14h30;1h00
+1292;1PAE;FINCKEN;FN;;vendredi;14h30;1h00
+1293;[6-LM1-AI];SACRE;ALP Anglais;;vendredi;14h30;2h00
+1294;[1-LM1-AI];CARLYLE;FHGES AI;;vendredi;14h30;1h00
+1295;"[5-5PAT-CPC1-ML-E]; 5PAW";LUCA;CPC1;;vendredi;14h30;1h00
+1296;6PAV;CHOLEWKA;CPC1;;vendredi;14h30;1h00
+1297;[4-ScOp3];MAGOUE;BIO opt.;;vendredi;14h30;1h00
+1298;[4-ScOp1];ZENTHNER;BIO opt.;;vendredi;14h30;1h00
+1299;[5-ScOp1];YAHIA;CHIMIE opt.;;vendredi;14h30;1h00
+1300;[5-ScOp2];BAKHTI;PHY opt.;;vendredi;14h30;1h00
+1301;[1-SF2];"YILDIRIM; BACCUS";SCIENCES;;vendredi;14h30;1h00
+1302;2PAF;ZANOL;EducTECH;;vendredi;14h30;1h00
+1303;[5-Commu2];CHAPEAU;COMMU;;vendredi;14h30;1h00
+1304;[5-SO1];BALON;SC. SOC.;;vendredi;14h30;1h00
+1305;[5-EC];MARECHAL;SC. ECO.;;vendredi;14h30;1h00
+1306;[5-HOp];BRUGMANS;HIST opt.;;vendredi;14h30;1h00
+1307;;ZOES;DESTENAY;;vendredi;14h30;2h00
+1308;3PAU;DEGEY;FRANCAIS;;vendredi;15h20;1h00
+1309;[3-La];LACASSE;LATIN;;vendredi;15h20;1h00
+1310;1PAE;SITKO;GYM;;vendredi;15h20;1h00
+1311;[4-SO1];BALON;SC. SOC.;;vendredi;15h20;1h00
+1312;[3-EC];MARECHAL;SC. ECO.;;vendredi;15h20;1h00
+1313;[5-H1];BRUGMANS;HIST;;vendredi;15h20;1h00
+1314;[6-H2];MEDART;HIST;;vendredi;15h20;1h00
+1315;[2-LM1-A4];THONNARD;ANGLAIS LM1;;vendredi;15h20;1h00
+1316;[1-LM1-AI];CARLYLE;FHGES AI;;vendredi;15h20;1h00
+1317;"[5-5PAT-CPC1-ML-D]; 5PAY";LUCA;CPC1;;vendredi;15h20;1h00
+1318;[4-Sc1];MAGOUE;BIO;;vendredi;15h20;1h00
+1319;[4-Sc4];ZENTHNER;BIO;;vendredi;15h20;1h00
+1320;[5-ScOp2];BAKHTI;PHY opt.;;vendredi;15h20;1h00
+1321;[1-SF4];"YILDIRIM; BACCUS";SCIENCES;;vendredi;15h20;1h00
+1322;2PAA;FINCKEN;EducTECH;;vendredi;15h20;1h00
+1323;;SEDRY;DESTENAY;;vendredi;15h20;1h00
+1324;[5-Sc5];PILATE;PHYSIQUE;;vendredi;15h20;1h00
+1325;5PAT;ZAMBUTO;FRANCAIS;;vendredi;16h10;1h00
+1326;[3-La];LACASSE;LATIN;;vendredi;16h10;1h00
+1327;[5-H1];BRUGMANS;HIST;;vendredi;16h10;1h00
+1328;[6-H3];MEDART;HIST;;vendredi;16h10;1h00
+1329;[6-H6];THOMAS;HIST;;vendredi;16h10;1h00
+1330;5PAU;MEERT;GÉO;;vendredi;16h10;1h00
+1331;[6-LM1-AI];SACRE;HIST AI;;vendredi;16h10;1h00
+1332;6PAT;CHOLEWKA;CPC1;;vendredi;16h10;1h00

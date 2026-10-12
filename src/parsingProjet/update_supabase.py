@@ -27,14 +27,14 @@ MODE_TEST = False
 LIMITE_ELEVES = 100
 LIMITE_COURS = 100
 
-VIDER_COURSES = True              # True pour tester (vide courses avant import)
+VIDER_COURSES = False              # True pour tester (vide courses avant import)
 
 # Import des élèves : passer à False une fois qu'ils sont stables (gain de temps)
-IMPORTER_ELEVES = False
+IMPORTER_ELEVES = True
 
 # Nettoyage one-shot des cours logiques obsolètes.
 # PASSER À False après un premier run propre !
-NETTOYER_COURS_LOGICIQUES_OBSOLETES = True
+NETTOYER_COURS_LOGICIQUES_OBSOLETES = False
 
 NOMS_A_PRESERVER = ['testeur']
 
