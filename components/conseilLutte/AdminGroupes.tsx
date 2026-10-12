@@ -1,4 +1,4 @@
-// /components/conseilLutte/AdminGroupes.tsx        
+// /components/conseilLutte/AdminGroupes.tsx
 
 'use client';
 
@@ -14,7 +14,7 @@ interface Props {
 
 export default function AdminGroupes({ phaseId, groupes, onRefresh, verrouille }: Props) {
   const [locaux, setLocaux] = useState<any[]>([]);
-  const [compteurs, setCompteurs] = useState<Record<string, { eleves: number; employes: number; manuels: number }>>({});
+  const [compteurs, setCompteurs] = useState<Record<string, { eleves: number; employes: number; manuels: number; animateurs: number }>>({});
 
   useEffect(() => {
     loadLocaux();
@@ -29,18 +29,31 @@ export default function AdminGroupes({ phaseId, groupes, onRefresh, verrouille }
   const loadCompteurs = async () => {
     const ids = groupes.map(g => g.id);
     if (ids.length === 0) return;
-    const { data } = await supabase
-      .from('conseil_lutte_membres')
-      .select('groupe_id, participant_type, manuel')
-      .in('groupe_id', ids);
+
+    const [membresRes, animsRes] = await Promise.all([
+      supabase
+        .from('conseil_lutte_membres')
+        .select('groupe_id, participant_type, manuel')
+        .in('groupe_id', ids),
+      supabase
+        .from('conseil_lutte_animateurs')
+        .select('groupe_id')
+        .in('groupe_id', ids),
+    ]);
 
     const c: Record<string, any> = {};
-    ids.forEach(id => c[id] = { eleves: 0, employes: 0, manuels: 0 });
-    (data || []).forEach(m => {
+    ids.forEach(id => c[id] = { eleves: 0, employes: 0, manuels: 0, animateurs: 0 });
+
+    (membresRes.data || []).forEach(m => {
       if (m.participant_type === 'student') c[m.groupe_id].eleves++;
       else c[m.groupe_id].employes++;
       if (m.manuel) c[m.groupe_id].manuels++;
     });
+
+    (animsRes.data || []).forEach(a => {
+      if (a.groupe_id && c[a.groupe_id]) c[a.groupe_id].animateurs++;
+    });
+
     setCompteurs(c);
   };
 
@@ -63,6 +76,7 @@ export default function AdminGroupes({ phaseId, groupes, onRefresh, verrouille }
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Nom</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Local</th>
               <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">Élèves</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">Animateurs</th>
               <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">Encadrants</th>
               <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">Manuels</th>
             </tr>
@@ -70,7 +84,7 @@ export default function AdminGroupes({ phaseId, groupes, onRefresh, verrouille }
           <tbody className="divide-y divide-gray-100">
             {groupes.map(g => {
               const l = getLocal(g);
-              const c = compteurs[g.id] || { eleves: 0, employes: 0, manuels: 0 };
+              const c = compteurs[g.id] || { eleves: 0, employes: 0, manuels: 0, animateurs: 0 };
               return (
                 <tr key={g.id} className="hover:bg-gray-50">
                   <td className="px-3 py-2">
@@ -99,6 +113,7 @@ export default function AdminGroupes({ phaseId, groupes, onRefresh, verrouille }
                     )}
                   </td>
                   <td className="px-3 py-2 text-center text-sm">{c.eleves}</td>
+                  <td className="px-3 py-2 text-center text-sm text-purple-700">{c.animateurs}</td>
                   <td className="px-3 py-2 text-center text-sm">{c.employes}</td>
                   <td className="px-3 py-2 text-center text-sm text-purple-700">{c.manuels}</td>
                 </tr>
