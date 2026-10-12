@@ -159,6 +159,40 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
     setLoading(false);
   };
 
+  const quitterGroupe = async () => {
+    if (!groupe) return;
+    if (!confirm(
+      'Quitter ce groupe ?\n\n' +
+      'Vous pourrez en rejoindre un autre en tant qu\'animateur·rice.'
+    )) return;
+
+    setSaving(true);
+    try {
+      // 1. Retirer la nomination animateur si elle existe
+      if (estAnimateur) {
+        await supabase
+          .from('conseil_lutte_animateurs')
+          .delete()
+          .eq('groupe_id', groupe.id)
+          .eq('student_matricule', parseInt(userId));
+      }
+
+      // 2. Retirer le membre
+      await supabase
+        .from('conseil_lutte_membres')
+        .delete()
+        .eq('groupe_id', groupe.id)
+        .eq('participant_id', userId)
+        .eq('participant_type', userType);
+
+      setSaving(false);
+      setTick(t => t + 1); // provoque un rechargement → ChoisirGroupe
+    } catch (e: any) {
+      alert('Erreur : ' + (e?.message || e));
+      setSaving(false);
+    }
+  };
+
   const changerPhaseFreinet = async (nouvellePhase: string) => {
     if (!groupe) return;
     setSaving(true);
@@ -310,9 +344,18 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
             </div>
             <h2 className="text-2xl font-bold text-gray-900">{groupe.nom}</h2>
             {estAnimateur && (
-              <span className="inline-block mt-1 text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-medium">
-                👑 Vous êtes animateur·rice de ce groupe
-              </span>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="inline-block text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-medium">
+                  👑 Vous êtes animateur·rice de ce groupe
+                </span>
+                <button
+                  onClick={quitterGroupe}
+                  disabled={saving}
+                  className="text-xs text-red-600 hover:text-red-800 underline disabled:opacity-50"
+                >
+                  Quitter le groupe
+                </button>
+              </div>
             )}
           </div>
           <div className="text-right">

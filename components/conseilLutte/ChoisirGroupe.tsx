@@ -16,6 +16,8 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
 
+  const [veutEtreAnimateur, setVeutEtreAnimateur] = useState(false);
+
   useEffect(() => { load(); }, [phaseId]);
 
   const load = async () => {
@@ -53,15 +55,57 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
 
   const rejoindre = async (groupeId: string) => {
     if (joining) return;
+
+    // Cas "je veux être animateur·rice"
+    if (veutEtreAnimateur && userType === 'student') {
+      // Vérifier qu'il n'y a pas déjà un animateur
+      const { data: existing } = await supabase
+        .from('conseil_lutte_animateurs')
+        .select('student_matricule')
+        .eq('groupe_id', groupeId)
+        .maybeSingle();
+
+      if (existing) {
+        alert('Ce groupe a déjà un·e animateur·rice.');
+        return;
+      }
+
+      if (!confirm(
+        `Vous allez rejoindre ce groupe en tant qu'animateur·rice.\n\n` +
+        `Confirmer ? (Vous pourrez quitter et changer de groupe plus tard.)`
+      )) return;
+    }
+
     setJoining(true);
-    const { error } = await supabase.from('conseil_lutte_membres').insert({
+
+    // 1. Insertion du membre
+    const { error: errMembre } = await supabase.from('conseil_lutte_membres').insert({
       groupe_id: groupeId,
       participant_id: userId,
       participant_type: userType === 'student' ? 'student' : 'employee',
-      manuel: true,
+      manuel: veutEtreAnimateur && userType === 'student', // manuel = true si animateur
     });
+
+    if (errMembre) {
+      alert('Erreur : ' + errMembre.message);
+      setJoining(false);
+      return;
+    }
+
+    // 2. Si animateur, insert dans la table animateurs
+    if (veutEtreAnimateur && userType === 'student') {
+      const { error: errAnim } = await supabase.from('conseil_lutte_animateurs').insert({
+        groupe_id: groupeId,
+        student_matricule: parseInt(userId),
+        nomme_par: 'auto',
+      });
+      if (errAnim) {
+        alert('Erreur nomination animateur·rice : ' + errAnim.message);
+      }
+    }
+
     setJoining(false);
-    if (!error) onJoined();
+    onJoined();
   };
 
   if (loading) return <div className="text-center py-8">Chargement...</div>;
@@ -91,13 +135,33 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
                 : "Choisissez un groupe. Inscriptions ouvertes pour cette phase.")
             : "Les inscriptions pour cette phase ne sont pas ouvertes. Contactez un membre de la direction."}
         </p>
+
+        {/* ⬇️ INSÈRE ICI ⬇️ */}
+        {userType === 'student' && inscriptionOuverte && (
+          <label className="mt-3 flex items-start gap-2 cursor-pointer text-sm text-blue-800">
+            <input
+              type="checkbox"
+              checked={veutEtreAnimateur}
+              onChange={(e) => setVeutEtreAnimateur(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="font-medium">Je souhaite être animateur·rice du groupe que je vais rejoindre.</span>
+              <span className="block text-xs text-blue-700 mt-0.5">
+                Un seul animateur·rice par groupe. Vous pourrez quitter et changer de groupe ensuite.
+              </span>
+            </span>
+          </label>
+        )}
+        {/* ⬆️ FIN INSERTION ⬆️ */}
+
         {userType === 'student' && (
           <p className="text-xs text-blue-700 mt-1">
             Vous ne pouvez pas rejoindre un groupe qui a déjà son animateur·rice.
           </p>
         )}
       </div>
-      
+
       {inscriptionOuverte && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {groupes.map(g => {
