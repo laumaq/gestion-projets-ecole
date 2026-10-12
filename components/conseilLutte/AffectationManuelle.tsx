@@ -175,6 +175,7 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
     await supabase.from('conseil_lutte_membres').update({ manuel: !m.manuel }).eq('id', m.id);
     await loadMembres(selectionGroupe);
   };
+  
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
