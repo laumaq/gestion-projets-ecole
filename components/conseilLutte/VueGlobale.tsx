@@ -56,7 +56,7 @@ export default function VueGlobale({ phaseId, phase, userType, monGroupeId, user
     setLoading(true);
     const { data: gr } = await supabase
       .from('conseil_lutte_groupes')
-      .select(`id, nom, localisation_id, capacite_max, localisation_fixe (id, etage)`)
+      .select(`id, nom, localisation_id, localisation_fixe (id, etage)`)
       .eq('phase_id', phaseId);
 
     const ids = (gr || []).map(g => g.id);
@@ -251,7 +251,7 @@ function GroupesParEtage({
                     <div className="text-red-600">→</div>
                   </div>
                   <div className="flex gap-3 text-xs text-gray-600 mt-3 pt-3 border-t">
-                    <span>👤 {g.elevesCount}{g.capacite_max ? `/${g.capacite_max}` : ''}</span>
+                    <span>👤 {g.elevesCount}</span>                    
                     <span>👨‍🏫 {g.employesCount}</span>
                   </div>
                 </button>

@@ -3,6 +3,7 @@ export const CONSEIL_LUTTE_ADMINS: string[] = [
   '52793bea-994a-4b50-b768-75427df4747b',
   'a06b22ec-11f6-49a7-ab8a-13607ff2ac87',
   'b6e22622-1a72-4969-8f2a-05289ec82151',
+  '211c9a03-1e49-488d-a9af-5090d4316674',
 ];
 
 export function estAdminConseilLutte(userId: string | null | undefined): boolean {

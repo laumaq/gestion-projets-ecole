@@ -37,7 +37,7 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
     setLoading(true);
     const { data: gr } = await supabase
       .from('conseil_lutte_groupes')
-      .select(`id, nom, capacite_max, localisation_fixe(id, etage)`)
+      .select(`id, nom, localisation_fixe(id, etage)`)
       .eq('phase_id', phaseId)
       .order('nom');
 
@@ -151,7 +151,7 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
     if (userType === 'student') {
       if (!phase?.inscription_eleves_ouverte) return false;
       if (g.aDejaUnManuel) return false;
-      return !g.capacite_max || g.elevesCount < g.capacite_max;
+      return true;  // ← plus de contrôle de capacité
     }
     return g.employesCount === minEncadrants;
   };
@@ -212,7 +212,7 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
                   </div>
                 </div>
                 <div className="flex gap-3 text-xs text-gray-600">
-                  <span>👤 {g.elevesCount}{g.capacite_max ? `/${g.capacite_max}` : ''}</span>
+                  <span>👤 {g.elevesCount}</span>
                   <span>👨‍🏫 {g.employesCount}</span>
                 </div>
 

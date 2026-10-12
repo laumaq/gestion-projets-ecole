@@ -1,6 +1,7 @@
 // /components/conseilLutte/repartition.ts
 
 import { supabase } from '@/lib/supabase';
+import { CONSEIL_LUTTE_ADMINS } from './admins';
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -52,11 +53,11 @@ interface RepartirResult {
 }
 
 export async function repartirAuto({
-  phaseId, nbGroupes, parAnnee, modeClasses,
+  phaseId, parAnnee, modeClasses,
 }: RepartirParams): Promise<RepartirResult> {
   const { data: groupes, error: gErr } = await supabase
     .from('conseil_lutte_groupes')
-    .select('id, capacite_max')
+    .select('id')
     .eq('phase_id', phaseId);
   if (gErr || !groupes || groupes.length === 0) throw new Error('Aucun groupe dans cette phase.');
 
@@ -67,9 +68,7 @@ export async function repartirAuto({
     .eq('participant_type', 'student');
 
   const manuels = (membresExistants || []).filter(m => m.manuel);
-  const manuelsParGroupe: Record<string, Set<number>> = {};
-  groupes.forEach(g => manuelsParGroupe[g.id] = new Set());
-  manuels.forEach(m => manuelsParGroupe[m.groupe_id]?.add(parseInt(m.participant_id)));
+  const manuelsSet = new Set<number>(manuels.map(m => parseInt(m.participant_id)));
 
   const nonManuelsIds = (membresExistants || []).filter(m => !m.manuel).map(m => m.id);
   if (nonManuelsIds.length > 0) {
@@ -79,7 +78,7 @@ export async function repartirAuto({
     }
   }
 
-  // Charger les animateurs déclarés (pour les exclure)
+  // Animateurs déclarés → exclus de la répartition
   const { data: anims } = await supabase
     .from('conseil_lutte_animateurs')
     .select('student_matricule');
@@ -106,19 +105,10 @@ export async function repartirAuto({
     from += data.length;
   }
 
-  const manuelsSet = new Set<number>();
-  Object.values(manuelsParGroupe).forEach(s => s.forEach(m => manuelsSet.add(m)));
   const elevesARepartir = eleves.filter(e => !manuelsSet.has(e.matricule));
 
-  const occupation = new Map<string, number>();
-  groupes.forEach(g => occupation.set(g.id, manuelsParGroupe[g.id].size));
-
+  const groupeIds = groupes.map(g => g.id);
   const places: { groupeId: string; matricule: number }[] = [];
-  const capaciteDe = (gId: string) => {
-    const g = groupes.find(x => x.id === gId)!;
-    const cap = g.capacite_max ?? Infinity;
-    return Math.max(0, cap - (occupation.get(gId) || 0));
-  };
 
   if (parAnnee) {
     const parNiveau: Record<string, any[]> = {};
@@ -130,25 +120,12 @@ export async function repartirAuto({
 
     for (const niveau of Object.keys(parNiveau).sort()) {
       const pool = parNiveau[niveau];
-      const cibles = groupes
-        .map(g => ({ id: g.id, cap: capaciteDe(g.id) }))
-        .filter(g => g.cap > 0)
-        .map(g => g.id);
-      if (cibles.length === 0) continue;
-
-      const placements = dispatcher(pool, cibles, modeClasses, capaciteDe);
-      placements.forEach(p => {
-        places.push(p);
-        occupation.set(p.groupeId, (occupation.get(p.groupeId) || 0) + 1);
-      });
+      const placements = dispatcher(pool, groupeIds, modeClasses);
+      places.push(...placements);
     }
   } else {
-    const cibles = groupes.map(g => g.id).filter(g => capaciteDe(g) > 0);
-    const placements = dispatcher(elevesARepartir, cibles, modeClasses, capaciteDe);
-    placements.forEach(p => {
-      places.push(p);
-      occupation.set(p.groupeId, (occupation.get(p.groupeId) || 0) + 1);
-    });
+    const placements = dispatcher(elevesARepartir, groupeIds, modeClasses);
+    places.push(...placements);
   }
 
   if (places.length > 0) {
@@ -174,39 +151,23 @@ function dispatcher(
   pool: any[],
   groupeIds: string[],
   mode: 'groupees' | 'aleatoire' | 'dispersees',
-  capaciteDe: (id: string) => number,
 ): { groupeId: string; matricule: number }[] {
-  if (mode === 'aleatoire') return dispatcherAleatoire(pool, groupeIds, capaciteDe);
-  if (mode === 'groupees') return dispatcherGroupees(pool, groupeIds, capaciteDe);
-  return dispatcherDispersees(pool, groupeIds, capaciteDe);
+  if (mode === 'aleatoire') return dispatcherAleatoire(pool, groupeIds);
+  if (mode === 'groupees') return dispatcherGroupees(pool, groupeIds);
+  return dispatcherDispersees(pool, groupeIds);
 }
 
-function dispatcherAleatoire(pool: any[], groupeIds: string[], capaciteDe: (id: string) => number) {
+// Aléatoire pur : round-robin sur les groupes
+function dispatcherAleatoire(pool: any[], groupeIds: string[]) {
   const shuffled = shuffle(pool);
-  const placements: { groupeId: string; matricule: number }[] = [];
-  const curseurs: Record<string, number> = {};
-  groupeIds.forEach(id => curseurs[id] = 0);
-  let global = 0;
-
-  for (const eleve of shuffled) {
-    let placed = false;
-    for (let i = 0; i < groupeIds.length; i++) {
-      const idx = (global + i) % groupeIds.length;
-      const gId = groupeIds[idx];
-      if (curseurs[gId] < capaciteDe(gId)) {
-        placements.push({ groupeId: gId, matricule: eleve.matricule });
-        curseurs[gId]++;
-        global = (idx + 1) % groupeIds.length;
-        placed = true;
-        break;
-      }
-    }
-    if (!placed) break;
-  }
-  return placements;
+  return shuffled.map((e, i) => ({
+    groupeId: groupeIds[i % groupeIds.length],
+    matricule: e.matricule,
+  }));
 }
 
-function dispatcherGroupees(pool: any[], groupeIds: string[], capaciteDe: (id: string) => number) {
+// Classes groupées : on remplit les groupes un par un, classe par classe
+function dispatcherGroupees(pool: any[], groupeIds: string[]) {
   const parClasse: Record<string, any[]> = {};
   pool.forEach(e => {
     const c = e.classe || '—';
@@ -216,36 +177,18 @@ function dispatcherGroupees(pool: any[], groupeIds: string[], capaciteDe: (id: s
   const classes = Object.keys(parClasse).sort((a, b) => parClasse[b].length - parClasse[a].length);
 
   const placements: { groupeId: string; matricule: number }[] = [];
-  const restants: Record<string, number> = {};
-  groupeIds.forEach(id => restants[id] = capaciteDe(id));
-
+  let gIdx = 0;
   for (const c of classes) {
-    const file = [...parClasse[c]];
-    for (const gId of groupeIds) {
-      let cap = restants[gId];
-      while (cap > 0 && file.length > 0) {
-        placements.push({ groupeId: gId, matricule: file.shift()!.matricule });
-        cap--; restants[gId]--;
-      }
-      if (file.length === 0) break;
-    }
-    while (file.length > 0) {
-      let placed = false;
-      for (const gId of groupeIds) {
-        if (restants[gId] > 0) {
-          placements.push({ groupeId: gId, matricule: file.shift()!.matricule });
-          restants[gId]--;
-          placed = true;
-          break;
-        }
-      }
-      if (!placed) break;
+    for (const eleve of parClasse[c]) {
+      placements.push({ groupeId: groupeIds[gIdx % groupeIds.length], matricule: eleve.matricule });
+      gIdx++;
     }
   }
   return placements;
 }
 
-function dispatcherDispersees(pool: any[], groupeIds: string[], capaciteDe: (id: string) => number) {
+// Classes dispersées : chaque classe étalée sur tous les groupes
+function dispatcherDispersees(pool: any[], groupeIds: string[]) {
   const parClasse: Record<string, any[]> = {};
   pool.forEach(e => {
     const c = e.classe || '—';
@@ -255,30 +198,14 @@ function dispatcherDispersees(pool: any[], groupeIds: string[], capaciteDe: (id:
   Object.keys(parClasse).forEach(c => parClasse[c] = shuffle(parClasse[c]));
 
   const placements: { groupeId: string; matricule: number }[] = [];
-  const restants: Record<string, number> = {};
-  groupeIds.forEach(id => restants[id] = capaciteDe(id));
-
-  for (const c of Object.keys(parClasse).sort((a, b) => parClasse[b].length - parClasse[a].length)) {
-    const file = parClasse[c];
+  for (const c of Object.keys(parClasse)) {
     const start = Math.floor(Math.random() * groupeIds.length);
-    let i = 0;
-    while (i < file.length) {
-      const gId = groupeIds[(start + i) % groupeIds.length];
-      if (restants[gId] > 0) {
-        placements.push({ groupeId: gId, matricule: file[i].matricule });
-        restants[gId]--; i++;
-      } else {
-        let placed = false;
-        for (const alt of groupeIds) {
-          if (restants[alt] > 0) {
-            placements.push({ groupeId: alt, matricule: file[i].matricule });
-            restants[alt]--; i++; placed = true;
-            break;
-          }
-        }
-        if (!placed) break;
-      }
-    }
+    parClasse[c].forEach((eleve, i) => {
+      placements.push({
+        groupeId: groupeIds[(start + i) % groupeIds.length],
+        matricule: eleve.matricule,
+      });
+    });
   }
   return placements;
 }
@@ -378,8 +305,9 @@ export async function assignerProfsAuto(params: AssignerProfsParams): Promise<As
     }
   }
 
+  // Exclure les admins dès le comptage
   const idsEligibles = Array.from(compteParProf.entries())
-    .filter(([_, n]) => n >= minHeures)
+    .filter(([id, n]) => n >= minHeures && !CONSEIL_LUTTE_ADMINS.includes(id))
     .map(([id]) => id);
 
   if (idsEligibles.length === 0) {
@@ -467,14 +395,12 @@ export async function repartirAnimateurs(params: {
   if (!groupes || groupes.length === 0) throw new Error('Aucun groupe.');
   const groupesTries = trierGroupesParLocal(groupes);
 
-  // Groupes qui ont déjà un animateur (toutes phases confondues)
   const { data: groupesPris } = await supabase
     .from('conseil_lutte_animateurs')
     .select('groupe_id')
     .not('groupe_id', 'is', null);
   const groupesAvecAnim = new Set((groupesPris || []).map(a => a.groupe_id));
 
-  // Animateurs déclarés sans groupe
   const { data: anims, error: aErr } = await supabase
     .from('conseil_lutte_animateurs')
     .select('student_matricule')

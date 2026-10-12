@@ -62,7 +62,6 @@ export default function AdminGroupes({ phaseId, groupes, onRefresh, verrouille }
             <tr>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Nom</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Local</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Capacité</th>
               <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">Élèves</th>
               <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">Encadrants</th>
               <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">Manuels</th>
@@ -83,30 +82,21 @@ export default function AdminGroupes({ phaseId, groupes, onRefresh, verrouille }
                     />
                   </td>
                   <td className="px-3 py-2">
-                    <select
-                      defaultValue={g.localisation_id || ''}
-                      disabled={verrouille}
-                      onChange={(e) => updateGroupe(g.id, { localisation_id: e.target.value || null })}
-                      className="px-2 py-1 border rounded text-sm disabled:bg-gray-50"
-                    >
-                      <option value="">—</option>
-                      {locaux.map(lo => (
-                        <option key={lo.id} value={lo.id}>{lo.id} (É{lo.etage})</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2">
-                    <input
-                      type="number"
-                      defaultValue={g.capacite_max ?? ''}
-                      disabled={verrouille}
-                      onBlur={(e) => {
-                        const v = e.target.value ? parseInt(e.target.value) : null;
-                        if (v !== g.capacite_max) updateGroupe(g.id, { capacite_max: v });
-                      }}
-                      placeholder="—"
-                      className="w-20 px-2 py-1 border rounded text-sm disabled:bg-gray-50"
-                    />
+                    {locaux.length > 0 ? (
+                      <select
+                        value={g.localisation_id || ''}
+                        disabled={verrouille}
+                        onChange={(e) => updateGroupe(g.id, { localisation_id: e.target.value || null })}
+                        className="px-2 py-1 border rounded text-sm disabled:bg-gray-50"
+                      >
+                        <option value="">—</option>
+                        {locaux.map(lo => (
+                          <option key={lo.id} value={lo.id}>{lo.id} (É{lo.etage})</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="px-2 py-1 text-sm text-gray-400 italic">Chargement…</div>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-center text-sm">{c.eleves}</td>
                   <td className="px-3 py-2 text-center text-sm">{c.employes}</td>
