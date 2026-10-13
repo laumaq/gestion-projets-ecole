@@ -21,6 +21,8 @@ import PrisePresencesResponsable from '@/components/voyages/activites/PrisePrese
 import VoyageAdministratif from '@/components/voyages/VoyageAdministratif';
 import VoyageMesInfos from '@/components/voyages/VoyageMesInfos';
 import VoyageDocuments from '@/components/voyages/VoyageDocuments';
+import ModalEditionVoyage from '@/components/voyages/ModalEditionVoyage';
+
 
 interface Voyage {
   id: string;
@@ -51,9 +53,10 @@ export default function VoyageDetailPage() {
   // États pour le menu statut
   const [showStatutMenu, setShowStatutMenu] = useState(false);
   const [updatingStatut, setUpdatingStatut] = useState(false);
-
+  const [showEditModal, setShowEditModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  
   // Récupérer l'ID de l'utilisateur
   useEffect(() => {
     const type = localStorage.getItem('userType');
@@ -293,8 +296,19 @@ export default function VoyageDetailPage() {
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">{voyage.nom}</h1>
             <p className="text-gray-600 mt-2">{voyage.destination}</p>
-            <div className="flex gap-4 mt-2 text-sm text-gray-500 items-center">
+            <div className="flex gap-4 mt-2 text-sm text-gray-500 items-center flex-wrap">
               <span>📅 {new Date(voyage.date_debut).toLocaleDateString('fr-FR')} - {new Date(voyage.date_fin).toLocaleDateString('fr-FR')}</span>
+
+              {isResponsable && (
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="text-blue-600 hover:text-blue-800 text-xs underline"
+                  title="Modifier les dates du voyage"
+                >
+                  ✏️ Modifier
+                </button>
+              )}
+
 
               {/* Badge statut cliquable */}
               <div className="relative">
@@ -572,8 +586,19 @@ export default function VoyageDetailPage() {
             userId={currentUserId}
           />
         )}
-
       </div>
+
+      {/* Modal édition du voyage */}
+      {showEditModal && voyage && (
+        <ModalEditionVoyage
+          voyage={voyage}
+          onClose={() => setShowEditModal(false)}
+          onSaved={(updated) => {
+            setVoyage({ ...voyage, ...updated });
+            setShowEditModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -46,6 +46,7 @@ export default function VueEducatrices({ phaseId, phase, userId }: Props) {
 
   useEffect(() => { loadAll(); }, [phaseId]);
 
+
   useEffect(() => {
     loadSoutiens();
 
@@ -60,6 +61,7 @@ export default function VueEducatrices({ phaseId, phase, userId }: Props) {
 
     return () => { supabase.removeChannel(channel); };
   }, [phaseId]);
+
 
   const loadAll = async () => {
     setLoading(true);
@@ -149,40 +151,34 @@ export default function VueEducatrices({ phaseId, phase, userId }: Props) {
   };
 
   const loadSoutiens = async () => {
-    // 1. Groupes de la phase
     const { data: groupes } = await supabase
       .from('conseil_lutte_groupes')
       .select('id, nom, localisation_id')
       .eq('phase_id', phaseId);
 
+    const groupesMap: Record<string, any> = {};
+    (groupes || []).forEach(g => { groupesMap[g.id] = g; });
     const groupeIds = (groupes || []).map(g => g.id);
     if (groupeIds.length === 0) { setSoutiensOuverts([]); return; }
 
-    const groupesMap: Record<string, any> = {};
-    (groupes || []).forEach(g => { groupesMap[g.id] = g; });
-
-    // 2. Soutiens ouverts dans ces groupes
     const { data: soutiens } = await supabase
       .from('conseil_lutte_soutiens')
-      .select('*')
+      .select('id, groupe_id, demandeur_id, demandeur_type, message, created_at')
       .in('groupe_id', groupeIds)
       .eq('statut', 'ouvert')
       .order('created_at', { ascending: false });
 
-    if (!soutiens || soutiens.length === 0) {
-      setSoutiensOuverts([]);
-      return;
-    }
+    if (!soutiens || soutiens.length === 0) { setSoutiensOuverts([]); return; }
 
-    // 3. Enrichir : nom du demandeur
-    const elevesIds = soutiens
-      .filter(s => s.demandeur_type === 'student')
-      .map(s => parseInt(s.demandeur_id));
-    const employesIds = soutiens
-      .filter(s => s.demandeur_type === 'employee')
-      .map(s => s.demandeur_id);
+    // Charger les noms des demandeurs
+    const elevesIds: number[] = [];
+    const employesIds: string[] = [];
+    soutiens.forEach(s => {
+      if (s.demandeur_type === 'student') elevesIds.push(parseInt(s.demandeur_id));
+      else employesIds.push(s.demandeur_id);
+    });
 
-    const [elevesRes, employesRes] = await Promise.all([
+    const [eRes, pRes] = await Promise.all([
       elevesIds.length > 0
         ? supabase.from('students').select('matricule, nom, prenom, classe').in('matricule', elevesIds)
         : Promise.resolve({ data: [] as any[] }),
@@ -192,24 +188,39 @@ export default function VueEducatrices({ phaseId, phase, userId }: Props) {
     ]);
 
     const elevesMap: Record<number, any> = {};
-    (elevesRes.data || []).forEach((s: any) => { elevesMap[s.matricule] = s; });
+    (eRes.data || []).forEach((s: any) => { elevesMap[s.matricule] = s; });
     const profsMap: Record<string, any> = {};
-    (employesRes.data || []).forEach((e: any) => { profsMap[e.id] = e; });
+    (pRes.data || []).forEach((p: any) => { profsMap[p.id] = p; });
 
     const enriched = soutiens.map(s => {
       const dem = s.demandeur_type === 'student'
         ? elevesMap[parseInt(s.demandeur_id)]
         : profsMap[s.demandeur_id];
+      const groupe = groupesMap[s.groupe_id];
       return {
         ...s,
         demandeur_nom: dem ? `${dem.prenom} ${dem.nom}` : '—',
         demandeur_classe: dem?.classe || null,
-        groupe_nom: groupesMap[s.groupe_id]?.nom || '—',
-        groupe_local: groupesMap[s.groupe_id]?.localisation_id || null,
+        groupe_nom: groupe?.nom || '—',
+        groupe_local: groupe?.localisation_id || null,
       };
     });
 
     setSoutiensOuverts(enriched);
+  };
+
+  const leverSoutien = async (soutienId: string) => {
+    if (!confirm('Lever cette demande de soutien ?')) return;
+    const { error } = await supabase
+      .from('conseil_lutte_soutiens')
+      .update({
+        statut: 'traite',
+        traite_at: new Date().toISOString(),
+        traite_par: userId,
+      })
+      .eq('id', soutienId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    loadSoutiens();
   };
 
   const demanderChangement = (eleve: EleveAvecStatut) => {
@@ -300,10 +311,10 @@ export default function VueEducatrices({ phaseId, phase, userId }: Props) {
             {soutiensOuverts.map(s => (
               <div key={s.id} className="bg-white border border-red-200 rounded-lg p-3">
                 <div className="flex justify-between items-start gap-3 flex-wrap">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium text-gray-900">
                       <span className="text-red-700">
-                        {s.demandeur_type === 'student' ? "🎓 Animateur·rice" : "👨‍🏫 Encadrant·e"}
+                        {s.demandeur_type === 'student' ? '👑 Animateur·rice' : '👨‍🏫 Encadrant·e'}
                       </span>
                       {' '}— {s.demandeur_nom}
                       {s.demandeur_classe && (
@@ -320,10 +331,18 @@ export default function VueEducatrices({ phaseId, phase, userId }: Props) {
                       </div>
                     )}
                   </div>
-                  <div className="text-xs text-gray-400 whitespace-nowrap">
-                    {new Date(s.created_at).toLocaleTimeString('fr-FR', {
-                      hour: '2-digit', minute: '2-digit',
-                    })}
+                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                      {new Date(s.created_at).toLocaleTimeString('fr-FR', {
+                        hour: '2-digit', minute: '2-digit',
+                      })}
+                    </span>
+                    <button
+                      onClick={() => leverSoutien(s.id)}
+                      className="px-2 py-1 text-xs bg-white border border-red-300 text-red-700 rounded hover:bg-red-100"
+                    >
+                      Lever
+                    </button>
                   </div>
                 </div>
               </div>
