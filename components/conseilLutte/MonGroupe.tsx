@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import ChoisirGroupe from './ChoisirGroupe';
+import { chargerAnimateursPhase } from '@/lib/conseilLutte/animateurs';
 
 interface Props {
   phaseId: string;
@@ -34,11 +35,9 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
   const [saving, setSaving] = useState(false);
   const [savingPresence, setSavingPresence] = useState(false);
 
-  // Formulaire soutien
   const [showSoutienModal, setShowSoutienModal] = useState(false);
   const [messageSoutien, setMessageSoutien] = useState('');
 
-  // Formulaire mandat
   const [showMandatModal, setShowMandatModal] = useState(false);
   const [nouveauMandat, setNouveauMandat] = useState({ mandat: '', description: '' });
   const [elevesSelectionnes, setElevesSelectionnes] = useState<number[]>([]);
@@ -48,12 +47,10 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
   const loadData = async () => {
     setLoading(true);
 
-    // 1. Phase
     const { data: ph } = await supabase
       .from('conseil_lutte_phases').select('*').eq('id', phaseId).single();
     setPhase(ph);
 
-    // 2. Mon groupe
     const { data: membresData } = await supabase
       .from('conseil_lutte_membres')
       .select(`groupe_id, conseil_lutte_groupes!inner (
@@ -77,7 +74,6 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
     const rawLocal = groupeData.localisation_fixe;
     setLocal(Array.isArray(rawLocal) ? rawLocal[0] ?? null : rawLocal);
 
-    // 3. Membres
     const { data: allMembres } = await supabase
       .from('conseil_lutte_membres')
       .select('participant_id, participant_type, manuel')
@@ -118,14 +114,13 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
     });
     setMembres(tous);
 
-    // 4. Animateurs (peut y en avoir plusieurs)
-    const { data: anims } = await supabase
-      .from('conseil_lutte_animateurs')
-      .select('student_matricule')
-      .eq('groupe_id', groupeData.id);
-    setAnimateursMatricules((anims || []).map(a => a.student_matricule));
+    // Animateurs de la phase, croisés avec les membres du groupe
+    const animSet = await chargerAnimateursPhase(phaseId);
+    const animateursDuGroupe = eleves
+      .filter(e => animSet.has(e.matricule))
+      .map(e => e.matricule);
+    setAnimateursMatricules(animateursDuGroupe);
 
-    // 5. Soutien ouvert
     const { data: soutien } = await supabase
       .from('conseil_lutte_soutiens')
       .select('*')
@@ -136,7 +131,6 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
       .maybeSingle();
     setSoutienOuvert(soutien);
 
-    // 6. Mandats
     const { data: mds } = await supabase
       .from('conseil_lutte_mandats')
       .select('*')
@@ -144,7 +138,6 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
       .order('created_at', { ascending: false });
     setMandats(mds || []);
 
-    // 7. Présences
     const { data: pres } = await supabase
       .from('conseil_lutte_presences')
       .select('student_matricule, present')
@@ -160,17 +153,10 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
 
   const quitterGroupe = async () => {
     if (!groupe) return;
-    if (!confirm('Quitter ce groupe ? Vous pourrez en rejoindre un autre.')) return;
+    if (!confirm('Quitter ce groupe ? Vous pourrez en rejoindre un autre. Votre déclaration animateur·rice sera conservée.')) return;
 
     setSaving(true);
     try {
-      if (estAnimateur) {
-        await supabase
-          .from('conseil_lutte_animateurs')
-          .update({ groupe_id: null })
-          .eq('student_matricule', parseInt(userId));
-      }
-
       await supabase
         .from('conseil_lutte_membres')
         .delete()
@@ -198,9 +184,7 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
       })
       .eq('id', groupe.id);
     setSaving(false);
-    if (!error) {
-      setGroupe({ ...groupe, phase_pedagogique: nouvellePhase });
-    }
+    if (!error) setGroupe({ ...groupe, phase_pedagogique: nouvellePhase });
   };
 
   const demanderSoutien = async () => {
@@ -336,22 +320,22 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
               Votre groupe
             </div>
             <h2 className="text-2xl font-bold text-gray-900">{groupe.nom}</h2>
-              {(estAnimateur || userType === 'employee') && (
-                <div className="mt-1 flex items-center gap-2 flex-wrap">
-                  {estAnimateur && (
-                    <span className="inline-block text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-medium">
-                      👑 Vous êtes animateur·rice de ce groupe
-                    </span>
-                  )}
-                  <button
-                    onClick={quitterGroupe}
-                    disabled={saving}
-                    className="text-xs text-red-600 hover:text-red-800 underline disabled:opacity-50"
-                  >
-                    Quitter le groupe
-                  </button>
-                </div>
-              )}
+            {(estAnimateur || userType === 'employee') && (
+              <div className="mt-1 flex items-center gap-2 flex-wrap">
+                {estAnimateur && (
+                  <span className="inline-block text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-medium">
+                    👑 Vous êtes animateur·rice de ce groupe
+                  </span>
+                )}
+                <button
+                  onClick={quitterGroupe}
+                  disabled={saving}
+                  className="text-xs text-red-600 hover:text-red-800 underline disabled:opacity-50"
+                >
+                  Quitter le groupe
+                </button>
+              </div>
+            )}
           </div>
           <div className="text-right">
             <div className="text-xs uppercase text-gray-500 font-semibold">Local</div>
@@ -527,7 +511,7 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
         </div>
       )}
 
-      {/* Membres + prise de présences intégrée */}
+      {/* Membres + prise de présences */}
       <div className="bg-white rounded-lg border p-6">
         <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
           <div>

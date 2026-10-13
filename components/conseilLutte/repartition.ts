@@ -61,10 +61,11 @@ export async function repartirAuto({
     .eq('phase_id', phaseId);
   if (gErr || !groupes || groupes.length === 0) throw new Error('Aucun groupe dans cette phase.');
 
-  // Charger les animateurs déclarés
+  // Animateurs déclarés pour cette phase → exclus de la répartition
   const { data: anims } = await supabase
     .from('conseil_lutte_animateurs')
-    .select('student_matricule');
+    .select('student_matricule')
+    .eq('phase_id', phaseId);
   const animateursSet = new Set<number>((anims || []).map(a => a.student_matricule));
 
   // Membres existants
@@ -408,74 +409,69 @@ export async function repartirAnimateurs(params: {
   if (!groupes || groupes.length === 0) throw new Error('Aucun groupe.');
   const groupesTries = trierGroupesParLocal(groupes);
 
-  const { data: groupesPris } = await supabase
-    .from('conseil_lutte_animateurs')
-    .select('groupe_id')
-    .not('groupe_id', 'is', null);
-  const groupesAvecAnim = new Set((groupesPris || []).map(a => a.groupe_id));
-
-  const { data: anims, error: aErr } = await supabase
+  // 1. Animateurs de la phase
+  const { data: anims } = await supabase
     .from('conseil_lutte_animateurs')
     .select('student_matricule')
-    .is('groupe_id', null);
-  if (aErr) throw aErr;
-  if (!anims || anims.length === 0) {
+    .eq('phase_id', phaseId);
+  const animateursSet = new Set<number>((anims || []).map(a => a.student_matricule));
+  if (animateursSet.size === 0) {
     return { animateursPlaces: 0, animateursRestants: 0 };
   }
 
+  // 2. Récupérer les membres actuels pour savoir qui est déjà placé et dans quel groupe
   const { data: membres } = await supabase
     .from('conseil_lutte_membres')
-    .select('participant_id')
+    .select('groupe_id, participant_id')
     .in('groupe_id', groupesTries.map((g: any) => g.id))
     .eq('participant_type', 'student');
-  const dejaPlaces = new Set((membres || []).map(m => parseInt(m.participant_id)));
 
-  const matricules = anims
-    .map(a => a.student_matricule)
-    .filter(m => !dejaPlaces.has(m));
-  if (matricules.length === 0) {
+  const dejaPlaces = new Set<number>();
+  const groupesAvecAnim = new Set<string>();
+  (membres || []).forEach(m => {
+    const mat = parseInt(m.participant_id);
+    if (animateursSet.has(mat)) {
+      dejaPlaces.add(mat);
+      groupesAvecAnim.add(m.groupe_id);
+    }
+  });
+
+  const aPlacer = Array.from(animateursSet).filter(m => !dejaPlaces.has(m));
+  if (aPlacer.length === 0) {
     return { animateursPlaces: 0, animateursRestants: 0 };
   }
 
+  // 3. Filtrer les élèves éligibles (hors testeur, niveau 0)
   const { data: eleves } = await supabase
     .from('students')
     .select('matricule, nom, prenom, classe, niveau')
-    .in('matricule', matricules);
+    .in('matricule', aPlacer);
 
   const eligibles = (eleves || []).filter(s =>
     !s.nom?.toLowerCase().includes('testeur') &&
     s.niveau && s.niveau !== '0'
   );
 
+  // 4. Placer 1 anim par groupe libre, dans l'ordre étage → numéro
   const placements: any[] = [];
-  let idxAnim = 0;
+  let idx = 0;
   for (const g of groupesTries) {
-    if (idxAnim >= eligibles.length) break;
+    if (idx >= eligibles.length) break;
     if (groupesAvecAnim.has((g as any).id)) continue;
-    const eleve = eligibles[idxAnim];
     placements.push({
       groupe_id: (g as any).id,
-      participant_id: eleve.matricule.toString(),
+      participant_id: eligibles[idx].matricule.toString(),
       participant_type: 'student',
       manuel: true,
     });
-    idxAnim++;
+    idx++;
   }
 
-  if (placements.length === 0) {
-    return { animateursPlaces: 0, animateursRestants: eligibles.length };
-  }
-
-  const { error: errIns } = await supabase
-    .from('conseil_lutte_membres')
-    .insert(placements);
-  if (errIns) throw errIns;
-
-  for (const p of placements) {
-    await supabase
-      .from('conseil_lutte_animateurs')
-      .update({ groupe_id: p.groupe_id })
-      .eq('student_matricule', parseInt(p.participant_id));
+  if (placements.length > 0) {
+    const { error } = await supabase
+      .from('conseil_lutte_membres')
+      .insert(placements);
+    if (error) throw error;
   }
 
   return {

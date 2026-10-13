@@ -57,10 +57,36 @@ export default function AdminPhase({ phase, config, onBack }: Props) {
   };
 
   const lancerRepartition = async () => {
+    // Vérifier les animateurs non placés
+    const { data: anims } = await supabase
+      .from('conseil_lutte_animateurs')
+      .select('student_matricule')
+      .eq('phase_id', phase.id);
+    const animateursSet = new Set((anims || []).map(a => a.student_matricule));
+
+    const { data: membres } = await supabase
+      .from('conseil_lutte_membres')
+      .select('participant_id')
+      .in('groupe_id', groupes.map(g => g.id))
+      .eq('participant_type', 'student');
+    const places = new Set((membres || []).map(m => parseInt(m.participant_id)));
+
+    const nonPlaces = Array.from(animateursSet).filter(m => !places.has(m));
+
+    if (nonPlaces.length > 0) {
+      const continuer = confirm(
+        `${nonPlaces.length} animateur·rice·s déclaré·e·s n'ont pas encore de groupe.\n\n` +
+        `Voulez-vous vraiment lancer la répartition des élèves sans les avoir placés ?\n\n` +
+        `(Annuler pour aller d'abord cliquer sur "Répartir les animateur·rice·s".)`
+      );
+      if (!continuer) return;
+    }
+
     if (!confirm(
       'Lancer la répartition automatique des élèves ?\n\n' +
       'Les élèves marqués "manuel" (dont les animateurs) sont préservés. Les autres sont répartis.'
     )) return;
+
     setWorking(true);
     try {
       const res = await repartirAuto({
