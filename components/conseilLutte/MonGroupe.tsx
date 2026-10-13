@@ -42,7 +42,18 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
   const [nouveauMandat, setNouveauMandat] = useState({ mandat: '', description: '' });
   const [elevesSelectionnes, setElevesSelectionnes] = useState<number[]>([]);
 
+  const [votePour, setVotePour] = useState<number | ''>('');
+  const [voteTotal, setVoteTotal] = useState<number | ''>('');
+  const [savingVote, setSavingVote] = useState(false);
+
   useEffect(() => { loadData(); }, [phaseId, userId, tick]);
+
+  useEffect(() => {
+    if (groupe) {
+      setVotePour(groupe.vote_pour ?? '');
+      setVoteTotal(groupe.vote_total ?? '');
+    }
+  }, [groupe?.id, groupe?.vote_pour, groupe?.vote_total]);
 
   const loadData = async () => {
     setLoading(true);
@@ -202,6 +213,32 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
       setShowSoutienModal(false);
       setMessageSoutien('');
       setTick(t => t + 1);
+    } else {
+      alert('Erreur : ' + error.message);
+    }
+  };
+
+  const enregistrerVote = async () => {
+    if (!groupe) return;
+    if (votePour === '' || voteTotal === '') {
+      alert('Remplissez les deux champs.');
+      return;
+    }
+    if (votePour > voteTotal) {
+      alert('Le nombre de voix pour ne peut pas dépasser le nombre total de votants.');
+      return;
+    }
+    setSavingVote(true);
+    const { error } = await supabase
+      .from('conseil_lutte_groupes')
+      .update({
+        vote_pour: votePour,
+        vote_total: voteTotal,
+      })
+      .eq('id', groupe.id);
+    setSavingVote(false);
+    if (!error) {
+      setGroupe({ ...groupe, vote_pour: votePour, vote_total: voteTotal });
     } else {
       alert('Erreur : ' + error.message);
     }
@@ -446,6 +483,52 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
           </div>
         );
       })()}
+
+      {/* Vote */}
+      {(estAnimateur || userType === 'employee') && (
+        <div className="bg-white rounded-lg border p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">Résultat du vote</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            Saisissez le résultat du vote de votre groupe. Le nombre de votants correspond aux présents (animateurs compris).
+          </p>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Voix pour</label>
+              <input
+                type="number"
+                min={0}
+                value={votePour}
+                onChange={(e) => setVotePour(e.target.value === '' ? '' : parseInt(e.target.value))}
+                className="w-full px-3 py-2 border rounded-lg"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Nombre de votants</label>
+              <input
+                type="number"
+                min={0}
+                value={voteTotal}
+                onChange={(e) => setVoteTotal(e.target.value === '' ? '' : parseInt(e.target.value))}
+                className="w-full px-3 py-2 border rounded-lg"
+                placeholder="0"
+              />
+            </div>
+          </div>
+          {votePour !== '' && voteTotal !== '' && votePour <= voteTotal && (
+            <div className="text-sm text-gray-600 mb-4">
+              → <strong>{votePour}</strong> pour · <strong>{voteTotal - votePour}</strong> contre · <strong>{voteTotal}</strong> votants
+            </div>
+          )}
+          <button
+            onClick={enregistrerVote}
+            disabled={savingVote}
+            className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50"
+          >
+            {savingVote ? 'Enregistrement…' : 'Enregistrer le vote'}
+          </button>
+        </div>
+      )}
 
       {/* Mandats (phase V) */}
       {phaseFreinetActuelle === 'mandater' && (

@@ -52,7 +52,7 @@ export default function AdminSuivi({ config, phaseId }: Props) {
     for (const ph of phasesFiltrees) {
       const { data: gr } = await supabase
         .from('conseil_lutte_groupes')
-        .select(`id, nom, phase_id, phase_pedagogique, localisation_fixe (id, etage)`)
+        .select(`id, nom, phase_id, phase_pedagogique, vote_pour, vote_total, localisation_fixe (id, etage)`)
         .eq('phase_id', ph.id);
       (gr || []).forEach(g => tousGroupes.push({ ...g, phase_nom: ph.nom }));
     }
@@ -77,14 +77,6 @@ export default function AdminSuivi({ config, phaseId }: Props) {
         animSetParPhase[a.phase_id].add(a.student_matricule);
       }
     });
-
-    // Récupérer les infos des élèves animateurs (toutes phases confondues)
-    const animMatricules = Array.from(new Set((animateurs || []).map(a => a.student_matricule)));
-    const { data: animEleves } = animMatricules.length > 0
-      ? await supabase.from('students').select('matricule, nom, prenom, classe').in('matricule', animMatricules)
-      : { data: [] as any[] };
-    const animInfo: Record<number, any> = {};
-    (animEleves || []).forEach((s: any) => { animInfo[s.matricule] = s; });
 
     // Membres
     const { data: mbs } = await supabase
@@ -114,45 +106,13 @@ export default function AdminSuivi({ config, phaseId }: Props) {
     (elevesRes.data || []).forEach((s: any) => { eleveInfo[s.matricule] = s; });
 
     // Soutiens ouverts
-  const { data: soutiens } = await supabase
-    .from('conseil_lutte_soutiens')
-    .select('id, groupe_id, demandeur_type, demandeur_id, message, created_at')
-    .in('groupe_id', groupesIds)
-    .eq('statut', 'ouvert');
-
-  // Récupérer les noms des demandeurs
-  const demElevesIds: number[] = [];
-  const demEmployesIds: string[] = [];
-  (soutiens || []).forEach(s => {
-    if (s.demandeur_type === 'student') demElevesIds.push(parseInt(s.demandeur_id));
-    else demEmployesIds.push(s.demandeur_id);
-  });
-
-  const [demElevesRes, demEmployesRes] = await Promise.all([
-    demElevesIds.length > 0
-      ? supabase.from('students').select('matricule, nom, prenom, classe').in('matricule', demElevesIds)
-      : Promise.resolve({ data: [] as any[] }),
-    demEmployesIds.length > 0
-      ? supabase.from('employees').select('id, nom, prenom, job').in('id', demEmployesIds)
-      : Promise.resolve({ data: [] as any[] }),
-  ]);
-
-  const demElevesMap: Record<number, any> = {};
-  (demElevesRes.data || []).forEach((s: any) => { demElevesMap[s.matricule] = s; });
-  const demEmployesMap: Record<string, any> = {};
-  (demEmployesRes.data || []).forEach((e: any) => { demEmployesMap[e.id] = e; });
-
-  const soutienParGroupe: Record<string, any> = {};
-  (soutiens || []).forEach(s => {
-    const dem = s.demandeur_type === 'student'
-      ? demElevesMap[parseInt(s.demandeur_id)]
-      : demEmployesMap[s.demandeur_id];
-    soutienParGroupe[s.groupe_id] = {
-      ...s,
-      demandeur_nom: dem ? `${dem.prenom} ${dem.nom}` : '—',
-      demandeur_classe: dem?.classe || null,
-    };
-  });
+    const { data: soutiens } = await supabase
+      .from('conseil_lutte_soutiens')
+      .select('id, groupe_id, demandeur_type, demandeur_id, message, created_at')
+      .in('groupe_id', groupesIds)
+      .eq('statut', 'ouvert');
+    const soutienParGroupe: Record<string, any> = {};
+    (soutiens || []).forEach(s => { soutienParGroupe[s.groupe_id] = s; });
 
     // Assemblage
     const result = tousGroupes.map(g => {
@@ -165,7 +125,6 @@ export default function AdminSuivi({ config, phaseId }: Props) {
 
       const elevesCount = membresDuGroupe.filter(m => m.participant_type === 'student').length;
 
-      // Animateurs = élèves du groupe dont le matricule est dans le set de la phase
       const animSet = animSetParPhase[g.phase_id] || new Set<number>();
       const animateursListe = membresDuGroupe
         .filter(m => m.participant_type === 'student' && animSet.has(parseInt(m.participant_id)))
@@ -188,6 +147,8 @@ export default function AdminSuivi({ config, phaseId }: Props) {
         eleves_count: elevesCount,
         phase_pedagogique: g.phase_pedagogique || 'informer',
         soutien: soutienParGroupe[g.id] || null,
+        vote_pour: g.vote_pour,
+        vote_total: g.vote_total,
       };
     }).sort((a, b) => {
       const ea = Number(a.etage) || 99;
@@ -213,19 +174,11 @@ export default function AdminSuivi({ config, phaseId }: Props) {
     parPhase[p].push(d);
   });
 
-  const leverSoutien = async (soutienId: string) => {
-    if (!confirm('Lever cette demande de soutien ?')) return;
-    const { error } = await supabase
-      .from('conseil_lutte_soutiens')
-      .update({
-        statut: 'traite',
-        traite_at: new Date().toISOString(),
-        traite_par: 'admin',
-      })
-      .eq('id', soutienId);
-    if (error) { alert('Erreur : ' + error.message); return; }
-    load();
-  };
+  // Agrégats de vote
+  const groupesAyantVote = donnees.filter(d => d.vote_total != null);
+  const totalPour = groupesAyantVote.reduce((sum, d) => sum + (d.vote_pour || 0), 0);
+  const totalVotants = groupesAyantVote.reduce((sum, d) => sum + (d.vote_total || 0), 0);
+  const totalContre = totalVotants - totalPour;
 
   return (
     <div className="space-y-6">
@@ -234,11 +187,20 @@ export default function AdminSuivi({ config, phaseId }: Props) {
           <h2 className="text-base font-semibold text-gray-900">Suivi temps réel</h2>
           <p className="text-xs text-gray-500">
             {donnees.length} groupes ·{' '}
-            {groupesAvecSoutien.length > 0
-              ? <span className="text-red-700 font-semibold">
+            {groupesAyantVote.length}/{donnees.length} votes enregistrés ·{' '}
+            <strong className="text-gray-900">{totalPour} pour</strong>
+            {' · '}
+            <strong className="text-gray-900">{totalContre} contre</strong>
+            {' · '}
+            <strong className="text-gray-900">{totalVotants} votants</strong>
+            {groupesAvecSoutien.length > 0 && (
+              <>
+                {' · '}
+                <span className="text-red-700 font-semibold">
                   {groupesAvecSoutien.length} demande{groupesAvecSoutien.length > 1 ? 's' : ''} de soutien
                 </span>
-              : 'aucune demande de soutien'}
+              </>
+            )}
           </p>
         </div>
         <button onClick={load} className="text-xs text-gray-500 hover:text-gray-700">
@@ -246,6 +208,7 @@ export default function AdminSuivi({ config, phaseId }: Props) {
         </button>
       </div>
 
+      {/* 1. Soutiens ouverts */}
       {groupesAvecSoutien.length > 0 && (
         <section>
           <div className="flex items-center gap-3 mb-3">
@@ -258,11 +221,12 @@ export default function AdminSuivi({ config, phaseId }: Props) {
             </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {groupesAvecSoutien.map(d => <CarteGroupe key={d.groupe_id} d={d} onLeverSoutien={leverSoutien} />)}
+            {groupesAvecSoutien.map(d => <CarteGroupe key={d.groupe_id} d={d} />)}
           </div>
         </section>
       )}
 
+      {/* 2. Phases Freinet */}
       {PHASE_ORDRE.map(phaseKey => {
         const groupes = parPhase[phaseKey] || [];
         if (groupes.length === 0) return null;
@@ -279,7 +243,7 @@ export default function AdminSuivi({ config, phaseId }: Props) {
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {groupes.map(d => <CarteGroupe key={d.groupe_id} d={d} onLeverSoutien={leverSoutien} />)}            
+              {groupes.map(d => <CarteGroupe key={d.groupe_id} d={d} />)}
             </div>
           </section>
         );
@@ -294,8 +258,11 @@ export default function AdminSuivi({ config, phaseId }: Props) {
 
 // ---------------------------------------------------------------------------
 
-function CarteGroupe({ d, onLeverSoutien }: { d: any; onLeverSoutien: (id: string) => void }) {
+function CarteGroupe({ d }: { d: any }) {
   const style = PHASE_STYLE[d.phase_pedagogique] || PHASE_STYLE.informer;
+  const aVote = d.vote_total != null;
+  const voteContre = aVote ? (d.vote_total - (d.vote_pour || 0)) : null;
+
   return (
     <div className={`bg-white border rounded-lg p-4 ${
       d.soutien ? 'border-red-400 ring-2 ring-red-100' : 'border-gray-200'
@@ -330,29 +297,20 @@ function CarteGroupe({ d, onLeverSoutien }: { d: any; onLeverSoutien: (id: strin
         <div>👤 {d.eleves_count} élève{d.eleves_count > 1 ? 's' : ''}</div>
       </div>
 
+      {/* Vote */}
+      <div className={`text-xs mt-2 pt-2 border-t ${aVote ? 'text-gray-700' : 'text-gray-400'}`}>
+        {aVote ? (
+          <>🗳️ <strong>{d.vote_pour}</strong> pour · <strong>{voteContre}</strong> contre · <strong>{d.vote_total}</strong> votants</>
+        ) : (
+          <>🗳️ Pas encore de vote</>
+        )}
+      </div>
+
       {d.soutien && (
-        <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-800">
-          <div>
-            🆘 <strong>Soutien demandé</strong>
-            {' '}par{' '}
-            {d.soutien.demandeur_nom}
-            {' '}
-            <span className="text-red-600">
-              ({d.soutien.demandeur_type === 'student' ? 'animateur·rice' : 'encadrant·e'})
-            </span>
-          </div>
-          {d.soutien.demandeur_classe && (
-            <div className="mt-0.5 text-red-600">{d.soutien.demandeur_classe}</div>
-          )}
-          {d.soutien.message && (
-            <div className="mt-1 italic">« {d.soutien.message} »</div>
-          )}
-          <button
-            onClick={() => onLeverSoutien(d.soutien.id)}
-            className="mt-2 px-2 py-1 text-xs bg-white border border-red-300 text-red-700 rounded hover:bg-red-100"
-          >
-            Lever la demande
-          </button>
+        <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-800 mt-2">
+          🆘 <strong>Soutien demandé</strong>
+          {' '}par {d.soutien.demandeur_type === 'student' ? 'élève' : 'encadrant'}
+          {d.soutien.message && <div className="mt-1 italic">« {d.soutien.message} »</div>}
         </div>
       )}
     </div>
