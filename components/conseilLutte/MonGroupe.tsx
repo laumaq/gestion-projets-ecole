@@ -220,12 +220,17 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
 
   const enregistrerVote = async () => {
     if (!groupe) return;
-    if (votePour === '' || voteTotal === '') {
-      alert('Remplissez les deux champs.');
+    if (votePour === '') {
+      alert('Entrez le nombre de voix pour.');
       return;
     }
-    if (votePour > voteTotal) {
-      alert('Le nombre de voix pour ne peut pas dépasser le nombre total de votants.');
+    const totalPresents = eleves.filter(e => presences.get(e.matricule)).length;
+    if (totalPresents === 0) {
+      alert('Aucun élève présent dans le groupe. Prenez les présences avant d\'enregistrer le vote.');
+      return;
+    }
+    if (votePour > totalPresents) {
+      alert(`Le nombre de voix pour (${votePour}) ne peut pas dépasser le nombre de présents (${totalPresents}).`);
       return;
     }
     setSavingVote(true);
@@ -233,12 +238,12 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
       .from('conseil_lutte_groupes')
       .update({
         vote_pour: votePour,
-        vote_total: voteTotal,
+        vote_total: totalPresents,
       })
       .eq('id', groupe.id);
     setSavingVote(false);
     if (!error) {
-      setGroupe({ ...groupe, vote_pour: votePour, vote_total: voteTotal });
+      setGroupe({ ...groupe, vote_pour: votePour, vote_total: totalPresents });
     } else {
       alert('Erreur : ' + error.message);
     }
@@ -489,9 +494,11 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
         <div className="bg-white rounded-lg border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-1">Résultat du vote</h3>
           <p className="text-sm text-gray-500 mb-4">
-            Saisissez le résultat du vote de votre groupe. Le nombre de votants correspond aux présents (animateurs compris).
+            Saisissez le nombre de voix pour. Le nombre de votants est calculé automatiquement
+            à partir des présents dans le groupe (animateurs compris).
           </p>
-          <div className="grid grid-cols-2 gap-4 mb-4">
+
+          <div className="flex items-center gap-3 mb-4">
             <div>
               <label className="block text-sm text-gray-600 mb-1">Voix pour</label>
               <input
@@ -499,27 +506,25 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
                 min={0}
                 value={votePour}
                 onChange={(e) => setVotePour(e.target.value === '' ? '' : parseInt(e.target.value))}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-24 px-3 py-2 border rounded-lg"
                 placeholder="0"
               />
             </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Nombre de votants</label>
-              <input
-                type="number"
-                min={0}
-                value={voteTotal}
-                onChange={(e) => setVoteTotal(e.target.value === '' ? '' : parseInt(e.target.value))}
-                className="w-full px-3 py-2 border rounded-lg"
-                placeholder="0"
-              />
+            <div className="pt-5">
+              <span className="text-sm text-gray-600">
+                sur <strong>{eleves.filter(e => presences.get(e.matricule)).length}</strong> présent·e·s
+              </span>
             </div>
           </div>
-          {votePour !== '' && voteTotal !== '' && votePour <= voteTotal && (
+
+          {votePour !== '' && votePour <= eleves.filter(e => presences.get(e.matricule)).length && (
             <div className="text-sm text-gray-600 mb-4">
-              → <strong>{votePour}</strong> pour · <strong>{voteTotal - votePour}</strong> contre · <strong>{voteTotal}</strong> votants
+              → <strong>{votePour}</strong> pour ·{' '}
+              <strong>{eleves.filter(e => presences.get(e.matricule)).length - votePour}</strong> contre ·{' '}
+              <strong>{eleves.filter(e => presences.get(e.matricule)).length}</strong> votants
             </div>
           )}
+
           <button
             onClick={enregistrerVote}
             disabled={savingVote}
