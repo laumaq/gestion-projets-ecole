@@ -8,7 +8,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import AdminPhase from './AdminPhase';
 import AdminSuivi from './AdminSuivi';
-import AdminVotes from './AdminVotes';
 
 const ORDRE_ETAGES: Record<string, number> = {
   '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, 'Annexe': 7,
@@ -32,6 +31,7 @@ interface Props {
 }
 
 export default function AdminPreparation({ config, phases, onRefresh }: Props) {
+  const [onglet, setOnglet] = useState<'preparation' | 'suivi'>('preparation');
   const [editingPhaseId, setEditingPhaseId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
 
@@ -44,8 +44,6 @@ export default function AdminPreparation({ config, phases, onRefresh }: Props) {
   const [modeClasses, setModeClasses] = useState<'groupees' | 'aleatoire' | 'dispersees'>('aleatoire');
   const [creating, setCreating] = useState(false);
   const [nominatingAnimateurs, setNominatingAnimateurs] = useState(false);
-
-  const [onglet, setOnglet] = useState<'preparation' | 'suivi' | 'votes'>('preparation');
 
   const [cfgLocal, setCfgLocal] = useState(config);
   useEffect(() => { setCfgLocal(config); }, [config]);
@@ -245,20 +243,10 @@ export default function AdminPreparation({ config, phases, onRefresh }: Props) {
               : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
           }`}
         >Suivi temps réel</button>
-        <button
-          onClick={() => setOnglet('votes')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-            onglet === 'votes'
-              ? 'bg-red-600 text-white'
-              : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-          }`}
-        >Votes</button>
       </div>
 
       {onglet === 'suivi' ? (
         <AdminSuivi config={config} />
-      ) : onglet === 'votes' ? (
-        <AdminVotes config={config} />
       ) : (
         <>
           {/* ═══════════════════════════════════════════ */}

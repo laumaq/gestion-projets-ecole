@@ -5,7 +5,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import ChoisirGroupe from './ChoisirGroupe';
-import { chargerAnimateursPhase } from '@/lib/conseilLutte/animateurs';
 
 interface Props {
   phaseId: string;
@@ -35,10 +34,6 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
   const [saving, setSaving] = useState(false);
   const [savingPresence, setSavingPresence] = useState(false);
 
-  // Vote
-  const [votePour, setVotePour] = useState<number | ''>('');
-  const [savingVote, setSavingVote] = useState(false);
-
   // Formulaire soutien
   const [showSoutienModal, setShowSoutienModal] = useState(false);
   const [messageSoutien, setMessageSoutien] = useState('');
@@ -49,12 +44,6 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
   const [elevesSelectionnes, setElevesSelectionnes] = useState<number[]>([]);
 
   useEffect(() => { loadData(); }, [phaseId, userId, tick]);
-
-  useEffect(() => {
-    if (groupe) {
-      setVotePour(groupe.vote_pour ?? '');
-    }
-  }, [groupe?.id, groupe?.vote_pour]);
 
   const loadData = async () => {
     setLoading(true);
@@ -68,7 +57,7 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
     const { data: membresData } = await supabase
       .from('conseil_lutte_membres')
       .select(`groupe_id, conseil_lutte_groupes!inner (
-        id, nom, localisation_id, phase_id, phase_pedagogique, vote_pour,
+        id, nom, localisation_id, phase_id, phase_pedagogique,
         localisation_fixe (id, etage)
       )`)
       .eq('participant_id', userId)
@@ -129,12 +118,12 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
     });
     setMembres(tous);
 
-    // 4. Animateurs de la phase, croisés avec les membres du groupe
-    const animSet = await chargerAnimateursPhase(phaseId);
-    const animateursDuGroupe = eleves
-      .filter(e => animSet.has(e.matricule))
-      .map(e => e.matricule);
-    setAnimateursMatricules(animateursDuGroupe);
+    // 4. Animateurs (peut y en avoir plusieurs)
+    const { data: anims } = await supabase
+      .from('conseil_lutte_animateurs')
+      .select('student_matricule')
+      .eq('groupe_id', groupeData.id);
+    setAnimateursMatricules((anims || []).map(a => a.student_matricule));
 
     // 5. Soutien ouvert
     const { data: soutien } = await supabase
@@ -171,10 +160,17 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
 
   const quitterGroupe = async () => {
     if (!groupe) return;
-    if (!confirm('Quitter ce groupe ? Vous pourrez en rejoindre un autre. Votre déclaration animateur·rice sera conservée.')) return;
+    if (!confirm('Quitter ce groupe ? Vous pourrez en rejoindre un autre.')) return;
 
     setSaving(true);
     try {
+      if (estAnimateur) {
+        await supabase
+          .from('conseil_lutte_animateurs')
+          .update({ groupe_id: null })
+          .eq('student_matricule', parseInt(userId));
+      }
+
       await supabase
         .from('conseil_lutte_membres')
         .delete()
@@ -202,7 +198,9 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
       })
       .eq('id', groupe.id);
     setSaving(false);
-    if (!error) setGroupe({ ...groupe, phase_pedagogique: nouvellePhase });
+    if (!error) {
+      setGroupe({ ...groupe, phase_pedagogique: nouvellePhase });
+    }
   };
 
   const demanderSoutien = async () => {
@@ -306,35 +304,6 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
     setSavingPresence(false);
   };
 
-  const enregistrerVote = async () => {
-    if (!groupe) return;
-    if (votePour === '') {
-      alert('Entrez le nombre de voix pour.');
-      return;
-    }
-    const totalPresents = membres.filter(m => m.type === 'student').filter(e => presences.get(e.matricule)).length;
-    if (totalPresents === 0) {
-      alert('Aucun élève présent dans le groupe. Prenez les présences avant d\'enregistrer le vote.');
-      return;
-    }
-    if (votePour > totalPresents) {
-      if (!confirm(
-        `Le nombre de voix pour (${votePour}) dépasse le nombre de présents (${totalPresents}).\n\nConfirmer ?`
-      )) return;
-    }
-    setSavingVote(true);
-    const { error } = await supabase
-      .from('conseil_lutte_groupes')
-      .update({ vote_pour: votePour })
-      .eq('id', groupe.id);
-    setSavingVote(false);
-    if (!error) {
-      setGroupe({ ...groupe, vote_pour: votePour });
-    } else {
-      alert('Erreur : ' + error.message);
-    }
-  };
-
   if (loading) return <div className="text-center py-8">Chargement...</div>;
 
   if (!groupe) {
@@ -354,8 +323,7 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
   const infoPhase = PHASES_FREINET.find(p => p.key === phaseFreinetActuelle);
 
   const eleves = membres.filter(m => m.type === 'student');
-  const elevesPresents = eleves.filter(e => presences.get(e.matricule));
-  const nbPresents = elevesPresents.length;
+  const nbPresents = eleves.filter(e => presences.get(e.matricule)).length;
 
   return (
     <div className="space-y-6">
@@ -368,22 +336,22 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
               Votre groupe
             </div>
             <h2 className="text-2xl font-bold text-gray-900">{groupe.nom}</h2>
-            {(estAnimateur || userType === 'employee') && (
-              <div className="mt-1 flex items-center gap-2 flex-wrap">
-                {estAnimateur && (
-                  <span className="inline-block text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-medium">
-                    👑 Vous êtes animateur·rice de ce groupe
-                  </span>
-                )}
-                <button
-                  onClick={quitterGroupe}
-                  disabled={saving}
-                  className="text-xs text-red-600 hover:text-red-800 underline disabled:opacity-50"
-                >
-                  Quitter le groupe
-                </button>
-              </div>
-            )}
+              {(estAnimateur || userType === 'employee') && (
+                <div className="mt-1 flex items-center gap-2 flex-wrap">
+                  {estAnimateur && (
+                    <span className="inline-block text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-medium">
+                      👑 Vous êtes animateur·rice de ce groupe
+                    </span>
+                  )}
+                  <button
+                    onClick={quitterGroupe}
+                    disabled={saving}
+                    className="text-xs text-red-600 hover:text-red-800 underline disabled:opacity-50"
+                  >
+                    Quitter le groupe
+                  </button>
+                </div>
+              )}
           </div>
           <div className="text-right">
             <div className="text-xs uppercase text-gray-500 font-semibold">Local</div>
@@ -428,64 +396,6 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
           </div>
         )}
       </div>
-
-      {/* Vote — saisie (animateur·rice + encadrant·e) */}
-      {(estAnimateur || userType === 'employee') && (
-        <div className="bg-white rounded-lg border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">Résultat du vote</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            Saisissez le nombre de voix pour. Le nombre de votants correspond aux présents
-            dans le groupe (animateurs compris).
-          </p>
-
-          <div className="flex items-center gap-4 mb-4 flex-wrap">
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Voix pour</label>
-              <input
-                type="number"
-                min={0}
-                value={votePour}
-                onChange={(e) => setVotePour(e.target.value === '' ? '' : parseInt(e.target.value))}
-                className="w-24 px-3 py-2 border rounded-lg"
-                placeholder="0"
-              />
-            </div>
-            <div className="pt-6">
-              <span className="text-sm text-gray-600">
-                sur <strong>{nbPresents}</strong> présent·e·s
-              </span>
-            </div>
-          </div>
-
-          {votePour !== '' && (
-            <div className="text-sm text-gray-600 mb-4">
-              → <strong>{votePour}</strong> pour ·{' '}
-              <strong>{Math.max(0, nbPresents - votePour)}</strong> contre ·{' '}
-              <strong>{nbPresents}</strong> votants
-            </div>
-          )}
-
-          <button
-            onClick={enregistrerVote}
-            disabled={savingVote}
-            className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50"
-          >
-            {savingVote ? 'Enregistrement…' : 'Enregistrer le vote'}
-          </button>
-        </div>
-      )}
-
-      {/* Vote — lecture seule (élève non animateur, si un vote existe) */}
-      {!estAnimateur && userType === 'student' && groupe.vote_pour != null && (
-        <div className="bg-white rounded-lg border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Résultat du vote</h3>
-          <p className="text-sm text-gray-700">
-            🗳️ <strong>{groupe.vote_pour}</strong> pour ·{' '}
-            <strong>{Math.max(0, nbPresents - groupe.vote_pour)}</strong> contre ·{' '}
-            <strong>{nbPresents}</strong> votants
-          </p>
-        </div>
-      )}
 
       {/* Soutien */}
       {(() => {
@@ -617,7 +527,7 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
         </div>
       )}
 
-      {/* Membres + prise de présences */}
+      {/* Membres + prise de présences intégrée */}
       <div className="bg-white rounded-lg border p-6">
         <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
           <div>

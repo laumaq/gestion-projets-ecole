@@ -52,7 +52,7 @@ export default function AdminSuivi({ config, phaseId }: Props) {
     for (const ph of phasesFiltrees) {
       const { data: gr } = await supabase
         .from('conseil_lutte_groupes')
-        .select(`id, nom, phase_id, phase_pedagogique, vote_pour, vote_total, localisation_fixe (id, etage)`)
+        .select(`id, nom, phase_pedagogique, localisation_fixe (id, etage)`)
         .eq('phase_id', ph.id);
       (gr || []).forEach(g => tousGroupes.push({ ...g, phase_nom: ph.nom }));
     }
@@ -62,21 +62,26 @@ export default function AdminSuivi({ config, phaseId }: Props) {
     }
 
     const groupesIds = tousGroupes.map(g => g.id);
-    const phasesIds = phasesFiltrees.map(p => p.id);
 
-    // Animateurs par phase
+    // Animateurs — plusieurs par groupe possibles
     const { data: animateurs } = await supabase
       .from('conseil_lutte_animateurs')
-      .select('student_matricule, phase_id')
-      .in('phase_id', phasesIds);
+      .select('groupe_id, student_matricule')
+      .in('groupe_id', groupesIds);
 
-    const animSetParPhase: Record<string, Set<number>> = {};
-    phasesIds.forEach(pid => { animSetParPhase[pid] = new Set(); });
+    const animMap: Record<string, number[]> = {};
     (animateurs || []).forEach(a => {
-      if (a.phase_id && animSetParPhase[a.phase_id]) {
-        animSetParPhase[a.phase_id].add(a.student_matricule);
-      }
+      if (!a.groupe_id) return;
+      if (!animMap[a.groupe_id]) animMap[a.groupe_id] = [];
+      animMap[a.groupe_id].push(a.student_matricule);
     });
+
+    const animMatricules = Array.from(new Set(Object.values(animMap).flat()));
+    const { data: animEleves } = animMatricules.length > 0
+      ? await supabase.from('students').select('matricule, nom, prenom, classe').in('matricule', animMatricules)
+      : { data: [] as any[] };
+    const animInfo: Record<number, any> = {};
+    (animEleves || []).forEach((s: any) => { animInfo[s.matricule] = s; });
 
     // Membres
     const { data: mbs } = await supabase
@@ -85,30 +90,19 @@ export default function AdminSuivi({ config, phaseId }: Props) {
       .in('groupe_id', groupesIds);
 
     const encadrantsIds: string[] = [];
-    const elevesIds: number[] = [];
     (mbs || []).forEach(m => {
       if (m.participant_type === 'employee') encadrantsIds.push(m.participant_id);
-      else elevesIds.push(parseInt(m.participant_id));
     });
-
-    const [encadsRes, elevesRes] = await Promise.all([
-      encadrantsIds.length > 0
-        ? supabase.from('employees').select('id, nom, prenom, job').in('id', encadrantsIds)
-        : Promise.resolve({ data: [] as any[] }),
-      elevesIds.length > 0
-        ? supabase.from('students').select('matricule, nom, prenom, classe').in('matricule', elevesIds)
-        : Promise.resolve({ data: [] as any[] }),
-    ]);
-
+    const { data: encads } = encadrantsIds.length > 0
+      ? await supabase.from('employees').select('id, nom, prenom, job').in('id', encadrantsIds)
+      : { data: [] as any[] };
     const encadInfo: Record<string, any> = {};
-    (encadsRes.data || []).forEach((e: any) => { encadInfo[e.id] = e; });
-    const eleveInfo: Record<number, any> = {};
-    (elevesRes.data || []).forEach((s: any) => { eleveInfo[s.matricule] = s; });
+    (encads || []).forEach((e: any) => { encadInfo[e.id] = e; });
 
     // Soutiens ouverts
     const { data: soutiens } = await supabase
       .from('conseil_lutte_soutiens')
-      .select('id, groupe_id, demandeur_type, demandeur_id, message, created_at')
+      .select('groupe_id, demandeur_type, demandeur_id, message, created_at')
       .in('groupe_id', groupesIds)
       .eq('statut', 'ouvert');
     const soutienParGroupe: Record<string, any> = {};
@@ -116,22 +110,15 @@ export default function AdminSuivi({ config, phaseId }: Props) {
 
     // Assemblage
     const result = tousGroupes.map(g => {
-      const membresDuGroupe = (mbs || []).filter(m => m.groupe_id === g.id);
-
-      const encadsGroupe = membresDuGroupe
-        .filter(m => m.participant_type === 'employee')
+      const encadsGroupe = (mbs || [])
+        .filter(m => m.groupe_id === g.id && m.participant_type === 'employee')
         .map(m => encadInfo[m.participant_id])
         .filter(Boolean);
+      const elevesCount = (mbs || []).filter(m => m.groupe_id === g.id && m.participant_type === 'student').length;
 
-      const elevesCount = membresDuGroupe.filter(m => m.participant_type === 'student').length;
-
-      const animSet = animSetParPhase[g.phase_id] || new Set<number>();
-      const animateursListe = membresDuGroupe
-        .filter(m => m.participant_type === 'student' && animSet.has(parseInt(m.participant_id)))
-        .map(m => {
-          const s = eleveInfo[parseInt(m.participant_id)];
-          return s ? { matricule: s.matricule, nom: s.nom, prenom: s.prenom, classe: s.classe } : null;
-        })
+      const matriculesAnim = animMap[g.id] || [];
+      const animateursListe = matriculesAnim
+        .map(mat => animInfo[mat])
         .filter(Boolean);
 
       const lf = Array.isArray(g.localisation_fixe) ? g.localisation_fixe[0] : g.localisation_fixe;
@@ -147,8 +134,6 @@ export default function AdminSuivi({ config, phaseId }: Props) {
         eleves_count: elevesCount,
         phase_pedagogique: g.phase_pedagogique || 'informer',
         soutien: soutienParGroupe[g.id] || null,
-        vote_pour: g.vote_pour,
-        vote_total: g.vote_total,
       };
     }).sort((a, b) => {
       const ea = Number(a.etage) || 99;
@@ -174,12 +159,6 @@ export default function AdminSuivi({ config, phaseId }: Props) {
     parPhase[p].push(d);
   });
 
-  // Agrégats de vote
-  const groupesAyantVote = donnees.filter(d => d.vote_total != null);
-  const totalPour = groupesAyantVote.reduce((sum, d) => sum + (d.vote_pour || 0), 0);
-  const totalVotants = groupesAyantVote.reduce((sum, d) => sum + (d.vote_total || 0), 0);
-  const totalContre = totalVotants - totalPour;
-
   return (
     <div className="space-y-6">
       <div className="bg-white border rounded-lg p-4 flex justify-between items-center flex-wrap gap-2">
@@ -187,20 +166,11 @@ export default function AdminSuivi({ config, phaseId }: Props) {
           <h2 className="text-base font-semibold text-gray-900">Suivi temps réel</h2>
           <p className="text-xs text-gray-500">
             {donnees.length} groupes ·{' '}
-            {groupesAyantVote.length}/{donnees.length} votes enregistrés ·{' '}
-            <strong className="text-gray-900">{totalPour} pour</strong>
-            {' · '}
-            <strong className="text-gray-900">{totalContre} contre</strong>
-            {' · '}
-            <strong className="text-gray-900">{totalVotants} votants</strong>
-            {groupesAvecSoutien.length > 0 && (
-              <>
-                {' · '}
-                <span className="text-red-700 font-semibold">
+            {groupesAvecSoutien.length > 0
+              ? <span className="text-red-700 font-semibold">
                   {groupesAvecSoutien.length} demande{groupesAvecSoutien.length > 1 ? 's' : ''} de soutien
                 </span>
-              </>
-            )}
+              : 'aucune demande de soutien'}
           </p>
         </div>
         <button onClick={load} className="text-xs text-gray-500 hover:text-gray-700">
@@ -208,7 +178,6 @@ export default function AdminSuivi({ config, phaseId }: Props) {
         </button>
       </div>
 
-      {/* 1. Soutiens ouverts */}
       {groupesAvecSoutien.length > 0 && (
         <section>
           <div className="flex items-center gap-3 mb-3">
@@ -226,7 +195,6 @@ export default function AdminSuivi({ config, phaseId }: Props) {
         </section>
       )}
 
-      {/* 2. Phases Freinet */}
       {PHASE_ORDRE.map(phaseKey => {
         const groupes = parPhase[phaseKey] || [];
         if (groupes.length === 0) return null;
@@ -260,9 +228,6 @@ export default function AdminSuivi({ config, phaseId }: Props) {
 
 function CarteGroupe({ d }: { d: any }) {
   const style = PHASE_STYLE[d.phase_pedagogique] || PHASE_STYLE.informer;
-  const aVote = d.vote_total != null;
-  const voteContre = aVote ? (d.vote_total - (d.vote_pour || 0)) : null;
-
   return (
     <div className={`bg-white border rounded-lg p-4 ${
       d.soutien ? 'border-red-400 ring-2 ring-red-100' : 'border-gray-200'
@@ -297,17 +262,8 @@ function CarteGroupe({ d }: { d: any }) {
         <div>👤 {d.eleves_count} élève{d.eleves_count > 1 ? 's' : ''}</div>
       </div>
 
-      {/* Vote */}
-      <div className={`text-xs mt-2 pt-2 border-t ${aVote ? 'text-gray-700' : 'text-gray-400'}`}>
-        {aVote ? (
-          <>🗳️ <strong>{d.vote_pour}</strong> pour · <strong>{voteContre}</strong> contre · <strong>{d.vote_total}</strong> votants</>
-        ) : (
-          <>🗳️ Pas encore de vote</>
-        )}
-      </div>
-
       {d.soutien && (
-        <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-800 mt-2">
+        <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-800">
           🆘 <strong>Soutien demandé</strong>
           {' '}par {d.soutien.demandeur_type === 'student' ? 'élève' : 'encadrant'}
           {d.soutien.message && <div className="mt-1 italic">« {d.soutien.message} »</div>}

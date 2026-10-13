@@ -4,7 +4,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { nommerAnimateur, retirerAnimateur } from '@/lib/conseilLutte/animateurs';
 
 interface Props {
   phaseId: string;
@@ -18,8 +17,7 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
   const [groupes, setGroupes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
-  const [estDeclare, setEstDeclare] = useState(false);
-  const [changingDeclaration, setChangingDeclaration] = useState(false);
+  const [declarationAnim, setDeclarationAnim] = useState<any>(null);
 
   useEffect(() => { load(); }, [phaseId]);
 
@@ -28,13 +26,12 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
     (async () => {
       const { data } = await supabase
         .from('conseil_lutte_animateurs')
-        .select('id')
+        .select('*')
         .eq('student_matricule', parseInt(userId))
-        .eq('phase_id', phaseId)
         .maybeSingle();
-      setEstDeclare(!!data);
+      setDeclarationAnim(data);
     })();
-  }, [userId, userType, phaseId]);
+  }, [userId, userType]);
 
   const load = async () => {
     setLoading(true);
@@ -45,17 +42,18 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
       .order('nom');
 
     const ids = (gr || []).map(g => g.id);
-    const counts: Record<string, { eleves: number; employes: number }> = {};
-    ids.forEach(id => { counts[id] = { eleves: 0, employes: 0 }; });
+    const counts: Record<string, { eleves: number; employes: number; manuel: boolean }> = {};
+    ids.forEach(id => { counts[id] = { eleves: 0, employes: 0, manuel: false }; });
 
     if (ids.length > 0) {
       const { data: mbs } = await supabase
         .from('conseil_lutte_membres')
-        .select('groupe_id, participant_type')
+        .select('groupe_id, participant_type, manuel')
         .in('groupe_id', ids);
       (mbs || []).forEach(m => {
         if (m.participant_type === 'student') counts[m.groupe_id].eleves++;
         else counts[m.groupe_id].employes++;
+        if (m.manuel && m.participant_type === 'student') counts[m.groupe_id].manuel = true;
       });
     }
 
@@ -63,45 +61,82 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
       ...g,
       elevesCount: counts[g.id].eleves,
       employesCount: counts[g.id].employes,
+      aDejaUnManuel: counts[g.id].manuel,
     })));
     setLoading(false);
   };
 
+  const veutEtreAnimateur = !!declarationAnim;
+
   const toggleDeclaration = async (checked: boolean) => {
-    if (userType !== 'student' || changingDeclaration) return;
-    setChangingDeclaration(true);
+    if (userType !== 'student') return;
+
     if (checked) {
-      await nommerAnimateur(parseInt(userId), phaseId);
+      const { error } = await supabase.from('conseil_lutte_animateurs').insert({
+        student_matricule: parseInt(userId),
+        groupe_id: null,
+        nomme_par: 'auto',
+      });
+      if (error) { alert('Erreur : ' + error.message); return; }
     } else {
-      await retirerAnimateur(parseInt(userId), phaseId);
+      if (declarationAnim?.groupe_id) {
+        alert("Vous êtes déjà animateur·rice d'un groupe. Quittez-le d'abord.");
+        return;
+      }
+      const { error } = await supabase
+        .from('conseil_lutte_animateurs')
+        .delete()
+        .eq('student_matricule', parseInt(userId));
+      if (error) { alert('Erreur : ' + error.message); return; }
     }
-    setEstDeclare(checked);
-    setChangingDeclaration(false);
+
+    const { data } = await supabase
+      .from('conseil_lutte_animateurs')
+      .select('*')
+      .eq('student_matricule', parseInt(userId))
+      .maybeSingle();
+    setDeclarationAnim(data);
   };
 
   const rejoindre = async (groupeId: string) => {
     if (joining) return;
 
-    if (estDeclare && userType === 'student') {
+    if (veutEtreAnimateur && userType === 'student') {
+      const { data: existing } = await supabase
+        .from('conseil_lutte_animateurs')
+        .select('student_matricule')
+        .eq('groupe_id', groupeId)
+        .maybeSingle();
+      if (existing) {
+        alert('Ce groupe a déjà un·e animateur·rice.');
+        return;
+      }
       if (!confirm(
         `Vous allez rejoindre ce groupe en tant qu'animateur·rice.\n\n` +
-        `Confirmer ?`
+        `Confirmer ? (Vous pourrez quitter et changer de groupe plus tard.)`
       )) return;
     }
 
     setJoining(true);
 
-    const { error } = await supabase.from('conseil_lutte_membres').insert({
+    const { error: errMembre } = await supabase.from('conseil_lutte_membres').insert({
       groupe_id: groupeId,
       participant_id: userId,
       participant_type: userType === 'student' ? 'student' : 'employee',
-      manuel: estDeclare && userType === 'student',
+      manuel: veutEtreAnimateur && userType === 'student',
     });
 
-    if (error) {
-      alert('Erreur : ' + error.message);
+    if (errMembre) {
+      alert('Erreur : ' + errMembre.message);
       setJoining(false);
       return;
+    }
+
+    if (veutEtreAnimateur && userType === 'student') {
+      await supabase
+        .from('conseil_lutte_animateurs')
+        .update({ groupe_id: groupeId })
+        .eq('student_matricule', parseInt(userId));
     }
 
     setJoining(false);
@@ -115,7 +150,8 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
   const peutRejoindre = (g: any) => {
     if (userType === 'student') {
       if (!phase?.inscription_eleves_ouverte) return false;
-      return true;
+      if (g.aDejaUnManuel) return false;
+      return true;  // ← plus de contrôle de capacité
     }
     return g.employesCount === minEncadrants;
   };
@@ -137,18 +173,23 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
           <label className="mt-3 flex items-start gap-2 cursor-pointer text-sm text-blue-800">
             <input
               type="checkbox"
-              checked={estDeclare}
+              checked={veutEtreAnimateur}
               onChange={(e) => toggleDeclaration(e.target.checked)}
-              disabled={changingDeclaration}
               className="mt-0.5"
             />
             <span>
               <span className="font-medium">Je souhaite être animateur·rice du groupe que je vais rejoindre.</span>
               <span className="block text-xs text-blue-700 mt-0.5">
-                Vous pourrez quitter et changer de groupe ensuite.
+                Un seul animateur·rice par groupe. Vous pourrez quitter et changer de groupe ensuite.
               </span>
             </span>
           </label>
+        )}
+
+        {userType === 'student' && (
+          <p className="text-xs text-blue-700 mt-1">
+            Vous ne pouvez pas rejoindre un groupe qui a déjà son animateur·rice.
+          </p>
         )}
       </div>
 
@@ -156,6 +197,7 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {groupes.map(g => {
             const canJoin = peutRejoindre(g);
+            const full = userType === 'student' && g.capacite_max && g.elevesCount >= g.capacite_max;
             return (
               <div
                 key={g.id}
@@ -174,17 +216,24 @@ export default function ChoisirGroupe({ phaseId, phase, userType, userId, onJoin
                   <span>👨‍🏫 {g.employesCount}</span>
                 </div>
 
+                {userType === 'student' && g.aDejaUnManuel && (
+                  <div className="mt-2 text-xs text-purple-700 bg-purple-50 border border-purple-200 rounded px-2 py-1">
+                    👑 Ce groupe a déjà son animateur·rice
+                  </div>
+                )}
+
                 {canJoin && (
                   <button
                     onClick={(e) => { e.stopPropagation(); rejoindre(g.id); }}
                     disabled={joining}
                     className="mt-3 w-full px-3 py-1.5 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
                   >
-                    {estDeclare && userType === 'student'
+                    {veutEtreAnimateur && userType === 'student'
                       ? '👑 Rejoindre comme animateur·rice'
                       : 'Rejoindre'}
                   </button>
                 )}
+                {full && <div className="mt-2 text-xs text-gray-500">Complet</div>}
               </div>
             );
           })}

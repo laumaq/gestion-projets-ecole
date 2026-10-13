@@ -4,7 +4,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { chargerAnimateursPhase, nommerAnimateur, retirerAnimateur } from '@/lib/conseilLutte/animateurs';
 
 interface Props {
   phaseId: string;
@@ -27,8 +26,8 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
   }, [groupes]);
 
   useEffect(() => {
-    chargerAnimateursPhase(phaseId).then(setAnimateursSet);
-  }, [phaseId]);
+    loadAnimateurs();
+  }, []);
 
   useEffect(() => {
     if (selectionGroupe) loadMembres(selectionGroupe);
@@ -38,6 +37,13 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
     const t = setTimeout(() => { if (searchTerm.length >= 2) doSearch(); else setResultats([]); }, 250);
     return () => clearTimeout(t);
   }, [searchTerm]);
+
+  const loadAnimateurs = async () => {
+    const { data } = await supabase
+      .from('conseil_lutte_animateurs')
+      .select('student_matricule');
+    setAnimateursSet(new Set((data || []).map(a => a.student_matricule)));
+  };
 
   const doSearch = async () => {
     setSearching(true);
@@ -140,9 +146,13 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
       const rankA = a.type === 'employee' ? 0 : (a.isAnimateur ? 1 : 2);
       const rankB = b.type === 'employee' ? 0 : (b.isAnimateur ? 1 : 2);
       if (rankA !== rankB) return rankA - rankB;
+
+      // Dans le même groupe (employés / animateurs / autres) :
+      // tri par classe si c'est un élève, sinon par nom
       const aClasse = a.type === 'student' ? (a.classe || '') : '';
       const bClasse = b.type === 'student' ? (b.classe || '') : '';
       if (aClasse !== bClasse) return aClasse.localeCompare(bClasse);
+
       return (a.nom || '').localeCompare(b.nom || '');
     });
 
@@ -154,13 +164,33 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
     setSaving(true);
 
     if (m.isAnimateur) {
-      await retirerAnimateur(m.matricule, phaseId);
+      // Retirer l'élève de la liste des animateurs
+      const { error } = await supabase
+        .from('conseil_lutte_animateurs')
+        .delete()
+        .eq('student_matricule', m.matricule);
+      if (error) { alert('Erreur : ' + error.message); setSaving(false); return; }
+
       const next = new Set(animateursSet);
       next.delete(m.matricule);
       setAnimateursSet(next);
     } else {
-      await nommerAnimateur(m.matricule, phaseId);
-      await supabase.from('conseil_lutte_membres').update({ manuel: true }).eq('id', m.id);
+      // Nommer l'élève animateur pour ce groupe
+      const { error } = await supabase
+        .from('conseil_lutte_animateurs')
+        .insert({
+          student_matricule: m.matricule,
+          groupe_id: m.groupe_id,
+          nomme_par: 'admin',
+        });
+      if (error) { alert('Erreur : ' + error.message); setSaving(false); return; }
+
+      // S'assurer que le membre est bien protégé (manuel = true)
+      await supabase
+        .from('conseil_lutte_membres')
+        .update({ manuel: true })
+        .eq('id', m.id);
+
       const next = new Set(animateursSet);
       next.add(m.matricule);
       setAnimateursSet(next);
@@ -177,15 +207,12 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
 
     const { data: existant } = await supabase
       .from('conseil_lutte_membres')
-      .select(`id, groupe_id, conseil_lutte_groupes!inner(phase_id)`)
+      .select(`id, groupe_id, manuel, conseil_lutte_groupes!inner(phase_id)`)
       .eq('participant_id', participantId)
       .eq('participant_type', item.type)
       .eq('conseil_lutte_groupes.phase_id', phaseId);
 
     if (existant && existant.length > 0) {
-      const dansLeMemeGroupe = existant.some(e => e.groupe_id === selectionGroupe);
-      if (dansLeMemeGroupe) return;
-
       if (!confirm(`${item.prenom} ${item.nom} est déjà dans un groupe de cette phase. Déplacer ?`)) return;
       await supabase.from('conseil_lutte_membres').delete().in('id', existant.map(e => e.id));
     }
@@ -197,27 +224,21 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
       manuel: true,
     });
 
+    if (item.type === 'student' && animateursSet.has(item.matricule)) {
+      await supabase
+        .from('conseil_lutte_animateurs')
+        .update({ groupe_id: selectionGroupe })
+        .eq('student_matricule', item.matricule);
+    }
+
     await loadMembres(selectionGroupe);
     onRefresh();
   };
 
-  const retirer = async (m: any) => {
+  const retirer = async (membreId: string) => {
     if (verrouille) return;
-
-    if (m.type === 'student' && m.isAnimateur) {
-      if (!confirm(
-        `${m.prenom} ${m.nom} est animateur·rice de cette phase.\n\n` +
-        `Le retirer du groupe va aussi retirer son statut d'animateur·rice.\n\nConfirmer ?`
-      )) return;
-      await retirerAnimateur(m.matricule, phaseId);
-      const next = new Set(animateursSet);
-      next.delete(m.matricule);
-      setAnimateursSet(next);
-    } else {
-      if (!confirm('Retirer cette personne du groupe ?')) return;
-    }
-
-    await supabase.from('conseil_lutte_membres').delete().eq('id', m.id);
+    if (!confirm('Retirer cette personne du groupe ?')) return;
+    await supabase.from('conseil_lutte_membres').delete().eq('id', membreId);
     await loadMembres(selectionGroupe);
     onRefresh();
   };
@@ -301,6 +322,7 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
                 <div className="text-xs text-gray-500">{m.classe}</div>
               </div>
               <div className="flex gap-1 flex-shrink-0">
+                {/* Bouton couronne : élève uniquement */}
                 {m.type === 'student' && (
                   <button
                     onClick={() => toggleAnimateur(m)}
@@ -322,7 +344,7 @@ export default function AffectationManuelle({ phaseId, groupes, onRefresh, verro
                   title="Basculer manuel"
                 >🔒</button>
                 <button
-                  onClick={() => retirer(m)}
+                  onClick={() => retirer(m.id)}
                   disabled={verrouille}
                   className="px-2 py-1 text-xs border border-red-300 text-red-600 rounded hover:bg-red-50 disabled:opacity-50"
                 >✕</button>

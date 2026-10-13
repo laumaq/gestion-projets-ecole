@@ -19,7 +19,7 @@ export default function AdminGroupes({ phaseId, groupes, onRefresh, verrouille }
   useEffect(() => {
     loadLocaux();
     loadCompteurs();
-  }, [groupes, phaseId]);
+  }, [groupes]);
 
   const loadLocaux = async () => {
     const { data } = await supabase.from('localisation_fixe').select('id, etage').order('id');
@@ -30,35 +30,28 @@ export default function AdminGroupes({ phaseId, groupes, onRefresh, verrouille }
     const ids = groupes.map(g => g.id);
     if (ids.length === 0) return;
 
-    // Animateurs de la phase : set de matricules
-    const { data: anims } = await supabase
-      .from('conseil_lutte_animateurs')
-      .select('student_matricule')
-      .eq('phase_id', phaseId);
-    const animateursSet = new Set<number>((anims || []).map(a => a.student_matricule));
-
-    // Membres de tous les groupes
-    const { data: membres } = await supabase
-      .from('conseil_lutte_membres')
-      .select('groupe_id, participant_id, participant_type, manuel')
-      .in('groupe_id', ids);
+    const [membresRes, animsRes] = await Promise.all([
+      supabase
+        .from('conseil_lutte_membres')
+        .select('groupe_id, participant_type, manuel')
+        .in('groupe_id', ids),
+      supabase
+        .from('conseil_lutte_animateurs')
+        .select('groupe_id')
+        .in('groupe_id', ids),
+    ]);
 
     const c: Record<string, any> = {};
     ids.forEach(id => c[id] = { eleves: 0, employes: 0, manuels: 0, animateurs: 0 });
 
-    (membres || []).forEach(m => {
-      const bucket = c[m.groupe_id];
-      if (!bucket) return;
-      if (m.participant_type === 'student') {
-        bucket.eleves++;
-        // Animateur = élève membre ET présent dans la liste de la phase
-        if (animateursSet.has(parseInt(m.participant_id))) {
-          bucket.animateurs++;
-        }
-      } else {
-        bucket.employes++;
-      }
-      if (m.manuel) bucket.manuels++;
+    (membresRes.data || []).forEach(m => {
+      if (m.participant_type === 'student') c[m.groupe_id].eleves++;
+      else c[m.groupe_id].employes++;
+      if (m.manuel) c[m.groupe_id].manuels++;
+    });
+
+    (animsRes.data || []).forEach(a => {
+      if (a.groupe_id && c[a.groupe_id]) c[a.groupe_id].animateurs++;
     });
 
     setCompteurs(c);
