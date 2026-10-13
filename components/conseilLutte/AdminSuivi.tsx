@@ -114,13 +114,45 @@ export default function AdminSuivi({ config, phaseId }: Props) {
     (elevesRes.data || []).forEach((s: any) => { eleveInfo[s.matricule] = s; });
 
     // Soutiens ouverts
-    const { data: soutiens } = await supabase
-      .from('conseil_lutte_soutiens')
-      .select('groupe_id, demandeur_type, demandeur_id, message, created_at')
-      .in('groupe_id', groupesIds)
-      .eq('statut', 'ouvert');
-    const soutienParGroupe: Record<string, any> = {};
-    (soutiens || []).forEach(s => { soutienParGroupe[s.groupe_id] = s; });
+  const { data: soutiens } = await supabase
+    .from('conseil_lutte_soutiens')
+    .select('id, groupe_id, demandeur_type, demandeur_id, message, created_at')
+    .in('groupe_id', groupesIds)
+    .eq('statut', 'ouvert');
+
+  // Récupérer les noms des demandeurs
+  const demElevesIds: number[] = [];
+  const demEmployesIds: string[] = [];
+  (soutiens || []).forEach(s => {
+    if (s.demandeur_type === 'student') demElevesIds.push(parseInt(s.demandeur_id));
+    else demEmployesIds.push(s.demandeur_id);
+  });
+
+  const [demElevesRes, demEmployesRes] = await Promise.all([
+    demElevesIds.length > 0
+      ? supabase.from('students').select('matricule, nom, prenom, classe').in('matricule', demElevesIds)
+      : Promise.resolve({ data: [] as any[] }),
+    demEmployesIds.length > 0
+      ? supabase.from('employees').select('id, nom, prenom, job').in('id', demEmployesIds)
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+
+  const demElevesMap: Record<number, any> = {};
+  (demElevesRes.data || []).forEach((s: any) => { demElevesMap[s.matricule] = s; });
+  const demEmployesMap: Record<string, any> = {};
+  (demEmployesRes.data || []).forEach((e: any) => { demEmployesMap[e.id] = e; });
+
+  const soutienParGroupe: Record<string, any> = {};
+  (soutiens || []).forEach(s => {
+    const dem = s.demandeur_type === 'student'
+      ? demElevesMap[parseInt(s.demandeur_id)]
+      : demEmployesMap[s.demandeur_id];
+    soutienParGroupe[s.groupe_id] = {
+      ...s,
+      demandeur_nom: dem ? `${dem.prenom} ${dem.nom}` : '—',
+      demandeur_classe: dem?.classe || null,
+    };
+  });
 
     // Assemblage
     const result = tousGroupes.map(g => {
@@ -181,6 +213,20 @@ export default function AdminSuivi({ config, phaseId }: Props) {
     parPhase[p].push(d);
   });
 
+  const leverSoutien = async (soutienId: string) => {
+    if (!confirm('Lever cette demande de soutien ?')) return;
+    const { error } = await supabase
+      .from('conseil_lutte_soutiens')
+      .update({
+        statut: 'traite',
+        traite_at: new Date().toISOString(),
+        traite_par: 'admin',
+      })
+      .eq('id', soutienId);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    load();
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-white border rounded-lg p-4 flex justify-between items-center flex-wrap gap-2">
@@ -212,7 +258,7 @@ export default function AdminSuivi({ config, phaseId }: Props) {
             </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {groupesAvecSoutien.map(d => <CarteGroupe key={d.groupe_id} d={d} />)}
+            {groupesAvecSoutien.map(d => <CarteGroupe key={d.groupe_id} d={d} onLeverSoutien={leverSoutien} />)}
           </div>
         </section>
       )}
@@ -233,7 +279,7 @@ export default function AdminSuivi({ config, phaseId }: Props) {
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {groupes.map(d => <CarteGroupe key={d.groupe_id} d={d} />)}
+              {groupes.map(d => <CarteGroupe key={d.groupe_id} d={d} onLeverSoutien={leverSoutien} />)}            
             </div>
           </section>
         );
@@ -248,7 +294,7 @@ export default function AdminSuivi({ config, phaseId }: Props) {
 
 // ---------------------------------------------------------------------------
 
-function CarteGroupe({ d }: { d: any }) {
+function CarteGroupe({ d, onLeverSoutien }: { d: any; onLeverSoutien: (id: string) => void }) {
   const style = PHASE_STYLE[d.phase_pedagogique] || PHASE_STYLE.informer;
   return (
     <div className={`bg-white border rounded-lg p-4 ${
@@ -286,9 +332,27 @@ function CarteGroupe({ d }: { d: any }) {
 
       {d.soutien && (
         <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-800">
-          🆘 <strong>Soutien demandé</strong>
-          {' '}par {d.soutien.demandeur_type === 'student' ? 'élève' : 'encadrant'}
-          {d.soutien.message && <div className="mt-1 italic">« {d.soutien.message} »</div>}
+          <div>
+            🆘 <strong>Soutien demandé</strong>
+            {' '}par{' '}
+            {d.soutien.demandeur_nom}
+            {' '}
+            <span className="text-red-600">
+              ({d.soutien.demandeur_type === 'student' ? 'animateur·rice' : 'encadrant·e'})
+            </span>
+          </div>
+          {d.soutien.demandeur_classe && (
+            <div className="mt-0.5 text-red-600">{d.soutien.demandeur_classe}</div>
+          )}
+          {d.soutien.message && (
+            <div className="mt-1 italic">« {d.soutien.message} »</div>
+          )}
+          <button
+            onClick={() => onLeverSoutien(d.soutien.id)}
+            className="mt-2 px-2 py-1 text-xs bg-white border border-red-300 text-red-700 rounded hover:bg-red-100"
+          >
+            Lever la demande
+          </button>
         </div>
       )}
     </div>
