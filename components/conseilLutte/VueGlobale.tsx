@@ -42,10 +42,11 @@ interface Props {
   monGroupeId?: string | null;
 }
 
-export default function VueGlobale({ phaseId, phase, userType, monGroupeId, userId, isEduc, isAdmin }: Props) {  const [groupes, setGroupes] = useState<any[]>([]);
+export default function VueGlobale({ phaseId, phase, userType, monGroupeId, userId, isEduc, isAdmin }: Props) {
+  const [groupes, setGroupes] = useState<any[]>([]);
   const [groupeSelectionneId, setGroupeSelectionneId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [vue, setVue] = useState<'cartes' | 'presences' | 'educ' | 'monGroupe'>(
+  const [vue, setVue] = useState<'cartes' | 'presences' | 'educ' | 'monGroupe' | 'inscription'>(
     isEduc ? 'educ' : 'cartes'
   );
   const [tick, setTick] = useState(0);
@@ -93,8 +94,8 @@ export default function VueGlobale({ phaseId, phase, userType, monGroupeId, user
   return (
     <div className="space-y-4">
 
-      {/* Bandeau pour employés non inscrits */}
-      {userType === 'employee' && !monGroupeId && (
+      {/* Bandeau pour employés non inscrits — masqué pour les admins */}
+      {userType === 'employee' && !monGroupeId && !isAdmin && (
         <ChoisirGroupe
           phaseId={phaseId}
           phase={phase}
@@ -114,6 +115,7 @@ export default function VueGlobale({ phaseId, phase, userType, monGroupeId, user
             {vue === 'presences' && 'Vue combinée : tous les groupes et leurs présences sur une seule page.'}
             {vue === 'educ' && 'Vue par classe : retrouvez un élève et corrigez son statut de présence.'}
             {vue === 'monGroupe' && 'Votre groupe : membres, étape Freinet, soutien, mandats.'}
+            {vue === 'inscription' && 'Choisissez un groupe pour vous y inscrire.'}
           </p>
         </div>
         <div className="flex border rounded-lg overflow-hidden">
@@ -145,6 +147,14 @@ export default function VueGlobale({ phaseId, phase, userType, monGroupeId, user
               }`}
             >Mon groupe</button>
           )}
+          {isAdmin && (
+            <button
+              onClick={() => setVue('inscription')}
+              className={`px-3 py-1.5 text-sm ${
+                vue === 'inscription' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >Inscription</button>
+          )}
         </div>
       </div>
 
@@ -162,6 +172,14 @@ export default function VueGlobale({ phaseId, phase, userType, monGroupeId, user
         />
       ) : vue === 'presences' ? (
         <VuePresencesGlobale groupes={groupes} userId={userId} />
+      ) : vue === 'inscription' && isAdmin ? (
+        <ChoisirGroupe
+          phaseId={phaseId}
+          phase={phase}
+          userType={userType}
+          userId={userId}
+          onJoined={() => setTick(t => t + 1)}
+        />
       ) : (
         <GroupesParEtage
           groupes={groupes}
@@ -188,7 +206,6 @@ function GroupesParEtage({
   monGroupeId: string | null;
   onSelect: (id: string) => void;
 }) {
-  // Regroupe par étage (en conservant l'ordre déjà trié)
   const parEtage: { etage: string; groupes: any[] }[] = [];
   for (const g of groupes) {
     const l = extraireLocal(g);
@@ -211,7 +228,6 @@ function GroupesParEtage({
     <div className="space-y-6">
       {parEtage.map(bloc => (
         <div key={bloc.etage}>
-          {/* Démarcation d'étage */}
           <div className="flex items-center gap-3 mb-3">
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
               {labelEtage(bloc.etage)}
@@ -251,7 +267,7 @@ function GroupesParEtage({
                     <div className="text-red-600">→</div>
                   </div>
                   <div className="flex gap-3 text-xs text-gray-600 mt-3 pt-3 border-t">
-                    <span>👤 {g.elevesCount}</span>                    
+                    <span>👤 {g.elevesCount}</span>
                     <span>👨‍🏫 {g.employesCount}</span>
                   </div>
                 </button>
