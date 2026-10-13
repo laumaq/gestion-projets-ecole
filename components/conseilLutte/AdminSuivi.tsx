@@ -52,7 +52,7 @@ export default function AdminSuivi({ config, phaseId }: Props) {
     for (const ph of phasesFiltrees) {
       const { data: gr } = await supabase
         .from('conseil_lutte_groupes')
-        .select(`id, nom, phase_pedagogique, localisation_fixe (id, etage)`)
+        .select(`id, nom, phase_id, phase_pedagogique, localisation_fixe (id, etage)`)
         .eq('phase_id', ph.id);
       (gr || []).forEach(g => tousGroupes.push({ ...g, phase_nom: ph.nom }));
     }
@@ -62,21 +62,24 @@ export default function AdminSuivi({ config, phaseId }: Props) {
     }
 
     const groupesIds = tousGroupes.map(g => g.id);
+    const phasesIds = phasesFiltrees.map(p => p.id);
 
-    // Animateurs — plusieurs par groupe possibles
+    // Animateurs par phase
     const { data: animateurs } = await supabase
       .from('conseil_lutte_animateurs')
-      .select('groupe_id, student_matricule')
-      .in('groupe_id', groupesIds);
+      .select('student_matricule, phase_id')
+      .in('phase_id', phasesIds);
 
-    const animMap: Record<string, number[]> = {};
+    const animSetParPhase: Record<string, Set<number>> = {};
+    phasesIds.forEach(pid => { animSetParPhase[pid] = new Set(); });
     (animateurs || []).forEach(a => {
-      if (!a.groupe_id) return;
-      if (!animMap[a.groupe_id]) animMap[a.groupe_id] = [];
-      animMap[a.groupe_id].push(a.student_matricule);
+      if (a.phase_id && animSetParPhase[a.phase_id]) {
+        animSetParPhase[a.phase_id].add(a.student_matricule);
+      }
     });
 
-    const animMatricules = Array.from(new Set(Object.values(animMap).flat()));
+    // Récupérer les infos des élèves animateurs (toutes phases confondues)
+    const animMatricules = Array.from(new Set((animateurs || []).map(a => a.student_matricule)));
     const { data: animEleves } = animMatricules.length > 0
       ? await supabase.from('students').select('matricule, nom, prenom, classe').in('matricule', animMatricules)
       : { data: [] as any[] };
@@ -90,14 +93,25 @@ export default function AdminSuivi({ config, phaseId }: Props) {
       .in('groupe_id', groupesIds);
 
     const encadrantsIds: string[] = [];
+    const elevesIds: number[] = [];
     (mbs || []).forEach(m => {
       if (m.participant_type === 'employee') encadrantsIds.push(m.participant_id);
+      else elevesIds.push(parseInt(m.participant_id));
     });
-    const { data: encads } = encadrantsIds.length > 0
-      ? await supabase.from('employees').select('id, nom, prenom, job').in('id', encadrantsIds)
-      : { data: [] as any[] };
+
+    const [encadsRes, elevesRes] = await Promise.all([
+      encadrantsIds.length > 0
+        ? supabase.from('employees').select('id, nom, prenom, job').in('id', encadrantsIds)
+        : Promise.resolve({ data: [] as any[] }),
+      elevesIds.length > 0
+        ? supabase.from('students').select('matricule, nom, prenom, classe').in('matricule', elevesIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+
     const encadInfo: Record<string, any> = {};
-    (encads || []).forEach((e: any) => { encadInfo[e.id] = e; });
+    (encadsRes.data || []).forEach((e: any) => { encadInfo[e.id] = e; });
+    const eleveInfo: Record<number, any> = {};
+    (elevesRes.data || []).forEach((s: any) => { eleveInfo[s.matricule] = s; });
 
     // Soutiens ouverts
     const { data: soutiens } = await supabase
@@ -110,15 +124,23 @@ export default function AdminSuivi({ config, phaseId }: Props) {
 
     // Assemblage
     const result = tousGroupes.map(g => {
-      const encadsGroupe = (mbs || [])
-        .filter(m => m.groupe_id === g.id && m.participant_type === 'employee')
+      const membresDuGroupe = (mbs || []).filter(m => m.groupe_id === g.id);
+
+      const encadsGroupe = membresDuGroupe
+        .filter(m => m.participant_type === 'employee')
         .map(m => encadInfo[m.participant_id])
         .filter(Boolean);
-      const elevesCount = (mbs || []).filter(m => m.groupe_id === g.id && m.participant_type === 'student').length;
 
-      const matriculesAnim = animMap[g.id] || [];
-      const animateursListe = matriculesAnim
-        .map(mat => animInfo[mat])
+      const elevesCount = membresDuGroupe.filter(m => m.participant_type === 'student').length;
+
+      // Animateurs = élèves du groupe dont le matricule est dans le set de la phase
+      const animSet = animSetParPhase[g.phase_id] || new Set<number>();
+      const animateursListe = membresDuGroupe
+        .filter(m => m.participant_type === 'student' && animSet.has(parseInt(m.participant_id)))
+        .map(m => {
+          const s = eleveInfo[parseInt(m.participant_id)];
+          return s ? { matricule: s.matricule, nom: s.nom, prenom: s.prenom, classe: s.classe } : null;
+        })
         .filter(Boolean);
 
       const lf = Array.isArray(g.localisation_fixe) ? g.localisation_fixe[0] : g.localisation_fixe;
