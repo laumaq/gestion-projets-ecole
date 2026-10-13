@@ -14,7 +14,7 @@ export default function AdminVotes({ config, phaseId }: Props) {
   const [lignes, setLignes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
-  const [edits, setEdits] = useState<Record<string, { pour: number | ''; total: number | '' }>>({});
+  const [edits, setEdits] = useState<Record<string, number | ''>>({});
 
   useEffect(() => { load(); }, [phaseId]);
 
@@ -34,9 +34,30 @@ export default function AdminVotes({ config, phaseId }: Props) {
     for (const ph of phasesFiltrees) {
       const { data: groupes } = await supabase
         .from('conseil_lutte_groupes')
-        .select(`id, nom, vote_pour, vote_total, localisation_fixe (id, etage)`)
+        .select(`id, nom, vote_pour, localisation_fixe (id, etage)`)
         .eq('phase_id', ph.id);
-      (groupes || []).forEach(g => tous.push({ ...g, phase_nom: ph.nom }));
+
+      const groupeIds = (groupes || []).map(g => g.id);
+
+      // Récupérer les présents par groupe (via conseil_lutte_presences)
+      let presMap: Record<string, number> = {};
+      if (groupeIds.length > 0) {
+        const { data: pres } = await supabase
+          .from('conseil_lutte_presences')
+          .select('groupe_id, present')
+          .in('groupe_id', groupeIds);
+        (pres || []).forEach(p => {
+          if (p.present) {
+            presMap[p.groupe_id] = (presMap[p.groupe_id] || 0) + 1;
+          }
+        });
+      }
+
+      (groupes || []).forEach(g => tous.push({
+        ...g,
+        phase_nom: ph.nom,
+        presences_count: presMap[g.id] || 0,
+      }));
     }
 
     // Tri par étage puis local
@@ -52,55 +73,39 @@ export default function AdminVotes({ config, phaseId }: Props) {
       return String(la?.id || '').localeCompare(String(lb?.id || ''), undefined, { numeric: true });
     });
 
-    // Init des champs d'édition
-    const init: Record<string, { pour: number | ''; total: number | '' }> = {};
-    tous.forEach(g => {
-      init[g.id] = {
-        pour: g.vote_pour ?? '',
-        total: g.vote_total ?? '',
-      };
-    });
+    const init: Record<string, number | ''> = {};
+    tous.forEach(g => { init[g.id] = g.vote_pour ?? ''; });
     setEdits(init);
     setLignes(tous);
     setLoading(false);
   };
 
-  const setChamp = (groupeId: string, champ: 'pour' | 'total', valeur: string) => {
+  const setChamp = (groupeId: string, valeur: string) => {
     setEdits(prev => ({
       ...prev,
-      [groupeId]: {
-        ...prev[groupeId],
-        [champ]: valeur === '' ? '' : Math.max(0, parseInt(valeur) || 0),
-      },
+      [groupeId]: valeur === '' ? '' : Math.max(0, parseInt(valeur) || 0),
     }));
   };
 
-  const enregistrer = async (groupeId: string) => {
-    const edit = edits[groupeId];
-    if (!edit) return;
-    const pour = edit.pour === '' ? null : edit.pour;
-    const total = edit.total === '' ? null : edit.total;
+  const enregistrer = async (ligne: any) => {
+    const edit = edits[ligne.id];
+    const pour = edit === '' ? null : edit;
 
-    if (pour != null && total != null && pour > total) {
-      alert('Le nombre de voix pour ne peut pas dépasser le nombre total.');
-      return;
+    if (pour != null && pour > ligne.presences_count) {
+      if (!confirm(
+        `Le nombre de voix pour (${pour}) dépasse le nombre de présents (${ligne.presences_count}).\n\n` +
+        `Confirmer quand même ?`
+      )) return;
     }
 
-    setSaving(groupeId);
+    setSaving(ligne.id);
     const { error } = await supabase
       .from('conseil_lutte_groupes')
-      .update({
-        vote_pour: pour,
-        vote_total: total,
-      })
-      .eq('id', groupeId);
+      .update({ vote_pour: pour })
+      .eq('id', ligne.id);
     setSaving(null);
-    if (error) {
-      alert('Erreur : ' + error.message);
-      return;
-    }
-    // MAJ local
-    setLignes(prev => prev.map(l => l.id === groupeId ? { ...l, vote_pour: pour, vote_total: total } : l));
+    if (error) { alert('Erreur : ' + error.message); return; }
+    setLignes(prev => prev.map(l => l.id === ligne.id ? { ...l, vote_pour: pour } : l));
   };
 
   const vider = async (groupeId: string) => {
@@ -108,27 +113,23 @@ export default function AdminVotes({ config, phaseId }: Props) {
     setSaving(groupeId);
     await supabase
       .from('conseil_lutte_groupes')
-      .update({ vote_pour: null, vote_total: null })
+      .update({ vote_pour: null })
       .eq('id', groupeId);
     setSaving(null);
-    setEdits(prev => ({ ...prev, [groupeId]: { pour: '', total: '' } }));
-    setLignes(prev => prev.map(l => l.id === groupeId ? { ...l, vote_pour: null, vote_total: null } : l));
+    setEdits(prev => ({ ...prev, [groupeId]: '' }));
+    setLignes(prev => prev.map(l => l.id === groupeId ? { ...l, vote_pour: null } : l));
   };
 
   if (loading) return <div className="text-center py-8">Chargement…</div>;
-
-  if (lignes.length === 0) {
-    return <div className="text-center py-8 text-gray-500">Aucun groupe.</div>;
-  }
+  if (lignes.length === 0) return <div className="text-center py-8 text-gray-500">Aucun groupe.</div>;
 
   const totalPour = lignes.reduce((s, l) => s + (l.vote_pour || 0), 0);
-  const totalVotants = lignes.reduce((s, l) => s + (l.vote_total || 0), 0);
+  const totalVotants = lignes.reduce((s, l) => s + l.presences_count, 0);
   const totalContre = totalVotants - totalPour;
-  const groupesAyantVote = lignes.filter(l => l.vote_total != null).length;
+  const groupesAyantVote = lignes.filter(l => l.vote_pour != null).length;
 
   return (
     <div className="space-y-3">
-      {/* Entête agrégée */}
       <div className="bg-white border rounded-lg p-4">
         <div className="flex flex-wrap justify-between items-center gap-3">
           <div>
@@ -148,7 +149,6 @@ export default function AdminVotes({ config, phaseId }: Props) {
         </div>
       </div>
 
-      {/* Tableau */}
       <div className="bg-white border rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -157,7 +157,7 @@ export default function AdminVotes({ config, phaseId }: Props) {
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Groupe</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Local</th>
                 <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 w-24">Pour</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 w-24">Total</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 w-24">Votants</th>
                 <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 w-24">Contre</th>
                 <th className="px-3 py-2 w-40"></th>
               </tr>
@@ -165,14 +165,12 @@ export default function AdminVotes({ config, phaseId }: Props) {
             <tbody className="divide-y divide-gray-100">
               {lignes.map(l => {
                 const lf = Array.isArray(l.localisation_fixe) ? l.localisation_fixe[0] : l.localisation_fixe;
-                const edit = edits[l.id] || { pour: '', total: '' };
-                const contre = (typeof edit.pour === 'number' && typeof edit.total === 'number')
-                  ? edit.total - edit.pour
+                const edit = edits[l.id] ?? '';
+                const contre = (typeof edit === 'number')
+                  ? l.presences_count - edit
                   : null;
                 const estSaving = saving === l.id;
-                const aEteModifie =
-                  (edit.pour === '' ? null : edit.pour) !== l.vote_pour ||
-                  (edit.total === '' ? null : edit.total) !== l.vote_total;
+                const modifie = (edit === '' ? null : edit) !== l.vote_pour;
 
                 return (
                   <tr key={l.id} className="hover:bg-gray-50">
@@ -186,20 +184,14 @@ export default function AdminVotes({ config, phaseId }: Props) {
                     <td className="px-3 py-2 text-center">
                       <input
                         type="number" min={0}
-                        value={edit.pour}
-                        onChange={e => setChamp(l.id, 'pour', e.target.value)}
+                        value={edit}
+                        onChange={e => setChamp(l.id, e.target.value)}
                         className="w-20 px-2 py-1 border rounded text-sm text-center"
                         placeholder="—"
                       />
                     </td>
-                    <td className="px-3 py-2 text-center">
-                      <input
-                        type="number" min={0}
-                        value={edit.total}
-                        onChange={e => setChamp(l.id, 'total', e.target.value)}
-                        className="w-20 px-2 py-1 border rounded text-sm text-center"
-                        placeholder="—"
-                      />
+                    <td className="px-3 py-2 text-center text-sm text-gray-700">
+                      {l.presences_count}
                     </td>
                     <td className="px-3 py-2 text-center text-sm text-gray-600">
                       {contre != null ? contre : '—'}
@@ -207,17 +199,15 @@ export default function AdminVotes({ config, phaseId }: Props) {
                     <td className="px-3 py-2">
                       <div className="flex gap-1 justify-end">
                         <button
-                          onClick={() => enregistrer(l.id)}
-                          disabled={!aEteModifie || estSaving}
+                          onClick={() => enregistrer(l)}
+                          disabled={!modifie || estSaving}
                           className={`px-2 py-1 text-xs rounded disabled:opacity-40 ${
-                            aEteModifie
-                              ? 'bg-red-600 text-white hover:bg-red-700'
-                              : 'bg-gray-100 text-gray-400'
+                            modifie ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-100 text-gray-400'
                           }`}
                         >
                           {estSaving ? '…' : 'Enregistrer'}
                         </button>
-                        {l.vote_total != null && (
+                        {l.vote_pour != null && (
                           <button
                             onClick={() => vider(l.id)}
                             disabled={estSaving}

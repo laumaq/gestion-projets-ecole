@@ -35,37 +35,40 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
   const [saving, setSaving] = useState(false);
   const [savingPresence, setSavingPresence] = useState(false);
 
+  // Vote
+  const [votePour, setVotePour] = useState<number | ''>('');
+  const [savingVote, setSavingVote] = useState(false);
+
+  // Formulaire soutien
   const [showSoutienModal, setShowSoutienModal] = useState(false);
   const [messageSoutien, setMessageSoutien] = useState('');
 
+  // Formulaire mandat
   const [showMandatModal, setShowMandatModal] = useState(false);
   const [nouveauMandat, setNouveauMandat] = useState({ mandat: '', description: '' });
   const [elevesSelectionnes, setElevesSelectionnes] = useState<number[]>([]);
-
-  const [votePour, setVotePour] = useState<number | ''>('');
-  const [voteTotal, setVoteTotal] = useState<number | ''>('');
-  const [savingVote, setSavingVote] = useState(false);
 
   useEffect(() => { loadData(); }, [phaseId, userId, tick]);
 
   useEffect(() => {
     if (groupe) {
       setVotePour(groupe.vote_pour ?? '');
-      setVoteTotal(groupe.vote_total ?? '');
     }
-  }, [groupe?.id, groupe?.vote_pour, groupe?.vote_total]);
+  }, [groupe?.id, groupe?.vote_pour]);
 
   const loadData = async () => {
     setLoading(true);
 
+    // 1. Phase
     const { data: ph } = await supabase
       .from('conseil_lutte_phases').select('*').eq('id', phaseId).single();
     setPhase(ph);
 
+    // 2. Mon groupe
     const { data: membresData } = await supabase
       .from('conseil_lutte_membres')
       .select(`groupe_id, conseil_lutte_groupes!inner (
-        id, nom, localisation_id, phase_id, phase_pedagogique,
+        id, nom, localisation_id, phase_id, phase_pedagogique, vote_pour,
         localisation_fixe (id, etage)
       )`)
       .eq('participant_id', userId)
@@ -85,6 +88,7 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
     const rawLocal = groupeData.localisation_fixe;
     setLocal(Array.isArray(rawLocal) ? rawLocal[0] ?? null : rawLocal);
 
+    // 3. Membres
     const { data: allMembres } = await supabase
       .from('conseil_lutte_membres')
       .select('participant_id, participant_type, manuel')
@@ -125,13 +129,14 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
     });
     setMembres(tous);
 
-    // Animateurs de la phase, croisés avec les membres du groupe
+    // 4. Animateurs de la phase, croisés avec les membres du groupe
     const animSet = await chargerAnimateursPhase(phaseId);
     const animateursDuGroupe = eleves
       .filter(e => animSet.has(e.matricule))
       .map(e => e.matricule);
     setAnimateursMatricules(animateursDuGroupe);
 
+    // 5. Soutien ouvert
     const { data: soutien } = await supabase
       .from('conseil_lutte_soutiens')
       .select('*')
@@ -142,6 +147,7 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
       .maybeSingle();
     setSoutienOuvert(soutien);
 
+    // 6. Mandats
     const { data: mds } = await supabase
       .from('conseil_lutte_mandats')
       .select('*')
@@ -149,6 +155,7 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
       .order('created_at', { ascending: false });
     setMandats(mds || []);
 
+    // 7. Présences
     const { data: pres } = await supabase
       .from('conseil_lutte_presences')
       .select('student_matricule, present')
@@ -213,37 +220,6 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
       setShowSoutienModal(false);
       setMessageSoutien('');
       setTick(t => t + 1);
-    } else {
-      alert('Erreur : ' + error.message);
-    }
-  };
-
-  const enregistrerVote = async () => {
-    if (!groupe) return;
-    if (votePour === '') {
-      alert('Entrez le nombre de voix pour.');
-      return;
-    }
-    const totalPresents = eleves.filter(e => presences.get(e.matricule)).length;
-    if (totalPresents === 0) {
-      alert('Aucun élève présent dans le groupe. Prenez les présences avant d\'enregistrer le vote.');
-      return;
-    }
-    if (votePour > totalPresents) {
-      alert(`Le nombre de voix pour (${votePour}) ne peut pas dépasser le nombre de présents (${totalPresents}).`);
-      return;
-    }
-    setSavingVote(true);
-    const { error } = await supabase
-      .from('conseil_lutte_groupes')
-      .update({
-        vote_pour: votePour,
-        vote_total: totalPresents,
-      })
-      .eq('id', groupe.id);
-    setSavingVote(false);
-    if (!error) {
-      setGroupe({ ...groupe, vote_pour: votePour, vote_total: totalPresents });
     } else {
       alert('Erreur : ' + error.message);
     }
@@ -330,6 +306,35 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
     setSavingPresence(false);
   };
 
+  const enregistrerVote = async () => {
+    if (!groupe) return;
+    if (votePour === '') {
+      alert('Entrez le nombre de voix pour.');
+      return;
+    }
+    const totalPresents = membres.filter(m => m.type === 'student').filter(e => presences.get(e.matricule)).length;
+    if (totalPresents === 0) {
+      alert('Aucun élève présent dans le groupe. Prenez les présences avant d\'enregistrer le vote.');
+      return;
+    }
+    if (votePour > totalPresents) {
+      if (!confirm(
+        `Le nombre de voix pour (${votePour}) dépasse le nombre de présents (${totalPresents}).\n\nConfirmer ?`
+      )) return;
+    }
+    setSavingVote(true);
+    const { error } = await supabase
+      .from('conseil_lutte_groupes')
+      .update({ vote_pour: votePour })
+      .eq('id', groupe.id);
+    setSavingVote(false);
+    if (!error) {
+      setGroupe({ ...groupe, vote_pour: votePour });
+    } else {
+      alert('Erreur : ' + error.message);
+    }
+  };
+
   if (loading) return <div className="text-center py-8">Chargement...</div>;
 
   if (!groupe) {
@@ -349,7 +354,8 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
   const infoPhase = PHASES_FREINET.find(p => p.key === phaseFreinetActuelle);
 
   const eleves = membres.filter(m => m.type === 'student');
-  const nbPresents = eleves.filter(e => presences.get(e.matricule)).length;
+  const elevesPresents = eleves.filter(e => presences.get(e.matricule));
+  const nbPresents = elevesPresents.length;
 
   return (
     <div className="space-y-6">
@@ -423,6 +429,64 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
         )}
       </div>
 
+      {/* Vote — saisie (animateur·rice + encadrant·e) */}
+      {(estAnimateur || userType === 'employee') && (
+        <div className="bg-white rounded-lg border p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">Résultat du vote</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            Saisissez le nombre de voix pour. Le nombre de votants correspond aux présents
+            dans le groupe (animateurs compris).
+          </p>
+
+          <div className="flex items-center gap-4 mb-4 flex-wrap">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Voix pour</label>
+              <input
+                type="number"
+                min={0}
+                value={votePour}
+                onChange={(e) => setVotePour(e.target.value === '' ? '' : parseInt(e.target.value))}
+                className="w-24 px-3 py-2 border rounded-lg"
+                placeholder="0"
+              />
+            </div>
+            <div className="pt-6">
+              <span className="text-sm text-gray-600">
+                sur <strong>{nbPresents}</strong> présent·e·s
+              </span>
+            </div>
+          </div>
+
+          {votePour !== '' && (
+            <div className="text-sm text-gray-600 mb-4">
+              → <strong>{votePour}</strong> pour ·{' '}
+              <strong>{Math.max(0, nbPresents - votePour)}</strong> contre ·{' '}
+              <strong>{nbPresents}</strong> votants
+            </div>
+          )}
+
+          <button
+            onClick={enregistrerVote}
+            disabled={savingVote}
+            className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50"
+          >
+            {savingVote ? 'Enregistrement…' : 'Enregistrer le vote'}
+          </button>
+        </div>
+      )}
+
+      {/* Vote — lecture seule (élève non animateur, si un vote existe) */}
+      {!estAnimateur && userType === 'student' && groupe.vote_pour != null && (
+        <div className="bg-white rounded-lg border p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Résultat du vote</h3>
+          <p className="text-sm text-gray-700">
+            🗳️ <strong>{groupe.vote_pour}</strong> pour ·{' '}
+            <strong>{Math.max(0, nbPresents - groupe.vote_pour)}</strong> contre ·{' '}
+            <strong>{nbPresents}</strong> votants
+          </p>
+        </div>
+      )}
+
       {/* Soutien */}
       {(() => {
         const jeSuisEncadrant = userType === 'employee';
@@ -488,52 +552,6 @@ export default function MonGroupe({ phaseId, userType, userId }: Props) {
           </div>
         );
       })()}
-
-      {/* Vote */}
-      {(estAnimateur || userType === 'employee') && (
-        <div className="bg-white rounded-lg border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">Résultat du vote</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            Saisissez le nombre de voix pour. Le nombre de votants est calculé automatiquement
-            à partir des présents dans le groupe (animateurs compris).
-          </p>
-
-          <div className="flex items-center gap-3 mb-4">
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Voix pour</label>
-              <input
-                type="number"
-                min={0}
-                value={votePour}
-                onChange={(e) => setVotePour(e.target.value === '' ? '' : parseInt(e.target.value))}
-                className="w-24 px-3 py-2 border rounded-lg"
-                placeholder="0"
-              />
-            </div>
-            <div className="pt-5">
-              <span className="text-sm text-gray-600">
-                sur <strong>{eleves.filter(e => presences.get(e.matricule)).length}</strong> présent·e·s
-              </span>
-            </div>
-          </div>
-
-          {votePour !== '' && votePour <= eleves.filter(e => presences.get(e.matricule)).length && (
-            <div className="text-sm text-gray-600 mb-4">
-              → <strong>{votePour}</strong> pour ·{' '}
-              <strong>{eleves.filter(e => presences.get(e.matricule)).length - votePour}</strong> contre ·{' '}
-              <strong>{eleves.filter(e => presences.get(e.matricule)).length}</strong> votants
-            </div>
-          )}
-
-          <button
-            onClick={enregistrerVote}
-            disabled={savingVote}
-            className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50"
-          >
-            {savingVote ? 'Enregistrement…' : 'Enregistrer le vote'}
-          </button>
-        </div>
-      )}
 
       {/* Mandats (phase V) */}
       {phaseFreinetActuelle === 'mandater' && (
