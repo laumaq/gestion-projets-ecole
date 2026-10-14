@@ -68,7 +68,15 @@ export interface TypeTFHDisplay {
   color: string;
 }
 
-export type TabId = 'mes-choix' | 'mon-carnet-de-bord' | 'mes-infos' | 'ma-defense' | 'vade-mecum';
+export type TabId =
+  | 'mes-choix'
+  | 'mon-carnet-de-bord'
+  | 'mes-infos'
+  | 'echeancier'
+  | 'ma-defense'
+  | 'documents'
+  | 'vade-mecum';
+  
 export interface Tab {
   id: TabId;
   label: string;

@@ -14,6 +14,8 @@ import { useEleveData } from './hooks/useEleveData';
 import { useTypesTFH } from './hooks/useTypesTFH';
 import { Tab, TabId } from './types';
 import VadeMecumTab from './tabs/VadeMecumTab';
+import EcheancierTab from './tabs/EcheancierTab';
+import DocumentsTab from './tabs/DocumentsTab';
 
 export default function EleveDashboard() {
   const [matricule, setMatricule] = useState<number | null>(null);
@@ -75,6 +77,7 @@ export default function EleveDashboard() {
         list.push({ id: 'mon-carnet-de-bord', label: 'Mon carnet de bord', icon: 'mon-carnet-de-bord' });
       }
       list.push({ id: 'mes-infos', label: 'Mes infos', icon: 'mes-infos' });
+      list.push({ id: 'echeancier', label: 'Échéancier', icon: 'echeancier' });
       if (shouldShowDefense) {
         list.push({ id: 'ma-defense', label: 'Ma défense', icon: 'ma-defense' });
       }
@@ -83,11 +86,15 @@ export default function EleveDashboard() {
       if (shouldShowJournal) {
         list.push({ id: 'mon-carnet-de-bord', label: 'Mon carnet de bord', icon: 'mon-carnet-de-bord' });
       }
+      list.push({ id: 'echeancier', label: 'Échéancier', icon: 'echeancier' });
       list.push({ id: 'mes-choix', label: 'Mes choix', icon: 'mes-choix' });
       if (shouldShowDefense) {
         list.push({ id: 'ma-defense', label: 'Ma défense', icon: 'ma-defense' });
       }
     }
+
+    // Documents : toujours disponible, avant-dernier
+    list.push({ id: 'documents', label: 'Documents', icon: 'documents' });
 
     // Vade Mecum toujours en dernier
     list.push({ id: 'vade-mecum', label: 'Vade Mecum', icon: 'vade-mecum' });
@@ -201,41 +208,49 @@ export default function EleveDashboard() {
             </div>
           </div>
 
-        {/* Contenu de l'onglet actif */}
-        <div>
-          {activeTab === 'mes-choix' && (
-            <MesChoixTab
-              eleve={eleve}
-              typesDisponibles={typesDisponibles}
-              loadingTypes={loadingTypes}
-              savingType={savingType}
-              autorisationModification={autorisationModification}
-              onSaveType={handleSaveType}
-              onSaveField={updateField}
-              onOpenInfoModal={openInfoModal}
-            />
-          )}
+          {/* Contenu de l'onglet actif */}
+          <div>
+            {activeTab === 'mes-choix' && (
+              <MesChoixTab
+                eleve={eleve}
+                typesDisponibles={typesDisponibles}
+                loadingTypes={loadingTypes}
+                savingType={savingType}
+                autorisationModification={autorisationModification}
+                onSaveType={handleSaveType}
+                onSaveField={updateField}
+                onOpenInfoModal={openInfoModal}
+              />
+            )}
 
-          {activeTab === 'mon-carnet-de-bord' && shouldShowJournal && (
-            <MonCarnetDeBordTab eleve={eleve} onUpdate={refresh} />
-          )}
+            {activeTab === 'mon-carnet-de-bord' && shouldShowJournal && (
+              <MonCarnetDeBordTab eleve={eleve} onUpdate={refresh} />
+            )}
 
-          {activeTab === 'mes-infos' && (
-            <MesInfosTab
-              eleve={eleve}
-              objectifGeneral={objectifGeneral}
-              objectifParticulier={objectifParticulier}
-              typesDisponibles={typesDisponibles}
-            />
-          )}
+            {activeTab === 'mes-infos' && (
+              <MesInfosTab
+                eleve={eleve}
+                objectifGeneral={objectifGeneral}
+                objectifParticulier={objectifParticulier}
+                typesDisponibles={typesDisponibles}
+              />
+            )}
 
-          {activeTab === 'ma-defense' && shouldShowDefense && (
-            <MaDefenseTab eleve={eleve} />
-          )}
+            {activeTab === 'ma-defense' && shouldShowDefense && (
+              <MaDefenseTab eleve={eleve} />
+            )}
 
-          {activeTab === 'vade-mecum' && <VadeMecumTab />}
-        </div>
+            {activeTab === 'echeancier' && (
+              <EcheancierTab
+                eleve={eleve}
+                typesDisponibles={typesDisponibles}
+              />
+            )}
 
+            {activeTab === 'documents' && <DocumentsTab />}
+
+            {activeTab === 'vade-mecum' && <VadeMecumTab />}
+          </div>
         </div>
       </div>
 

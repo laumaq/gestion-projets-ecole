@@ -7,10 +7,12 @@ import {
   Hammer,
   GraduationCap,
   Target,
+  CalendarDays,
   Sparkles,
   BookOpen,
   User,
-  Calendar
+  Calendar,
+  FolderOpen
 } from 'lucide-react';
 
 export const ICON_MAP: Record<string, any> = {
@@ -29,7 +31,9 @@ export const TAB_ICONS: Record<string, any> = {
   'mes-choix': BookOpen,
   'mon-carnet-de-bord': BookOpen,
   'mes-infos': User,
+  'echeancier': CalendarDays,
   'ma-defense': Calendar,
+  'documents': FolderOpen,
   'vade-mecum': BookMarked,
 };
 

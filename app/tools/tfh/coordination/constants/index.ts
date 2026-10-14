@@ -64,6 +64,18 @@ export const TABS_CONFIG = [
     color: 'gray',
   },
   {
+    id: 'annee-tfh',
+    name: 'Année TFH',
+    icon: '📅',
+    color: 'teal',
+  },
+  {
+    id: 'documents',
+    name: 'Documents',
+    icon: '📁',
+    color: 'cyan',
+  },
+  {
     id: 'stats',
     name: 'Statistiques',
     icon: '📊',

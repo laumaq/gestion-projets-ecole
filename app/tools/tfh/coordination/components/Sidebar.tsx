@@ -4,7 +4,7 @@
 import { 
   Shield, FileText, UserCheck, Calendar, 
   Users, Settings, BarChart, LogOut,NotebookPen,
-  BookOpen
+  BookOpen,CalendarCog, FolderOpen
 } from 'lucide-react';
 import { TabType } from '../types';
 
@@ -115,6 +115,24 @@ export default function Sidebar({
       activeClass: 'bg-sky-50 text-sky-700 border border-sky-200',
       iconClass: 'bg-sky-100 text-sky-600',
       countClass: 'bg-sky-100 text-sky-700',
+      showCount: false
+    },
+    {
+      id: 'annee-tfh' as TabType,
+      name: 'Année TFH',
+      icon: <CalendarCog className="w-5 h-5" />,
+      activeClass: 'bg-teal-50 text-teal-700 border border-teal-200',
+      iconClass: 'bg-teal-100 text-teal-600',
+      countClass: 'bg-teal-100 text-teal-700',
+      showCount: false
+    },
+    {
+      id: 'documents' as TabType,
+      name: 'Documents',
+      icon: <FolderOpen className="w-5 h-5" />,
+      activeClass: 'bg-cyan-50 text-cyan-700 border border-cyan-200',
+      iconClass: 'bg-cyan-100 text-cyan-600',
+      countClass: 'bg-cyan-100 text-cyan-700',
       showCount: false
     },
     {

@@ -23,7 +23,7 @@ module.exports = {
         },
         // Ajout de la couleur verte de l'école (une seule teinte)
         'school-green': {
-          DEFAULT: '#00CE7b', // Remplacez par votre code hex exact
+          DEFAULT: '#00CE7b',
           50: '#E8F5E9',
           100: '#C8E6C9',
           200: '#A5D6A7',
@@ -36,13 +36,24 @@ module.exports = {
           900: '#1B5E20',
         },
         // Ajout de couleurs secondaires pour votre charte
-        'school-dark': '#1a2a3a', // Remplacez par votre code
-        'school-gold': '#c9a84c', // Si vous avez une couleur dorée
+        'school-dark': '#1a2a3a',
+        'school-gold': '#c9a84c',
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },
+  // ============================================================
+  // SAFELIST — classes construites dynamiquement (échéanciers TFH)
+  // Sans ça, les classes comme bg-purple-50 construites à la volée
+  // ne sont PAS générées par le JIT de Tailwind.
+  // ============================================================
+  safelist: [
+    {
+      // Toutes les nuances utilisées par EcheancierTimeline
+      pattern: /(bg|text|border)-(violet|purple|blue|green|orange|red|amber|emerald|sky|indigo|rose|teal|cyan|fuchsia|pink|lime|yellow|gray)-(50|100|200|300|400|500|600|700|800|900)/,
+    },
+  ],
   plugins: [],
-}
+};

@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Menu, X } from 'lucide-react';
 import Sidebar from './components/Sidebar';
-import Header from './components/Header';
 import LoadingSpinner from './components/LoadingSpinner';
 import DashboardTab from './tabs/DashboardTab';
 import ConvocationsTab from './tabs/ConvocationsTab';
@@ -22,6 +21,9 @@ import { useCoordinateurData } from './hooks/useCoordinateurData';
 import { useElevesOperations } from './hooks/useElevesOperations';
 import { TabType, UserType } from './types';
 import SuiviCarnetsTab from './tabs/SuiviCarnetsTab';
+import Header, { getTabTitle } from './components/Header';
+import AnneeTFHTab from './tabs/AnneeTFHTab';
+import DocumentsTab from './tabs/DocumentsTab';
 
 export default function CoordinateurDashboard() {
   const router = useRouter();
@@ -204,6 +206,12 @@ export default function CoordinateurDashboard() {
       case 'parametres':
         return <ParametresTab onRefresh={refreshData} />;
 
+      case 'annee-tfh':
+        return <AnneeTFHTab onRefresh={refreshData} />;
+
+      case 'documents':
+        return <DocumentsTab />;
+                
       case 'stats':
         return <StatsTab eleves={eleves} />;
 
@@ -259,9 +267,7 @@ export default function CoordinateurDashboard() {
               </button>
               <div>
                 <h1 className="font-semibold text-gray-800">
-                  {activeTab === 'dashboard' ? 'Tableau de bord' : 
-                   activeTab === 'convocations' ? 'Convocations' : 
-                   activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                  {getTabTitle(activeTab)}
                 </h1>
                 <p className="text-xs text-gray-500">Coordination TFH</p>
               </div>

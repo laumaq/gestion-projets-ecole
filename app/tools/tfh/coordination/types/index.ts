@@ -288,6 +288,34 @@ export interface DemandeChangementRole {
   traitee_par: string | null;
 }
 
-export type TabType = 'dashboard' | 'convocations' | 'presences' | 'defenses' | 'calendrier' | 'gestion-utilisateurs' | 'parametres' | 'stats' | 'controle' | 'liste-tfh' | 'suivi-carnets';
+// Document générique TFH
+export interface TfhDocument {
+  id: string;
+  nom: string;
+  url: string;
+  nom_fichier: string;
+  taille_octets: number | null;
+  mime_type: string | null;
+  categorie: string | null;
+  student_matricule: number | null;
+  uploaded_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
+export type TabType =
+  | 'dashboard'
+  | 'liste-tfh'
+  | 'suivi-carnets'
+  | 'convocations'
+  | 'presences'
+  | 'defenses'
+  | 'calendrier'
+  | 'gestion-utilisateurs'
+  | 'parametres'
+  | 'annee-tfh'
+  | 'documents'
+  | 'stats'
+  | 'controle';
+  
 export type UserType = 'eleves' | 'guides' | 'externes' | 'coordinateurs' | 'direction';

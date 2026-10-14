@@ -1,10 +1,10 @@
-// app/tools/tfh/coordination/tabs/ParametresTab/sections/SectionDefenses.tsx
+// app/tools/tfh/coordination/tabs/AnneeTFHTab/sections/JourneesDefenseSection.tsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { 
-  GraduationCap, ChevronDown, ChevronUp, RefreshCw, 
+import {
+  GraduationCap, ChevronDown, ChevronUp, RefreshCw,
   Save, Plus, Info, Trash2
 } from 'lucide-react';
 
@@ -14,17 +14,17 @@ interface JourneeDefense {
   libelle: string;
 }
 
-interface SectionDefensesProps {
+interface JourneesDefenseSectionProps {
   expanded: boolean;
   onToggle: () => void;
 }
 
-export default function SectionDefenses({ expanded, onToggle }: SectionDefensesProps) {
+export default function JourneesDefenseSection({ expanded, onToggle }: JourneesDefenseSectionProps) {
   const [journeesDefense, setJourneesDefense] = useState<JourneeDefense[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [message, setMessage] = useState<{type: 'info' | 'error' | 'success', text: string} | null>(null);
+  const [message, setMessage] = useState<{ type: 'info' | 'error' | 'success'; text: string } | null>(null);
 
   const showMessage = (type: 'info' | 'error' | 'success', text: string) => {
     setMessage({ type, text });
@@ -39,29 +39,30 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
         .select('*')
         .like('setting_key', 'Journee_defense_%')
         .order('setting_key');
-      
+
       if (error) throw error;
-      
+
       if (!data || data.length === 0) {
         setJourneesDefense([]);
         setHasLoaded(true);
         return;
       }
-      
-      const journees = data.map(item => {
-        const match = item.setting_key.match(/Journee_defense_(\d+)/);
-        if (match) {
-          return {
-            id: parseInt(match[1]),
-            date: item.setting_value || '',
-            libelle: item.description || `Défense TFH ${match[1]}`
-          };
-        }
-        return null;
-      })
-      .filter((j): j is JourneeDefense => j !== null)
-      .sort((a, b) => a.id - b.id);
-      
+
+      const journees = data
+        .map(item => {
+          const match = item.setting_key.match(/Journee_defense_(\d+)/);
+          if (match) {
+            return {
+              id: parseInt(match[1]),
+              date: item.setting_value || '',
+              libelle: item.description || `Défense TFH ${match[1]}`,
+            };
+          }
+          return null;
+        })
+        .filter((j): j is JourneeDefense => j !== null)
+        .sort((a, b) => a.id - b.id);
+
       setJourneesDefense(journees);
       setHasLoaded(true);
     } catch (err) {
@@ -73,9 +74,7 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
   }, []);
 
   useEffect(() => {
-    if (!hasLoaded) {
-      loadJournees();
-    }
+    if (!hasLoaded) loadJournees();
   }, [loadJournees, hasLoaded]);
 
   const saveJourneeDefense = async (journeeId: number, date: string) => {
@@ -83,25 +82,23 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
     try {
       const { error } = await supabase
         .from('tfh_system_settings')
-        .upsert({
-          setting_key: `Journee_defense_${journeeId}`,
-          setting_value: date,
-          description: `Journée de défense des TFH ${journeeId}`,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'setting_key' });
-      
+        .upsert(
+          {
+            setting_key: `Journee_defense_${journeeId}`,
+            setting_value: date,
+            description: `Journée de défense des TFH ${journeeId}`,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'setting_key' }
+        );
       if (error) throw error;
-      
+
       setJourneesDefense(prev => {
         const existing = prev.find(j => j.id === journeeId);
-        if (existing) {
-          return prev.map(j => j.id === journeeId ? { ...j, date } : j);
-        } else {
-          return [...prev, { id: journeeId, date, libelle: `Défense TFH ${journeeId}` }]
-            .sort((a, b) => a.id - b.id);
-        }
+        if (existing) return prev.map(j => (j.id === journeeId ? { ...j, date } : j));
+        return [...prev, { id: journeeId, date, libelle: `Défense TFH ${journeeId}` }].sort((a, b) => a.id - b.id);
       });
-      
+
       showMessage('success', `Date de la défense ${journeeId} sauvegardée`);
     } catch (err) {
       console.error('Erreur sauvegarde défense:', err);
@@ -112,19 +109,14 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
   };
 
   const deleteJourneeDefense = async (journeeId: number) => {
-    if (!confirm(`Voulez-vous vraiment supprimer définitivement la défense ${journeeId} ?`)) {
-      return;
-    }
-    
+    if (!confirm(`Voulez-vous vraiment supprimer définitivement la défense ${journeeId} ?`)) return;
     setSaving(true);
     try {
       const { error } = await supabase
         .from('tfh_system_settings')
         .delete()
         .eq('setting_key', `Journee_defense_${journeeId}`);
-      
       if (error) throw error;
-      
       setJourneesDefense(prev => prev.filter(j => j.id !== journeeId));
       showMessage('info', `Défense ${journeeId} supprimée`);
     } catch (err) {
@@ -142,43 +134,37 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
         .from('tfh_system_settings')
         .select('setting_key')
         .like('setting_key', 'Journee_defense_%');
-      
       if (fetchError) throw fetchError;
-      
+
       const currentDefenseKeys = journeesDefense.map(j => `Journee_defense_${j.id}`);
       const defensesToDelete = existingDefenses
         ?.filter(def => !currentDefenseKeys.includes(def.setting_key))
         .map(def => def.setting_key) || [];
-      
+
       if (defensesToDelete.length > 0) {
         const { error: deleteError } = await supabase
           .from('tfh_system_settings')
           .delete()
           .in('setting_key', defensesToDelete);
-        
         if (deleteError) throw deleteError;
       }
-      
+
       const upserts = journeesDefense.map(journee => ({
         setting_key: `Journee_defense_${journee.id}`,
         setting_value: journee.date,
         description: `Journée de défense des TFH ${journee.id}`,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }));
-      
+
       if (upserts.length > 0) {
         const { error: upsertError } = await supabase
           .from('tfh_system_settings')
           .upsert(upserts, { onConflict: 'setting_key' });
-        
         if (upsertError) throw upsertError;
       }
-      
+
       await loadJournees();
-      
-      showMessage('success', 
-        `${journeesDefense.filter(j => j.date.trim() !== '').length} défense(s) sauvegardée(s)`
-      );
+      showMessage('success', `${journeesDefense.filter(j => j.date.trim() !== '').length} défense(s) sauvegardée(s)`);
     } catch (err) {
       console.error('Erreur sauvegarde globale:', err);
       showMessage('error', 'Erreur lors de la sauvegarde globale');
@@ -188,39 +174,30 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
   };
 
   const addJourneeDefense = () => {
-    const nouvelleJourneeId = journeesDefense.length > 0 
-      ? Math.max(...journeesDefense.map(j => j.id)) + 1 
-      : 1;
-    
+    const nouvelleJourneeId =
+      journeesDefense.length > 0 ? Math.max(...journeesDefense.map(j => j.id)) + 1 : 1;
     setJourneesDefense(prev => [
       ...prev,
-      {
-        id: nouvelleJourneeId,
-        date: '',
-        libelle: `Défense TFH ${nouvelleJourneeId}`
-      }
+      { id: nouvelleJourneeId, date: '', libelle: `Défense TFH ${nouvelleJourneeId}` },
     ]);
   };
 
   const clearAllDefenseDates = async () => {
-    if (confirm('Voulez-vous effacer toutes les dates de défense ?')) {
-      setSaving(true);
-      try {
-        const { error } = await supabase
-          .from('tfh_system_settings')
-          .delete()
-          .like('setting_key', 'Journee_defense_%');
-        
-        if (error) throw error;
-        
-        setJourneesDefense([]);
-        showMessage('info', 'Toutes les défenses ont été supprimées.');
-      } catch (err) {
-        console.error('Erreur suppression défenses:', err);
-        showMessage('error', 'Erreur lors de la suppression');
-      } finally {
-        setSaving(false);
-      }
+    if (!confirm('Voulez-vous effacer toutes les dates de défense ?')) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('tfh_system_settings')
+        .delete()
+        .like('setting_key', 'Journee_defense_%');
+      if (error) throw error;
+      setJourneesDefense([]);
+      showMessage('info', 'Toutes les défenses ont été supprimées.');
+    } catch (err) {
+      console.error('Erreur suppression défenses:', err);
+      showMessage('error', 'Erreur lors de la suppression');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -235,7 +212,7 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
             <GraduationCap className="w-5 h-5" />
           </div>
           <div className="text-left">
-            <h3 className="text-lg font-semibold text-gray-800">Paramètres des défenses TFH</h3>
+            <h3 className="text-lg font-semibold text-gray-800">Journées de défense TFH</h3>
             <p className="text-sm text-gray-500">Configuration des journées de défense</p>
           </div>
         </div>
@@ -245,7 +222,7 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
           <ChevronDown className="w-5 h-5 text-gray-400" />
         )}
       </button>
-      
+
       {expanded && (
         <div className="px-6 pb-6 pt-2 border-t">
           {message && (
@@ -262,7 +239,6 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
             <p className="text-sm text-gray-600 mb-2">
               Configurez les dates des journées de défense des TFH.
             </p>
-            
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-500">
                 {journeesDefense.filter(j => j.date).length} défense(s) programmée(s)
@@ -277,7 +253,7 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
               </button>
             </div>
           </div>
-          
+
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
@@ -302,7 +278,7 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
                         </td>
                       </tr>
                     ) : (
-                      journeesDefense.map((journee) => (
+                      journeesDefense.map(journee => (
                         <tr key={journee.id} className="hover:bg-gray-50 transition-colors">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center justify-center">
@@ -324,20 +300,16 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
                               <input
                                 type="date"
                                 value={journee.date}
-                                onChange={(e) => {
+                                onChange={e => {
                                   const newDate = e.target.value;
-                                  setJourneesDefense(prev => prev.map(j => 
-                                    j.id === journee.id ? { ...j, date: newDate } : j
-                                  ));
+                                  setJourneesDefense(prev => prev.map(j => (j.id === journee.id ? { ...j, date: newDate } : j)));
                                 }}
                                 className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                               />
                               {journee.date && (
                                 <span className="text-xs text-green-600 font-medium whitespace-nowrap">
                                   {new Date(journee.date).toLocaleDateString('fr-FR', {
-                                    weekday: 'short',
-                                    day: 'numeric',
-                                    month: 'short'
+                                    weekday: 'short', day: 'numeric', month: 'short',
                                   })}
                                 </span>
                               )}
@@ -350,7 +322,7 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
                                 disabled={saving}
                                 className={`px-3 py-1.5 rounded text-xs font-medium ${
                                   !saving
-                                    ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' 
+                                    ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
                                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                 }`}
                               >
@@ -381,7 +353,7 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
                   Ajouter une journée de défense
                 </button>
               </div>
-              
+
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t">
                 <div className="flex gap-3">
                   <button
@@ -405,7 +377,7 @@ export default function SectionDefenses({ expanded, onToggle }: SectionDefensesP
                   </button>
                 </div>
               </div>
-              
+
               <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
                 <h4 className="text-sm font-medium text-purple-800 mb-2 flex items-center gap-2">
                   <Info className="w-4 h-4" />
