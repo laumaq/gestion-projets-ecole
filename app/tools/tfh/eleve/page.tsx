@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileText, User, GraduationCap, Users, AlertCircle } from 'lucide-react';
+import { FileText, User, GraduationCap, Users, AlertCircle, AlertTriangle } from 'lucide-react';
 import TypeInfoModal from './components/TypeInfoModal';
 import { TabNavigation } from './tabs';
 import MesChoixTab from './tabs/MesChoixTab';
@@ -16,6 +16,7 @@ import { Tab, TabId } from './types';
 import VadeMecumTab from './tabs/VadeMecumTab';
 import EcheancierTab from './tabs/EcheancierTab';
 import DocumentsTab from './tabs/DocumentsTab';
+import { useRejectedDocuments } from './hooks/useRejectedDocuments';
 
 export default function EleveDashboard() {
   const [matricule, setMatricule] = useState<number | null>(null);
@@ -53,6 +54,11 @@ export default function EleveDashboard() {
     refresh, 
     updateField 
   } = useEleveData(matricule);
+  const {
+    documents: rejectedDocuments,
+    error: rejectedDocumentsError,
+    reload: reloadRejectedDocuments,
+  } = useRejectedDocuments(matricule);
 
   // Chargement des types (uniquement si phase préparatoire)
   const { typesDisponibles, loading: loadingTypes } = useTypesTFH(phasePreparatoire);
@@ -151,6 +157,37 @@ export default function EleveDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-violet-50 to-purple-50">
       <div className="max-w-5xl mx-auto px-4 py-8">
+        {rejectedDocuments.length > 0 && (
+          <div role="alert" className="mb-5 rounded-xl border-2 border-red-300 bg-red-50 p-4 text-red-900 shadow-sm">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-6 w-6 flex-shrink-0 text-red-600" />
+              <div className="min-w-0 flex-1">
+                <p className="font-bold">
+                  {rejectedDocuments.length === 1
+                    ? 'Un document a été rejeté.'
+                    : `${rejectedDocuments.length} documents ont été rejetés.`}
+                </p>
+                <ul className="mt-1 list-inside list-disc text-sm">
+                  {rejectedDocuments.map(document => <li key={document.id}>{document.nom}</li>)}
+                </ul>
+                <p className="mt-1 text-sm">Ouvre l’onglet Documents pour envoyer une version corrigée.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab('documents')}
+                className="shrink-0 rounded-lg bg-red-700 px-3 py-2 text-sm font-semibold text-white hover:bg-red-800"
+              >
+                Voir les documents
+              </button>
+            </div>
+          </div>
+        )}
+        {rejectedDocumentsError && (
+          <div role="alert" className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {rejectedDocumentsError}
+          </div>
+        )}
+
         {/* Header avec toggle d'onglets à droite */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
@@ -247,7 +284,12 @@ export default function EleveDashboard() {
               />
             )}
 
-            {activeTab === 'documents' && <DocumentsTab />}
+            {activeTab === 'documents' && (
+              <DocumentsTab
+                matricule={eleve.student_matricule}
+                onSubmissionChanged={reloadRejectedDocuments}
+              />
+            )}
 
             {activeTab === 'vade-mecum' && <VadeMecumTab />}
           </div>

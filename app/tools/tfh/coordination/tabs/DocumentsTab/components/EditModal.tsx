@@ -4,18 +4,32 @@
 import { useState } from 'react';
 import { X, Save, AlertCircle, FileUp } from 'lucide-react';
 import { TfhDocument } from '../../../types';
+import TargetingFields from './TargetingFields';
+import { TfhDocumentRecipient } from '../hooks/useDocumentsCRUD';
 
 interface EditModalProps {
   document: TfhDocument;
+  recipients: TfhDocumentRecipient[];
   onClose: () => void;
-  onSubmit: (data: { nom: string; file?: File }) => Promise<void>;
+  onSubmit: (data: {
+    nom: string;
+    file?: File;
+    a_rendre: boolean;
+    mode_ciblage: 'tous' | 'types' | 'eleves' | null;
+    types_tfh: string[];
+    destinataires_matricules: number[];
+  }) => Promise<void>;
 }
 
 const MAX_SIZE = 20 * 1024 * 1024;
 
-export default function EditModal({ document, onClose, onSubmit }: EditModalProps) {
+export default function EditModal({ document, onClose, onSubmit, recipients }: EditModalProps) {
   const [nom, setNom] = useState(document.nom);
   const [file, setFile] = useState<File | null>(null);
+  const [aRendre, setARendre] = useState(document.a_rendre);
+  const [mode, setMode] = useState<'tous' | 'types' | 'eleves'>(document.mode_ciblage || 'tous');
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(document.types_tfh || []);
+  const [selectedMatricules, setSelectedMatricules] = useState<number[]>(document.destinataires_matricules || []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,10 +45,30 @@ export default function EditModal({ document, onClose, onSubmit }: EditModalProp
       setError(`Fichier trop volumineux (max 20 Mo).`);
       return;
     }
+    const destinataires = aRendre
+      ? mode === 'tous'
+        ? recipients.map(student => student.student_matricule)
+        : mode === 'types'
+          ? recipients
+              .filter(student => selectedTypes.includes(student.type))
+              .map(student => student.student_matricule)
+          : selectedMatricules
+      : [];
+    if (aRendre && destinataires.length === 0) {
+      setError('Sélectionne au moins un élève destinataire.');
+      return;
+    }
 
     setSaving(true);
     try {
-      await onSubmit({ nom: nom.trim(), file: file || undefined });
+      await onSubmit({
+        nom: nom.trim(),
+        file: file || undefined,
+        a_rendre: aRendre,
+        mode_ciblage: aRendre ? mode : null,
+        types_tfh: aRendre && mode === 'types' ? selectedTypes : [],
+        destinataires_matricules: destinataires,
+      });
       onClose();
     } catch (err: any) {
       setError(err?.message || 'Erreur lors de la sauvegarde.');
@@ -90,7 +124,7 @@ export default function EditModal({ document, onClose, onSubmit }: EditModalProp
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
               <FileUp className="w-4 h-4" />
               Remplacer le fichier (optionnel)
             </label>
@@ -108,6 +142,20 @@ export default function EditModal({ document, onClose, onSubmit }: EditModalProp
               Laisse vide pour conserver le fichier actuel. Max 20 Mo.
             </p>
           </div>
+
+          <TargetingFields
+            aRendre={aRendre}
+            mode={mode}
+            selectedTypes={selectedTypes}
+            selectedMatricules={selectedMatricules}
+            recipients={recipients}
+            onChange={value => {
+              setARendre(value.aRendre);
+              setMode(value.mode);
+              setSelectedTypes(value.selectedTypes);
+              setSelectedMatricules(value.selectedMatricules);
+            }}
+          />
 
           <div className="flex justify-end gap-3 pt-2 border-t">
             <button

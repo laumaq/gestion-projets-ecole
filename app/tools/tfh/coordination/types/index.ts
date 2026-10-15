@@ -301,6 +301,12 @@ export interface TfhDocument {
   uploaded_by: string | null;
   created_at: string;
   updated_at: string;
+  document_parent_id: string | null;
+  a_rendre: boolean;
+  mode_ciblage: 'tous' | 'types' | 'eleves' | null;
+  types_tfh: string[] | null;
+  destinataires_matricules: number[] | null;
+  validation_status: 'pending' | 'validated' | 'rejected' | null;
 }
 
 export type TabType =

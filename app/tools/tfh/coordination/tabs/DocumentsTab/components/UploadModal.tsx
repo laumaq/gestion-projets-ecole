@@ -3,17 +3,31 @@
 
 import { useState } from 'react';
 import { X, Upload, AlertCircle } from 'lucide-react';
+import TargetingFields from './TargetingFields';
+import { TfhDocumentRecipient } from '../hooks/useDocumentsCRUD';
 
 interface UploadModalProps {
   onClose: () => void;
-  onSubmit: (data: { nom: string; file: File }) => Promise<void>;
+  recipients: TfhDocumentRecipient[];
+  onSubmit: (data: {
+    nom: string;
+    file: File;
+    a_rendre: boolean;
+    mode_ciblage: 'tous' | 'types' | 'eleves' | null;
+    types_tfh: string[];
+    destinataires_matricules: number[];
+  }) => Promise<void>;
 }
 
 const MAX_SIZE = 20 * 1024 * 1024;
 
-export default function UploadModal({ onClose, onSubmit }: UploadModalProps) {
+export default function UploadModal({ onClose, onSubmit, recipients }: UploadModalProps) {
   const [nom, setNom] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [aRendre, setARendre] = useState(false);
+  const [mode, setMode] = useState<'tous' | 'types' | 'eleves'>('tous');
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedMatricules, setSelectedMatricules] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,10 +47,30 @@ export default function UploadModal({ onClose, onSubmit }: UploadModalProps) {
       setError(`Fichier trop volumineux (max 20 Mo). Taille : ${(file.size / 1024 / 1024).toFixed(2)} Mo.`);
       return;
     }
+    const destinataires = aRendre
+      ? mode === 'tous'
+        ? recipients.map(student => student.student_matricule)
+        : mode === 'types'
+          ? recipients
+              .filter(student => selectedTypes.includes(student.type))
+              .map(student => student.student_matricule)
+          : selectedMatricules
+      : [];
+    if (aRendre && destinataires.length === 0) {
+      setError('Sélectionne au moins un élève destinataire.');
+      return;
+    }
 
     setSaving(true);
     try {
-      await onSubmit({ nom: nom.trim(), file });
+      await onSubmit({
+        nom: nom.trim(),
+        file,
+        a_rendre: aRendre,
+        mode_ciblage: aRendre ? mode : null,
+        types_tfh: aRendre && mode === 'types' ? selectedTypes : [],
+        destinataires_matricules: destinataires,
+      });
       onClose();
     } catch (err: any) {
       setError(err?.message || 'Erreur lors de l\'upload.');
@@ -98,6 +132,20 @@ export default function UploadModal({ onClose, onSubmit }: UploadModalProps) {
             )}
             <p className="text-xs text-gray-400 mt-1">Max 20 Mo</p>
           </div>
+
+          <TargetingFields
+            aRendre={aRendre}
+            mode={mode}
+            selectedTypes={selectedTypes}
+            selectedMatricules={selectedMatricules}
+            recipients={recipients}
+            onChange={value => {
+              setARendre(value.aRendre);
+              setMode(value.mode);
+              setSelectedTypes(value.selectedTypes);
+              setSelectedMatricules(value.selectedMatricules);
+            }}
+          />
 
           <div className="flex justify-end gap-3 pt-2 border-t">
             <button
