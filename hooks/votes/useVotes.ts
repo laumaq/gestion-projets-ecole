@@ -1,5 +1,5 @@
 // hooks/votes/useVotes.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/hooks/useUser';
 import { getErrorMessage } from '@/lib/errors';
@@ -61,6 +61,7 @@ export const useVotes = (context: {
   const [votes, setVotes] = useState<Vote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedVotes = useRef(false);
 
   // Ne pas exécuter les requêtes tant que l'utilisateur n'est pas chargé
   useEffect(() => {
@@ -75,7 +76,9 @@ export const useVotes = (context: {
     if (!user) return;
     
     try {
-      setLoading(true);
+      if (!hasLoadedVotes.current) {
+        setLoading(true);
+      }
       const idField = context.idField || 'module_id';
       
       let query = supabase
@@ -131,6 +134,7 @@ export const useVotes = (context: {
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
+      hasLoadedVotes.current = true;
       setLoading(false);
     }
   }, [context.module, context.id, context.idField, context.communicationId, context.interventionLibreId, user]);

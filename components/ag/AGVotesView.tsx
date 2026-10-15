@@ -31,7 +31,7 @@ export default function AGVotesView({ agId }: AGVotesViewProps) {
 
   const votesActifs = votes.filter(v => v.statut === 'actif').length;
 
-  if (loading) {
+  if (loading && votes.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <p className="text-gray-500">Chargement des votes...</p>
