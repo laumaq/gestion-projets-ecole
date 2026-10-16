@@ -9,7 +9,7 @@ interface StateCycleOption<Value extends string> {
 
 interface StateCycleCheckboxProps<Value extends string> {
   value: Value;
-  options: StateCycleOption<Value>[];
+  options: readonly StateCycleOption<Value>[];
   onChange: (value: Value) => void;
   disabled?: boolean;
 }
