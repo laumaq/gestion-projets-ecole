@@ -209,6 +209,32 @@ export default function Header() {
   };
 
   const dynamicLinks = getDynamicLinks();
+  const isTfhModule = pathname?.startsWith('/tools/tfh/') ?? false;
+  const isVoyagesModule = pathname === '/tools/voyages'
+    || pathname?.startsWith('/tools/voyages/')
+    || pathname === '/archives/voyages';
+  const isAgModule = pathname === '/tools/ag';
+  const isSciencesCollaborativeModule = pathname === '/dashboard/sciences'
+    || pathname === '/tools/sciences/nouvelle-experience'
+    || pathname?.startsWith('/tools/sciences/experiences/');
+  const helpHref = isTfhModule
+    ? `/help/tfh?from=${encodeURIComponent(pathname || '/tools/tfh')}`
+    : isVoyagesModule
+      ? `/help/voyages?from=${encodeURIComponent(pathname || '/tools/voyages')}`
+      : isAgModule
+        ? `/help/ag?from=${encodeURIComponent(pathname)}`
+        : isSciencesCollaborativeModule
+          ? `/help/sciences?from=${encodeURIComponent(pathname || '/dashboard/sciences')}`
+    : '/help';
+  const helpLabel = isTfhModule
+    ? 'Aide TFH'
+    : isVoyagesModule
+      ? 'Aide Voyages'
+      : isAgModule
+        ? 'Aide AG'
+        : isSciencesCollaborativeModule
+          ? 'Aide Sciences'
+          : 'Aide';
 
 
   const getRoleDisplay = () => {
@@ -299,7 +325,8 @@ export default function Header() {
             )}
 
             <Link
-              href="/help"
+              href={helpHref}
+              aria-label={helpLabel}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all text-sm font-medium ${
                 isScrolled
                   ? 'text-gray-600 hover:text-gray-700 hover:bg-gray-50'
@@ -307,7 +334,7 @@ export default function Header() {
               }`}
             >
               <HelpCircle className="w-4 h-4" />
-              <span>Aide</span>
+              <span>{helpLabel}</span>
             </Link>
 
             <div className="flex items-center gap-3">
@@ -403,7 +430,8 @@ export default function Header() {
 
               {/* Aide dans menu mobile */}
               <Link
-                href="/help"
+                href={helpHref}
+                aria-label={helpLabel}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                   isScrolled
                     ? 'text-gray-600 hover:bg-gray-50'
@@ -412,7 +440,7 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 <HelpCircle className="w-5 h-5" />
-                <span className="font-medium">Aide</span>
+                <span className="font-medium">{helpLabel}</span>
               </Link>
 
               {/* Profil dans menu mobile */}
